@@ -1,0 +1,77 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap");
+@import "tailwindcss";
+
+/* =========================
+   Tailwind v4 Theme Tokens
+========================= */
+
+@theme {
+    /* Fonts */
+    --font-sans: "Inter", sans-serif;
+
+    /* Brand */
+    --color-primary: #7d8f69;
+    --color-primary-dark: #5f7050;
+    --color-primary-light: #c8d7b0;
+
+    --color-secondary: #a68a64;
+    --color-secondary-dark: #7a6245;
+    --color-secondary-light: #dcc4a0;
+
+    /* Neutral */
+    --color-neutral: #fcfaf7;
+    --color-neutral-dark: #e7e2db;
+
+    /* Text */
+    --color-text-primary: #2f312b;
+    --color-text-secondary: #666666;
+    --color-text-light: #fcfaf7;
+
+    /* Borders */
+    --color-border-light: #ddd8d0;
+    --color-border-dark: #b8b1a7;
+
+    /* Semantic */
+    --color-success: #6e8b5b;
+    --color-warning: #b58b4d;
+    --color-danger: #c62828;
+    --color-info: #5c6f7c;
+
+    /* Radius */
+    --radius-sm: 4px;
+    --radius-md: 10px;
+    --radius-lg: 15px;
+    --radius-full: 9999px;
+
+    /* Spacing */
+    --spacing-section-sm: clamp(0.4rem, 1.5vw, 0.8rem);
+    --spacing-section-md: clamp(1rem, 2.5vw, 1.4rem);
+    --spacing-section-lg: clamp(2rem, 4vw, 2.2rem);
+}
+
+/* =========================
+   Custom Utilities
+========================= */
+
+@utility scrollbar-none {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+
+    &::-webkit-scrollbar {
+        display: none;
+    }
+}
+
+/* =========================
+   Base Styles
+========================= */
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family: var(--font-sans);
+    background-color: var(--color-neutral);
+    color: var(--color-text-primary);
+}

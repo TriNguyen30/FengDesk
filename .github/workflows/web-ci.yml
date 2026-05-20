@@ -1,0 +1,50 @@
+name: FengDesk AI Web CI
+
+# Kích hoạt workflow khi có push hoặc pull request vào nhánh main
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Bước 1: Lấy code từ GitHub về máy ảo
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # Bước 2: Cài đặt pnpm (Vì dự án của bạn dùng pnpm)
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9 # Hoặc phiên bản pnpm bạn đang dùng
+
+      # Bước 3: Cài đặt Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      # Bước 4: Cài đặt các thư viện (dependencies)
+      - name: Install Dependencies
+        run: pnpm install
+
+      # Bước 5: Kiểm tra lỗi logic/format (Linting)
+      - name: Run Lint
+        run: pnpm lint
+
+      # Bước 6: Kiểm tra lỗi TypeScript (Dựa trên script "tsc -b" trong package.json của bạn)
+      - name: Type Check
+        run: pnpm tsc -b
+
+      # Bước 7: Build thử nghiệm dự án
+      - name: Build Web Application
+        run: pnpm build
+        env:
+          # Nếu bạn có các biến môi trường Firebase, hãy khai báo ở đây để tránh lỗi build
+          VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
+          VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}
