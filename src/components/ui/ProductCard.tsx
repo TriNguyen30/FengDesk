@@ -32,7 +32,7 @@ export default function ProductCard({ product, onAddToCart }: ProductCardProps) 
             )}
 
             {/* Image */}
-            <div className="relative h-44 w-full overflow-hidden bg-gray-50 flex items-center justify-center p-4">
+            <div className="relative flex h-32 w-full items-center justify-center overflow-hidden bg-gray-50 p-3 sm:h-40 sm:p-4 md:h-44">
                 <img
                     src={product.image}
                     alt={product.name}
@@ -41,31 +41,31 @@ export default function ProductCard({ product, onAddToCart }: ProductCardProps) 
             </div>
 
             {/* Info */}
-            <div className="flex flex-1 flex-col gap-2 p-3">
-                <p className="line-clamp-2 text-sm font-medium text-gray-800 leading-snug min-h-[2.5rem]">
+            <div className="flex flex-1 flex-col gap-1.5 p-2.5 sm:gap-2 sm:p-3">
+                <p className="line-clamp-2 min-h-9 text-xs font-medium leading-snug text-gray-800 sm:min-h-10 sm:text-sm">
                     {product.name}
                 </p>
 
                 {/* Prices */}
-                <div className="flex items-baseline gap-2">
-                    <span className="text-base font-bold text-primary">
+                <div className="flex min-w-0 flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
+                    <span className="truncate text-sm font-bold text-primary sm:text-base">
                         {formatPrice(product.price)}
                     </span>
                     {product.originalPrice > product.price && (
-                        <span className="text-xs text-gray-400 line-through">
+                        <span className="truncate text-[10px] text-gray-400 line-through sm:text-xs">
                             {formatPrice(product.originalPrice)}
                         </span>
                     )}
                 </div>
 
                 {/* Rating + Cart */}
-                <div className="mt-auto flex items-center justify-between pt-1">
-                    <div className="flex items-center gap-1">
-                        <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
-                        <span className="text-xs font-medium text-gray-600">
+                <div className="mt-auto flex items-center justify-between gap-1 pt-1">
+                    <div className="flex min-w-0 items-center gap-0.5 sm:gap-1">
+                        <Star className="h-3 w-3 shrink-0 fill-yellow-400 text-yellow-400 sm:h-3.5 sm:w-3.5" />
+                        <span className="text-[10px] font-medium text-gray-600 sm:text-xs">
                             {product.rating}
                         </span>
-                        <span className="text-xs text-gray-400">
+                        <span className="hidden text-[10px] text-gray-400 sm:inline sm:text-xs">
                             ({product.reviewCount})
                         </span>
                     </div>
@@ -152,18 +152,18 @@ export function BestSellersSection() {
     const { addItem } = useCart();
 
     return (
-        <section className="mt-8">
-            <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-lg font-bold text-gray-800">Sản phẩm bán chạy</h2>
+        <section className="mt-6 min-w-0 sm:mt-8">
+            <div className="mb-3 flex items-center justify-between gap-2 sm:mb-4">
+                <h2 className="text-base font-bold text-gray-800 sm:text-lg">Sản phẩm bán chạy</h2>
                 <a
                     href="#"
-                    className="text-sm font-medium text-primary hover:text-primary-dark transition-colors"
+                    className="shrink-0 text-xs font-medium text-primary transition-colors hover:text-primary-dark sm:text-sm"
                 >
                     Xem tất cả &rsaquo;
                 </a>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
                 {SAMPLE_PRODUCTS.map((product) => (
                     <ProductCard
                         key={product.id}

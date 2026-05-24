@@ -85,9 +85,10 @@ function CategoryItem({ category }: CategoryItemProps) {
             {/* Circle icon/image */}
             <div
                 className={`
-                    relative h-16 w-16 rounded-full overflow-hidden flex items-center justify-center
+                    relative flex h-12 w-12 items-center justify-center overflow-hidden rounded-full
                     ring-2 ring-transparent transition-all duration-300
                     group-hover:ring-primary group-hover:shadow-md group-hover:-translate-y-1
+                    sm:h-16 sm:w-16
                     ${category.image ? "bg-gray-50" : category.color}
                 `}
             >
@@ -105,7 +106,7 @@ function CategoryItem({ category }: CategoryItemProps) {
             </div>
 
             {/* Label */}
-            <span className="text-xs font-medium text-gray-700 text-center leading-tight group-hover:text-orange-500 transition-colors duration-200">
+            <span className="line-clamp-2 w-full px-0.5 text-center text-[10px] font-medium leading-tight text-gray-700 transition-colors duration-200 group-hover:text-primary sm:text-xs">
                 {category.label}
             </span>
         </a>
@@ -118,19 +119,19 @@ interface PopularCategoriesProps {
 
 export default function PopularCategories({ categories = CATEGORIES }: PopularCategoriesProps) {
     return (
-        <section className="mt-6">
-            <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-lg font-bold text-gray-800">Danh mục nổi bật</h2>
+        <section className="mt-6 min-w-0">
+            <div className="mb-3 flex items-center justify-between gap-2 sm:mb-4">
+                <h2 className="text-base font-bold text-gray-800 sm:text-lg">Danh mục nổi bật</h2>
                 <a
                     href="/danh-muc"
-                    className="text-sm font-medium text-primary hover:text-primary-dark transition-colors"
+                    className="shrink-0 text-xs font-medium text-primary transition-colors hover:text-primary-dark sm:text-sm"
                 >
                     Xem tất cả &rsaquo;
                 </a>
             </div>
 
-            <div className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-gray-100">
-                <div className="grid grid-cols-4 gap-y-5 sm:grid-cols-8">
+            <div className="rounded-xl bg-white p-3 shadow-sm ring-1 ring-gray-100 sm:p-4">
+                <div className="grid grid-cols-4 gap-x-1 gap-y-4 sm:grid-cols-8 sm:gap-x-2 sm:gap-y-5">
                     {categories.map((cat) => (
                         <CategoryItem key={cat.id} category={cat} />
                     ))}

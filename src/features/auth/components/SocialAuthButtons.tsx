@@ -41,10 +41,12 @@ export default function SocialAuthButtons({
 
   return (
     <>
-      <div className="flex items-center gap-3 text-xs text-gray-400">
-        <div className="h-px flex-1 bg-gray-200" />
-        {dividerLabel}
-        <div className="h-px flex-1 bg-gray-200" />
+      <div className="flex items-center gap-2 text-xs text-gray-400 sm:gap-3">
+        <div className="h-px min-w-0 flex-1 bg-gray-200" />
+        <span className="max-w-[45%] shrink-0 text-center leading-tight sm:max-w-none">
+          {dividerLabel}
+        </span>
+        <div className="h-px min-w-0 flex-1 bg-gray-200" />
       </div>
 
       <div className="flex flex-col gap-2.5">
@@ -54,7 +56,9 @@ export default function SocialAuthButtons({
           className="flex min-h-11 w-full items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm transition hover:bg-gray-50 active:bg-gray-100 cursor-pointer"
         >
           <GoogleIcon />
-          <span className="flex-1 text-center">Tiếp tục với Google</span>
+          <span className="min-w-0 flex-1 truncate text-center sm:whitespace-normal">
+            Tiếp tục với Google
+          </span>
         </button>
         <button
           type="button"
@@ -62,7 +66,9 @@ export default function SocialAuthButtons({
           className="flex min-h-11 w-full items-center gap-3 rounded-xl border border-[#1877F2]/20 bg-[#1877F2]/5 px-4 py-2.5 text-sm font-medium text-[#1877F2] shadow-sm transition hover:bg-[#1877F2]/10 active:bg-[#1877F2]/15 cursor-pointer"
         >
           <FacebookIcon />
-          <span className="flex-1 text-center">Tiếp tục với Facebook</span>
+          <span className="min-w-0 flex-1 truncate text-center sm:whitespace-normal">
+            Tiếp tục với Facebook
+          </span>
         </button>
       </div>
     </>

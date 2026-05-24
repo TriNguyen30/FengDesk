@@ -5,7 +5,7 @@ export default function Footer() {
   return (
     <footer className="bg-white border-t border-gray-200 mt-auto">
       <div className="mx-auto max-w-screen-xl px-4 py-12 sm:px-6 lg:px-10">
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-4 lg:gap-12">
+        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4 lg:gap-12">
           {/* Brand & Contact */}
           <div className="flex flex-col gap-4">
             <a
@@ -106,16 +106,16 @@ export default function Footer() {
             <p className="text-sm text-gray-600">
               Nhận thông tin mới nhất về sản phẩm và các ưu đãi đặc biệt.
             </p>
-            <form className="flex w-full mt-1">
+            <form className="mt-1 flex w-full max-w-md flex-col gap-2 sm:max-w-none sm:flex-row">
               <input
                 type="email"
                 placeholder="Email của bạn"
-                className="w-full rounded-l-md border border-gray-300 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                className="min-h-11 w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary sm:min-h-0 sm:rounded-l-md sm:rounded-r-none"
                 required
               />
               <button
                 type="submit"
-                className="rounded-r-md bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary/90"
+                className="min-h-11 shrink-0 rounded-md bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary/90 sm:min-h-0 sm:rounded-l-none sm:rounded-r-md"
               >
                 Gửi
               </button>
@@ -145,11 +145,11 @@ export default function Footer() {
 
       {/* Bottom Bar */}
       <div className="bg-gray-50 border-t border-gray-200">
-        <div className="mx-auto max-w-screen-xl px-4 py-6 sm:px-6 lg:px-10 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-sm text-gray-500">
+        <div className="mx-auto flex max-w-screen-xl flex-col items-center justify-between gap-4 px-4 py-6 text-center sm:flex-row sm:px-6 sm:text-left lg:px-10">
+          <p className="text-xs text-gray-500 sm:text-sm">
             &copy; {new Date().getFullYear()} FengDesk. All rights reserved.
           </p>
-          <div className="flex items-center gap-4 text-sm text-gray-500">
+          <div className="flex flex-wrap items-center justify-center gap-3 text-xs text-gray-500 sm:gap-4 sm:text-sm">
             <a href="#" className="hover:text-primary transition-colors">
               Điều khoản dịch vụ
             </a>

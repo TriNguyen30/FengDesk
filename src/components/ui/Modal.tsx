@@ -33,7 +33,7 @@ export default function Modal({ open, title, onClose, children }: ModalProps) {
         role="dialog"
         aria-modal="false"
         aria-labelledby={title ? "modal-title" : undefined}
-        className="pointer-events-auto relative z-101 flex max-h-[92dvh] w-full max-w-md flex-col rounded-t-2xl bg-white shadow-xl sm:max-h-[min(90dvh,720px)] sm:rounded-2xl"
+        className="pointer-events-auto relative z-101 flex max-h-[92dvh] w-full max-w-md flex-col rounded-t-2xl bg-white pb-[env(safe-area-inset-bottom)] shadow-xl sm:max-h-[min(90dvh,720px)] sm:rounded-2xl sm:pb-0"
       >
         <div className="flex shrink-0 items-center justify-between border-b border-gray-100 px-4 py-3 sm:px-6 sm:py-4">
           {title ? (

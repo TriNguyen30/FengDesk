@@ -20,6 +20,7 @@ interface HeroSliderProps {
 export default function HeroSlider({ slides }: HeroSliderProps) {
     return (
         <Splide
+            className="hero-splide mt-3 sm:mt-4"
             options={{
                 type: "fade",
                 rewind: true,
@@ -59,8 +60,12 @@ export default function HeroSlider({ slides }: HeroSliderProps) {
                                     <span className="text-green-400">{slide.highlight}</span>
                                 </h2>
 
-                                <p className="mb-1 text-xs text-white/80 sm:text-sm">{slide.desc1}</p>
-                                <p className="mb-6 text-xs text-white/80 sm:mb-8 sm:text-sm">{slide.desc2}</p>
+                                <p className="mb-1 line-clamp-2 text-xs text-white/80 sm:text-sm">
+                                    {slide.desc1}
+                                </p>
+                                <p className="mb-4 line-clamp-2 text-xs text-white/80 sm:mb-8 sm:text-sm">
+                                    {slide.desc2}
+                                </p>
 
                                 <div className="flex flex-col gap-2 sm:flex-row sm:gap-3">
                                     <button

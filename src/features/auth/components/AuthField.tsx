@@ -27,11 +27,11 @@ export default function AuthField({
 }: AuthFieldProps) {
   return (
     <div>
-      <div className="mb-1.5 flex items-center justify-between gap-2">
+      <div className="mb-1.5 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-2">
         <label htmlFor={id} className="text-sm font-medium text-gray-700">
           {label}
         </label>
-        {hint}
+        {hint ? <div className="shrink-0 sm:text-right">{hint}</div> : null}
       </div>
       {children}
       {error ? (

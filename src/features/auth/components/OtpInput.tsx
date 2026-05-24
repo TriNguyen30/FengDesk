@@ -34,7 +34,7 @@ export default function OtpInput({ value, onChange, error }: OtpInputProps) {
 
   return (
     <div>
-      <div className="flex justify-between gap-2">
+      <div className="grid grid-cols-6 gap-1.5 sm:gap-2">
         {digits.map((d, i) => (
           <input
             key={i}
@@ -48,7 +48,7 @@ export default function OtpInput({ value, onChange, error }: OtpInputProps) {
             onChange={(e) => handleChange(i, e.target.value)}
             onKeyDown={(e) => handleKey(i, e)}
             className={[
-              "h-12 w-full rounded-xl border text-center text-lg font-semibold text-gray-900 outline-none transition focus:ring-2 focus:ring-green-600/20",
+              "h-11 w-full min-w-0 rounded-lg border text-center text-base font-semibold text-gray-900 outline-none transition focus:ring-2 focus:ring-green-600/20 sm:h-12 sm:rounded-xl sm:text-lg",
               error
                 ? "border-danger focus:border-danger"
                 : "border-gray-200 focus:border-green-600",

@@ -58,7 +58,7 @@ export default function CartDropDown() {
           id="navbar-cart-panel"
           role="dialog"
           aria-label="Giỏ hàng"
-          className="absolute right-0 top-full z-50 mt-2 w-[min(100vw-1.5rem,22rem)] overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xl sm:w-96"
+          className="absolute right-0 top-full z-50 mt-2 w-[min(calc(100vw-1.5rem),22rem)] overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xl sm:w-96"
         >
           <div className="flex items-center justify-between border-b border-gray-100 px-3 py-2.5">
             <h2 className="text-sm font-bold text-gray-900">

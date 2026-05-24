@@ -12,11 +12,11 @@ export default function Navbar() {
   const [authModal, setAuthModal] = useState<"login" | "signup" | null>(null);
 
   return (
-    <div className="w-full">
+    <div className="w-full min-w-0">
       {/* Top promo bar — single line, always visible */}
-      <div className="w-full border-b border-gray-200 bg-gray-100 px-4 py-1.5">
-        <div className="mx-auto flex max-w-screen-xl items-center justify-between text-[11px] text-gray-600 sm:text-xs">
-          <div className="flex items-center gap-3 sm:gap-5">
+      <div className="w-full border-b border-gray-200 bg-gray-100 px-3 py-1.5 sm:px-4">
+        <div className="mx-auto flex min-w-0 max-w-screen-xl items-center justify-between gap-2 text-[11px] text-gray-600 sm:text-xs">
+          <div className="flex min-w-0 items-center gap-2 sm:gap-5">
             <div className="flex items-center gap-1.5">
               <Truck size={13} className="shrink-0" />
               <span className="font-medium">
