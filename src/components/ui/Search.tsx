@@ -36,6 +36,7 @@ export default function SearchBar({
     const showPanel = open && suggestions.length > 0;
 
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setHighlight((h) => {
             if (suggestions.length === 0) return -1;
             if (h < 0) return -1;

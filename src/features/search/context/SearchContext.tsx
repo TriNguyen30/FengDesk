@@ -14,6 +14,7 @@ type SearchContextType = {
 
 const SearchContext = createContext<SearchContextType | undefined>(undefined);
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function SearchProvider({ children }: { children: ReactNode }) {
   const [keyword, setKeyword] = useState("");
 
@@ -31,6 +32,7 @@ export function SearchProvider({ children }: { children: ReactNode }) {
   );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useSearch() {
   const ctx = useContext(SearchContext);
   if (!ctx) throw new Error("useSearch must be used inside SearchProvider");

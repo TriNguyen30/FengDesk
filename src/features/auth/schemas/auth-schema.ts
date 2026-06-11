@@ -56,7 +56,7 @@ export const signUpFinalizeSchema = z
       .max(100, "Họ tên tối đa 100 ký tự"),
     phone: vietnamesePhoneField,
     dateOfBirth: z.string().min(1, "Vui lòng chọn ngày sinh"),
-    gender: z.coerce.number(),
+    gender: z.union([z.string(), z.number()]).transform((v) => Number(v)),
     password: passwordField,
     confirmPassword: z.string().min(1, "Vui lòng xác nhận mật khẩu"),
   })

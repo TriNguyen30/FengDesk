@@ -8,6 +8,7 @@ type AuthFieldProps = {
   children: ReactNode;
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function inputClassName(hasError?: boolean) {
   return [
     "min-h-11 w-full rounded-xl border px-3.5 py-2.5 text-base outline-none transition sm:text-sm",

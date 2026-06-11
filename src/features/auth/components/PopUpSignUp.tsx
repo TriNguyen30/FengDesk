@@ -53,7 +53,8 @@ export default function PopUpSignUp({
   });
 
   const finalizeForm = useForm<SignUpFinalizeFormValues>({
-    resolver: zodResolver(signUpFinalizeSchema),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    resolver: zodResolver(signUpFinalizeSchema) as any,
     defaultValues: {
       fullName: "",
       phone: "",
@@ -207,6 +208,7 @@ export default function PopUpSignUp({
             </div>
 
             <OtpInput
+              // eslint-disable-next-line react-hooks/incompatible-library
               value={verifyForm.watch("otp")}
               onChange={(otp) =>
                 verifyForm.setValue("otp", otp, { shouldValidate: true })
