@@ -32,6 +32,18 @@ export default function OtpInput({ value, onChange, error }: OtpInputProps) {
     }
   };
 
+  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    const pastedData = e.clipboardData.getData("text");
+    const numericData = pastedData.replace(/\D/g, "").slice(0, 6);
+    if (numericData) {
+      onChange(numericData);
+      const nextFocusIndex = Math.min(numericData.length, 5);
+      (document.getElementById(`otp-${nextFocusIndex}`) as HTMLInputElement)?.focus();
+    }
+  };
+
+
   return (
     <div>
       <div className="grid grid-cols-6 gap-1.5 sm:gap-2">
@@ -47,6 +59,7 @@ export default function OtpInput({ value, onChange, error }: OtpInputProps) {
             aria-describedby={error ? "otp-error" : undefined}
             onChange={(e) => handleChange(i, e.target.value)}
             onKeyDown={(e) => handleKey(i, e)}
+            onPaste={handlePaste}
             className={[
               "h-11 w-full min-w-0 rounded-lg border text-center text-base font-semibold text-gray-900 outline-none transition focus:ring-2 focus:ring-green-600/20 sm:h-12 sm:rounded-xl sm:text-lg",
               error
