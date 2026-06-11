@@ -31,7 +31,22 @@ export const loginEmailSchema = z.object({
 
 export type LoginEmailFormValues = z.infer<typeof loginEmailSchema>;
 
-export const signUpSchema = z
+export const signUpInitiateSchema = z.object({
+  email: emailField,
+});
+
+export type SignUpInitiateFormValues = z.infer<typeof signUpInitiateSchema>;
+
+export const signUpVerifySchema = z.object({
+  otp: z
+    .string()
+    .length(6, "Mã OTP phải có đủ 6 chữ số")
+    .regex(/^\d{6}$/, "Mã OTP chỉ được chứa số"),
+});
+
+export type SignUpVerifyFormValues = z.infer<typeof signUpVerifySchema>;
+
+export const signUpFinalizeSchema = z
   .object({
     fullName: z
       .string()
@@ -39,7 +54,9 @@ export const signUpSchema = z
       .min(1, "Vui lòng nhập họ tên")
       .min(2, "Họ tên tối thiểu 2 ký tự")
       .max(100, "Họ tên tối đa 100 ký tự"),
-    email: emailField,
+    phone: vietnamesePhoneField,
+    dateOfBirth: z.string().min(1, "Vui lòng chọn ngày sinh"),
+    gender: z.coerce.number(),
     password: passwordField,
     confirmPassword: z.string().min(1, "Vui lòng xác nhận mật khẩu"),
   })
@@ -48,19 +65,6 @@ export const signUpSchema = z
     path: ["confirmPassword"],
   });
 
-export type SignUpFormValues = z.infer<typeof signUpSchema>;
+export type SignUpFinalizeFormValues = z.infer<typeof signUpFinalizeSchema>;
 
-export const loginPhoneSchema = z.object({
-  phone: vietnamesePhoneField,
-});
 
-export type LoginPhoneFormValues = z.infer<typeof loginPhoneSchema>;
-
-export const otpSchema = z.object({
-  otp: z
-    .string()
-    .length(6, "Mã OTP phải có đủ 6 chữ số")
-    .regex(/^\d{6}$/, "Mã OTP chỉ được chứa số"),
-});
-
-export type OtpFormValues = z.infer<typeof otpSchema>;

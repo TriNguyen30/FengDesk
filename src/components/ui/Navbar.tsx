@@ -1,15 +1,37 @@
 import { Truck, Package, User, Leaf } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
 import SearchBar from "./Search";
 import PopUpLogin from "@/features/auth/components/PopUpLogin";
 import PopUpSignUp from "@/features/auth/components/PopUpSignUp";
 import { CartDropDown } from "@/features/cart";
+import { useAppSelector, useAppDispatch } from "@/store/hooks";
+import { logout } from "@/features/auth/store/authSlice";
+import { logoutRequest } from "@/features/auth/api/authApi";
 
 export default function Navbar() {
   const handleSearch = (query: string) => {
     console.log("Searching for:", query);
   };
   const [authModal, setAuthModal] = useState<"login" | "signup" | null>(null);
+  
+  const user = useAppSelector((state) => state.auth.user);
+  const dispatch = useAppDispatch();
+
+  const handleLogout = async () => {
+    try {
+      const refreshToken = localStorage.getItem("refreshToken");
+      if (refreshToken) {
+        await logoutRequest({ refreshToken });
+      }
+    } catch (error) {
+      console.error("Logout error", error);
+    } finally {
+      dispatch(logout());
+      localStorage.removeItem("refreshToken");
+      toast.success("Đăng xuất thành công");
+    }
+  };
 
   return (
     <div className="w-full min-w-0">
@@ -68,17 +90,50 @@ export default function Navbar() {
 
             {/* Icon group — always visible */}
             <div className="flex shrink-0 items-center gap-1 sm:gap-3">
-              <button
-                type="button"
-                onClick={() => setAuthModal("login")}
-                className="flex min-w-[44px] flex-col items-center gap-0.5 rounded-lg px-1 py-1 text-gray-700 transition-colors hover:text-primary active:bg-gray-100 cursor-pointer"
-                aria-label="Tài khoản"
-              >
-                <User size={22} strokeWidth={1.8} />
-                <span className="hidden text-[10px] font-medium sm:block sm:text-xs">
-                  Tài khoản
-                </span>
-              </button>
+              {user ? (
+                <div className="relative group flex flex-col items-center">
+                  <button
+                    type="button"
+                    className="flex min-w-[44px] flex-col items-center gap-0.5 rounded-lg px-1 py-1 text-gray-700 transition-colors hover:text-primary cursor-pointer"
+                    aria-label="Tài khoản"
+                  >
+                    <div className="flex size-[22px] items-center justify-center rounded-full bg-primary/10 text-primary font-bold text-[11px]">
+                      {user.fullName ? user.fullName.charAt(0).toUpperCase() : <User size={14} />}
+                    </div>
+                    <span className="hidden text-[10px] font-medium sm:block sm:text-xs max-w-[60px] truncate">
+                      {user.fullName || "User"}
+                    </span>
+                  </button>
+                  
+                  {/* Dropdown menu */}
+                  <div className="absolute right-0 top-full mt-0 hidden w-48 flex-col rounded-lg bg-white shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] ring-1 ring-black/5 group-hover:flex z-50 overflow-hidden">
+                    <div className="px-4 py-3 border-b border-gray-100 bg-gray-50/50">
+                      <p className="text-sm font-semibold text-gray-900 truncate">{user.fullName || "Người dùng"}</p>
+                      <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                    </div>
+                    <div className="p-1">
+                      <button
+                        onClick={handleLogout}
+                        className="flex w-full items-center px-3 py-2 text-sm text-red-600 hover:bg-red-50 hover:text-red-700 rounded-md transition-colors text-left font-medium cursor-pointer"
+                      >
+                        Đăng xuất
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setAuthModal("login")}
+                  className="flex min-w-[44px] flex-col items-center gap-0.5 rounded-lg px-1 py-1 text-gray-700 transition-colors hover:text-primary active:bg-gray-100 cursor-pointer"
+                  aria-label="Tài khoản"
+                >
+                  <User size={22} strokeWidth={1.8} />
+                  <span className="hidden text-[10px] font-medium sm:block sm:text-xs">
+                    Tài khoản
+                  </span>
+                </button>
+              )}
 
               <div className="h-6 w-px bg-gray-200" />
 

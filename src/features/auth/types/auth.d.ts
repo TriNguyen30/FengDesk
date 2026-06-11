@@ -2,6 +2,7 @@ export interface AuthUser {
   id: string;
   email: string;
   fullName?: string;
+  phone?: string;
   role?: string;
 }
 
@@ -10,18 +11,53 @@ export interface LoginPayload {
   password: string;
 }
 
-export interface RegisterPayload {
-  fullName: string;
+export interface MyProfile {
+  id: string;
   email: string;
-  password: string;
+  fullName?: string;
+  phone?: string;
+  role?: string;
 }
 
 export interface LoginResponseData {
-  userId: string;
-  email: string;
-  fullName: string;
-  role: string;
   accessToken: string;
+  accessTokenExpiresAt: string;
+  refreshTokenExpiresAt: string;
   refreshToken: string;
-  expiresAt: string;
+  user: AuthUser;
 }
+
+export interface RegisterResponseData {
+  message?: string;
+  registrationToken?: string;
+}
+
+export interface RegisterInitiatePayload {
+  email: string;
+}
+
+export interface RegisterVerifyPayload {
+  email: string;
+  otp: string;
+}
+
+export interface RegisterFinalizePayload {
+  registrationToken: string;
+  password: string;
+  fullName: string;
+  phone: string;
+  dateOfBirth: string;
+  gender: number;
+}
+
+export interface RefreshTokenPayload {
+  refreshToken: string;
+}
+
+export interface LogoutPayload {
+  refreshToken: string;
+}
+
+
+
+

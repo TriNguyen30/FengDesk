@@ -1,5 +1,5 @@
-const ACCESS_TOKEN = 'access_token';
-const REFRESH_TOKEN = 'refresh_token';
+const ACCESS_TOKEN = 'token';
+const REFRESH_TOKEN = 'refreshToken';
 
 const isBrowser = typeof window !== 'undefined';
 export const getAccessToken = (): string | null => {

@@ -17,8 +17,8 @@ export default function AppLayout() {
       <Toaster
         richColors
         closeButton
-        position="top-center"
-        className="top-[max(0.75rem,env(safe-area-inset-top))]! sm:top-4!"
+        position="top-right"
+        className="top-[max(0.75rem,env(safe-area-inset-top))]! right-[max(0.75rem,env(safe-area-inset-right))]! sm:top-4! sm:right-4!"
         style={toasterStyle}
       />
     </div>

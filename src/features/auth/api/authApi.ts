@@ -3,8 +3,15 @@ import type { ApiResponse } from "@/types/api";
 import type {
   LoginPayload,
   LoginResponseData,
-  RegisterPayload,
+  RegisterResponseData,
+  RegisterInitiatePayload,
+  RegisterVerifyPayload,
+  RegisterFinalizePayload,
+  MyProfile,
+  LogoutPayload,
+  RefreshTokenPayload,
 } from "@/features/auth/types/auth";
+
 
 export async function loginRequest(payload: LoginPayload) {
   const { data } = await fetchHttpClient.post<ApiResponse<LoginResponseData>>(
@@ -14,9 +21,47 @@ export async function loginRequest(payload: LoginPayload) {
   return data;
 }
 
-export async function registerRequest(payload: RegisterPayload) {
+export async function registerInitiateRequest(payload: RegisterInitiatePayload) {
+  const { data } = await fetchHttpClient.post<ApiResponse<RegisterResponseData>>(
+    "/Auth/register/initiate",
+    payload,
+  );
+  return data;
+}
+
+export async function registerVerifyRequest(payload: RegisterVerifyPayload) {
+  const { data } = await fetchHttpClient.post<ApiResponse<RegisterResponseData>>(
+    "/Auth/register/verify",
+    payload,
+  );
+  return data;
+}
+
+export async function registerFinalizeRequest(payload: RegisterFinalizePayload) {
+  const { data } = await fetchHttpClient.post<ApiResponse<RegisterResponseData>>(
+    "/Auth/register/finalize",
+    payload,
+  );
+  return data;
+}
+
+export async function myProfileRequest() {
+  const { data } = await fetchHttpClient.get<ApiResponse<MyProfile>>(
+    "/Auth/me",
+  );
+  return data;
+}
+export async function logoutRequest(payload: LogoutPayload) {
+  const { data } = await fetchHttpClient.post<ApiResponse<null>>(
+    "/Auth/logout",
+    payload,
+  );
+  return data;
+}
+
+export async function refreshTokenRequest(payload: RefreshTokenPayload) {
   const { data } = await fetchHttpClient.post<ApiResponse<LoginResponseData>>(
-    "/Auth/register",
+    "/Auth/refresh",
     payload,
   );
   return data;

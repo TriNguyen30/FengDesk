@@ -9,15 +9,9 @@ export function useAuthSession() {
   const persistSession = useCallback(
     (data: LoginResponseData) => {
       dispatch(setToken(data.accessToken));
-      dispatch(
-        setUser({
-          id: data.userId,
-          email: data.email,
-          fullName: data.fullName,
-          role: data.role,
-        }),
-      );
-      dispatch(setRole(data.role));
+      localStorage.setItem("refreshToken", data.refreshToken);
+      dispatch(setUser(data.user));
+      dispatch(setRole(data.user.role ?? null));
     },
     [dispatch],
   );

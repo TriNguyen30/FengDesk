@@ -3,7 +3,6 @@ import FeatureBar from "@/components/ui/FeatureBar";
 import CategoryBar from "@/components/ui/CategoryBar";
 import PopularCategories from "@/components/ui/PopularCategories";
 import { BestSellersSection } from "@/components/ui/ProductCard";
-import ToastExample from "@/components/ui/ToastExample"
 
 const slides: HeroSlide[] = [
     {
@@ -49,7 +48,6 @@ export default function HomePage() {
             <FeatureBar />
             <PopularCategories />
             <BestSellersSection />
-            <ToastExample />
         </main>
     );
 }

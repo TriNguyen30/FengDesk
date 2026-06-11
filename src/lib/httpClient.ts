@@ -7,6 +7,8 @@ import {
   setTokens,
 } from "@/utils";
 import { HTTP_STATUS } from "@/constants";
+import { store } from "@/store";
+import { setToken, logout } from "@/features/auth/store/authSlice";
 
 export class FetchHttpClient {
   private baseURL: string;
@@ -55,13 +57,12 @@ export class FetchHttpClient {
         const originalRequest = error.config;
 
         const noAuthRetryEndpoints = [
-          "/auth/login",
-          "/users/verify-email",
-          "/users/verify-forgot-password",
-          "/users/reset-password",
-          "/users/resend-verify-email",
-          "/users/refresh-token",
-          "/users/change-password",
+          "/Auth/login",
+          "/Auth/register/initiate",
+          "/Auth/register/verify",
+          "/Auth/register/finalize",
+          "/Auth/refresh",
+          "/Auth/logout",
         ];
 
         const shouldSkipTokenRefresh = noAuthRetryEndpoints.some((endpoint) =>
@@ -112,23 +113,32 @@ export class FetchHttpClient {
   private async refreshAccessToken(): Promise<string> {
     const refreshToken = getRefreshToken();
     if (!refreshToken) {
+      store.dispatch(logout());
       throw new Error("No refresh token available");
     }
 
-    const response = await axios.post(
-      `${this.baseURL}/auth/refresh`,
-      { refreshToken },
-      { headers: { "Content-Type": "application/json" } },
-    );
+    try {
+      const response = await axios.post(
+        `${this.baseURL}/Auth/refresh`,
+        { refreshToken },
+        { headers: { "Content-Type": "application/json" } },
+      );
 
-    if (response.status !== HTTP_STATUS.OK) {
+      if (response.status !== HTTP_STATUS.OK || !response.data?.isSuccess) {
+        clearTokens();
+        store.dispatch(logout());
+        throw new Error("Refresh token expired");
+      }
+
+      const { accessToken, refreshToken: newRefreshToken } = response.data.data;
+      setTokens(accessToken, newRefreshToken);
+      store.dispatch(setToken(accessToken));
+      return accessToken;
+    } catch (error) {
       clearTokens();
-      throw new Error("Refresh token expired");
+      store.dispatch(logout());
+      throw error;
     }
-
-    const { accessToken, refreshToken: newRefreshToken } = response.data.data;
-    setTokens(accessToken, newRefreshToken);
-    return accessToken;
   }
 
   private processQueue(error: unknown, token: string | null) {
