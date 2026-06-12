@@ -8,6 +8,7 @@ import { CartDropDown } from "@/features/cart";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { logout } from "@/features/auth/store/authSlice";
 import { logoutRequest } from "@/features/auth/api/authApi";
+import Logo from "@/assets/image/fengdesk_logo_2.png";
 
 export default function Navbar() {
   const handleSearch = (query: string) => {
@@ -72,8 +73,8 @@ export default function Navbar() {
               className="flex shrink-0 items-center gap-2"
               aria-label="FengDesk home"
             >
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary sm:h-9 sm:w-9">
-                <Leaf size={18} className="text-white sm:size-5" />
+              <div className="flex h-8 w-8 items-center justify-center  sm:h-12 sm:w-12">
+                <img src={Logo} alt="Logo" className="h-full w-full object-contain" />
               </div>
               <span className="text-lg font-extrabold tracking-tight text-gray-900 sm:text-xl">
                 Feng<span className="text-primary">Desk</span>
