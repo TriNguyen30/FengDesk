@@ -44,10 +44,8 @@ export default function ProductDetailPage() {
   const handleAddToCart = () => {
     if (product && selectedItem) {
       addItem({
-        id: selectedItem.id, // using the specific variant ID
-        name: `${product.name} - ${selectedItem.name}`,
-        image: product.images.length > 0 ? product.images[0].url : "",
-        price: selectedItem.price,
+        productItemId: selectedItem.id, // using the specific variant ID
+        quantity: 1,
       });
       alert("Đã thêm vào giỏ hàng");
     }

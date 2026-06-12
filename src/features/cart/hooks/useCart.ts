@@ -1,43 +1,50 @@
 import { useCallback } from "react";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
-  addItem as addItemAction,
-  clearCart as clearCartAction,
-  removeItem as removeItemAction,
-  selectCartItemCount,
+  fetchCart,
+  addCartItem,
+  updateCartItem,
+  removeCartItem,
+  clearCartState,
+  selectCart,
   selectCartItems,
+  selectCartItemCount,
   selectCartSubtotal,
-  setQuantity as setQuantityAction,
 } from "@/features/cart/store/cartSlice";
-import type { CartProduct } from "@/features/cart/types/cart";
+import type { AddCartItemParams, UpdateCartItemParams } from "@/features/cart/types/cart";
 
 export function useCart() {
   const dispatch = useAppDispatch();
+  const cart = useAppSelector(selectCart);
   const items = useAppSelector(selectCartItems);
   const itemCount = useAppSelector(selectCartItemCount);
   const subtotal = useAppSelector(selectCartSubtotal);
 
+  const getCart = useCallback(() => dispatch(fetchCart()), [dispatch]);
+
   const addItem = useCallback(
-    (product: CartProduct) => dispatch(addItemAction(product)),
+    (params: AddCartItemParams) => dispatch(addCartItem(params)),
     [dispatch],
   );
 
   const removeItem = useCallback(
-    (productId: number) => dispatch(removeItemAction(productId)),
+    (itemId: string) => dispatch(removeCartItem(itemId)),
     [dispatch],
   );
 
   const setQuantity = useCallback(
-    (productId: number, quantity: number) => dispatch(setQuantityAction({ productId, quantity })),
+    (params: UpdateCartItemParams) => dispatch(updateCartItem(params)),
     [dispatch],
   );
 
-  const clearCart = useCallback(() => dispatch(clearCartAction()), [dispatch]);
+  const clearCart = useCallback(() => dispatch(clearCartState()), [dispatch]);
 
   return {
+    cart,
     items,
     itemCount,
     subtotal,
+    getCart,
     addItem,
     removeItem,
     setQuantity,

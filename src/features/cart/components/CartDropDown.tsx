@@ -1,6 +1,6 @@
 import { useCart } from "@/features/cart";
 import { Link } from "react-router-dom";
-import { Minus, Plus, ShoppingCart, Trash2, X } from "lucide-react";
+import { Minus, Plus, ShoppingCart, Trash2, X, Leaf } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
@@ -103,46 +103,38 @@ export default function CartDropDown() {
           ) : (
             <>
               <ul className="scrollbar-none max-h-[min(50vh,20rem)] overflow-y-auto divide-y divide-gray-100">
-                {items.map(({ product, quantity }) => (
-                  <li key={product.id} className="flex gap-3 px-3 py-3 hover:bg-gray-50/80">
-                    <Link
-                      to={`/products`}
-                      onClick={close}
-                      className="h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-gray-50 ring-1 ring-gray-100"
-                    >
-                      <img
-                        src={product.image}
-                        alt=""
-                        className="h-full w-full object-contain p-1"
-                      />
-                    </Link>
+                {items.map((item) => (
+                  <li key={item.id} className="flex gap-3 px-3 py-3 hover:bg-gray-50/80">
+                    <div className="h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-gray-50 ring-1 ring-gray-100 flex items-center justify-center text-gray-400">
+                      <Leaf size={24} />
+                    </div>
                     <div className="min-w-0 flex-1">
                       <Link
-                        to="/products"
+                        to={`/products`}
                         onClick={close}
                         className="line-clamp-2 text-left text-xs font-medium leading-snug text-gray-800 hover:text-primary"
                       >
-                        {product.name}
+                        {item.productName} {item.variantName ? `(${item.variantName})` : ""}
                       </Link>
                       <p className="mt-1 text-sm font-bold text-primary">
-                        {formatVnd(product.price)}
+                        {formatVnd(item.unitPrice)}
                       </p>
                       <div className="mt-2 flex items-center gap-2">
                         <div className="flex items-center rounded-md border border-gray-200 bg-white">
                           <button
                             type="button"
-                            onClick={() => setQuantity(product.id, quantity - 1)}
+                            onClick={() => setQuantity({ itemId: item.id, quantity: item.quantity - 1 })}
                             className="flex h-7 w-7 items-center justify-center text-gray-600 hover:bg-gray-100"
                             aria-label="Giảm số lượng"
                           >
                             <Minus size={14} />
                           </button>
                           <span className="min-w-6 text-center text-xs font-semibold tabular-nums">
-                            {quantity}
+                            {item.quantity}
                           </span>
                           <button
                             type="button"
-                            onClick={() => setQuantity(product.id, quantity + 1)}
+                            onClick={() => setQuantity({ itemId: item.id, quantity: item.quantity + 1 })}
                             className="flex h-7 w-7 items-center justify-center text-gray-600 hover:bg-gray-100"
                             aria-label="Tăng số lượng"
                           >
@@ -151,7 +143,7 @@ export default function CartDropDown() {
                         </div>
                         <button
                           type="button"
-                          onClick={() => removeItem(product.id)}
+                          onClick={() => removeItem(item.id)}
                           className="ml-auto rounded-md p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-600"
                           aria-label="Xóa khỏi giỏ"
                         >

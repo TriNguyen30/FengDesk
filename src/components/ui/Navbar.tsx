@@ -1,10 +1,10 @@
 import { Truck, Package, User, Leaf } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import SearchBar from "./Search";
 import PopUpLogin from "@/features/auth/components/PopUpLogin";
 import PopUpSignUp from "@/features/auth/components/PopUpSignUp";
-import { CartDropDown } from "@/features/cart";
+import { CartDropDown, useCart } from "@/features/cart";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { logout } from "@/features/auth/store/authSlice";
 import { logoutRequest } from "@/features/auth/api/auth.api";
@@ -18,6 +18,15 @@ export default function Navbar() {
 
   const user = useAppSelector((state) => state.auth.user);
   const dispatch = useAppDispatch();
+  const { getCart, clearCart } = useCart();
+
+  useEffect(() => {
+    if (user) {
+      getCart();
+    } else {
+      clearCart();
+    }
+  }, [user, getCart, clearCart]);
 
   const handleLogout = async () => {
     try {

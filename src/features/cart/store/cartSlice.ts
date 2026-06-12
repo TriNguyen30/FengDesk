@@ -1,53 +1,85 @@
-import { createSelector, createSlice, type PayloadAction } from "@reduxjs/toolkit";
+import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import type { RootState } from "@/store";
-import type { CartProduct, CartState } from "@/features/cart/types/cart";
+import type { CartProduct, AddCartItemParams, UpdateCartItemParams } from "@/features/cart/types/cart";
+import { cartApi } from "../api/cart.api";
+
+interface CartState {
+  cart: CartProduct | null;
+  status: "idle" | "loading" | "failed";
+}
 
 const initialState: CartState = {
-  items: [],
+  cart: null,
+  status: "idle",
 };
+
+export const fetchCart = createAsyncThunk("cart/fetchCart", async () => {
+  const response = await cartApi.getCart();
+  return response.data;
+});
+
+export const addCartItem = createAsyncThunk(
+  "cart/addCartItem",
+  async (params: AddCartItemParams) => {
+    const response = await cartApi.addCartItem(params);
+    return response.data;
+  }
+);
+
+export const updateCartItem = createAsyncThunk(
+  "cart/updateCartItem",
+  async (params: UpdateCartItemParams) => {
+    const response = await cartApi.updateCartItem(params);
+    return response.data;
+  }
+);
+
+export const removeCartItem = createAsyncThunk(
+  "cart/removeCartItem",
+  async (itemId: string) => {
+    const response = await cartApi.deleteCartItem({ itemId });
+    return response.data;
+  }
+);
 
 const cartSlice = createSlice({
   name: "cart",
   initialState,
   reducers: {
-    addItem(state, action: PayloadAction<CartProduct>) {
-      const product = action.payload;
-      const index = state.items.findIndex((l) => l.product.id === product.id);
-      if (index === -1) {
-        state.items.push({ product, quantity: 1 });
-        return;
-      }
-      state.items[index].quantity += 1;
+    clearCartState(state) {
+      state.cart = null;
+      state.status = "idle";
     },
-    removeItem(state, action: PayloadAction<number>) {
-      state.items = state.items.filter((l) => l.product.id !== action.payload);
-    },
-    setQuantity(state, action: PayloadAction<{ productId: number; quantity: number }>) {
-      const { productId, quantity } = action.payload;
-      if (quantity < 1) {
-        state.items = state.items.filter((l) => l.product.id !== productId);
-        return;
-      }
-      const line = state.items.find((l) => l.product.id === productId);
-      if (line) line.quantity = quantity;
-    },
-    clearCart(state) {
-      state.items = [];
-    },
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchCart.pending, (state) => {
+        state.status = "loading";
+      })
+      .addCase(fetchCart.fulfilled, (state, action) => {
+        state.status = "idle";
+        state.cart = action.payload?.data || null;
+      })
+      .addCase(fetchCart.rejected, (state) => {
+        state.status = "failed";
+      })
+      .addCase(addCartItem.fulfilled, (state, action) => {
+        state.cart = action.payload?.data || null;
+      })
+      .addCase(updateCartItem.fulfilled, (state, action) => {
+        state.cart = action.payload?.data || null;
+      })
+      .addCase(removeCartItem.fulfilled, (state, action) => {
+        state.cart = action.payload?.data || null;
+      });
   },
 });
 
-export const { addItem, removeItem, setQuantity, clearCart } = cartSlice.actions;
+export const { clearCartState } = cartSlice.actions;
 export default cartSlice.reducer;
 
-const selectCartItems = (state: RootState) => state.cart.items;
-
-export const selectCartItemCount = createSelector([selectCartItems], (items) =>
-  items.reduce((sum, line) => sum + line.quantity, 0),
-);
-
-export const selectCartSubtotal = createSelector([selectCartItems], (items) =>
-  items.reduce((sum, line) => sum + line.product.price * line.quantity, 0),
-);
-
-export { selectCartItems };
+export const selectCart = (state: RootState) => state.cart.cart;
+export const selectCartItems = (state: RootState) => state.cart.cart?.items || [];
+export const selectCartItemCount = (state: RootState) =>
+  state.cart.cart?.items.reduce((sum, item) => sum + item.quantity, 0) || 0;
+export const selectCartSubtotal = (state: RootState) => state.cart.cart?.subtotal || 0;
