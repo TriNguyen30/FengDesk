@@ -9,8 +9,7 @@ function formatVnd(n: number): string {
 }
 
 export default function CartDropDown() {
-  const { items, itemCount, subtotal, setQuantity, removeItem, clearCart } =
-    useCart();
+  const { items, itemCount, subtotal, setQuantity, removeItem, clearCart } = useCart();
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
 
@@ -43,9 +42,7 @@ export default function CartDropDown() {
         aria-label={`Giỏ hàng, ${itemCount} sản phẩm`}
       >
         <ShoppingCart size={22} strokeWidth={1.8} />
-        <span className="hidden text-[10px] font-medium sm:block sm:text-xs">
-          Giỏ hàng
-        </span>
+        <span className="hidden text-[10px] font-medium sm:block sm:text-xs">Giỏ hàng</span>
         {itemCount > 0 && (
           <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-0.5 text-[10px] font-bold text-white tabular-nums">
             {itemCount > 99 ? "99+" : itemCount}
@@ -63,11 +60,7 @@ export default function CartDropDown() {
           <div className="flex items-center justify-between border-b border-gray-100 px-3 py-2.5">
             <h2 className="text-sm font-bold text-gray-900">
               Giỏ hàng{" "}
-              {itemCount > 0 && (
-                <span className="font-normal text-gray-500">
-                  ({itemCount})
-                </span>
-              )}
+              {itemCount > 0 && <span className="font-normal text-gray-500">({itemCount})</span>}
             </h2>
             <div className="flex items-center gap-1">
               {items.length > 0 && (
@@ -111,10 +104,7 @@ export default function CartDropDown() {
             <>
               <ul className="scrollbar-none max-h-[min(50vh,20rem)] overflow-y-auto divide-y divide-gray-100">
                 {items.map(({ product, quantity }) => (
-                  <li
-                    key={product.id}
-                    className="flex gap-3 px-3 py-3 hover:bg-gray-50/80"
-                  >
+                  <li key={product.id} className="flex gap-3 px-3 py-3 hover:bg-gray-50/80">
                     <Link
                       to={`/products`}
                       onClick={close}
@@ -141,9 +131,7 @@ export default function CartDropDown() {
                         <div className="flex items-center rounded-md border border-gray-200 bg-white">
                           <button
                             type="button"
-                            onClick={() =>
-                              setQuantity(product.id, quantity - 1)
-                            }
+                            onClick={() => setQuantity(product.id, quantity - 1)}
                             className="flex h-7 w-7 items-center justify-center text-gray-600 hover:bg-gray-100"
                             aria-label="Giảm số lượng"
                           >
@@ -154,9 +142,7 @@ export default function CartDropDown() {
                           </span>
                           <button
                             type="button"
-                            onClick={() =>
-                              setQuantity(product.id, quantity + 1)
-                            }
+                            onClick={() => setQuantity(product.id, quantity + 1)}
                             className="flex h-7 w-7 items-center justify-center text-gray-600 hover:bg-gray-100"
                             aria-label="Tăng số lượng"
                           >
@@ -180,9 +166,7 @@ export default function CartDropDown() {
               <div className="border-t border-gray-100 bg-gray-50/80 px-3 py-3">
                 <div className="mb-3 flex items-center justify-between text-sm">
                   <span className="text-gray-600">Tạm tính</span>
-                  <span className="font-bold text-gray-900">
-                    {formatVnd(subtotal)}
-                  </span>
+                  <span className="font-bold text-gray-900">{formatVnd(subtotal)}</span>
                 </div>
                 <div className="flex flex-col gap-2 sm:flex-row">
                   <Link
@@ -194,9 +178,7 @@ export default function CartDropDown() {
                   </Link>
                   <button
                     type="button"
-                    onClick={() =>
-                      toast.info("Chức năng thanh toán đang được hoàn thiện")
-                    }
+                    onClick={() => toast.info("Chức năng thanh toán đang được hoàn thiện")}
                     className="flex flex-1 items-center justify-center rounded-lg bg-primary px-3 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-dark"
                   >
                     Thanh toán

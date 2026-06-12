@@ -1,10 +1,6 @@
 import { z } from "zod";
 
-const emailField = z
-  .string()
-  .trim()
-  .min(1, "Vui lòng nhập email")
-  .email("Email không hợp lệ");
+const emailField = z.string().trim().min(1, "Vui lòng nhập email").email("Email không hợp lệ");
 
 const passwordField = z
   .string()
@@ -22,10 +18,7 @@ const vietnamesePhoneField = z
 
 export const loginEmailSchema = z.object({
   email: emailField,
-  password: z
-    .string()
-    .min(1, "Vui lòng nhập mật khẩu")
-    .min(6, "Mật khẩu tối thiểu 6 ký tự"),
+  password: z.string().min(1, "Vui lòng nhập mật khẩu").min(6, "Mật khẩu tối thiểu 6 ký tự"),
   remember: z.boolean().optional(),
 });
 
@@ -66,5 +59,3 @@ export const signUpFinalizeSchema = z
   });
 
 export type SignUpFinalizeFormValues = z.infer<typeof signUpFinalizeSchema>;
-
-

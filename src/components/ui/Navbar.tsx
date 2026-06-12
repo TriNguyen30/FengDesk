@@ -7,7 +7,7 @@ import PopUpSignUp from "@/features/auth/components/PopUpSignUp";
 import { CartDropDown } from "@/features/cart";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { logout } from "@/features/auth/store/authSlice";
-import { logoutRequest } from "@/features/auth/api/authApi";
+import { logoutRequest } from "@/features/auth/api/auth.api";
 import Logo from "@/assets/image/fengdesk_logo_2.png";
 
 export default function Navbar() {
@@ -15,7 +15,7 @@ export default function Navbar() {
     console.log("Searching for:", query);
   };
   const [authModal, setAuthModal] = useState<"login" | "signup" | null>(null);
-  
+
   const user = useAppSelector((state) => state.auth.user);
   const dispatch = useAppDispatch();
 
@@ -35,7 +35,7 @@ export default function Navbar() {
   };
 
   return (
-    <div className="w-full min-w-0">
+    <header className="sticky top-0 z-50 w-full min-w-0">
       {/* Top promo bar — single line, always visible */}
       <div className="w-full border-b border-gray-200 bg-gray-100 px-3 py-1.5 sm:px-4">
         <div className="mx-auto flex min-w-0 max-w-screen-xl items-center justify-between gap-2 text-[11px] text-gray-600 sm:text-xs">
@@ -68,11 +68,7 @@ export default function Navbar() {
           {/* Row 1: Logo + Icons (mobile) / Logo + Search + Icons (desktop) */}
           <div className="flex items-center gap-3 md:gap-6">
             {/* Logo */}
-            <a
-              href="/"
-              className="flex shrink-0 items-center gap-2"
-              aria-label="FengDesk home"
-            >
+            <a href="/" className="flex shrink-0 items-center gap-2" aria-label="FengDesk home">
               <div className="flex h-8 w-8 items-center justify-center  sm:h-12 sm:w-12">
                 <img src={Logo} alt="Logo" className="h-full w-full object-contain" />
               </div>
@@ -105,11 +101,13 @@ export default function Navbar() {
                       {user.fullName || "User"}
                     </span>
                   </button>
-                  
+
                   {/* Dropdown menu */}
                   <div className="absolute right-0 top-full mt-0 hidden w-48 flex-col rounded-lg bg-white shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] ring-1 ring-black/5 group-hover:flex z-50 overflow-hidden">
                     <div className="px-4 py-3 border-b border-gray-100 bg-gray-50/50">
-                      <p className="text-sm font-semibold text-gray-900 truncate">{user.fullName || "Người dùng"}</p>
+                      <p className="text-sm font-semibold text-gray-900 truncate">
+                        {user.fullName || "Người dùng"}
+                      </p>
                       <p className="text-xs text-gray-500 truncate">{user.email}</p>
                     </div>
                     <div className="p-1">
@@ -159,6 +157,6 @@ export default function Navbar() {
         onClose={() => setAuthModal(null)}
         onSwitchToLogin={() => setAuthModal("login")}
       />
-    </div>
+    </header>
   );
 }

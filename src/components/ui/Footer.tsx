@@ -1,5 +1,6 @@
 import { Leaf, Mail, Phone, MapPin } from "lucide-react";
 import { FaFacebook, FaInstagram, FaTiktok } from "react-icons/fa";
+import Logo from "@/assets/image/fengdesk_logo_2.png"
 
 export default function Footer() {
   return (
@@ -8,21 +9,17 @@ export default function Footer() {
         <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4 lg:gap-12">
           {/* Brand & Contact */}
           <div className="flex flex-col gap-4">
-            <a
-              href="/"
-              className="flex items-center gap-2"
-              aria-label="FengDesk home"
-            >
-              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary">
-                <Leaf size={20} className="text-white" />
+            <a href="/" className="flex items-center gap-2" aria-label="FengDesk home">
+              <div className="flex h-8 w-8 items-center justify-center  sm:h-12 sm:w-12">
+                <img src={Logo} alt="Logo" className="h-full w-full object-contain" />
               </div>
               <span className="text-2xl font-extrabold tracking-tight text-gray-900">
                 Feng<span className="text-primary">Desk</span>
               </span>
             </a>
             <p className="text-sm leading-relaxed text-gray-600">
-              Mang đến không gian làm việc cân bằng, thịnh vượng và tràn đầy
-              năng lượng tích cực với các vật phẩm phong thủy tinh tế.
+              Mang đến không gian làm việc cân bằng, thịnh vượng và tràn đầy năng lượng tích cực với
+              các vật phẩm phong thủy tinh tế.
             </p>
             <ul className="mt-2 flex flex-col gap-3 text-sm text-gray-600">
               <li className="flex items-start gap-2">

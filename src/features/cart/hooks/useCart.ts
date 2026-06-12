@@ -28,15 +28,11 @@ export function useCart() {
   );
 
   const setQuantity = useCallback(
-    (productId: number, quantity: number) =>
-      dispatch(setQuantityAction({ productId, quantity })),
+    (productId: number, quantity: number) => dispatch(setQuantityAction({ productId, quantity })),
     [dispatch],
   );
 
-  const clearCart = useCallback(
-    () => dispatch(clearCartAction()),
-    [dispatch],
-  );
+  const clearCart = useCallback(() => dispatch(clearCartAction()), [dispatch]);
 
   return {
     items,

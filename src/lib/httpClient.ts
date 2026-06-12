@@ -1,11 +1,6 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
 import { axiosBaseConfig } from "@/config/axios.config";
-import {
-  clearTokens,
-  getAccessToken,
-  getRefreshToken,
-  setTokens,
-} from "@/utils";
+import { clearTokens, getAccessToken, getRefreshToken, setTokens } from "@/utils";
 import { HTTP_STATUS } from "@/constants";
 import { store } from "@/store";
 import { setToken, logout } from "@/features/auth/store/authSlice";
@@ -47,12 +42,7 @@ export class FetchHttpClient {
         return response;
       },
       async (error) => {
-        console.log(
-          "API Error:",
-          error.response?.status,
-          error.config?.url,
-          error.response?.data,
-        );
+        console.log("API Error:", error.response?.status, error.config?.url, error.response?.data);
 
         const originalRequest = error.config;
 
@@ -69,10 +59,7 @@ export class FetchHttpClient {
           originalRequest?.url?.includes(endpoint),
         );
 
-        if (
-          error.response?.status === HTTP_STATUS.UNAUTHORIZED &&
-          !shouldSkipTokenRefresh
-        ) {
+        if (error.response?.status === HTTP_STATUS.UNAUTHORIZED && !shouldSkipTokenRefresh) {
           if (this.isRefreshing) {
             return new Promise((resolve, reject) => {
               this.failedQueue.push({ resolve, reject });
@@ -152,10 +139,7 @@ export class FetchHttpClient {
     this.failedQueue = [];
   }
 
-  async get<T>(
-    url: string,
-    params?: AxiosRequestConfig["params"],
-  ): Promise<AxiosResponse<T>> {
+  async get<T>(url: string, params?: AxiosRequestConfig["params"]): Promise<AxiosResponse<T>> {
     return this.axiosInstance.get(url, {
       params: params ? { ...params } : {},
     });
@@ -185,18 +169,13 @@ export class FetchHttpClient {
     return this.axiosInstance.patch(url, data, config);
   }
 
-  async delete<T>(
-    url: string,
-    params?: AxiosRequestConfig["params"],
-  ): Promise<AxiosResponse<T>> {
+  async delete<T>(url: string, params?: AxiosRequestConfig["params"]): Promise<AxiosResponse<T>> {
     return this.axiosInstance.delete(url, {
       params: params ? { ...params } : undefined,
     });
   }
 }
 
-const fetchHttpClient = new FetchHttpClient(
-  import.meta.env.VITE_API_BASE_URL || "",
-);
+const fetchHttpClient = new FetchHttpClient(import.meta.env.VITE_API_BASE_URL || "");
 
 export default fetchHttpClient;

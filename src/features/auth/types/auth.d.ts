@@ -57,7 +57,3 @@ export interface RefreshTokenPayload {
 export interface LogoutPayload {
   refreshToken: string;
 }
-
-
-
-

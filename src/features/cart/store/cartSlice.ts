@@ -1,8 +1,4 @@
-import {
-  createSelector,
-  createSlice,
-  type PayloadAction,
-} from "@reduxjs/toolkit";
+import { createSelector, createSlice, type PayloadAction } from "@reduxjs/toolkit";
 import type { RootState } from "@/store";
 import type { CartProduct, CartState } from "@/features/cart/types/cart";
 
@@ -24,14 +20,9 @@ const cartSlice = createSlice({
       state.items[index].quantity += 1;
     },
     removeItem(state, action: PayloadAction<number>) {
-      state.items = state.items.filter(
-        (l) => l.product.id !== action.payload,
-      );
+      state.items = state.items.filter((l) => l.product.id !== action.payload);
     },
-    setQuantity(
-      state,
-      action: PayloadAction<{ productId: number; quantity: number }>,
-    ) {
+    setQuantity(state, action: PayloadAction<{ productId: number; quantity: number }>) {
       const { productId, quantity } = action.payload;
       if (quantity < 1) {
         state.items = state.items.filter((l) => l.product.id !== productId);
@@ -51,18 +42,12 @@ export default cartSlice.reducer;
 
 const selectCartItems = (state: RootState) => state.cart.items;
 
-export const selectCartItemCount = createSelector(
-  [selectCartItems],
-  (items) => items.reduce((sum, line) => sum + line.quantity, 0),
+export const selectCartItemCount = createSelector([selectCartItems], (items) =>
+  items.reduce((sum, line) => sum + line.quantity, 0),
 );
 
-export const selectCartSubtotal = createSelector(
-  [selectCartItems],
-  (items) =>
-    items.reduce(
-      (sum, line) => sum + line.product.price * line.quantity,
-      0,
-    ),
+export const selectCartSubtotal = createSelector([selectCartItems], (items) =>
+  items.reduce((sum, line) => sum + line.product.price * line.quantity, 0),
 );
 
 export { selectCartItems };

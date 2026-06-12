@@ -43,7 +43,6 @@ export default function OtpInput({ value, onChange, error }: OtpInputProps) {
     }
   };
 
-
   return (
     <div>
       <div className="grid grid-cols-6 gap-1.5 sm:gap-2">

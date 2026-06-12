@@ -22,8 +22,13 @@ export default function ToastExample() {
         Sonner — ví dụ toast
       </h2>
       <p className="mb-4 text-xs text-neutral-600">
-        Gọi <code className="rounded bg-neutral-200/80 px-1 py-0.5 font-mono text-[11px]">toast()</code> từ bất kỳ component nào sau khi đã có{" "}
-        <code className="rounded bg-neutral-200/80 px-1 py-0.5 font-mono text-[11px]">&lt;Toaster /&gt;</code> trong layout.
+        Gọi{" "}
+        <code className="rounded bg-neutral-200/80 px-1 py-0.5 font-mono text-[11px]">toast()</code>{" "}
+        từ bất kỳ component nào sau khi đã có{" "}
+        <code className="rounded bg-neutral-200/80 px-1 py-0.5 font-mono text-[11px]">
+          &lt;Toaster /&gt;
+        </code>{" "}
+        trong layout.
       </p>
       <div className="flex flex-wrap gap-2">
         <button

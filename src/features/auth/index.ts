@@ -9,7 +9,7 @@ export {
   myProfileRequest,
   logoutRequest,
   refreshTokenRequest,
-} from "./api/authApi";
+} from "./api/auth.api";
 export type {
   AuthUser,
   LoginPayload,
@@ -17,6 +17,6 @@ export type {
   RegisterVerifyPayload,
   RegisterFinalizePayload,
   RefreshTokenPayload,
-  LogoutPayload ,
+  LogoutPayload,
   LoginResponseData,
 } from "./types/auth";
