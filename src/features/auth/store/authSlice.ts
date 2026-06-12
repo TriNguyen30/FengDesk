@@ -5,6 +5,7 @@ interface AuthState {
   token: string | null;
   user: AuthUser | null;
   role: string | null;
+  authModal: "login" | "signup" | null;
 }
 
 export interface User {
@@ -22,6 +23,7 @@ const initialState: AuthState = {
   token: storedToken,
   user: storedUser ? (JSON.parse(storedUser) as AuthUser) : null,
   role: storedRole as string | null,
+  authModal: null,
 };
 
 const authSlice = createSlice({
@@ -52,6 +54,9 @@ const authSlice = createSlice({
         localStorage.removeItem("role");
       }
     },
+    setAuthModal(state, action: PayloadAction<"login" | "signup" | null>) {
+      state.authModal = action.payload;
+    },
     logout(state) {
       state.token = null;
       state.user = null;
@@ -63,5 +68,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { setToken, setUser, setRole, logout } = authSlice.actions;
+export const { setToken, setUser, setRole, setAuthModal, logout } = authSlice.actions;
 export default authSlice.reducer;

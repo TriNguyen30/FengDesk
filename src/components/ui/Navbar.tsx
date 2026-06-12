@@ -1,22 +1,29 @@
 import { Truck, Package, User, Leaf } from "lucide-react";
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import SearchBar from "./Search";
 import PopUpLogin from "@/features/auth/components/PopUpLogin";
 import PopUpSignUp from "@/features/auth/components/PopUpSignUp";
 import { CartDropDown, useCart } from "@/features/cart";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
-import { logout } from "@/features/auth/store/authSlice";
+import { logout, setAuthModal } from "@/features/auth/store/authSlice";
 import { logoutRequest } from "@/features/auth/api/auth.api";
 import Logo from "@/assets/image/fengdesk_logo_2.png";
 
 export default function Navbar() {
+  const navigate = useNavigate();
+  
   const handleSearch = (query: string) => {
-    console.log("Searching for:", query);
+    if (query.trim()) {
+      navigate(`/products?search=${encodeURIComponent(query)}`);
+    } else {
+      navigate(`/products`);
+    }
   };
-  const [authModal, setAuthModal] = useState<"login" | "signup" | null>(null);
 
   const user = useAppSelector((state) => state.auth.user);
+  const authModal = useAppSelector((state) => state.auth.authModal);
   const dispatch = useAppDispatch();
   const { getCart, clearCart } = useCart();
 
@@ -132,7 +139,7 @@ export default function Navbar() {
               ) : (
                 <button
                   type="button"
-                  onClick={() => setAuthModal("login")}
+                  onClick={() => dispatch(setAuthModal("login"))}
                   className="flex min-w-[44px] flex-col items-center gap-0.5 rounded-lg px-1 py-1 text-gray-700 transition-colors hover:text-primary active:bg-gray-100 cursor-pointer"
                   aria-label="Tài khoản"
                 >
@@ -158,13 +165,13 @@ export default function Navbar() {
 
       <PopUpLogin
         open={authModal === "login"}
-        onClose={() => setAuthModal(null)}
-        onSwitchToSignUp={() => setAuthModal("signup")}
+        onClose={() => dispatch(setAuthModal(null))}
+        onSwitchToSignUp={() => dispatch(setAuthModal("signup"))}
       />
       <PopUpSignUp
         open={authModal === "signup"}
-        onClose={() => setAuthModal(null)}
-        onSwitchToLogin={() => setAuthModal("login")}
+        onClose={() => dispatch(setAuthModal(null))}
+        onSwitchToLogin={() => dispatch(setAuthModal("login"))}
       />
     </header>
   );

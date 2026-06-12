@@ -11,10 +11,13 @@ import {
   selectCartItemCount,
   selectCartSubtotal,
 } from "@/features/cart/store/cartSlice";
+import { setAuthModal } from "@/features/auth/store/authSlice";
 import type { AddCartItemParams, UpdateCartItemParams } from "@/features/cart/types/cart";
+import { toast } from "sonner";
 
 export function useCart() {
   const dispatch = useAppDispatch();
+  const user = useAppSelector((state) => state.auth.user);
   const cart = useAppSelector(selectCart);
   const items = useAppSelector(selectCartItems);
   const itemCount = useAppSelector(selectCartItemCount);
@@ -23,8 +26,15 @@ export function useCart() {
   const getCart = useCallback(() => dispatch(fetchCart()), [dispatch]);
 
   const addItem = useCallback(
-    (params: AddCartItemParams) => dispatch(addCartItem(params)),
-    [dispatch],
+    (params: AddCartItemParams) => {
+      if (!user) {
+        dispatch(setAuthModal("login"));
+        toast.info("Vui lòng đăng nhập để thêm vào giỏ hàng");
+        return;
+      }
+      dispatch(addCartItem(params));
+    },
+    [dispatch, user],
   );
 
   const removeItem = useCallback(

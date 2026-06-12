@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ShoppingCart, ArrowLeft, Check, AlertCircle } from "lucide-react";
+import { toast } from "sonner";
 import { productApi } from "../api/product.api";
 import { ProductDetail, ProductItem } from "../types/product";
 import { useCart } from "@/features/cart";
@@ -16,6 +17,7 @@ export default function ProductDetailPage() {
   const [selectedItem, setSelectedItem] = useState<ProductItem | null>(null);
 
   useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
     if (!id) return;
     
     const fetchProduct = async () => {
@@ -47,14 +49,65 @@ export default function ProductDetailPage() {
         productItemId: selectedItem.id, // using the specific variant ID
         quantity: 1,
       });
-      alert("Đã thêm vào giỏ hàng");
+      toast.success("Đã thêm vào giỏ hàng");
     }
   };
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 animate-pulse">
+        <div className="mb-6 h-4 w-24 rounded bg-gray-200"></div>
+
+        <div className="grid gap-8 lg:grid-cols-2 lg:gap-12">
+          {/* Image Skeleton */}
+          <div className="flex flex-col gap-4">
+            <div className="aspect-square w-full rounded-2xl bg-gray-200"></div>
+            <div className="flex gap-4 pb-2">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="h-20 w-20 shrink-0 rounded-lg bg-gray-200"></div>
+              ))}
+            </div>
+          </div>
+
+          {/* Info Skeleton */}
+          <div className="flex flex-col">
+            <div className="mb-2 flex gap-2">
+              <div className="h-6 w-20 rounded-full bg-gray-200"></div>
+              <div className="h-6 w-24 rounded-full bg-gray-200"></div>
+            </div>
+
+            <div className="mt-2 h-10 w-3/4 rounded bg-gray-200"></div>
+            <div className="mt-4 h-4 w-1/3 rounded bg-gray-200"></div>
+
+            <div className="mt-8 h-10 w-1/4 rounded bg-gray-200"></div>
+
+            <div className="mt-6">
+              <div className="h-4 w-24 rounded bg-gray-200"></div>
+              <div className="mt-3 space-y-2">
+                <div className="h-4 w-full rounded bg-gray-200"></div>
+                <div className="h-4 w-5/6 rounded bg-gray-200"></div>
+                <div className="h-4 w-4/6 rounded bg-gray-200"></div>
+              </div>
+            </div>
+
+            <div className="mt-8">
+              <div className="flex items-center justify-between">
+                <div className="h-4 w-20 rounded bg-gray-200"></div>
+                <div className="h-4 w-16 rounded bg-gray-200"></div>
+              </div>
+              
+              <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="h-16 rounded-xl bg-gray-200"></div>
+                ))}
+              </div>
+            </div>
+
+            <div className="mt-10 flex gap-4">
+              <div className="h-14 flex-1 rounded-xl bg-gray-200"></div>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }

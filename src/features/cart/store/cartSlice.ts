@@ -20,24 +20,33 @@ export const fetchCart = createAsyncThunk("cart/fetchCart", async () => {
 
 export const addCartItem = createAsyncThunk(
   "cart/addCartItem",
-  async (params: AddCartItemParams) => {
+  async (params: AddCartItemParams, { dispatch }) => {
     const response = await cartApi.addCartItem(params);
+    if (response.data.isSuccess) {
+      dispatch(fetchCart());
+    }
     return response.data;
   }
 );
 
 export const updateCartItem = createAsyncThunk(
   "cart/updateCartItem",
-  async (params: UpdateCartItemParams) => {
+  async (params: UpdateCartItemParams, { dispatch }) => {
     const response = await cartApi.updateCartItem(params);
+    if (response.data.isSuccess) {
+      dispatch(fetchCart());
+    }
     return response.data;
   }
 );
 
 export const removeCartItem = createAsyncThunk(
   "cart/removeCartItem",
-  async (itemId: string) => {
+  async (itemId: string, { dispatch }) => {
     const response = await cartApi.deleteCartItem({ itemId });
+    if (response.data.isSuccess) {
+      dispatch(fetchCart());
+    }
     return response.data;
   }
 );
@@ -64,13 +73,13 @@ const cartSlice = createSlice({
         state.status = "failed";
       })
       .addCase(addCartItem.fulfilled, (state, action) => {
-        state.cart = action.payload?.data || null;
+        if (action.payload?.data) state.cart = action.payload.data;
       })
       .addCase(updateCartItem.fulfilled, (state, action) => {
-        state.cart = action.payload?.data || null;
+        if (action.payload?.data) state.cart = action.payload.data;
       })
       .addCase(removeCartItem.fulfilled, (state, action) => {
-        state.cart = action.payload?.data || null;
+        if (action.payload?.data) state.cart = action.payload.data;
       });
   },
 });
