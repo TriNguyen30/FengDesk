@@ -51,6 +51,17 @@ export const removeCartItem = createAsyncThunk(
   }
 );
 
+export const deleteAllCart = createAsyncThunk(
+  "cart/deleteAllCart",
+  async (_, { dispatch }) => {
+    const response = await cartApi.deleteCart();
+    if (response.data.isSuccess) {
+      dispatch(fetchCart());
+    }
+    return response.data;
+  }
+);
+
 const cartSlice = createSlice({
   name: "cart",
   initialState,
@@ -80,6 +91,9 @@ const cartSlice = createSlice({
       })
       .addCase(removeCartItem.fulfilled, (state, action) => {
         if (action.payload?.data) state.cart = action.payload.data;
+      })
+      .addCase(deleteAllCart.fulfilled, (state) => {
+        state.cart = null;
       });
   },
 });
@@ -89,6 +103,9 @@ export default cartSlice.reducer;
 
 export const selectCart = (state: RootState) => state.cart.cart;
 export const selectCartItems = (state: RootState) => state.cart.cart?.items || [];
-export const selectCartItemCount = (state: RootState) =>
-  state.cart.cart?.items.reduce((sum, item) => sum + item.quantity, 0) || 0;
+export const selectCartItemCount = (state: RootState) => {
+  const items = state.cart.cart?.items;
+  if (!items) return 0;
+  return items.reduce((sum, item) => sum + (Number(item.quantity) || 1), 0);
+};
 export const selectCartSubtotal = (state: RootState) => state.cart.cart?.subtotal || 0;

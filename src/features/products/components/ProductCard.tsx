@@ -108,7 +108,7 @@ export function BestSellersSection() {
         </h2>
         <a
           href="#"
-          className="shrink-0 text-xs font-medium text-primary transition-colors hover:text-primary-dark sm:text-sm"
+          className="shrink-0 text-xs font-medium text-primary transition-colors hover:text-primary-dark sm:text-sm cursor-pointer"
         >
           Xem tất cả &rsaquo;
         </a>

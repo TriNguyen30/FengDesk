@@ -5,6 +5,7 @@ import {
   addCartItem,
   updateCartItem,
   removeCartItem,
+  deleteAllCart,
   clearCartState,
   selectCart,
   selectCartItems,
@@ -49,6 +50,11 @@ export function useCart() {
 
   const clearCart = useCallback(() => dispatch(clearCartState()), [dispatch]);
 
+  const deleteAll = useCallback(() => {
+    if (!user) return;
+    dispatch(deleteAllCart());
+  }, [dispatch, user]);
+
   return {
     cart,
     items,
@@ -59,5 +65,6 @@ export function useCart() {
     removeItem,
     setQuantity,
     clearCart,
+    deleteAll,
   };
 }

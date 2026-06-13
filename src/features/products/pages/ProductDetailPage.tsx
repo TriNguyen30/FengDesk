@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ShoppingCart, ArrowLeft, Check, AlertCircle } from "lucide-react";
+import { ShoppingCart, AlertCircle, Check, ChevronLeft } from "lucide-react";
 import { toast } from "sonner";
 import { productApi } from "../api/product.api";
 import { ProductDetail, ProductItem } from "../types/product";
@@ -10,16 +10,17 @@ export default function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { addItem } = useCart();
-  
+
   const [product, setProduct] = useState<ProductDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedItem, setSelectedItem] = useState<ProductItem | null>(null);
+  const [activeImage, setActiveImage] = useState<string>("");
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
     if (!id) return;
-    
+
     const fetchProduct = async () => {
       try {
         setLoading(true);
@@ -27,14 +28,13 @@ export default function ProductDetailPage() {
         if (response.data.isSuccess && response.data.data) {
           const productData = response.data.data;
           setProduct(productData);
-          if (productData.items.length > 0) {
-            setSelectedItem(productData.items[0]);
-          }
+          if (productData.items.length > 0) setSelectedItem(productData.items[0]);
+          if (productData.images.length > 0) setActiveImage(productData.images[0].url);
         } else {
-          setError(response.data.message || "Failed to load product details");
+          setError(response.data.message || "Không thể tải thông tin sản phẩm");
         }
-      } catch (err) {
-        setError("An error occurred while fetching product details");
+      } catch {
+        setError("Đã xảy ra lỗi khi tải thông tin sản phẩm");
       } finally {
         setLoading(false);
       }
@@ -45,220 +45,218 @@ export default function ProductDetailPage() {
 
   const handleAddToCart = () => {
     if (product && selectedItem) {
-      addItem({
-        productItemId: selectedItem.id, // using the specific variant ID
-        quantity: 1,
-      });
+      addItem({ productItemId: selectedItem.id, quantity: 1 });
       toast.success("Đã thêm vào giỏ hàng");
     }
   };
 
+  // ── Loading skeleton ──────────────────────────────────────────────────────
   if (loading) {
     return (
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 animate-pulse">
-        <div className="mb-6 h-4 w-24 rounded bg-gray-200"></div>
-
-        <div className="grid gap-8 lg:grid-cols-2 lg:gap-12">
-          {/* Image Skeleton */}
-          <div className="flex flex-col gap-4">
-            <div className="aspect-square w-full rounded-2xl bg-gray-200"></div>
-            <div className="flex gap-4 pb-2">
+      <div className="mx-auto max-w-5xl px-3 py-4 sm:px-6 sm:py-6 animate-pulse">
+        <div className="mb-4 h-4 w-20 rounded bg-gray-200" />
+        <div className="flex flex-col gap-4 sm:flex-row sm:gap-6">
+          <div className="w-full sm:w-[360px] shrink-0">
+            <div className="aspect-square w-full rounded-xl bg-gray-200" />
+            <div className="mt-2 flex gap-2">
               {[1, 2, 3].map((i) => (
-                <div key={i} className="h-20 w-20 shrink-0 rounded-lg bg-gray-200"></div>
+                <div key={i} className="h-16 w-16 rounded-lg bg-gray-200" />
               ))}
             </div>
           </div>
-
-          {/* Info Skeleton */}
-          <div className="flex flex-col">
-            <div className="mb-2 flex gap-2">
-              <div className="h-6 w-20 rounded-full bg-gray-200"></div>
-              <div className="h-6 w-24 rounded-full bg-gray-200"></div>
+          <div className="flex flex-1 flex-col gap-3">
+            <div className="h-6 w-3/4 rounded bg-gray-200" />
+            <div className="h-4 w-1/3 rounded bg-gray-200" />
+            <div className="h-10 w-1/2 rounded bg-gray-200" />
+            <div className="h-4 w-full rounded bg-gray-200" />
+            <div className="h-4 w-5/6 rounded bg-gray-200" />
+            <div className="mt-4 flex gap-2">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="h-10 w-24 rounded-lg bg-gray-200" />
+              ))}
             </div>
-
-            <div className="mt-2 h-10 w-3/4 rounded bg-gray-200"></div>
-            <div className="mt-4 h-4 w-1/3 rounded bg-gray-200"></div>
-
-            <div className="mt-8 h-10 w-1/4 rounded bg-gray-200"></div>
-
-            <div className="mt-6">
-              <div className="h-4 w-24 rounded bg-gray-200"></div>
-              <div className="mt-3 space-y-2">
-                <div className="h-4 w-full rounded bg-gray-200"></div>
-                <div className="h-4 w-5/6 rounded bg-gray-200"></div>
-                <div className="h-4 w-4/6 rounded bg-gray-200"></div>
-              </div>
-            </div>
-
-            <div className="mt-8">
-              <div className="flex items-center justify-between">
-                <div className="h-4 w-20 rounded bg-gray-200"></div>
-                <div className="h-4 w-16 rounded bg-gray-200"></div>
-              </div>
-              
-              <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="h-16 rounded-xl bg-gray-200"></div>
-                ))}
-              </div>
-            </div>
-
-            <div className="mt-10 flex gap-4">
-              <div className="h-14 flex-1 rounded-xl bg-gray-200"></div>
-            </div>
+            <div className="mt-4 h-12 w-48 rounded-xl bg-gray-200" />
           </div>
         </div>
       </div>
     );
   }
 
+  // ── Error state ───────────────────────────────────────────────────────────
   if (error || !product) {
     return (
-      <div className="flex min-h-[50vh] flex-col items-center justify-center gap-4 text-center">
+      <div className="flex min-h-[50vh] flex-col items-center justify-center gap-4 text-center px-4">
         <AlertCircle className="h-12 w-12 text-red-500" />
-        <p className="text-lg font-medium text-gray-800">{error || "Product not found"}</p>
+        <p className="text-base font-medium text-gray-800">{error || "Không tìm thấy sản phẩm"}</p>
         <button
           onClick={() => navigate(-1)}
-          className="rounded-lg bg-gray-100 px-4 py-2 font-medium text-gray-700 hover:bg-gray-200"
+          className="rounded-lg bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200"
         >
-          Go Back
+          Quay lại
         </button>
       </div>
     );
   }
 
-  const primaryImage = product.images.length > 0 ? product.images[0].url : "";
+  const currentPrice = selectedItem?.price ?? product.items[0]?.price ?? 0;
+  const outOfStock = selectedItem?.stock === 0;
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+    <div className="mx-auto max-w-6xl px-3 py-4 sm:px-6 sm:py-6">
+      {/* Back button */}
       <button
         onClick={() => navigate(-1)}
-        className="mb-6 flex items-center gap-2 text-sm font-medium text-gray-600 transition-colors hover:text-primary"
+        className="mb-4 flex items-center gap-1.5 text-sm font-medium text-gray-500 hover:text-primary cursor-pointer transition-colors"
       >
-        <ArrowLeft className="h-4 w-4" />
+        <ChevronLeft className="h-4 w-4" />
         Quay lại
       </button>
 
-      <div className="grid gap-8 lg:grid-cols-2 lg:gap-12">
-        {/* Image Section */}
-        <div className="flex flex-col gap-4">
-          <div className="aspect-square w-full overflow-hidden rounded-2xl bg-gray-50 p-6 shadow-inner">
-            {primaryImage ? (
-              <img
-                src={primaryImage}
-                alt={product.name}
-                className="h-full w-full object-contain"
-              />
-            ) : (
-              <div className="flex h-full w-full items-center justify-center text-gray-400">
-                No image available
+      <div className="rounded-2xl bg-white shadow-sm ring-1 ring-gray-100">
+        <div className="flex flex-col sm:flex-row">
+
+          {/* ── Left: Images ─────────────────────────────────────────────── */}
+          <div className="w-full shrink-0 p-4 sm:w-[360px] sm:p-6">
+            {/* Main image */}
+            <div className="aspect-square w-full overflow-hidden rounded-xl bg-gray-50 p-4 shadow-inner">
+              {activeImage ? (
+                <img
+                  src={activeImage}
+                  alt={product.name}
+                  className="h-full w-full object-contain"
+                />
+              ) : (
+                <div className="flex h-full items-center justify-center text-sm text-gray-300">
+                  Không có ảnh
+                </div>
+              )}
+            </div>
+
+            {/* Thumbnails */}
+            {product.images.length > 1 && (
+              <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+                {product.images.map((img) => (
+                  <button
+                    key={img.id}
+                    onClick={() => setActiveImage(img.url)}
+                    className={`h-16 w-16 shrink-0 overflow-hidden rounded-lg border-2 bg-gray-50 transition-all ${activeImage === img.url
+                      ? "border-primary"
+                      : "border-transparent hover:border-gray-300"
+                      }`}
+                  >
+                    <img src={img.url} alt="thumb" className="h-full w-full object-contain" />
+                  </button>
+                ))}
               </div>
             )}
           </div>
-          
-          {/* Thumbnails if multiple images exist */}
-          {product.images.length > 1 && (
-            <div className="flex gap-4 overflow-x-auto pb-2">
-              {product.images.map((img) => (
-                <button
-                  key={img.id}
-                  className="h-20 w-20 shrink-0 overflow-hidden rounded-lg border-2 border-transparent bg-gray-50 hover:border-primary focus:border-primary focus:outline-none"
-                >
-                  <img src={img.url} alt="thumbnail" className="h-full w-full object-contain" />
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
 
-        {/* Info Section */}
-        <div className="flex flex-col">
-          <div className="mb-2 flex flex-wrap items-center gap-2">
-            {product.categories.map((cat) => (
-              <span key={cat.id} className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">
-                {cat.name}
-              </span>
-            ))}
-          </div>
+          {/* ── Right: Info ───────────────────────────────────────────────── */}
+          <div className="flex flex-1 flex-col gap-5 border-t border-gray-100 p-4 sm:border-l sm:border-t-0 sm:p-6">
 
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-            {product.name}
-          </h1>
-          <p className="mt-2 text-sm font-medium text-gray-500">
-            Cửa hàng: <span className="text-gray-700">{product.storeName}</span>
-          </p>
-
-          <div className="mt-6 flex items-end gap-4">
-            <p className="text-3xl font-bold text-primary">
-              {selectedItem ? selectedItem.price.toLocaleString("vi-VN") : product.items[0]?.price.toLocaleString("vi-VN")}
-              <span className="text-lg">đ</span>
-            </p>
-          </div>
-
-          <div className="mt-6">
-            <h3 className="text-sm font-medium text-gray-900">Mô tả sản phẩm</h3>
-            <div className="prose prose-sm mt-2 text-gray-600">
-              <p>{product.description}</p>
-            </div>
-          </div>
-
-          {product.items.length > 0 && (
-            <div className="mt-8">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-medium text-gray-900">Phân loại</h3>
-                {selectedItem && (
-                  <span className="text-sm text-gray-500">Kho: {selectedItem.stock}</span>
-                )}
+            {/* Categories */}
+            {product.categories.length > 0 && (
+              <div className="flex flex-wrap gap-1.5">
+                {product.categories.map((cat) => (
+                  <span
+                    key={cat.id}
+                    className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary"
+                  >
+                    {cat.name}
+                  </span>
+                ))}
               </div>
-              
-              <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
-                {product.items.map((item) => {
-                  const isSelected = selectedItem?.id === item.id;
-                  return (
-                    <button
-                      key={item.id}
-                      onClick={() => setSelectedItem(item)}
-                      className={`relative flex flex-col items-center justify-center rounded-xl border p-3 text-sm font-medium transition-all focus:outline-none ${
-                        isSelected
+            )}
+
+            {/* Name + store */}
+            <div>
+              <h1 className="text-xl font-bold leading-snug text-gray-900 sm:text-2xl">
+                {product.name}
+              </h1>
+              <p className="mt-1.5 text-sm text-gray-400">
+                Cửa hàng:{" "}
+                <span className="font-medium text-gray-600">{product.storeName}</span>
+              </p>
+            </div>
+
+            {/* Price */}
+            <div className="rounded-xl bg-gray-50 px-4 py-3">
+              <p className="text-3xl font-bold text-primary">
+                {currentPrice.toLocaleString("vi-VN")}
+                <span className="text-lg">đ</span>
+              </p>
+            </div>
+
+            {/* Variants */}
+            {product.items.length > 0 && (
+              <div>
+                <div className="mb-2.5 flex items-center gap-3">
+                  <span className="text-sm font-medium text-gray-700">Phân loại</span>
+                  {selectedItem && (
+                    <span className="text-xs text-gray-400">
+                      Kho: {selectedItem.stock} sản phẩm
+                    </span>
+                  )}
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {product.items.map((item) => {
+                    const isSelected = selectedItem?.id === item.id;
+                    return (
+                      <button
+                        key={item.id}
+                        onClick={() => setSelectedItem(item)}
+                        className={`relative flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-all focus:outline-none cursor-not-allowed ${isSelected
                           ? "border-primary bg-primary/5 text-primary"
-                          : "border-gray-200 text-gray-700 hover:border-gray-300 hover:bg-gray-50"
-                      }`}
-                    >
-                      <span>{item.name}</span>
-                      <span className="mt-1 text-xs text-gray-500">{item.price.toLocaleString("vi-VN")}đ</span>
-                      {isSelected && (
-                        <Check className="absolute top-1.5 right-1.5 h-4 w-4 text-primary" />
-                      )}
-                    </button>
-                  );
-                })}
+                          : "border-gray-200 text-gray-600 hover:border-primary/40 hover:bg-gray-50 cursor-pointer"
+                          }`}
+                      >
+                        {item.name}
+                        <span className="text-xs opacity-60">
+                          {item.price.toLocaleString("vi-VN")}đ
+                        </span>
+                        {isSelected && (
+                          <Check className="absolute -top-1.5 -right-1.5 h-3.5 w-3.5 rounded-full bg-primary p-0.5 text-white" />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
+            )}
+
+            {/* Description */}
+            <div className="border-t border-dashed border-gray-100 pt-4">
+              <p className="mb-2 text-sm font-medium text-gray-700">Mô tả sản phẩm</p>
+              <p className="text-sm leading-relaxed text-gray-500">{product.description}</p>
             </div>
-          )}
 
-          <div className="mt-10 flex gap-4">
-            <button
-              onClick={handleAddToCart}
-              disabled={!selectedItem || selectedItem.stock === 0}
-              className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-primary px-8 py-4 text-base font-bold text-white shadow-lg transition-all hover:bg-primary-dark hover:shadow-xl disabled:cursor-not-allowed disabled:bg-gray-300 disabled:shadow-none"
-            >
-              <ShoppingCart className="h-5 w-5" />
-              {selectedItem?.stock === 0 ? "Hết hàng" : "Thêm vào giỏ hàng"}
-            </button>
-          </div>
-
-          {product.tags.length > 0 && (
-            <div className="mt-8 border-t pt-6">
-              <h3 className="text-sm font-medium text-gray-900">Tags</h3>
-              <div className="mt-3 flex flex-wrap gap-2">
+            {/* Tags */}
+            {product.tags.length > 0 && (
+              <div className="flex flex-wrap gap-1.5">
                 {product.tags.map((tag) => (
-                  <span key={tag.id} className="inline-flex items-center rounded-md bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-600">
+                  <span
+                    key={tag.id}
+                    className="rounded-md bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-500"
+                  >
                     #{tag.name}
                   </span>
                 ))}
               </div>
+            )}
+
+            {/* Add to cart */}
+            <div className="mt-auto pt-2">
+              <button
+                onClick={handleAddToCart}
+                disabled={!selectedItem || outOfStock}
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-8 py-3.5 text-base font-bold text-white shadow-md transition-all hover:bg-primary-dark hover:shadow-lg active:scale-95 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:shadow-none sm:w-auto cursor-pointer"
+              >
+                <ShoppingCart className="h-5 w-5" />
+                {outOfStock ? "Hết hàng" : "Thêm vào giỏ hàng"}
+              </button>
             </div>
-          )}
+
+          </div>
         </div>
       </div>
     </div>

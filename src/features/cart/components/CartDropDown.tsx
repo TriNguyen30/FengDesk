@@ -9,7 +9,7 @@ function formatVnd(n: number): string {
 }
 
 export default function CartDropDown() {
-  const { items, itemCount, subtotal, setQuantity, removeItem, clearCart } = useCart();
+  const { items, itemCount, subtotal, setQuantity, removeItem, clearCart, deleteAll } = useCart();
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
 
@@ -67,10 +67,10 @@ export default function CartDropDown() {
                 <button
                   type="button"
                   onClick={() => {
-                    clearCart();
+                    deleteAll();
                     toast.success("Đã xóa giỏ hàng");
                   }}
-                  className="rounded-md px-2 py-1 text-xs font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-800"
+                  className="rounded-md px-2 py-1 text-xs font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-800 cursor-pointer"
                 >
                   Xóa tất cả
                 </button>
@@ -78,7 +78,7 @@ export default function CartDropDown() {
               <button
                 type="button"
                 onClick={close}
-                className="rounded-md p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-800"
+                className="rounded-md p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-800 cursor-pointer"
                 aria-label="Đóng"
               >
                 <X size={18} />
@@ -95,7 +95,7 @@ export default function CartDropDown() {
               <Link
                 to="/products"
                 onClick={close}
-                className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary-dark"
+                className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary-dark cursor-pointer"
               >
                 Mua sắm ngay
               </Link>
@@ -124,7 +124,7 @@ export default function CartDropDown() {
                           <button
                             type="button"
                             onClick={() => setQuantity({ itemId: item.id, quantity: item.quantity - 1 })}
-                            className="flex h-7 w-7 items-center justify-center text-gray-600 hover:bg-gray-100"
+                            className="flex h-7 w-7 items-center justify-center text-gray-600 hover:bg-gray-100 cursor-pointer"
                             aria-label="Giảm số lượng"
                           >
                             <Minus size={14} />
@@ -135,7 +135,7 @@ export default function CartDropDown() {
                           <button
                             type="button"
                             onClick={() => setQuantity({ itemId: item.id, quantity: item.quantity + 1 })}
-                            className="flex h-7 w-7 items-center justify-center text-gray-600 hover:bg-gray-100"
+                            className="flex h-7 w-7 items-center justify-center text-gray-600 hover:bg-gray-100 cursor-pointer"
                             aria-label="Tăng số lượng"
                           >
                             <Plus size={14} />
@@ -144,7 +144,7 @@ export default function CartDropDown() {
                         <button
                           type="button"
                           onClick={() => removeItem(item.id)}
-                          className="ml-auto rounded-md p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-600"
+                          className="ml-auto rounded-md p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-600 cursor-pointer"
                           aria-label="Xóa khỏi giỏ"
                         >
                           <Trash2 size={16} />
@@ -164,14 +164,14 @@ export default function CartDropDown() {
                   <Link
                     to="/products"
                     onClick={close}
-                    className="flex flex-1 items-center justify-center rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-center text-sm font-semibold text-gray-800 transition-colors hover:bg-gray-50"
+                    className="flex flex-1 items-center justify-center rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-center text-sm font-semibold text-gray-800 transition-colors hover:bg-gray-50 cursor-pointer"
                   >
                     Tiếp tục mua
                   </Link>
                   <button
                     type="button"
                     onClick={() => toast.info("Chức năng thanh toán đang được hoàn thiện")}
-                    className="flex flex-1 items-center justify-center rounded-lg bg-primary px-3 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-dark"
+                    className="flex flex-1 items-center justify-center rounded-lg bg-primary px-3 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-dark cursor-pointer"
                   >
                     Thanh toán
                   </button>
