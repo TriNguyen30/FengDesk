@@ -1,10 +1,12 @@
 export { useCart } from "./hooks/useCart";
-export type { CartProduct, CartLine } from "./types/cart";
+export type { CartProduct, CartItem } from "./types/cart";
 export {
-  addItem,
-  removeItem,
-  setQuantity,
-  clearCart,
+  fetchCart,
+  addCartItem,
+  removeCartItem,
+  updateCartItem,
+  clearCartState,
+  selectCart,
   selectCartItems,
   selectCartItemCount,
   selectCartSubtotal,

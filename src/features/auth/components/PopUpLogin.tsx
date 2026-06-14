@@ -4,14 +4,11 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { ChevronRight, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import Modal from "@/components/ui/Modal";
-import { loginRequest } from "@/features/auth/api/authApi";
+import { loginRequest } from "@/features/auth/api/auth.api";
 import AuthField, { inputClassName } from "@/features/auth/components/AuthField";
 import SocialAuthButtons from "@/features/auth/components/SocialAuthButtons";
 import { useAuthSession } from "@/features/auth/hooks/useAuthSession";
-import {
-  loginEmailSchema,
-  type LoginEmailFormValues,
-} from "@/features/auth/schemas/auth-schema";
+import { loginEmailSchema, type LoginEmailFormValues } from "@/features/auth/schemas/auth-schema";
 import { getAuthErrorMessage } from "@/features/auth/utils/getAuthErrorMessage";
 
 export interface PopUpLoginProps {
@@ -23,11 +20,7 @@ export interface PopUpLoginProps {
 const submitButtonClass =
   "mt-1 flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-primary py-2.5 text-sm font-semibold text-white transition hover:bg-primary-dark active:bg-green-800 disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer";
 
-export default function PopUpLogin({
-  open,
-  onClose,
-  onSwitchToSignUp,
-}: PopUpLoginProps) {
+export default function PopUpLogin({ open, onClose, onSwitchToSignUp }: PopUpLoginProps) {
   const { persistSession } = useAuthSession();
   const [showPassword, setShowPassword] = useState(false);
 
@@ -62,9 +55,7 @@ export default function PopUpLogin({
       toast.success(response.message || "Đăng nhập thành công");
       handleClose();
     } catch (error) {
-      toast.error(
-        getAuthErrorMessage(error, "Đăng nhập thất bại. Vui lòng thử lại."),
-      );
+      toast.error(getAuthErrorMessage(error, "Đăng nhập thất bại. Vui lòng thử lại."));
     }
   };
 
@@ -78,19 +69,13 @@ export default function PopUpLogin({
           className="flex flex-col gap-3"
           noValidate
         >
-          <AuthField
-            id="login-email"
-            label="Email"
-            error={emailErrors.email?.message}
-          >
+          <AuthField id="login-email" label="Email" error={emailErrors.email?.message}>
             <input
               id="login-email"
               type="email"
               autoComplete="email"
               aria-invalid={Boolean(emailErrors.email)}
-              aria-describedby={
-                emailErrors.email ? "login-email-error" : undefined
-              }
+              aria-describedby={emailErrors.email ? "login-email-error" : undefined}
               className={inputClassName(Boolean(emailErrors.email))}
               placeholder="you@example.com"
               {...emailForm.register("email")}
@@ -116,9 +101,7 @@ export default function PopUpLogin({
                 type={showPassword ? "text" : "password"}
                 autoComplete="current-password"
                 aria-invalid={Boolean(emailErrors.password)}
-                aria-describedby={
-                  emailErrors.password ? "login-password-error" : undefined
-                }
+                aria-describedby={emailErrors.password ? "login-password-error" : undefined}
                 className={inputClassName(Boolean(emailErrors.password))}
                 placeholder="••••••••"
                 {...emailForm.register("password")}
@@ -148,9 +131,7 @@ export default function PopUpLogin({
             disabled={emailForm.formState.isSubmitting}
             className={submitButtonClass}
           >
-            {emailForm.formState.isSubmitting
-              ? "Đang đăng nhập..."
-              : "Đăng nhập"}
+            {emailForm.formState.isSubmitting ? "Đang đăng nhập..." : "Đăng nhập"}
             <ChevronRight size={16} />
           </button>
         </form>

@@ -1,10 +1,4 @@
-import {
-  createContext,
-  useContext,
-  useMemo,
-  useState,
-  type ReactNode,
-} from "react";
+import { createContext, useContext, useMemo, useState, type ReactNode } from "react";
 
 type SearchContextType = {
   keyword: string;
@@ -27,9 +21,7 @@ export function SearchProvider({ children }: { children: ReactNode }) {
     [keyword],
   );
 
-  return (
-    <SearchContext.Provider value={value}>{children}</SearchContext.Provider>
-  );
+  return <SearchContext.Provider value={value}>{children}</SearchContext.Provider>;
 }
 
 // eslint-disable-next-line react-refresh/only-export-components

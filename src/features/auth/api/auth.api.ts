@@ -12,7 +12,6 @@ import type {
   RefreshTokenPayload,
 } from "@/features/auth/types/auth";
 
-
 export async function loginRequest(payload: LoginPayload) {
   const { data } = await fetchHttpClient.post<ApiResponse<LoginResponseData>>(
     "/Auth/login",
@@ -46,16 +45,11 @@ export async function registerFinalizeRequest(payload: RegisterFinalizePayload) 
 }
 
 export async function myProfileRequest() {
-  const { data } = await fetchHttpClient.get<ApiResponse<MyProfile>>(
-    "/Auth/me",
-  );
+  const { data } = await fetchHttpClient.get<ApiResponse<MyProfile>>("/Auth/me");
   return data;
 }
 export async function logoutRequest(payload: LogoutPayload) {
-  const { data } = await fetchHttpClient.post<ApiResponse<null>>(
-    "/Auth/logout",
-    payload,
-  );
+  const { data } = await fetchHttpClient.post<ApiResponse<null>>("/Auth/logout", payload);
   return data;
 }
 

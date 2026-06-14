@@ -8,7 +8,7 @@ import {
   registerInitiateRequest,
   registerVerifyRequest,
   registerFinalizeRequest,
-} from "@/features/auth/api/authApi";
+} from "@/features/auth/api/auth.api";
 import AuthField, { inputClassName } from "@/features/auth/components/AuthField";
 import OtpInput from "@/features/auth/components/OtpInput";
 import SocialAuthButtons from "@/features/auth/components/SocialAuthButtons";
@@ -31,11 +31,7 @@ export interface PopUpSignUpProps {
 const submitButtonClass =
   "mt-1 flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-primary py-2.5 text-sm font-semibold text-white transition hover:bg-primary-dark active:bg-green-800 disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer";
 
-export default function PopUpSignUp({
-  open,
-  onClose,
-  onSwitchToLogin,
-}: PopUpSignUpProps) {
+export default function PopUpSignUp({ open, onClose, onSwitchToLogin }: PopUpSignUpProps) {
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [email, setEmail] = useState("");
   const [registrationToken, setRegistrationToken] = useState("");
@@ -88,9 +84,7 @@ export default function PopUpSignUp({
       setStep(2);
       toast.success(response.message || "Mã OTP đã được gửi đến email");
     } catch (error) {
-      toast.error(
-        getAuthErrorMessage(error, "Có lỗi xảy ra. Vui lòng thử lại."),
-      );
+      toast.error(getAuthErrorMessage(error, "Có lỗi xảy ra. Vui lòng thử lại."));
     }
   };
 
@@ -125,15 +119,11 @@ export default function PopUpSignUp({
         return;
       }
 
-      toast.success(
-        response.message || "Đăng ký thành công! Vui lòng đăng nhập.",
-      );
+      toast.success(response.message || "Đăng ký thành công! Vui lòng đăng nhập.");
       handleClose();
       if (onSwitchToLogin) onSwitchToLogin();
     } catch (error) {
-      toast.error(
-        getAuthErrorMessage(error, "Đăng ký thất bại. Vui lòng thử lại."),
-      );
+      toast.error(getAuthErrorMessage(error, "Đăng ký thất bại. Vui lòng thử lại."));
     }
   };
 
@@ -147,8 +137,8 @@ export default function PopUpSignUp({
             noValidate
           >
             <p className="text-sm text-gray-600 mb-2">
-              Vui lòng nhập email của bạn để bắt đầu đăng ký. Chúng tôi sẽ gửi mã
-              xác nhận đến email này.
+              Vui lòng nhập email của bạn để bắt đầu đăng ký. Chúng tôi sẽ gửi mã xác nhận đến email
+              này.
             </p>
             <AuthField
               id="signup-initiate-email"
@@ -161,13 +151,9 @@ export default function PopUpSignUp({
                 autoComplete="email"
                 aria-invalid={Boolean(initiateForm.formState.errors.email)}
                 aria-describedby={
-                  initiateForm.formState.errors.email
-                    ? "signup-initiate-email-error"
-                    : undefined
+                  initiateForm.formState.errors.email ? "signup-initiate-email-error" : undefined
                 }
-                className={inputClassName(
-                  Boolean(initiateForm.formState.errors.email),
-                )}
+                className={inputClassName(Boolean(initiateForm.formState.errors.email))}
                 placeholder="you@example.com"
                 {...initiateForm.register("email")}
               />
@@ -178,9 +164,7 @@ export default function PopUpSignUp({
               disabled={initiateForm.formState.isSubmitting}
               className={submitButtonClass}
             >
-              {initiateForm.formState.isSubmitting
-                ? "Đang gửi OTP..."
-                : "Tiếp tục"}
+              {initiateForm.formState.isSubmitting ? "Đang gửi OTP..." : "Tiếp tục"}
               <ChevronRight size={16} />
             </button>
           </form>
@@ -210,9 +194,7 @@ export default function PopUpSignUp({
             <OtpInput
               // eslint-disable-next-line react-hooks/incompatible-library
               value={verifyForm.watch("otp")}
-              onChange={(otp) =>
-                verifyForm.setValue("otp", otp, { shouldValidate: true })
-              }
+              onChange={(otp) => verifyForm.setValue("otp", otp, { shouldValidate: true })}
               error={verifyForm.formState.errors.otp?.message}
             />
 
@@ -220,9 +202,7 @@ export default function PopUpSignUp({
               Không nhận được mã?{" "}
               <button
                 type="button"
-                onClick={() =>
-                  initiateForm.handleSubmit(onInitiateSubmit)()
-                }
+                onClick={() => initiateForm.handleSubmit(onInitiateSubmit)()}
                 className="font-medium text-green-600 hover:text-green-700 cursor-pointer"
               >
                 Gửi lại
@@ -231,10 +211,7 @@ export default function PopUpSignUp({
 
             <button
               type="submit"
-              disabled={
-                verifyForm.formState.isSubmitting ||
-                verifyForm.watch("otp").length < 6
-              }
+              disabled={verifyForm.formState.isSubmitting || verifyForm.watch("otp").length < 6}
               className={submitButtonClass}
             >
               Xác nhận
@@ -259,17 +236,11 @@ export default function PopUpSignUp({
                 id="signup-fullname"
                 type="text"
                 autoComplete="name"
-                aria-invalid={Boolean(
-                  finalizeForm.formState.errors.fullName,
-                )}
+                aria-invalid={Boolean(finalizeForm.formState.errors.fullName)}
                 aria-describedby={
-                  finalizeForm.formState.errors.fullName
-                    ? "signup-fullname-error"
-                    : undefined
+                  finalizeForm.formState.errors.fullName ? "signup-fullname-error" : undefined
                 }
-                className={inputClassName(
-                  Boolean(finalizeForm.formState.errors.fullName),
-                )}
+                className={inputClassName(Boolean(finalizeForm.formState.errors.fullName))}
                 placeholder="Nguyễn Văn A"
                 {...finalizeForm.register("fullName")}
               />
@@ -287,13 +258,9 @@ export default function PopUpSignUp({
                   inputMode="numeric"
                   aria-invalid={Boolean(finalizeForm.formState.errors.phone)}
                   aria-describedby={
-                    finalizeForm.formState.errors.phone
-                      ? "signup-phone-error"
-                      : undefined
+                    finalizeForm.formState.errors.phone ? "signup-phone-error" : undefined
                   }
-                  className={inputClassName(
-                    Boolean(finalizeForm.formState.errors.phone),
-                  )}
+                  className={inputClassName(Boolean(finalizeForm.formState.errors.phone))}
                   placeholder="09xxxxxxxx"
                   {...finalizeForm.register("phone", {
                     setValueAs: (value) => String(value).replace(/\D/g, ""),
@@ -309,17 +276,11 @@ export default function PopUpSignUp({
                 <input
                   id="signup-dob"
                   type="date"
-                  aria-invalid={Boolean(
-                    finalizeForm.formState.errors.dateOfBirth,
-                  )}
+                  aria-invalid={Boolean(finalizeForm.formState.errors.dateOfBirth)}
                   aria-describedby={
-                    finalizeForm.formState.errors.dateOfBirth
-                      ? "signup-dob-error"
-                      : undefined
+                    finalizeForm.formState.errors.dateOfBirth ? "signup-dob-error" : undefined
                   }
-                  className={inputClassName(
-                    Boolean(finalizeForm.formState.errors.dateOfBirth),
-                  )}
+                  className={inputClassName(Boolean(finalizeForm.formState.errors.dateOfBirth))}
                   {...finalizeForm.register("dateOfBirth")}
                 />
               </AuthField>
@@ -332,9 +293,7 @@ export default function PopUpSignUp({
             >
               <select
                 id="signup-gender"
-                className={inputClassName(
-                  Boolean(finalizeForm.formState.errors.gender),
-                )}
+                className={inputClassName(Boolean(finalizeForm.formState.errors.gender))}
                 {...finalizeForm.register("gender")}
               >
                 <option value={0}>Nam</option>
@@ -348,9 +307,7 @@ export default function PopUpSignUp({
               label="Mật khẩu"
               error={finalizeForm.formState.errors.password?.message}
               hint={
-                <span className="text-xs text-gray-400">
-                  Tối thiểu 8 ký tự, có hoa/thường/số
-                </span>
+                <span className="text-xs text-gray-400">Tối thiểu 8 ký tự, có hoa/thường/số</span>
               }
             >
               <div className="relative">
@@ -358,17 +315,11 @@ export default function PopUpSignUp({
                   id="signup-password"
                   type={showPassword ? "text" : "password"}
                   autoComplete="new-password"
-                  aria-invalid={Boolean(
-                    finalizeForm.formState.errors.password,
-                  )}
+                  aria-invalid={Boolean(finalizeForm.formState.errors.password)}
                   aria-describedby={
-                    finalizeForm.formState.errors.password
-                      ? "signup-password-error"
-                      : undefined
+                    finalizeForm.formState.errors.password ? "signup-password-error" : undefined
                   }
-                  className={inputClassName(
-                    Boolean(finalizeForm.formState.errors.password),
-                  )}
+                  className={inputClassName(Boolean(finalizeForm.formState.errors.password))}
                   placeholder="••••••••"
                   {...finalizeForm.register("password")}
                 />
@@ -376,9 +327,7 @@ export default function PopUpSignUp({
                   type="button"
                   onClick={() => setShowPassword((v) => !v)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer"
-                  aria-label={
-                    showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"
-                  }
+                  aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
                 >
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
@@ -395,17 +344,13 @@ export default function PopUpSignUp({
                   id="signup-confirm-password"
                   type={showConfirmPassword ? "text" : "password"}
                   autoComplete="new-password"
-                  aria-invalid={Boolean(
-                    finalizeForm.formState.errors.confirmPassword,
-                  )}
+                  aria-invalid={Boolean(finalizeForm.formState.errors.confirmPassword)}
                   aria-describedby={
                     finalizeForm.formState.errors.confirmPassword
                       ? "signup-confirm-password-error"
                       : undefined
                   }
-                  className={inputClassName(
-                    Boolean(finalizeForm.formState.errors.confirmPassword),
-                  )}
+                  className={inputClassName(Boolean(finalizeForm.formState.errors.confirmPassword))}
                   placeholder="••••••••"
                   {...finalizeForm.register("confirmPassword")}
                 />
@@ -413,15 +358,9 @@ export default function PopUpSignUp({
                   type="button"
                   onClick={() => setShowConfirmPassword((v) => !v)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer"
-                  aria-label={
-                    showConfirmPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"
-                  }
+                  aria-label={showConfirmPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
                 >
-                  {showConfirmPassword ? (
-                    <EyeOff size={18} />
-                  ) : (
-                    <Eye size={18} />
-                  )}
+                  {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
             </AuthField>
@@ -431,9 +370,7 @@ export default function PopUpSignUp({
               disabled={finalizeForm.formState.isSubmitting}
               className={submitButtonClass}
             >
-              {finalizeForm.formState.isSubmitting
-                ? "Đang đăng ký..."
-                : "Hoàn tất đăng ký"}
+              {finalizeForm.formState.isSubmitting ? "Đang đăng ký..." : "Hoàn tất đăng ký"}
               <ChevronRight size={16} />
             </button>
           </form>
@@ -449,9 +386,7 @@ export default function PopUpSignUp({
       <div className="flex flex-col gap-5">
         {renderStep()}
 
-        {step === 1 && (
-          <SocialAuthButtons dividerLabel="hoặc đăng ký với" />
-        )}
+        {step === 1 && <SocialAuthButtons dividerLabel="hoặc đăng ký với" />}
 
         <p className="text-center text-sm text-gray-600">
           Đã có tài khoản?{" "}

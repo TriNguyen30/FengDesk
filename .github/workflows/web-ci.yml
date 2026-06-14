@@ -3,9 +3,9 @@ name: FengDesk AI Web CI
 # Kích hoạt workflow khi có push hoặc pull request vào nhánh main
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   build-and-test:
@@ -26,8 +26,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'pnpm'
+          node-version: "20"
+          cache: "pnpm"
 
       # Bước 4: Cài đặt các thư viện (dependencies)
       - name: Install Dependencies

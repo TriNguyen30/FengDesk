@@ -1,22 +1,39 @@
 import { Truck, Package, User, Leaf } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import SearchBar from "./Search";
 import PopUpLogin from "@/features/auth/components/PopUpLogin";
 import PopUpSignUp from "@/features/auth/components/PopUpSignUp";
-import { CartDropDown } from "@/features/cart";
+import { CartDropDown, useCart } from "@/features/cart";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
-import { logout } from "@/features/auth/store/authSlice";
-import { logoutRequest } from "@/features/auth/api/authApi";
+import { logout, setAuthModal } from "@/features/auth/store/authSlice";
+import { logoutRequest } from "@/features/auth/api/auth.api";
+import Logo from "@/assets/image/fengdesk_logo_2.png";
 
 export default function Navbar() {
-  const handleSearch = (query: string) => {
-    console.log("Searching for:", query);
-  };
-  const [authModal, setAuthModal] = useState<"login" | "signup" | null>(null);
+  const navigate = useNavigate();
   
+  const handleSearch = (query: string) => {
+    if (query.trim()) {
+      navigate(`/products?search=${encodeURIComponent(query)}`);
+    } else {
+      navigate(`/products`);
+    }
+  };
+
   const user = useAppSelector((state) => state.auth.user);
+  const authModal = useAppSelector((state) => state.auth.authModal);
   const dispatch = useAppDispatch();
+  const { getCart, clearCart } = useCart();
+
+  useEffect(() => {
+    if (user) {
+      getCart();
+    } else {
+      clearCart();
+    }
+  }, [user, getCart, clearCart]);
 
   const handleLogout = async () => {
     try {
@@ -34,7 +51,7 @@ export default function Navbar() {
   };
 
   return (
-    <div className="w-full min-w-0">
+    <header className="sticky top-0 z-50 w-full min-w-0">
       {/* Top promo bar — single line, always visible */}
       <div className="w-full border-b border-gray-200 bg-gray-100 px-3 py-1.5 sm:px-4">
         <div className="mx-auto flex min-w-0 max-w-screen-xl items-center justify-between gap-2 text-[11px] text-gray-600 sm:text-xs">
@@ -67,13 +84,9 @@ export default function Navbar() {
           {/* Row 1: Logo + Icons (mobile) / Logo + Search + Icons (desktop) */}
           <div className="flex items-center gap-3 md:gap-6">
             {/* Logo */}
-            <a
-              href="/"
-              className="flex shrink-0 items-center gap-2"
-              aria-label="FengDesk home"
-            >
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary sm:h-9 sm:w-9">
-                <Leaf size={18} className="text-white sm:size-5" />
+            <a href="/" className="flex shrink-0 items-center gap-2" aria-label="FengDesk home">
+              <div className="flex h-8 w-8 items-center justify-center  sm:h-12 sm:w-12">
+                <img src={Logo} alt="Logo" className="h-full w-full object-contain" />
               </div>
               <span className="text-lg font-extrabold tracking-tight text-gray-900 sm:text-xl">
                 Feng<span className="text-primary">Desk</span>
@@ -104,11 +117,13 @@ export default function Navbar() {
                       {user.fullName || "User"}
                     </span>
                   </button>
-                  
+
                   {/* Dropdown menu */}
                   <div className="absolute right-0 top-full mt-0 hidden w-48 flex-col rounded-lg bg-white shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] ring-1 ring-black/5 group-hover:flex z-50 overflow-hidden">
                     <div className="px-4 py-3 border-b border-gray-100 bg-gray-50/50">
-                      <p className="text-sm font-semibold text-gray-900 truncate">{user.fullName || "Người dùng"}</p>
+                      <p className="text-sm font-semibold text-gray-900 truncate">
+                        {user.fullName || "Người dùng"}
+                      </p>
                       <p className="text-xs text-gray-500 truncate">{user.email}</p>
                     </div>
                     <div className="p-1">
@@ -124,7 +139,7 @@ export default function Navbar() {
               ) : (
                 <button
                   type="button"
-                  onClick={() => setAuthModal("login")}
+                  onClick={() => dispatch(setAuthModal("login"))}
                   className="flex min-w-[44px] flex-col items-center gap-0.5 rounded-lg px-1 py-1 text-gray-700 transition-colors hover:text-primary active:bg-gray-100 cursor-pointer"
                   aria-label="Tài khoản"
                 >
@@ -150,14 +165,14 @@ export default function Navbar() {
 
       <PopUpLogin
         open={authModal === "login"}
-        onClose={() => setAuthModal(null)}
-        onSwitchToSignUp={() => setAuthModal("signup")}
+        onClose={() => dispatch(setAuthModal(null))}
+        onSwitchToSignUp={() => dispatch(setAuthModal("signup"))}
       />
       <PopUpSignUp
         open={authModal === "signup"}
-        onClose={() => setAuthModal(null)}
-        onSwitchToLogin={() => setAuthModal("login")}
+        onClose={() => dispatch(setAuthModal(null))}
+        onSwitchToLogin={() => dispatch(setAuthModal("login"))}
       />
-    </div>
+    </header>
   );
 }

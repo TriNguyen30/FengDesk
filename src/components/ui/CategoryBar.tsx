@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { TextAlignJustify, ChevronDown } from "lucide-react";
 import { useNavigate, NavLink } from "react-router-dom";
+import { getCategoriesRequest } from "@/features/category/api/category.api";
+import type { Category } from "@/features/category/types/category";
 
 const navItems = [
   { label: "Trang chủ", to: "/" },
@@ -10,12 +12,6 @@ const navItems = [
   { label: "Liên Hệ", to: "/contact" },
 ] as const;
 
-const dropdownItems = [
-  { label: "Cây trong nhà", to: "/products?category=trong-nha" },
-  { label: "Cây văn phòng", to: "/products?category=van-phong" },
-  { label: "Chậu cây", to: "/products?category=chau-cay" },
-  { label: "Phụ kiện", to: "/products?category=phu-kien" },
-] as const;
 
 const navLinkClass = ({ isActive }: { isActive: boolean }) =>
   [
@@ -31,7 +27,22 @@ const navLinkClass = ({ isActive }: { isActive: boolean }) =>
 export default function CategoryBar() {
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [categories, setCategories] = useState<Category[]>([]);
   const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    async function fetchCategories() {
+      try {
+        const res = await getCategoriesRequest();
+        if (res.isSuccess) {
+          setCategories(res.data.filter((c) => c.isActive));
+        }
+      } catch (error) {
+        console.error("Failed to fetch categories", error);
+      }
+    }
+    fetchCategories();
+  }, []);
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -46,7 +57,10 @@ export default function CategoryBar() {
   return (
     <nav className="w-full min-w-0 border-t border-gray-200">
       <div className="mx-auto flex w-full min-w-0 max-w-screen-xl flex-col gap-2 px-3 py-2 sm:flex-row sm:items-stretch sm:gap-0 sm:px-4 sm:py-0 lg:px-10">
-        <div ref={menuRef} className="relative shrink-0 sm:flex sm:items-center sm:border-r sm:border-gray-200 sm:pr-4 lg:pr-6">
+        <div
+          ref={menuRef}
+          className="relative shrink-0 sm:flex sm:items-center sm:border-r sm:border-gray-200 sm:pr-4 lg:pr-6"
+        >
           <button
             type="button"
             aria-expanded={menuOpen ? "true" : "false"}
@@ -70,18 +84,18 @@ export default function CategoryBar() {
             role="menu"
             className={`absolute left-0 right-0 top-full z-50 mt-1 max-h-[min(70vh,24rem)] overflow-y-auto rounded-lg border border-gray-100 bg-white shadow-lg sm:left-0 sm:right-auto sm:mt-0 sm:w-56 sm:rounded-b-lg sm:rounded-t-none ${menuOpen ? "block" : "hidden"}`}
           >
-            {dropdownItems.map((item) => (
+            {categories.map((item) => (
               <button
-                key={item.label}
+                key={item.id}
                 type="button"
                 role="menuitem"
                 onClick={() => {
-                  navigate(item.to);
+                  navigate(`/products?categoryId=${item.id}`);
                   setMenuOpen(false);
                 }}
                 className="block w-full px-4 py-3 text-left text-sm transition hover:bg-primary-light/20 hover:text-primary hover:ring-1 hover:ring-primary/40"
               >
-                {item.label}
+                {item.name}
               </button>
             ))}
           </div>
