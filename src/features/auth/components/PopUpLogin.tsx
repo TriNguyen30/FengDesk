@@ -54,6 +54,11 @@ export default function PopUpLogin({ open, onClose, onSwitchToSignUp }: PopUpLog
       persistSession(response.data);
       toast.success(response.message || "Đăng nhập thành công");
       handleClose();
+
+      // Navigate to manager dashboard if user is a Manager
+      if (response.data.user.role === "Manager") {
+        window.location.href = "/manager";
+      }
     } catch (error) {
       toast.error(getAuthErrorMessage(error, "Đăng nhập thất bại. Vui lòng thử lại."));
     }
