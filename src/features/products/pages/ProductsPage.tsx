@@ -90,7 +90,7 @@ export default function ProductsPage() {
                 className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors ${
                   !categoryId
                     ? "bg-primary/10 text-primary"
-                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-900 cursor-pointer"
                 }`}
               >
                 Tất cả sản phẩm
@@ -102,7 +102,7 @@ export default function ProductsPage() {
                   className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors ${
                     categoryId === cat.id
                       ? "bg-primary/10 text-primary"
-                      : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                      : "text-gray-600 hover:bg-gray-50 hover:text-gray-900 cursor-pointer"
                   }`}
                 >
                   {cat.name}

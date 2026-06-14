@@ -3,7 +3,7 @@ import AppLayout from "@/components/layouts/AppLayout";
 import HomePage from "@/features/home/pages/Home";
 import ProductsPage from "@/features/products/pages/ProductsPage";
 import ProductDetailPage from "@/features/products/pages/ProductDetailPage";
-
+import ProtectedRoute from "./ProtectedRoute";
 
 export default function AppRoutes() {
   return (
