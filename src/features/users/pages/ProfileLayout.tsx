@@ -1,5 +1,6 @@
 import { Outlet, NavLink } from "react-router-dom";
 import { User, MapPin, Package } from "lucide-react";
+import { useEffect } from "react";
 
 export default function ProfileLayout() {
   const navItems = [
@@ -7,6 +8,10 @@ export default function ProfileLayout() {
     { name: "Địa chỉ", path: "/profile/addresses", icon: MapPin },
     { name: "Đơn hàng của tôi", path: "/profile/orders", icon: Package },
   ];
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, []);
 
   return (
     <div className="mx-auto max-w-screen-xl px-4 py-8 sm:px-6 lg:px-10">
@@ -23,10 +28,9 @@ export default function ProfileLayout() {
                     key={item.path}
                     to={item.path}
                     className={({ isActive }) =>
-                      `flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
-                        isActive
-                          ? "bg-primary/10 text-primary"
-                          : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                      `flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${isActive
+                        ? "bg-primary/10 text-primary"
+                        : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                       }`
                     }
                   >

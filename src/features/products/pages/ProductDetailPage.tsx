@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ShoppingCart, AlertCircle, Check, ChevronLeft } from "lucide-react";
+import { ShoppingCart, AlertCircle, Check, ChevronLeft, Minus, Plus, Store, MessageSquare, MapPin, Phone, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { productApi } from "../api/product.api";
 import { ProductDetail, ProductItem } from "../types/product";
 import { useCart } from "@/features/cart";
+import { getShopRequestById } from "@/features/shop/api/shop.api";
+import { Shop } from "@/features/shop/types/shop";
 
 export default function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -16,6 +18,8 @@ export default function ProductDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [selectedItem, setSelectedItem] = useState<ProductItem | null>(null);
   const [activeImage, setActiveImage] = useState<string>("");
+  const [quantity, setQuantity] = useState<number>(1);
+  const [shop, setShop] = useState<Shop | null>(null);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -30,6 +34,17 @@ export default function ProductDetailPage() {
           setProduct(productData);
           if (productData.items.length > 0) setSelectedItem(productData.items[0]);
           if (productData.images.length > 0) setActiveImage(productData.images[0].url);
+
+          // Fetch shop info
+          if (productData.gardenStoreId) {
+            getShopRequestById(productData.gardenStoreId)
+              .then((shopRes) => {
+                if (shopRes.isSuccess && shopRes.data) {
+                  setShop(shopRes.data);
+                }
+              })
+              .catch(console.error);
+          }
         } else {
           setError(response.data.message || "Không thể tải thông tin sản phẩm");
         }
@@ -45,7 +60,7 @@ export default function ProductDetailPage() {
 
   const handleAddToCart = () => {
     if (product && selectedItem) {
-      addItem({ productItemId: selectedItem.id, quantity: 1 });
+      addItem({ productItemId: selectedItem.id, quantity });
       toast.success("Đã thêm vào giỏ hàng");
     }
   };
@@ -245,13 +260,47 @@ export default function ProductDetailPage() {
             )}
 
             {/* Add to cart */}
-            <div className="mt-auto pt-2">
+            <div className="mt-auto pt-2 flex flex-col sm:flex-row gap-3">
+              {/* Quantity Selector */}
+              <div className="flex items-center rounded-lg border border-gray-200 bg-white p-1 h-10 w-28 shrink-0 shadow-sm">
+                <button
+                  onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                  disabled={quantity <= 1 || outOfStock}
+                  className="flex h-full flex-1 items-center justify-center rounded-md text-gray-600 hover:bg-gray-100 disabled:opacity-50 transition-colors cursor-pointer"
+                >
+                  <Minus size={14} />
+                </button>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={quantity}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/[^0-9]/g, '');
+                    setQuantity(val === '' ? ('' as any) : parseInt(val, 10));
+                  }}
+                  onBlur={() => {
+                    let val = Number(quantity);
+                    if (isNaN(val) || val < 1) val = 1;
+                    if (selectedItem && val > selectedItem.stock) val = selectedItem.stock;
+                    setQuantity(val);
+                  }}
+                  className="flex-1 w-10 text-center text-sm font-semibold tabular-nums text-gray-900 focus:outline-none bg-transparent"
+                />
+                <button
+                  onClick={() => setQuantity((q) => (selectedItem ? Math.min(selectedItem.stock, q + 1) : q + 1))}
+                  disabled={(selectedItem && quantity >= selectedItem.stock) || outOfStock}
+                  className="flex h-full flex-1 items-center justify-center rounded-md text-gray-600 hover:bg-gray-100 disabled:opacity-50 transition-colors cursor-pointer"
+                >
+                  <Plus size={14} />
+                </button>
+              </div>
+
               <button
                 onClick={handleAddToCart}
                 disabled={!selectedItem || outOfStock}
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-8 py-3.5 text-base font-bold text-white shadow-md transition-all hover:bg-primary-dark hover:shadow-lg active:scale-95 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:shadow-none sm:w-auto cursor-pointer"
+                className="flex items-center justify-center gap-2 rounded-lg bg-primary px-6 py-0 text-sm font-semibold text-white shadow-sm transition-all hover:bg-primary-dark active:scale-95 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:shadow-none cursor-pointer h-10 w-full sm:w-auto"
               >
-                <ShoppingCart className="h-5 w-5" />
+                <ShoppingCart className="h-4 w-4" />
                 {outOfStock ? "Hết hàng" : "Thêm vào giỏ hàng"}
               </button>
             </div>
@@ -259,6 +308,45 @@ export default function ProductDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* ── Store Info ─────────────────────────────────────────────────── */}
+      {shop && (
+        <div className="mt-6 rounded-2xl bg-white shadow-sm ring-1 ring-gray-100 p-4 sm:p-6 flex flex-col md:flex-row items-start md:items-center gap-6">
+          <div className="flex items-center gap-4 border-b border-gray-100 pb-6 md:border-b-0 md:pb-0 md:border-r md:pr-6 shrink-0 w-full md:w-auto">
+            <div className="flex h-[76px] w-[76px] items-center justify-center rounded-full bg-primary/10 text-primary shrink-0 ring-4 ring-gray-50">
+              <Store className="h-8 w-8" />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-gray-900 leading-tight">{shop.name}</h2>
+              <div className="mt-3 flex gap-2">
+                <button className="flex items-center gap-1.5 rounded-lg border border-primary px-3 py-1.5 text-xs font-semibold text-primary hover:bg-primary/5 transition-colors cursor-pointer">
+                  <MessageSquare className="h-3.5 w-3.5" />
+                  Chat ngay
+                </button>
+                <button className="flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer">
+                  <Store className="h-3.5 w-3.5" />
+                  Xem Shop
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-y-4 gap-x-6 text-sm">
+            <div className="flex flex-col gap-1.5 text-gray-500">
+              <span className="flex items-center gap-1.5"><Phone className="h-4 w-4" /> Hotline</span>
+              <span className="font-semibold text-primary">{shop.hotline || "Đang cập nhật"}</span>
+            </div>
+            <div className="flex flex-col gap-1.5 text-gray-500">
+              <span className="flex items-center gap-1.5"><Clock className="h-4 w-4" /> Giờ mở cửa</span>
+              <span className="font-medium text-gray-800">{shop.openingHours || "Đang cập nhật"}</span>
+            </div>
+            <div className="flex flex-col gap-1.5 text-gray-500 sm:col-span-2 lg:col-span-1">
+              <span className="flex items-center gap-1.5"><MapPin className="h-4 w-4" /> Địa chỉ</span>
+              <span className="font-medium text-gray-800 line-clamp-2">{shop.address || "Đang cập nhật"}</span>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

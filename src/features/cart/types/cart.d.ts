@@ -14,6 +14,7 @@ export interface CartProduct {
 
 export interface CartItem {
   id: string;
+  productId: string;
   productItemId: string;
   productName: string;
   variantName: string;

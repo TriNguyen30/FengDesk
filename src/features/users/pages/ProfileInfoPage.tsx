@@ -1,7 +1,12 @@
+import { useEffect } from "react";
 import { useAppSelector } from "@/store/hooks";
 
 export default function ProfileInfoPage() {
   const user = useAppSelector((state) => state.auth.user);
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, []);
 
   if (!user) return null;
 

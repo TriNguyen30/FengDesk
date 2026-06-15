@@ -122,3 +122,29 @@ export function BestSellersSection() {
     </section>
   );
 }
+
+// ─── YouMightAlsoLikeSection ──────────────────────────────────────────────────
+
+export function YouMightAlsoLikeSection() {
+  return (
+    <section className="mt-8 min-w-0 sm:mt-12 w-full">
+      <div className="mb-4 flex items-center justify-between gap-2 sm:mb-6">
+        <h2 className="text-xm font-medium text-gray-500 sm:text-xm">
+          Có thể bạn cũng thích
+        </h2>
+        <Link
+          to="/products"
+          className="shrink-0 text-sm font-medium text-primary transition-colors hover:text-primary-dark cursor-pointer"
+        >
+          Xem tất cả &rsaquo;
+        </Link>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5">
+        {SAMPLE_PRODUCTS.map((product) => (
+          <ProductCard key={product.id} product={product} />
+        ))}
+      </div>
+    </section>
+  );
+}

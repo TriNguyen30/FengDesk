@@ -80,7 +80,7 @@ export default function ProductsPage() {
         {/* Sidebar Filter */}
         <aside className="w-full shrink-0 md:w-64">
           <div className="sticky top-24 rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
-            <h2 className="mb-4 flex items-center gap-2 font-semibold text-gray-900">
+            <h2 className="mb-4 flex items-center gap-2 font-medium text-gray-900">
               <Filter className="h-4 w-4" />
               Danh mục sản phẩm
             </h2>
@@ -114,7 +114,7 @@ export default function ProductsPage() {
         <div className="flex-1 min-w-0">
           <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">
+              <h1 className="text-lg font-medium text-gray-900">
                 {selectedCategoryName ? selectedCategoryName : "Tất cả sản phẩm"}
               </h1>
               {search && (

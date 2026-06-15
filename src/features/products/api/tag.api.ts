@@ -6,7 +6,3 @@ export const getTags = async () => {
     const response = await fetchHttpClient.get<ApiResponse<Tag[]>>("/tags");
     return response.data;
 };
-
-
-
-g

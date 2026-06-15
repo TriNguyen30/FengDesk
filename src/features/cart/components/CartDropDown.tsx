@@ -1,5 +1,5 @@
 import { useCart } from "@/features/cart";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Minus, Plus, ShoppingCart, Trash2, X, Leaf } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -12,6 +12,7 @@ export default function CartDropDown() {
   const { items, itemCount, subtotal, setQuantity, removeItem, clearCart, deleteAll } = useCart();
   const [open, setOpen] = useState(false);
   const [closing, setClosing] = useState(false);
+  const navigate = useNavigate();
   const rootRef = useRef<HTMLDivElement>(null);
   const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -37,6 +38,14 @@ export default function CartDropDown() {
       if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current);
     };
   }, []);
+
+  const handleNavigate = useCallback((e: React.MouseEvent, path: string) => {
+    e.preventDefault();
+    close();
+    setTimeout(() => {
+      navigate(path);
+    }, 180); // Wait for the slide-up animation to finish
+  }, [close, navigate]);
 
   useEffect(() => {
     if (!open) return;
@@ -94,9 +103,9 @@ export default function CartDropDown() {
         onMouseEnter={open_}
         onMouseLeave={close}
       >
-        <Link
-          to="/cart"
-          onClick={() => close()}
+        <a
+          href="/cart"
+          onClick={(e) => handleNavigate(e, "/cart")}
           className="relative flex min-w-[44px] flex-col items-center gap-0.5 rounded-lg px-1 py-1 text-gray-700 transition-colors hover:text-primary active:bg-gray-100 cursor-pointer"
           aria-haspopup="true"
           aria-label={`Giỏ hàng, ${itemCount} sản phẩm`}
@@ -108,7 +117,7 @@ export default function CartDropDown() {
               {itemCount > 99 ? "99+" : itemCount}
             </span>
           )}
-        </Link>
+        </a>
 
         {open && (
           <div className="absolute right-0 top-full z-50 pt-2">
@@ -154,13 +163,13 @@ export default function CartDropDown() {
                     <ShoppingCart size={28} strokeWidth={1.5} />
                   </div>
                   <p className="text-sm text-gray-600">Chưa có sản phẩm nào</p>
-                  <Link
-                    to="/products"
-                    onClick={close}
+                  <a
+                    href="/products"
+                    onClick={(e) => handleNavigate(e, "/products")}
                     className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary-dark cursor-pointer"
                   >
                     Mua sắm ngay
-                  </Link>
+                  </a>
                 </div>
               ) : (
                 <>
@@ -171,13 +180,13 @@ export default function CartDropDown() {
                           <Leaf size={24} />
                         </div>
                         <div className="min-w-0 flex-1">
-                          <Link
-                            to={`/products`}
-                            onClick={close}
+                          <a
+                            href={`/products/${item.productId}`}
+                            onClick={(e) => handleNavigate(e, `/products/${item.productId}`)}
                             className="line-clamp-2 text-left text-xs font-medium leading-snug text-gray-800 hover:text-primary"
                           >
                             {item.productName} {item.variantName ? `(${item.variantName})` : ""}
-                          </Link>
+                          </a>
                           <p className="mt-1 text-sm font-bold text-primary">
                             {formatVnd(item.unitPrice)}
                           </p>
@@ -227,20 +236,13 @@ export default function CartDropDown() {
                       <span className="font-bold text-gray-900">{formatVnd(subtotal)}</span>
                     </div>
                     <div className="flex flex-col gap-2 sm:flex-row">
-                      <Link
-                        to="/cart"
-                        onClick={close}
+                      <a
+                        href="/cart"
+                        onClick={(e) => handleNavigate(e, "/cart")}
                         className="flex flex-1 items-center justify-center rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-center text-sm font-semibold text-gray-800 transition-colors hover:bg-gray-50 cursor-pointer"
                       >
                         Xem giỏ hàng
-                      </Link>
-                      {/* <button
-                        type="button"
-                        onClick={() => toast.info("Chức năng thanh toán đang được hoàn thiện")}
-                        className="flex flex-1 items-center justify-center rounded-lg bg-primary px-3 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-dark cursor-pointer"
-                      >
-                        Thanh toán
-                      </button> */}
+                      </a>
                     </div>
                   </div>
                 </>
