@@ -5,6 +5,7 @@ import HomePage from "@/features/home/pages/Home";
 import ProductsPage from "@/features/products/pages/ProductsPage";
 import ProductDetailPage from "@/features/products/pages/ProductDetailPage";
 import DashboardPage from "@/features/manager/pages/DashboardPage";
+import CartPage from "@/features/cart/pages/CartPage";
 import ProtectedRoute from "./ProtectedRoute";
 
 // Profile Pages
@@ -19,6 +20,7 @@ export default function AppRoutes() {
         <Route path="/" element={<HomePage />} />
         <Route path="/products" element={<ProductsPage />} />
         <Route path="/products/:id" element={<ProductDetailPage />} />
+        <Route path="/cart" element={<CartPage />} />
         
         {/* Protected Profile Routes */}
         <Route 
