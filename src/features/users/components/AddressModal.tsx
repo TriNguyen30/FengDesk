@@ -5,6 +5,7 @@ import { createAddress, updateAddress } from "../api/address.api";
 import { getProvinces, getDistrictsByProvinceId, getWardsByDistrictId } from "../api/location.api";
 import { Provinces, District, Ward } from "../types/location";
 import { toast } from "sonner";
+import LocationPickerMap from "./LocationPickerMap";
 
 interface AddressModalProps {
   isOpen: boolean;
@@ -290,6 +291,16 @@ export default function AddressModal({ isOpen, onClose, onSuccess, address }: Ad
                 className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                 placeholder="Số nhà, tên đường..."
               />
+            </div>
+
+            <div className="z-0 relative">
+              <label className="mb-1.5 block text-sm font-medium text-gray-700">Vị trí trên bản đồ</label>
+              <LocationPickerMap 
+                latitude={formData.latitude} 
+                longitude={formData.longitude} 
+                onChange={(lat, lng) => setFormData(prev => ({ ...prev, latitude: lat, longitude: lng }))} 
+              />
+              <p className="mt-1 text-xs text-gray-500">Chạm vào bản đồ để chọn vị trí chính xác của địa chỉ nhận hàng</p>
             </div>
 
             <div>

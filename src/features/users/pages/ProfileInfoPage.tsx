@@ -8,7 +8,7 @@ export default function ProfileInfoPage() {
   return (
     <div className="max-w-2xl">
       <h1 className="mb-6 text-2xl font-bold text-gray-900">Thông tin tài khoản</h1>
-      
+
       <div className="space-y-6">
         <div className="flex items-center gap-6 pb-6 border-b border-gray-100">
           <div className="flex h-20 w-20 items-center justify-center rounded-full bg-primary/10 text-primary text-2xl font-bold">
@@ -16,7 +16,7 @@ export default function ProfileInfoPage() {
           </div>
           <div>
             <h2 className="text-xl font-semibold text-gray-900">{user.fullName || "Người dùng"}</h2>
-            <p className="text-sm text-gray-500">{user.role}</p>
+            <p className="text-sm text-gray-500">{user.role === "Customer" ? "Khách hàng" : "Nhân viên"}</p>
           </div>
         </div>
 
@@ -32,7 +32,7 @@ export default function ProfileInfoPage() {
               className="block w-full rounded-lg border border-gray-300 bg-gray-50 px-4 py-2.5 text-sm text-gray-900 opacity-70 cursor-not-allowed"
             />
           </div>
-          
+
           <div>
             <label className="mb-1.5 block text-sm font-medium text-gray-700">
               Email

@@ -4,12 +4,15 @@ import { getAddresses, deleteAddress } from "../api/address.api";
 import { Address } from "../types/address";
 import { toast } from "sonner";
 import AddressModal from "../components/AddressModal";
+import Modal from "@/components/ui/Modal";
 
 export default function AddressBookPage() {
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [addressToDelete, setAddressToDelete] = useState<string | null>(null);
 
   useEffect(() => {
     fetchAddresses();
@@ -38,16 +41,23 @@ export default function AddressBookPage() {
     setIsModalOpen(true);
   };
 
-  const handleDelete = async (id: string) => {
-    if (window.confirm("Bạn có chắc chắn muốn xóa địa chỉ này?")) {
-      try {
-        await deleteAddress(id);
-        toast.success("Xóa địa chỉ thành công");
-        fetchAddresses();
-      } catch (error) {
-        toast.error("Không thể xóa địa chỉ");
-        console.error(error);
-      }
+  const handleDeleteClick = (id: string) => {
+    setAddressToDelete(id);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!addressToDelete) return;
+    try {
+      await deleteAddress(addressToDelete);
+      toast.success("Xóa địa chỉ thành công");
+      fetchAddresses();
+    } catch (error) {
+      toast.error("Không thể xóa địa chỉ");
+      console.error(error);
+    } finally {
+      setIsDeleteModalOpen(false);
+      setAddressToDelete(null);
     }
   };
 
@@ -116,7 +126,7 @@ export default function AddressBookPage() {
                 </button>
                 {!address.isDefault && (
                   <button 
-                    onClick={() => handleDelete(address.id)}
+                    onClick={() => handleDeleteClick(address.id)}
                     className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 cursor-pointer"
                   >
                     <Trash2 size={14} />
@@ -135,6 +145,32 @@ export default function AddressBookPage() {
         onSuccess={fetchAddresses}
         address={selectedAddress}
       />
+
+      <Modal
+        open={isDeleteModalOpen}
+        title="Xóa địa chỉ"
+        onClose={() => setIsDeleteModalOpen(false)}
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-gray-600">
+            Bạn có chắc chắn muốn xóa địa chỉ này? Hành động này không thể hoàn tác.
+          </p>
+          <div className="flex gap-3 pt-2">
+            <button
+              onClick={() => setIsDeleteModalOpen(false)}
+              className="flex-1 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 cursor-pointer"
+            >
+              Hủy
+            </button>
+            <button
+              onClick={handleConfirmDelete}
+              className="flex-1 rounded-lg bg-red-600 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-red-700 cursor-pointer"
+            >
+              Xóa địa chỉ
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }
