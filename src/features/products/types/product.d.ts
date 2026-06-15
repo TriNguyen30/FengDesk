@@ -89,4 +89,4 @@ export interface ProductDetail {
     tags: ProductTag[];
     createdAt: string;
     updatedAt: string;
-}
+}

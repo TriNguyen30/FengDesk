@@ -107,7 +107,7 @@ export function BestSellersSection() {
           Sản phẩm bán chạy
         </h2>
         <a
-          href="#"
+          href="/products"
           className="shrink-0 text-xs font-medium text-primary transition-colors hover:text-primary-dark sm:text-sm cursor-pointer"
         >
           Xem tất cả &rsaquo;

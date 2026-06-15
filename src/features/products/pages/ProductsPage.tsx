@@ -76,7 +76,7 @@ export default function ProductsPage() {
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       <div className="flex flex-col gap-6 md:flex-row md:items-start md:gap-8">
-        
+
         {/* Sidebar Filter */}
         <aside className="w-full shrink-0 md:w-64">
           <div className="sticky top-24 rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
@@ -87,11 +87,10 @@ export default function ProductsPage() {
             <div className="flex flex-col gap-1.5">
               <button
                 onClick={() => handleCategorySelect("")}
-                className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors ${
-                  !categoryId
+                className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors ${!categoryId
                     ? "bg-primary/10 text-primary"
                     : "text-gray-600 hover:bg-gray-50 hover:text-gray-900 cursor-pointer"
-                }`}
+                  }`}
               >
                 Tất cả sản phẩm
               </button>
@@ -99,11 +98,10 @@ export default function ProductsPage() {
                 <button
                   key={cat.id}
                   onClick={() => handleCategorySelect(cat.id)}
-                  className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors ${
-                    categoryId === cat.id
+                  className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors ${categoryId === cat.id
                       ? "bg-primary/10 text-primary"
                       : "text-gray-600 hover:bg-gray-50 hover:text-gray-900 cursor-pointer"
-                  }`}
+                    }`}
                 >
                   {cat.name}
                 </button>
