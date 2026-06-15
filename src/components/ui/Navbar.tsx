@@ -13,7 +13,7 @@ import Logo from "@/assets/image/fengdesk_logo_2.png";
 
 export default function Navbar() {
   const navigate = useNavigate();
-  
+
   const handleSearch = (query: string) => {
     if (query.trim()) {
       navigate(`/products?search=${encodeURIComponent(query)}`);
@@ -127,6 +127,18 @@ export default function Navbar() {
                       <p className="text-xs text-gray-500 truncate">{user.email}</p>
                     </div>
                     <div className="p-1">
+                      <button
+                        onClick={() => navigate('/profile/info')}
+                        className="flex w-full items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 rounded-md transition-colors text-left font-medium cursor-pointer"
+                      >
+                        Tài Khoản Của Tôi
+                      </button>
+                      <button
+                        onClick={() => navigate('/profile/orders')}
+                        className="flex w-full items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 rounded-md transition-colors text-left font-medium cursor-pointer"
+                      >
+                        Đơn Mua
+                      </button>
                       <button
                         onClick={handleLogout}
                         className="flex w-full items-center px-3 py-2 text-sm text-red-600 hover:bg-red-50 hover:text-red-700 rounded-md transition-colors text-left font-medium cursor-pointer"

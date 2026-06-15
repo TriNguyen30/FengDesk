@@ -7,6 +7,11 @@ import ProductDetailPage from "@/features/products/pages/ProductDetailPage";
 import DashboardPage from "@/features/manager/pages/DashboardPage";
 import ProtectedRoute from "./ProtectedRoute";
 
+// Profile Pages
+import ProfileLayout from "@/features/users/pages/ProfileLayout";
+import ProfileInfoPage from "@/features/users/pages/ProfileInfoPage";
+import AddressBookPage from "@/features/users/pages/AddressBookPage";
+
 export default function AppRoutes() {
   return (
     <Routes>
@@ -14,6 +19,21 @@ export default function AppRoutes() {
         <Route path="/" element={<HomePage />} />
         <Route path="/products" element={<ProductsPage />} />
         <Route path="/products/:id" element={<ProductDetailPage />} />
+        
+        {/* Protected Profile Routes */}
+        <Route 
+          path="/profile" 
+          element={
+            <ProtectedRoute>
+              <ProfileLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<Navigate to="info" replace />} />
+          <Route path="info" element={<ProfileInfoPage />} />
+          <Route path="addresses" element={<AddressBookPage />} />
+          <Route path="orders" element={<div className="p-4 text-center">Đơn hàng của tôi đang phát triển...</div>} />
+        </Route>
       </Route>
       <Route 
         path="/manager" 

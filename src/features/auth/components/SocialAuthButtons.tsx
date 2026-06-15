@@ -60,7 +60,7 @@ export default function SocialAuthButtons({
             Tiếp tục với Google
           </span>
         </button>
-        <button
+        {/* <button
           type="button"
           onClick={handleFacebook}
           className="flex min-h-11 w-full items-center gap-3 rounded-xl border border-[#1877F2]/20 bg-[#1877F2]/5 px-4 py-2.5 text-sm font-medium text-[#1877F2] shadow-sm transition hover:bg-[#1877F2]/10 active:bg-[#1877F2]/15 cursor-pointer"
@@ -69,7 +69,7 @@ export default function SocialAuthButtons({
           <span className="min-w-0 flex-1 truncate text-center sm:whitespace-normal">
             Tiếp tục với Facebook
           </span>
-        </button>
+        </button> */}
       </div>
     </>
   );
