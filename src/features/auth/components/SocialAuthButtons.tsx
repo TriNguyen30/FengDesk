@@ -34,10 +34,9 @@ type SocialAuthButtonsProps = {
 };
 
 export default function SocialAuthButtons({
-  dividerLabel = "hoặc đăng nhập với",
+  dividerLabel = "HOẶC",
 }: SocialAuthButtonsProps) {
   const handleGoogle = () => console.log("Google sign-in");
-  const handleFacebook = () => console.log("Facebook sign-in");
 
   return (
     <>
@@ -53,23 +52,13 @@ export default function SocialAuthButtons({
         <button
           type="button"
           onClick={handleGoogle}
-          className="flex min-h-11 w-full items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm transition hover:bg-gray-50 active:bg-gray-100 cursor-pointer"
+          className="flex min-h-11 w-full items-center justify-center rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm transition hover:bg-gray-50 active:bg-gray-100 cursor-pointer"
         >
-          <GoogleIcon />
-          <span className="min-w-0 flex-1 truncate text-center sm:whitespace-normal">
-            Tiếp tục với Google
-          </span>
+          <div className="flex items-center gap-2">
+            <GoogleIcon />
+            <span>Tiếp tục với Google</span>
+          </div>
         </button>
-        {/* <button
-          type="button"
-          onClick={handleFacebook}
-          className="flex min-h-11 w-full items-center gap-3 rounded-xl border border-[#1877F2]/20 bg-[#1877F2]/5 px-4 py-2.5 text-sm font-medium text-[#1877F2] shadow-sm transition hover:bg-[#1877F2]/10 active:bg-[#1877F2]/15 cursor-pointer"
-        >
-          <FacebookIcon />
-          <span className="min-w-0 flex-1 truncate text-center sm:whitespace-normal">
-            Tiếp tục với Facebook
-          </span>
-        </button> */}
       </div>
     </>
   );

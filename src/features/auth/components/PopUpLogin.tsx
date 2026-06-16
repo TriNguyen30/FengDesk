@@ -91,14 +91,6 @@ export default function PopUpLogin({ open, onClose, onSwitchToSignUp }: PopUpLog
             id="login-password"
             label="Mật khẩu"
             error={emailErrors.password?.message}
-            hint={
-              <button
-                type="button"
-                className="text-xs font-medium text-primary hover:text-primary-dark cursor-pointer"
-              >
-                Quên mật khẩu?
-              </button>
-            }
           >
             <div className="relative">
               <input
@@ -139,6 +131,15 @@ export default function PopUpLogin({ open, onClose, onSwitchToSignUp }: PopUpLog
             {emailForm.formState.isSubmitting ? "Đang đăng nhập..." : "Đăng nhập"}
             <ChevronRight size={16} />
           </button>
+
+          <div className="text-start mt-1">
+            <button
+              type="button"
+              className="text-sm font-medium text-primary hover:text-primary-dark cursor-pointer transition-colors"
+            >
+              Quên mật khẩu?
+            </button>
+          </div>
         </form>
 
         <SocialAuthButtons />
