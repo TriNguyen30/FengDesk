@@ -1,10 +1,9 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { getCategoriesRequest } from "@/features/category/api/category.api";
-import { productApi } from "@/features/products/api/product.api";
 import type { Category } from "@/features/category/types/category";
-import type { Product } from "@/features/products/types/product";
 import ProductCard from "@/features/products/components/ProductCard";
+import { useProductList } from "@/features/products/hooks/useProducts";
 import { Filter, SearchX, Loader2 } from "lucide-react";
 
 export default function ProductsPage() {
@@ -13,10 +12,13 @@ export default function ProductsPage() {
   const categoryId = searchParams.get("categoryId") || "";
 
   const [categories, setCategories] = useState<Category[]>([]);
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
 
-  // Fetch Categories
+  const { products, loading } = useProductList({
+    search: search || undefined,
+    categoryId: categoryId || undefined,
+    pageSize: 20,
+  });
+
   useEffect(() => {
     async function fetchCategories() {
       try {
@@ -31,26 +33,7 @@ export default function ProductsPage() {
     fetchCategories();
   }, []);
 
-  // Fetch Products based on URL params
   useEffect(() => {
-    async function fetchProducts() {
-      try {
-        setLoading(true);
-        const res = await productApi.getProducts({
-          search: search || undefined,
-          categoryId: categoryId || undefined,
-          pageSize: 20, // Load a bunch initially
-        });
-        if (res.data.isSuccess) {
-          setProducts(res.data.data.items);
-        }
-      } catch (error) {
-        console.error("Failed to fetch products", error);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchProducts();
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [search, categoryId]);
 
@@ -61,7 +44,6 @@ export default function ProductsPage() {
     } else {
       newParams.delete("categoryId");
     }
-    // Optional: reset page to 1 if we had pagination
     setSearchParams(newParams);
   };
 

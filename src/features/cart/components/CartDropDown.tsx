@@ -1,11 +1,81 @@
 import { useCart } from "@/features/cart";
+import CartItemImage from "@/features/cart/components/CartItemImage";
+import type { CartItem } from "@/features/cart/types/cart";
 import { Link, useNavigate } from "react-router-dom";
-import { Minus, Plus, ShoppingCart, Trash2, X, Leaf } from "lucide-react";
+import { Minus, Plus, ShoppingCart, Trash2, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import { useAppSelector } from "@/store/hooks";
+import { selectProductPrimaryImage } from "@/features/products/store/productSlice";
+import type { UpdateCartItemParams } from "@/features/cart/types/cart";
 
 function formatVnd(n: number): string {
   return n.toLocaleString("vi-VN") + "đ";
+}
+
+interface CartDropdownItemProps {
+  item: CartItem;
+  onNavigate: (e: React.MouseEvent, path: string) => void;
+  onQuantityChange: (params: UpdateCartItemParams) => void;
+  onRemove: () => void;
+}
+
+function CartDropdownItem({
+  item,
+  onNavigate,
+  onQuantityChange,
+  onRemove,
+}: CartDropdownItemProps) {
+  const imageUrl = useAppSelector(selectProductPrimaryImage(item.productId));
+
+  return (
+    <li className="flex gap-3 px-3 py-3 hover:bg-gray-50/80">
+      <CartItemImage imageUrl={imageUrl} alt={item.productName} />
+      <div className="min-w-0 flex-1">
+        <a
+          href={`/products/${item.productId}`}
+          onClick={(e) => onNavigate(e, `/products/${item.productId}`)}
+          className="line-clamp-2 text-left text-xs font-medium leading-snug text-gray-800 hover:text-primary"
+        >
+          {item.productName} {item.variantName ? `(${item.variantName})` : ""}
+        </a>
+        <p className="mt-1 text-sm font-bold text-primary">
+          {formatVnd(item.unitPrice)}
+        </p>
+        <div className="mt-2 flex items-center gap-2">
+          <div className="flex items-center rounded-md border border-gray-200 bg-white">
+            <button
+              type="button"
+              onClick={() => onQuantityChange({ itemId: item.id, quantity: item.quantity - 1 })}
+              className="flex h-7 w-7 items-center justify-center text-gray-600 hover:bg-gray-100 cursor-pointer"
+              aria-label="Giảm số lượng"
+            >
+              <Minus size={14} />
+            </button>
+            <span className="min-w-6 text-center text-xs font-semibold tabular-nums">
+              {item.quantity}
+            </span>
+            <button
+              type="button"
+              onClick={() => onQuantityChange({ itemId: item.id, quantity: item.quantity + 1 })}
+              className="flex h-7 w-7 items-center justify-center text-gray-600 hover:bg-gray-100 cursor-pointer"
+              aria-label="Tăng số lượng"
+            >
+              <Plus size={14} />
+            </button>
+          </div>
+          <button
+            type="button"
+            onClick={onRemove}
+            className="ml-auto rounded-md p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-600 cursor-pointer"
+            aria-label="Xóa khỏi giỏ"
+          >
+            <Trash2 size={16} />
+          </button>
+        </div>
+      </div>
+    </li>
+  );
 }
 
 export default function CartDropDown() {
@@ -175,58 +245,13 @@ export default function CartDropDown() {
                 <>
                   <ul className="scrollbar-none max-h-[min(50vh,20rem)] overflow-y-auto divide-y divide-gray-100">
                     {items.map((item) => (
-                      <li key={item.id} className="flex gap-3 px-3 py-3 hover:bg-gray-50/80">
-                        <div className="h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-gray-50 ring-1 ring-gray-100 flex items-center justify-center text-gray-400">
-                          <Leaf size={24} />
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <a
-                            href={`/products/${item.productId}`}
-                            onClick={(e) => handleNavigate(e, `/products/${item.productId}`)}
-                            className="line-clamp-2 text-left text-xs font-medium leading-snug text-gray-800 hover:text-primary"
-                          >
-                            {item.productName} {item.variantName ? `(${item.variantName})` : ""}
-                          </a>
-                          <p className="mt-1 text-sm font-bold text-primary">
-                            {formatVnd(item.unitPrice)}
-                          </p>
-                          <div className="mt-2 flex items-center gap-2">
-                            <div className="flex items-center rounded-md border border-gray-200 bg-white">
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  setQuantity({ itemId: item.id, quantity: item.quantity - 1 })
-                                }
-                                className="flex h-7 w-7 items-center justify-center text-gray-600 hover:bg-gray-100 cursor-pointer"
-                                aria-label="Giảm số lượng"
-                              >
-                                <Minus size={14} />
-                              </button>
-                              <span className="min-w-6 text-center text-xs font-semibold tabular-nums">
-                                {item.quantity}
-                              </span>
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  setQuantity({ itemId: item.id, quantity: item.quantity + 1 })
-                                }
-                                className="flex h-7 w-7 items-center justify-center text-gray-600 hover:bg-gray-100 cursor-pointer"
-                                aria-label="Tăng số lượng"
-                              >
-                                <Plus size={14} />
-                              </button>
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => removeItem(item.id)}
-                              className="ml-auto rounded-md p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-600 cursor-pointer"
-                              aria-label="Xóa khỏi giỏ"
-                            >
-                              <Trash2 size={16} />
-                            </button>
-                          </div>
-                        </div>
-                      </li>
+                      <CartDropdownItem
+                        key={item.id}
+                        item={item}
+                        onNavigate={handleNavigate}
+                        onQuantityChange={setQuantity}
+                        onRemove={() => removeItem(item.id)}
+                      />
                     ))}
                   </ul>
 

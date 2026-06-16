@@ -1,12 +1,109 @@
 import { useCart } from "@/features/cart";
+import CartItemImage from "@/features/cart/components/CartItemImage";
+import type { CartItem } from "@/features/cart/types/cart";
 import { Link, useNavigate } from "react-router-dom";
-import { Minus, Plus, ShoppingCart, Trash2, Leaf, ChevronLeft } from "lucide-react";
+import { Minus, Plus, ShoppingCart, Trash2, ChevronLeft } from "lucide-react";
 import { toast } from "sonner";
 import { useState, useMemo, useEffect } from "react";
+import { useAppSelector } from "@/store/hooks";
+import { selectProductPrimaryImage } from "@/features/products/store/productSlice";
 import { YouMightAlsoLikeSection } from "@/features/products/components/ProductCard";
+import type { UpdateCartItemParams } from "@/features/cart/types/cart";
 
 function formatVnd(n: number): string {
   return n.toLocaleString("vi-VN") + "đ";
+}
+
+interface CartLineItemProps {
+  item: CartItem;
+  selected: boolean;
+  onSelect: (checked: boolean) => void;
+  onQuantityChange: (params: UpdateCartItemParams) => void;
+  onRemove: () => void;
+}
+
+function CartLineItem({
+  item,
+  selected,
+  onSelect,
+  onQuantityChange,
+  onRemove,
+}: CartLineItemProps) {
+  const imageUrl = useAppSelector(selectProductPrimaryImage(item.productId));
+
+  return (
+    <li className="flex gap-4 py-5 sm:items-center">
+      <div className="flex items-center">
+        <input
+          type="checkbox"
+          checked={selected}
+          onChange={(e) => onSelect(e.target.checked)}
+          className="h-5 w-5 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
+        />
+      </div>
+      <CartItemImage
+        imageUrl={imageUrl}
+        alt={item.productName}
+        className="flex h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-gray-50 ring-1 ring-gray-100"
+        iconSize={28}
+      />
+
+      <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <Link
+            to={`/products/${item.productId}`}
+            className="text-base font-bold text-gray-900 hover:text-primary line-clamp-2"
+          >
+            {item.productName} {item.variantName ? `(${item.variantName})` : ""}
+          </Link>
+          <p className="mt-1 text-lg font-bold text-primary">
+            {formatVnd(item.unitPrice)}
+          </p>
+        </div>
+
+        <div className="flex items-center justify-between sm:flex-col sm:items-end gap-3">
+          <div className="flex items-center rounded-lg border border-gray-200 bg-white">
+            <button
+              onClick={() => onQuantityChange({ itemId: item.id, quantity: item.quantity - 1 })}
+              className="flex h-8 w-8 items-center justify-center text-gray-600 hover:bg-gray-100 transition-colors cursor-pointer rounded-l-lg"
+            >
+              <Minus size={14} />
+            </button>
+            <input
+              type="text"
+              inputMode="numeric"
+              value={item.quantity}
+              onChange={(e) => {
+                const val = e.target.value.replace(/[^0-9]/g, "");
+                if (val) {
+                  onQuantityChange({ itemId: item.id, quantity: parseInt(val, 10) });
+                }
+              }}
+              onBlur={(e) => {
+                const val = e.target.value.replace(/[^0-9]/g, "");
+                const num = val ? parseInt(val, 10) : 1;
+                onQuantityChange({ itemId: item.id, quantity: Math.max(1, num) });
+              }}
+              className="min-w-10 w-10 text-center text-sm font-semibold tabular-nums focus:outline-none bg-transparent"
+            />
+            <button
+              onClick={() => onQuantityChange({ itemId: item.id, quantity: item.quantity + 1 })}
+              className="flex h-8 w-8 items-center justify-center text-gray-600 hover:bg-gray-100 transition-colors cursor-pointer rounded-r-lg"
+            >
+              <Plus size={14} />
+            </button>
+          </div>
+          <button
+            onClick={onRemove}
+            className="flex items-center gap-1.5 text-xs font-medium text-gray-400 hover:text-red-500 transition-colors cursor-pointer"
+          >
+            <Trash2 size={14} />
+            <span className="hidden sm:inline">Xóa</span>
+          </button>
+        </div>
+      </div>
+    </li>
+  );
 }
 
 export default function CartPage() {
@@ -122,74 +219,14 @@ export default function CartPage() {
 
               <ul className="divide-y divide-dashed divide-gray-100">
                 {items.map((item) => (
-                  <li key={item.id} className="flex gap-4 py-5 sm:items-center">
-                    <div className="flex items-center">
-                      <input
-                        type="checkbox"
-                        checked={selectedItems.includes(item.id)}
-                        onChange={(e) => handleSelectItem(item.id, e.target.checked)}
-                        className="h-5 w-5 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
-                      />
-                    </div>
-                    <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gray-50 ring-1 ring-gray-100 text-gray-400">
-                      <Leaf size={28} />
-                    </div>
-                    
-                    <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                      <div>
-                        <Link
-                          to={`/products/${item.productId}`}
-                          className="text-base font-bold text-gray-900 hover:text-primary line-clamp-2"
-                        >
-                          {item.productName} {item.variantName ? `(${item.variantName})` : ""}
-                        </Link>
-                        <p className="mt-1 text-lg font-bold text-primary">
-                          {formatVnd(item.unitPrice)}
-                        </p>
-                      </div>
-
-                      <div className="flex items-center justify-between sm:flex-col sm:items-end gap-3">
-                        <div className="flex items-center rounded-lg border border-gray-200 bg-white">
-                          <button
-                            onClick={() => setQuantity({ itemId: item.id, quantity: item.quantity - 1 })}
-                            className="flex h-8 w-8 items-center justify-center text-gray-600 hover:bg-gray-100 transition-colors cursor-pointer rounded-l-lg"
-                          >
-                            <Minus size={14} />
-                          </button>
-                          <input
-                            type="text"
-                            inputMode="numeric"
-                            value={item.quantity}
-                            onChange={(e) => {
-                              const val = e.target.value.replace(/[^0-9]/g, '');
-                              if (val) {
-                                setQuantity({ itemId: item.id, quantity: parseInt(val, 10) });
-                              }
-                            }}
-                            onBlur={(e) => {
-                              const val = e.target.value.replace(/[^0-9]/g, '');
-                              const num = val ? parseInt(val, 10) : 1;
-                              setQuantity({ itemId: item.id, quantity: Math.max(1, num) });
-                            }}
-                            className="min-w-[2.5rem] w-10 text-center text-sm font-semibold tabular-nums focus:outline-none bg-transparent"
-                          />
-                          <button
-                            onClick={() => setQuantity({ itemId: item.id, quantity: item.quantity + 1 })}
-                            className="flex h-8 w-8 items-center justify-center text-gray-600 hover:bg-gray-100 transition-colors cursor-pointer rounded-r-lg"
-                          >
-                            <Plus size={14} />
-                          </button>
-                        </div>
-                        <button
-                          onClick={() => removeItem(item.id)}
-                          className="flex items-center gap-1.5 text-xs font-medium text-gray-400 hover:text-red-500 transition-colors cursor-pointer"
-                        >
-                          <Trash2 size={14} />
-                          <span className="hidden sm:inline">Xóa</span>
-                        </button>
-                      </div>
-                    </div>
-                  </li>
+                  <CartLineItem
+                    key={item.id}
+                    item={item}
+                    selected={selectedItems.includes(item.id)}
+                    onSelect={(checked) => handleSelectItem(item.id, checked)}
+                    onQuantityChange={setQuantity}
+                    onRemove={() => removeItem(item.id)}
+                  />
                 ))}
               </ul>
             </div>

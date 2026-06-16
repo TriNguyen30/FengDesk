@@ -5,10 +5,7 @@ const emailField = z.string().trim().min(1, "Vui lòng nhập email").email("Ema
 const passwordField = z
   .string()
   .min(1, "Vui lòng nhập mật khẩu")
-  .min(8, "Mật khẩu tối thiểu 8 ký tự")
-  .regex(/[A-Z]/, "Mật khẩu cần ít nhất 1 chữ hoa")
-  .regex(/[a-z]/, "Mật khẩu cần ít nhất 1 chữ thường")
-  .regex(/[0-9]/, "Mật khẩu cần ít nhất 1 chữ số");
+  .min(5, "Mật khẩu tối thiểu 5 ký tự");
 
 const vietnamesePhoneField = z
   .string()
@@ -18,7 +15,7 @@ const vietnamesePhoneField = z
 
 export const loginEmailSchema = z.object({
   email: emailField,
-  password: z.string().min(1, "Vui lòng nhập mật khẩu").min(6, "Mật khẩu tối thiểu 6 ký tự"),
+  password: z.string().min(1, "Vui lòng nhập mật khẩu").min(5, "Mật khẩu tối thiểu 5 ký tự"),
   remember: z.boolean().optional(),
 });
 

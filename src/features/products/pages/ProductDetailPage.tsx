@@ -2,8 +2,8 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ShoppingCart, AlertCircle, Check, ChevronLeft, Minus, Plus, Store, MessageSquare, MapPin, Phone, Clock } from "lucide-react";
 import { toast } from "sonner";
-import { productApi } from "../api/product.api";
-import { ProductDetail, ProductItem } from "../types/product";
+import { ProductItem } from "../types/product";
+import { useProductDetail } from "../hooks/useProducts";
 import { useCart } from "@/features/cart";
 import { getShopRequestById } from "@/features/shop/api/shop.api";
 import { Shop } from "@/features/shop/types/shop";
@@ -12,10 +12,8 @@ export default function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { addItem } = useCart();
+  const { product, loading, failed } = useProductDetail(id);
 
-  const [product, setProduct] = useState<ProductDetail | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [selectedItem, setSelectedItem] = useState<ProductItem | null>(null);
   const [activeImage, setActiveImage] = useState<string>("");
   const [quantity, setQuantity] = useState<number>(1);
@@ -23,40 +21,26 @@ export default function ProductDetailPage() {
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
-    if (!id) return;
-
-    const fetchProduct = async () => {
-      try {
-        setLoading(true);
-        const response = await productApi.getProductById(id);
-        if (response.data.isSuccess && response.data.data) {
-          const productData = response.data.data;
-          setProduct(productData);
-          if (productData.items.length > 0) setSelectedItem(productData.items[0]);
-          if (productData.images.length > 0) setActiveImage(productData.images[0].url);
-
-          // Fetch shop info
-          if (productData.gardenStoreId) {
-            getShopRequestById(productData.gardenStoreId)
-              .then((shopRes) => {
-                if (shopRes.isSuccess && shopRes.data) {
-                  setShop(shopRes.data);
-                }
-              })
-              .catch(console.error);
-          }
-        } else {
-          setError(response.data.message || "Không thể tải thông tin sản phẩm");
-        }
-      } catch {
-        setError("Đã xảy ra lỗi khi tải thông tin sản phẩm");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProduct();
   }, [id]);
+
+  useEffect(() => {
+    if (!product) return;
+
+    setSelectedItem(product.items[0] ?? null);
+    setActiveImage(product.images[0]?.url ?? "");
+    setQuantity(1);
+    setShop(null);
+
+    if (product.gardenStoreId) {
+      getShopRequestById(product.gardenStoreId)
+        .then((shopRes) => {
+          if (shopRes.isSuccess && shopRes.data) {
+            setShop(shopRes.data);
+          }
+        })
+        .catch(console.error);
+    }
+  }, [product]);
 
   const handleAddToCart = () => {
     if (product && selectedItem) {
@@ -64,6 +48,8 @@ export default function ProductDetailPage() {
       toast.success("Đã thêm vào giỏ hàng");
     }
   };
+
+  const error = failed ? "Không thể tải thông tin sản phẩm" : null;
 
   // ── Loading skeleton ──────────────────────────────────────────────────────
   if (loading) {
@@ -330,7 +316,7 @@ export default function ProductDetailPage() {
               </div>
             </div>
           </div>
-          
+
           <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-y-4 gap-x-6 text-sm">
             <div className="flex flex-col gap-1.5 text-gray-500">
               <span className="flex items-center gap-1.5"><Phone className="h-4 w-4" /> Hotline</span>
@@ -342,7 +328,7 @@ export default function ProductDetailPage() {
             </div>
             <div className="flex flex-col gap-1.5 text-gray-500 sm:col-span-2 lg:col-span-1">
               <span className="flex items-center gap-1.5"><MapPin className="h-4 w-4" /> Địa chỉ</span>
-              <span className="font-medium text-gray-800 line-clamp-2">{shop.address || "Đang cập nhật"}</span>
+              <span className="font-medium text-gray-800 line-clamp-2">{shop.address?.streetAddress || "Đang cập nhật"}</span>
             </div>
           </div>
         </div>
