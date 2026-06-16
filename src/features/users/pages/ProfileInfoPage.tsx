@@ -21,15 +21,15 @@ export default function ProfileInfoPage() {
           </div>
           <div>
             <h2 className="text-xl font-semibold text-gray-900">{user.fullName || "Người dùng"}</h2>
-            <p className="text-sm text-gray-500">{user.role === "Customer" ? "Khách hàng" : "Nhân viên"}</p>
+            <p className="text-sm text-gray-500">
+              {user.role === "Customer" ? "Khách hàng" : "Nhân viên"}
+            </p>
           </div>
         </div>
 
         <form className="space-y-4">
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-gray-700">
-              Họ và tên
-            </label>
+            <label className="mb-1.5 block text-sm font-medium text-gray-700">Họ và tên</label>
             <input
               type="text"
               disabled
@@ -39,9 +39,7 @@ export default function ProfileInfoPage() {
           </div>
 
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-gray-700">
-              Email
-            </label>
+            <label className="mb-1.5 block text-sm font-medium text-gray-700">Email</label>
             <input
               type="email"
               disabled
@@ -58,7 +56,9 @@ export default function ProfileInfoPage() {
             >
               Cập nhật thông tin
             </button>
-            <p className="mt-2 text-xs text-gray-500">Tính năng cập nhật thông tin đang được phát triển.</p>
+            <p className="mt-2 text-xs text-gray-500">
+              Tính năng cập nhật thông tin đang được phát triển.
+            </p>
           </div>
         </form>
       </div>

@@ -42,13 +42,10 @@ export const fetchProducts = createAsyncThunk(
   },
 );
 
-export const fetchProductById = createAsyncThunk(
-  "product/fetchProductById",
-  async (id: string) => {
-    const response = await productApi.getProductById(id);
-    return { id, data: response.data };
-  },
-);
+export const fetchProductById = createAsyncThunk("product/fetchProductById", async (id: string) => {
+  const response = await productApi.getProductById(id);
+  return { id, data: response.data };
+});
 
 export const fetchProductDetailsByIds = createAsyncThunk(
   "product/fetchProductDetailsByIds",
@@ -143,11 +140,12 @@ const productSlice = createSlice({
 
 export default productSlice.reducer;
 
-export const selectProductList = (params: GetProductsParams = {}) => (state: RootState) =>
-  state.product.lists[getProductListKey(params)];
+export const selectProductList =
+  (params: GetProductsParams = {}) =>
+  (state: RootState) =>
+    state.product.lists[getProductListKey(params)];
 
-export const selectProductDetail = (id: string) => (state: RootState) =>
-  state.product.details[id];
+export const selectProductDetail = (id: string) => (state: RootState) => state.product.details[id];
 
 export const selectProductDetailStatus = (id: string) => (state: RootState) =>
   state.product.detailStatus[id] ?? "idle";

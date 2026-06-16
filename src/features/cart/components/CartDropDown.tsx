@@ -20,12 +20,7 @@ interface CartDropdownItemProps {
   onRemove: () => void;
 }
 
-function CartDropdownItem({
-  item,
-  onNavigate,
-  onQuantityChange,
-  onRemove,
-}: CartDropdownItemProps) {
+function CartDropdownItem({ item, onNavigate, onQuantityChange, onRemove }: CartDropdownItemProps) {
   const imageUrl = useAppSelector(selectProductPrimaryImage(item.productId));
 
   return (
@@ -39,9 +34,7 @@ function CartDropdownItem({
         >
           {item.productName} {item.variantName ? `(${item.variantName})` : ""}
         </a>
-        <p className="mt-1 text-sm font-bold text-primary">
-          {formatVnd(item.unitPrice)}
-        </p>
+        <p className="mt-1 text-sm font-bold text-primary">{formatVnd(item.unitPrice)}</p>
         <div className="mt-2 flex items-center gap-2">
           <div className="flex items-center rounded-md border border-gray-200 bg-white">
             <button
@@ -109,13 +102,16 @@ export default function CartDropDown() {
     };
   }, []);
 
-  const handleNavigate = useCallback((e: React.MouseEvent, path: string) => {
-    e.preventDefault();
-    close();
-    setTimeout(() => {
-      navigate(path);
-    }, 180); // Wait for the slide-up animation to finish
-  }, [close, navigate]);
+  const handleNavigate = useCallback(
+    (e: React.MouseEvent, path: string) => {
+      e.preventDefault();
+      close();
+      setTimeout(() => {
+        navigate(path);
+      }, 180); // Wait for the slide-up animation to finish
+    },
+    [close, navigate],
+  );
 
   useEffect(() => {
     if (!open) return;
@@ -167,12 +163,7 @@ export default function CartDropDown() {
         }
       `}</style>
 
-      <div
-        ref={rootRef}
-        className="relative group"
-        onMouseEnter={open_}
-        onMouseLeave={close}
-      >
+      <div ref={rootRef} className="relative group" onMouseEnter={open_} onMouseLeave={close}>
         <a
           href="/cart"
           onClick={(e) => handleNavigate(e, "/cart")}
@@ -195,13 +186,16 @@ export default function CartDropDown() {
               id="navbar-cart-panel"
               role="dialog"
               aria-label="Giỏ hàng"
-              className={`w-[min(calc(100vw-1.5rem),22rem)] overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xl sm:w-96 ${closing ? "cart-dropdown-exit" : "cart-dropdown-enter"
-                }`}
+              className={`w-[min(calc(100vw-1.5rem),22rem)] overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xl sm:w-96 ${
+                closing ? "cart-dropdown-exit" : "cart-dropdown-enter"
+              }`}
             >
               <div className="flex items-center justify-between border-b border-gray-100 px-3 py-2.5">
                 <h2 className="text-sm font-bold text-gray-900">
                   Giỏ hàng{" "}
-                  {itemCount > 0 && <span className="font-normal text-gray-500">({itemCount})</span>}
+                  {itemCount > 0 && (
+                    <span className="font-normal text-gray-500">({itemCount})</span>
+                  )}
                 </h2>
                 <div className="flex items-center gap-1">
                   {items.length > 0 && (

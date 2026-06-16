@@ -1,6 +1,10 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import type { RootState } from "@/store";
-import type { CartProduct, AddCartItemParams, UpdateCartItemParams } from "@/features/cart/types/cart";
+import type {
+  CartProduct,
+  AddCartItemParams,
+  UpdateCartItemParams,
+} from "@/features/cart/types/cart";
 import { fetchProductDetailsByIds } from "@/features/products/store/productSlice";
 import { cartApi } from "../api/cart.api";
 
@@ -67,16 +71,13 @@ export const removeCartItem = createAsyncThunk(
   },
 );
 
-export const deleteAllCart = createAsyncThunk(
-  "cart/deleteAllCart",
-  async (_, { dispatch }) => {
-    const response = await cartApi.deleteCart();
-    if (response.data.isSuccess) {
-      dispatch(fetchCart());
-    }
-    return response.data;
+export const deleteAllCart = createAsyncThunk("cart/deleteAllCart", async (_, { dispatch }) => {
+  const response = await cartApi.deleteCart();
+  if (response.data.isSuccess) {
+    dispatch(fetchCart());
   }
-);
+  return response.data;
+});
 
 const cartSlice = createSlice({
   name: "cart",

@@ -42,11 +42,7 @@ export default function ChatWidget() {
         aria-label={isOpen ? "Đóng chat" : "Mở chat hỗ trợ"}
         aria-expanded={isOpen}
       >
-        {isOpen ? (
-          <X size={24} strokeWidth={2} />
-        ) : (
-          <MessageCircle size={26} strokeWidth={1.8} />
-        )}
+        {isOpen ? <X size={24} strokeWidth={2} /> : <MessageCircle size={26} strokeWidth={1.8} />}
 
         {!isOpen && unreadCount > 0 && (
           <span className="absolute -right-0.5 -top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-danger px-1 text-[10px] font-bold text-white tabular-nums ring-2 ring-white">

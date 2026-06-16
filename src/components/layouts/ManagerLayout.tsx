@@ -9,7 +9,7 @@ import {
   LogOut,
   Menu,
   X,
-  Bell
+  Bell,
 } from "lucide-react";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { logout } from "@/features/auth/store/authSlice";
@@ -36,7 +36,7 @@ export default function ManagerLayout() {
     <div className="flex h-screen bg-gray-50 text-gray-900 overflow-hidden">
       {/* Mobile Sidebar Overlay */}
       {sidebarOpen && (
-        <div 
+        <div
           className="fixed inset-0 z-20 bg-black/50 lg:hidden"
           onClick={() => setSidebarOpen(false)}
         />
@@ -78,7 +78,7 @@ export default function ManagerLayout() {
         </nav>
 
         <div className="absolute bottom-0 w-full p-4 border-t border-gray-200">
-          <button 
+          <button
             onClick={handleLogout}
             className="flex items-center w-full gap-3 px-4 py-3 font-medium text-red-600 rounded-lg hover:bg-red-50 transition-colors"
           >

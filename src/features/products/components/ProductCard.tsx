@@ -37,13 +37,9 @@ export default function ProductCard({ product, soldCount }: ProductCardProps) {
           {product.name}
         </p>
 
-        <p className="text-sm font-medium text-[#ee4d2d]">
-          {formatPrice(product.minPrice)}
-        </p>
+        <p className="text-sm font-medium text-[#ee4d2d]">{formatPrice(product.minPrice)}</p>
 
-        {soldCount !== undefined && (
-          <p className="text-[11px] text-gray-400">Đã bán {soldCount}</p>
-        )}
+        {soldCount !== undefined && <p className="text-[11px] text-gray-400">Đã bán {soldCount}</p>}
       </div>
     </Link>
   );
@@ -65,9 +61,7 @@ export function BestSellersSection() {
   return (
     <section className="mt-6 min-w-0 sm:mt-8">
       <div className="mb-3 flex items-center justify-between gap-2 sm:mb-4">
-        <h2 className="text-base font-bold text-gray-800 sm:text-lg">
-          Sản phẩm bán chạy
-        </h2>
+        <h2 className="text-base font-bold text-gray-800 sm:text-lg">Sản phẩm bán chạy</h2>
         <Link
           to="/products"
           className="shrink-0 text-xs font-medium text-primary transition-colors hover:text-primary-dark sm:text-sm cursor-pointer"
@@ -103,9 +97,7 @@ export function YouMightAlsoLikeSection() {
   return (
     <section className="mt-8 min-w-0 sm:mt-12 w-full">
       <div className="mb-4 flex items-center justify-between gap-2 sm:mb-6">
-        <h2 className="text-xm font-medium text-gray-500 sm:text-xm">
-          Có thể bạn cũng thích
-        </h2>
+        <h2 className="text-xm font-medium text-gray-500 sm:text-xm">Có thể bạn cũng thích</h2>
         <Link
           to="/products"
           className="shrink-0 text-sm font-medium text-primary transition-colors hover:text-primary-dark cursor-pointer"

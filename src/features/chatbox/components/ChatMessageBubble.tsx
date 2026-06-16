@@ -18,9 +18,7 @@ export default function ChatMessageBubble({ message, isOwn }: ChatMessageBubbleP
 
   return (
     <div className={`flex ${isOwn ? "justify-end" : "justify-start"}`}>
-      <div
-        className={`flex max-w-[85%] flex-col gap-1 ${isOwn ? "items-end" : "items-start"}`}
-      >
+      <div className={`flex max-w-[85%] flex-col gap-1 ${isOwn ? "items-end" : "items-start"}`}>
         {!isOwn && (
           <div className="flex items-center gap-1.5 px-1">
             <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/15 text-primary">

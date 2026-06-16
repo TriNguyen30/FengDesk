@@ -16,7 +16,8 @@ const elements = [
     overlayText: "text-white",
     icon: <Diamond size={32} strokeWidth={1.5} />,
     largeIcon: <Diamond size={80} strokeWidth={1.5} />,
-    image: "https://i.ex-cdn.com/danviet.vn/files/content/2026/01/01/031026tai-voi-lai-cay-canh-a-0222.jpg",
+    image:
+      "https://i.ex-cdn.com/danviet.vn/files/content/2026/01/01/031026tai-voi-lai-cay-canh-a-0222.jpg",
   },
   {
     id: "wood",
@@ -30,7 +31,8 @@ const elements = [
     overlayText: "text-white",
     icon: <Leaf size={32} strokeWidth={1.5} />,
     largeIcon: <Leaf size={80} strokeWidth={1.5} />,
-    image: "https://i.ex-cdn.com/danviet.vn/files/content/2025/12/30/025751ngoc-bich-cay-canh-a2-0254.jpg",
+    image:
+      "https://i.ex-cdn.com/danviet.vn/files/content/2025/12/30/025751ngoc-bich-cay-canh-a2-0254.jpg",
   },
   {
     id: "water",
@@ -44,7 +46,8 @@ const elements = [
     overlayText: "text-white",
     icon: <Droplets size={32} strokeWidth={1.5} />,
     largeIcon: <Droplets size={80} strokeWidth={1.5} />,
-    image: "https://tapchivietnamhuongsac.vn/stores/news_dataimages/2026/042026/06/09/capture20260406090848.jpg?rt=20260406090850",
+    image:
+      "https://tapchivietnamhuongsac.vn/stores/news_dataimages/2026/042026/06/09/capture20260406090848.jpg?rt=20260406090850",
   },
   {
     id: "fire",
@@ -58,7 +61,8 @@ const elements = [
     overlayText: "text-white",
     icon: <Flame size={32} strokeWidth={1.5} />,
     largeIcon: <Flame size={80} strokeWidth={1.5} />,
-    image: "https://i.ex-cdn.com/danviet.vn/files/content/2026/01/01/031026tai-voi-lai-cay-canh-a-0222.jpg",
+    image:
+      "https://i.ex-cdn.com/danviet.vn/files/content/2026/01/01/031026tai-voi-lai-cay-canh-a-0222.jpg",
   },
   {
     id: "earth",
@@ -72,7 +76,8 @@ const elements = [
     overlayText: "text-white",
     icon: <Mountain size={32} strokeWidth={1.5} />,
     largeIcon: <Mountain size={80} strokeWidth={1.5} />,
-    image: "https://i.ex-cdn.com/danviet.vn/files/content/2025/12/30/025751ngoc-bich-cay-canh-a2-0254.jpg",
+    image:
+      "https://i.ex-cdn.com/danviet.vn/files/content/2025/12/30/025751ngoc-bich-cay-canh-a2-0254.jpg",
   },
 ];
 
@@ -82,8 +87,8 @@ interface Particle {
   y: number;
   vx: number;
   vy: number;
-  ax: number;   // acceleration x
-  ay: number;   // acceleration y
+  ax: number; // acceleration x
+  ay: number; // acceleration y
   size: number;
   life: number;
   maxLife: number;
@@ -151,10 +156,10 @@ export function ElementCanvas({ elementId }: { elementId: string }) {
             vx: rand(-1.2, 1.2),
             vy: rand(-7, -4),
             ax: 0,
-            ay: -0.06,        // buoyancy
+            ay: -0.06, // buoyancy
             size,
             maxLife: rand(70, 130),
-            hue: rand(0, 45),  // red → orange → yellow
+            hue: rand(0, 45), // red → orange → yellow
             sat: 95,
             lit: 60,
             alpha: 1,
@@ -175,7 +180,7 @@ export function ElementCanvas({ elementId }: { elementId: string }) {
             vx: rand(-0.8, 0.8),
             vy: rand(2, 6),
             ax: 0,
-            ay: 0.18,         // gravity
+            ay: 0.18, // gravity
             size,
             maxLife: rand(80, 140),
             hue: rand(195, 220),
@@ -184,7 +189,7 @@ export function ElementCanvas({ elementId }: { elementId: string }) {
             alpha: 1,
             wobble: 0,
             spin: 0,
-            phase: rand(0, 1),  // reuse as "has hit ground" flag (0 = airborne)
+            phase: rand(0, 1), // reuse as "has hit ground" flag (0 = airborne)
           } as Particle;
         }
 
@@ -201,14 +206,14 @@ export function ElementCanvas({ elementId }: { elementId: string }) {
             vx: fromLeft ? speed : -speed,
             vy: rand(-0.5, 1.5),
             ax: 0,
-            ay: 0.012,        // very gentle gravity
+            ay: 0.012, // very gentle gravity
             size,
             maxLife: rand(160, 260),
             hue: rand(90, 135),
             sat: rand(55, 75),
             lit: rand(35, 50),
             alpha: 1,
-            wobble: rand(0.04, 0.09),  // flutter frequency
+            wobble: rand(0.04, 0.09), // flutter frequency
             spin: rand(-0.04, 0.04),
             angle: rand(0, Math.PI * 2),
           } as Particle;
@@ -228,16 +233,16 @@ export function ElementCanvas({ elementId }: { elementId: string }) {
             vx: Math.cos(dir) * speed,
             vy: Math.sin(dir) * speed,
             ax: 0,
-            ay: 0.15,         // gravity
+            ay: 0.15, // gravity
             size: rand(2, 5),
             maxLife: rand(40, 80),
-            hue: rand(40, 55),  // gold/silver shimmer
+            hue: rand(40, 55), // gold/silver shimmer
             sat: rand(10, 60),
             lit: rand(75, 95),
             alpha: 1,
             wobble: 0,
             spin: 0,
-            phase: 0,  // streak length multiplier
+            phase: 0, // streak length multiplier
           } as Particle;
         }
 
@@ -283,7 +288,7 @@ export function ElementCanvas({ elementId }: { elementId: string }) {
       switch (p.type) {
         case "fire": {
           // Softbox glow: two overlapping radial gradients (core + halo)
-          const hue = p.hue + progress * 15;  // shift redder as particle rises and cools
+          const hue = p.hue + progress * 15; // shift redder as particle rises and cools
           const r = p.size * (1 - progress * 0.55);
 
           // Outer halo
@@ -306,7 +311,7 @@ export function ElementCanvas({ elementId }: { elementId: string }) {
           ctx.translate(p.x, p.y);
           // Wobble: subtle horizontal sway
           ctx.rotate(Math.sin(p.life * p.wobble + p.phase) * 0.18);
-          ctx.scale(0.6, 1);         // squish horizontally for teardrop
+          ctx.scale(0.6, 1); // squish horizontally for teardrop
           ctx.arc(0, 0, r, 0, Math.PI * 2);
           ctx.fillStyle = grad;
           ctx.fill();
@@ -411,9 +416,10 @@ export function ElementCanvas({ elementId }: { elementId: string }) {
 
           // Trail
           const trailGrad = ctx.createLinearGradient(
-            p.x, p.y,
+            p.x,
+            p.y,
             p.x - Math.cos(dir2) * trailLen,
-            p.y - Math.sin(dir2) * trailLen
+            p.y - Math.sin(dir2) * trailLen,
           );
           trailGrad.addColorStop(0, `hsla(${p.hue}, ${p.sat}%, ${p.lit}%, ${alpha * 0.9})`);
           trailGrad.addColorStop(1, `hsla(${p.hue}, ${p.sat}%, ${p.lit}%, 0)`);
@@ -462,7 +468,7 @@ export function ElementCanvas({ elementId }: { elementId: string }) {
       fire: { rate: 5, interval: 2, burst: 2 },
       water: { rate: 4, interval: 2 },
       wood: { rate: 2, interval: 4 },
-      metal: { rate: 0, interval: 1, burst: 12 },  // burst every N frames
+      metal: { rate: 0, interval: 1, burst: 12 }, // burst every N frames
       earth: { rate: 3, interval: 3 },
     };
 
@@ -495,9 +501,9 @@ export function ElementCanvas({ elementId }: { elementId: string }) {
         // Element-specific physics
         if (p.type === "fire") {
           p.vx += Math.sin(p.life * p.wobble + p.phase) * 0.35;
-          p.vy -= 0.04;           // extra buoyancy as fire rises
+          p.vy -= 0.04; // extra buoyancy as fire rises
           p.size *= 0.993;
-          p.hue = Math.min(55, p.hue + 0.3);  // shift toward yellow as flame cools
+          p.hue = Math.min(55, p.hue + 0.3); // shift toward yellow as flame cools
         } else if (p.type === "water") {
           // drag
           p.vx *= 0.995;

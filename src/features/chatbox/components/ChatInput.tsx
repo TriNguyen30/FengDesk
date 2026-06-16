@@ -36,10 +36,7 @@ export default function ChatInput({
   };
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="border-t border-gray-100 bg-white px-3 py-3"
-    >
+    <form onSubmit={handleSubmit} className="border-t border-gray-100 bg-white px-3 py-3">
       <div className="flex items-end gap-2">
         <textarea
           value={value}

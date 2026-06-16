@@ -23,13 +23,7 @@ interface CartLineItemProps {
   onRemove: () => void;
 }
 
-function CartLineItem({
-  item,
-  selected,
-  onSelect,
-  onQuantityChange,
-  onRemove,
-}: CartLineItemProps) {
+function CartLineItem({ item, selected, onSelect, onQuantityChange, onRemove }: CartLineItemProps) {
   const imageUrl = useAppSelector(selectProductPrimaryImage(item.productId));
 
   return (
@@ -57,9 +51,7 @@ function CartLineItem({
           >
             {item.productName} {item.variantName ? `(${item.variantName})` : ""}
           </Link>
-          <p className="mt-1 text-lg font-bold text-primary">
-            {formatVnd(item.unitPrice)}
-          </p>
+          <p className="mt-1 text-lg font-bold text-primary">{formatVnd(item.unitPrice)}</p>
         </div>
 
         <div className="flex items-center justify-between sm:flex-col sm:items-end gap-3">
@@ -121,7 +113,7 @@ export default function CartPage() {
 
   // Automatically deselect items that are removed from the cart
   useEffect(() => {
-    setSelectedItems((prev) => prev.filter(id => items.some(item => item.id === id)));
+    setSelectedItems((prev) => prev.filter((id) => items.some((item) => item.id === id)));
   }, [items]);
 
   const selectedCount = useMemo(() => {
@@ -202,7 +194,10 @@ export default function CartPage() {
                     onChange={(e) => handleSelectAll(e.target.checked)}
                     className="h-5 w-5 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
                   />
-                  <label htmlFor="selectAll" className="text-sm font-medium text-gray-900 cursor-pointer select-none">
+                  <label
+                    htmlFor="selectAll"
+                    className="text-sm font-medium text-gray-900 cursor-pointer select-none"
+                  >
                     Chọn tất cả
                   </label>
                 </div>
@@ -232,9 +227,7 @@ export default function CartPage() {
 
             {/* ── Right: Order Summary ───────────────────────────────────── */}
             <div className="flex w-full flex-col gap-5 border-t border-gray-100 bg-gray-50/50 p-4 lg:w-96 lg:border-l lg:border-t-0 lg:p-6">
-              <h2 className="text-lg font-bold leading-snug text-gray-900">
-                Tóm tắt đơn hàng
-              </h2>
+              <h2 className="text-lg font-bold leading-snug text-gray-900">Tóm tắt đơn hàng</h2>
 
               <div className="flex flex-col gap-4 text-sm text-gray-600">
                 <div className="flex justify-between">

@@ -24,8 +24,8 @@ export default function ChatMessageList({ messages, currentUserId }: ChatMessage
         <div>
           <p className="text-sm font-semibold text-gray-800">Xin chào từ FengDesk!</p>
           <p className="mt-1 text-xs leading-relaxed text-gray-500">
-            Hỏi về cây phong thủy, đơn hàng hoặc tư vấn không gian làm việc. Chúng tôi phản hồi
-            ngay lập tức.
+            Hỏi về cây phong thủy, đơn hàng hoặc tư vấn không gian làm việc. Chúng tôi phản hồi ngay
+            lập tức.
           </p>
         </div>
       </div>

@@ -65,7 +65,7 @@ export default function AddressBookPage() {
     <div>
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-2xl font-bold text-gray-900">Địa chỉ của tôi</h1>
-        <button 
+        <button
           onClick={handleAdd}
           className="flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90 transition-colors cursor-pointer"
         >
@@ -84,9 +84,7 @@ export default function AddressBookPage() {
             <Plus size={24} />
           </div>
           <h3 className="text-sm font-medium text-gray-900">Chưa có địa chỉ nào</h3>
-          <p className="mt-1 text-sm text-gray-500">
-            Thêm địa chỉ để nhận hàng thuận tiện hơn
-          </p>
+          <p className="mt-1 text-sm text-gray-500">Thêm địa chỉ để nhận hàng thuận tiện hơn</p>
         </div>
       ) : (
         <div className="space-y-4">
@@ -97,9 +95,7 @@ export default function AddressBookPage() {
             >
               <div className="flex-1">
                 <div className="mb-1 flex items-center gap-2">
-                  <span className="font-semibold text-gray-900">
-                    {address.recipientName}
-                  </span>
+                  <span className="font-semibold text-gray-900">{address.recipientName}</span>
                   {address.isDefault && (
                     <span className="rounded bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
                       Mặc định
@@ -117,7 +113,7 @@ export default function AddressBookPage() {
                 </div>
               </div>
               <div className="flex items-center gap-2 sm:flex-col sm:items-end">
-                <button 
+                <button
                   onClick={() => handleEdit(address)}
                   className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-blue-600 transition-colors hover:bg-blue-50 cursor-pointer"
                 >
@@ -125,7 +121,7 @@ export default function AddressBookPage() {
                   Cập nhật
                 </button>
                 {!address.isDefault && (
-                  <button 
+                  <button
                     onClick={() => handleDeleteClick(address.id)}
                     className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 cursor-pointer"
                   >
