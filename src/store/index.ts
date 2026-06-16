@@ -1,12 +1,14 @@
 import { configureStore } from "@reduxjs/toolkit";
 import authReducer from "@/features/auth/store/authSlice";
 import cartReducer from "@/features/cart/store/cartSlice";
+import chatboxReducer from "@/features/chatbox/store/chatboxSlice";
 import themeReducer from "@/store/slices/themeSlice";
 
 export const store = configureStore({
   reducer: {
     auth: authReducer,
     cart: cartReducer,
+    chatbox: chatboxReducer,
     theme: themeReducer,
   },
 });

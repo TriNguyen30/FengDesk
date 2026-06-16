@@ -3,6 +3,7 @@ import Navbar from "@/components/ui/Navbar";
 import { Outlet } from "react-router-dom";
 import Footer from "@/components/ui/Footer";
 import { Toaster } from "sonner";
+import { ChatWidget } from "@/features/chatbox";
 
 const toasterStyle = { "--width": "min(100vw - 1.5rem, 356px)" } as CSSProperties;
 
@@ -14,6 +15,7 @@ export default function AppLayout() {
         <Outlet />
       </div>
       <Footer />
+      <ChatWidget />
       <Toaster
         richColors
         closeButton
