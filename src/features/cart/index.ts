@@ -7,6 +7,7 @@ export {
   updateCartItem,
   clearCartState,
   selectCart,
+  selectCartStatus,
   selectCartItems,
   selectCartItemCount,
   selectCartSubtotal,

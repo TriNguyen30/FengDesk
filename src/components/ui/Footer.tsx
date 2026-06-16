@@ -1,6 +1,6 @@
 import { Leaf, Mail, Phone, MapPin } from "lucide-react";
 import { FaFacebook, FaInstagram, FaTiktok } from "react-icons/fa";
-import Logo from "@/assets/image/fengdesk_logo_2.png"
+import Logo from "@/assets/image/fengdesk_logo_2.png";
 
 export default function Footer() {
   return (

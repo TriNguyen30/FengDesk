@@ -9,5 +9,5 @@ export const productApi = {
 
   getProductById: (id: string) => {
     return fetchHttpClient.get<ApiResponse<ProductDetail>>(`/products/${id}`);
-  }
+  },
 };

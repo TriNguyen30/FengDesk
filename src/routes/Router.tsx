@@ -21,10 +21,10 @@ export default function AppRoutes() {
         <Route path="/products" element={<ProductsPage />} />
         <Route path="/products/:id" element={<ProductDetailPage />} />
         <Route path="/cart" element={<CartPage />} />
-        
+
         {/* Protected Profile Routes */}
-        <Route 
-          path="/profile" 
+        <Route
+          path="/profile"
           element={
             <ProtectedRoute>
               <ProfileLayout />
@@ -34,11 +34,14 @@ export default function AppRoutes() {
           <Route index element={<Navigate to="info" replace />} />
           <Route path="info" element={<ProfileInfoPage />} />
           <Route path="addresses" element={<AddressBookPage />} />
-          <Route path="orders" element={<div className="p-4 text-center">Đơn hàng của tôi đang phát triển...</div>} />
+          <Route
+            path="orders"
+            element={<div className="p-4 text-center">Đơn hàng của tôi đang phát triển...</div>}
+          />
         </Route>
       </Route>
-      <Route 
-        path="/manager" 
+      <Route
+        path="/manager"
         element={
           <ProtectedRoute requireManager>
             <ManagerLayout />

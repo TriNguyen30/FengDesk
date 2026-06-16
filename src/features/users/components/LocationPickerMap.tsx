@@ -42,13 +42,16 @@ function LocationMarker({ latitude, longitude, onChange }: LocationPickerMapProp
   );
 }
 
-export default function LocationPickerMap({ latitude, longitude, onChange }: LocationPickerMapProps) {
+export default function LocationPickerMap({
+  latitude,
+  longitude,
+  onChange,
+}: LocationPickerMapProps) {
   // Default center: Ho Chi Minh City
   const defaultCenter: [number, number] = [10.8231, 106.6297];
 
-  const center: [number, number] = latitude !== 0 && longitude !== 0 
-    ? [latitude, longitude] 
-    : defaultCenter;
+  const center: [number, number] =
+    latitude !== 0 && longitude !== 0 ? [latitude, longitude] : defaultCenter;
 
   return (
     <div className="h-[250px] w-full rounded-lg overflow-hidden border border-gray-300 z-0 relative">

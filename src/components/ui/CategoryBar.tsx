@@ -12,7 +12,6 @@ const navItems = [
   { label: "Liên Hệ", to: "/contact" },
 ] as const;
 
-
 const navLinkClass = ({ isActive }: { isActive: boolean }) =>
   [
     "relative block whitespace-nowrap rounded-lg px-3 py-2 text-sm font-semibold transition-colors duration-300",

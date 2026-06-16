@@ -33,9 +33,7 @@ type SocialAuthButtonsProps = {
   dividerLabel?: string;
 };
 
-export default function SocialAuthButtons({
-  dividerLabel = "HOẶC",
-}: SocialAuthButtonsProps) {
+export default function SocialAuthButtons({ dividerLabel = "HOẶC" }: SocialAuthButtonsProps) {
   const handleGoogle = () => console.log("Google sign-in");
 
   return (

@@ -1,10 +1,9 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { getCategoriesRequest } from "@/features/category/api/category.api";
-import { productApi } from "@/features/products/api/product.api";
 import type { Category } from "@/features/category/types/category";
-import type { Product } from "@/features/products/types/product";
 import ProductCard from "@/features/products/components/ProductCard";
+import { useProductList } from "@/features/products/hooks/useProducts";
 import { Filter, SearchX, Loader2 } from "lucide-react";
 
 export default function ProductsPage() {
@@ -13,10 +12,13 @@ export default function ProductsPage() {
   const categoryId = searchParams.get("categoryId") || "";
 
   const [categories, setCategories] = useState<Category[]>([]);
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
 
-  // Fetch Categories
+  const { products, loading } = useProductList({
+    search: search || undefined,
+    categoryId: categoryId || undefined,
+    pageSize: 20,
+  });
+
   useEffect(() => {
     async function fetchCategories() {
       try {
@@ -31,26 +33,7 @@ export default function ProductsPage() {
     fetchCategories();
   }, []);
 
-  // Fetch Products based on URL params
   useEffect(() => {
-    async function fetchProducts() {
-      try {
-        setLoading(true);
-        const res = await productApi.getProducts({
-          search: search || undefined,
-          categoryId: categoryId || undefined,
-          pageSize: 20, // Load a bunch initially
-        });
-        if (res.data.isSuccess) {
-          setProducts(res.data.data.items);
-        }
-      } catch (error) {
-        console.error("Failed to fetch products", error);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchProducts();
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [search, categoryId]);
 
@@ -61,7 +44,6 @@ export default function ProductsPage() {
     } else {
       newParams.delete("categoryId");
     }
-    // Optional: reset page to 1 if we had pagination
     setSearchParams(newParams);
   };
 
@@ -76,7 +58,6 @@ export default function ProductsPage() {
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       <div className="flex flex-col gap-6 md:flex-row md:items-start md:gap-8">
-
         {/* Sidebar Filter */}
         <aside className="w-full shrink-0 md:w-64">
           <div className="sticky top-24 rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
@@ -87,10 +68,11 @@ export default function ProductsPage() {
             <div className="flex flex-col gap-1.5">
               <button
                 onClick={() => handleCategorySelect("")}
-                className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors ${!categoryId
+                className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors ${
+                  !categoryId
                     ? "bg-primary/10 text-primary"
                     : "text-gray-600 hover:bg-gray-50 hover:text-gray-900 cursor-pointer"
-                  }`}
+                }`}
               >
                 Tất cả sản phẩm
               </button>
@@ -98,10 +80,11 @@ export default function ProductsPage() {
                 <button
                   key={cat.id}
                   onClick={() => handleCategorySelect(cat.id)}
-                  className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors ${categoryId === cat.id
+                  className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors ${
+                    categoryId === cat.id
                       ? "bg-primary/10 text-primary"
                       : "text-gray-600 hover:bg-gray-50 hover:text-gray-900 cursor-pointer"
-                    }`}
+                  }`}
                 >
                   {cat.name}
                 </button>
@@ -119,7 +102,8 @@ export default function ProductsPage() {
               </h1>
               {search && (
                 <p className="mt-1 flex items-center gap-2 text-sm text-gray-600">
-                  Kết quả tìm kiếm cho: <span className="font-semibold text-gray-900">"{search}"</span>
+                  Kết quả tìm kiếm cho:{" "}
+                  <span className="font-semibold text-gray-900">"{search}"</span>
                   <button
                     onClick={handleSearchReset}
                     className="ml-2 text-xs text-primary hover:underline"
@@ -130,9 +114,7 @@ export default function ProductsPage() {
               )}
             </div>
             {!loading && (
-              <p className="text-sm text-gray-500">
-                Hiển thị {products.length} sản phẩm
-              </p>
+              <p className="text-sm text-gray-500">Hiển thị {products.length} sản phẩm</p>
             )}
           </div>
 
@@ -164,7 +146,6 @@ export default function ProductsPage() {
             </div>
           )}
         </div>
-
       </div>
     </div>
   );

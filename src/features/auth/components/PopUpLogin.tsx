@@ -87,11 +87,7 @@ export default function PopUpLogin({ open, onClose, onSwitchToSignUp }: PopUpLog
             />
           </AuthField>
 
-          <AuthField
-            id="login-password"
-            label="Mật khẩu"
-            error={emailErrors.password?.message}
-          >
+          <AuthField id="login-password" label="Mật khẩu" error={emailErrors.password?.message}>
             <div className="relative">
               <input
                 id="login-password"
@@ -135,7 +131,8 @@ export default function PopUpLogin({ open, onClose, onSwitchToSignUp }: PopUpLog
           <div className="text-start mt-1">
             <button
               type="button"
-              className="text-sm font-medium text-primary hover:text-primary-dark cursor-pointer transition-colors"
+              className="text-sm font-light text-primary hover:text-primary-dark cursor-pointer transition-colors"
+              onClick={() => toast.info("Chức năng quên mật khẩu đang được hoàn thiện")}
             >
               Quên mật khẩu?
             </button>

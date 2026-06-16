@@ -62,7 +62,8 @@ function sortMessages(messages: ChatMessage[]): ChatMessage[] {
 
 function subscribeLocal(roomId: string, listener: MessageListener): Unsubscribe {
   const channelName = `fengdesk-chat-${roomId}`;
-  const channel = typeof BroadcastChannel !== "undefined" ? new BroadcastChannel(channelName) : null;
+  const channel =
+    typeof BroadcastChannel !== "undefined" ? new BroadcastChannel(channelName) : null;
 
   const notify = () => listener(sortMessages(readLocalMessages(roomId)));
 

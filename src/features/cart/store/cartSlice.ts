@@ -1,6 +1,11 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import type { RootState } from "@/store";
-import type { CartProduct, AddCartItemParams, UpdateCartItemParams } from "@/features/cart/types/cart";
+import type {
+  CartProduct,
+  AddCartItemParams,
+  UpdateCartItemParams,
+} from "@/features/cart/types/cart";
+import { fetchProductDetailsByIds } from "@/features/products/store/productSlice";
 import { cartApi } from "../api/cart.api";
 
 interface CartState {
@@ -13,8 +18,20 @@ const initialState: CartState = {
   status: "idle",
 };
 
-export const fetchCart = createAsyncThunk("cart/fetchCart", async () => {
+function syncCartProductDetails(
+  dispatch: (action: unknown) => void,
+  cart: CartProduct | null | undefined,
+) {
+  if (!cart?.items?.length) return;
+  const productIds = [...new Set(cart.items.map((item) => item.productId).filter(Boolean))];
+  if (productIds.length > 0) {
+    dispatch(fetchProductDetailsByIds(productIds));
+  }
+}
+
+export const fetchCart = createAsyncThunk("cart/fetchCart", async (_, { dispatch }) => {
   const response = await cartApi.getCart();
+  syncCartProductDetails(dispatch, response.data?.data);
   return response.data;
 });
 
@@ -23,10 +40,11 @@ export const addCartItem = createAsyncThunk(
   async (params: AddCartItemParams, { dispatch }) => {
     const response = await cartApi.addCartItem(params);
     if (response.data.isSuccess) {
+      syncCartProductDetails(dispatch, response.data.data);
       dispatch(fetchCart());
     }
     return response.data;
-  }
+  },
 );
 
 export const updateCartItem = createAsyncThunk(
@@ -34,10 +52,11 @@ export const updateCartItem = createAsyncThunk(
   async (params: UpdateCartItemParams, { dispatch }) => {
     const response = await cartApi.updateCartItem(params);
     if (response.data.isSuccess) {
+      syncCartProductDetails(dispatch, response.data.data);
       dispatch(fetchCart());
     }
     return response.data;
-  }
+  },
 );
 
 export const removeCartItem = createAsyncThunk(
@@ -45,22 +64,20 @@ export const removeCartItem = createAsyncThunk(
   async (itemId: string, { dispatch }) => {
     const response = await cartApi.deleteCartItem({ itemId });
     if (response.data.isSuccess) {
+      syncCartProductDetails(dispatch, response.data.data);
       dispatch(fetchCart());
     }
     return response.data;
-  }
+  },
 );
 
-export const deleteAllCart = createAsyncThunk(
-  "cart/deleteAllCart",
-  async (_, { dispatch }) => {
-    const response = await cartApi.deleteCart();
-    if (response.data.isSuccess) {
-      dispatch(fetchCart());
-    }
-    return response.data;
+export const deleteAllCart = createAsyncThunk("cart/deleteAllCart", async (_, { dispatch }) => {
+  const response = await cartApi.deleteCart();
+  if (response.data.isSuccess) {
+    dispatch(fetchCart());
   }
-);
+  return response.data;
+});
 
 const cartSlice = createSlice({
   name: "cart",
@@ -102,8 +119,10 @@ export const { clearCartState } = cartSlice.actions;
 export default cartSlice.reducer;
 
 export const selectCart = (state: RootState) => state.cart.cart;
+export const selectCartStatus = (state: RootState) => state.cart.status;
 export const selectCartItems = (state: RootState) => state.cart.cart?.items || [];
-export const selectCartItemCount = (state: RootState) => {
+export const selectCartItemCount = (state: RootState) => state.cart.cart?.items.length ?? 0;
+export const selectCartTotalQuantity = (state: RootState) => {
   const items = state.cart.cart?.items;
   if (!items) return 0;
   return items.reduce((sum, item) => sum + (Number(item.quantity) || 1), 0);

@@ -38,10 +38,7 @@ export function useCart() {
     [dispatch, user],
   );
 
-  const removeItem = useCallback(
-    (itemId: string) => dispatch(removeCartItem(itemId)),
-    [dispatch],
-  );
+  const removeItem = useCallback((itemId: string) => dispatch(removeCartItem(itemId)), [dispatch]);
 
   const setQuantity = useCallback(
     (params: UpdateCartItemParams) => dispatch(updateCartItem(params)),

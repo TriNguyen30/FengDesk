@@ -135,7 +135,7 @@ export default function Navbar() {
                     type="button"
                     className="flex min-w-[44px] flex-col items-center gap-0.5 rounded-lg px-1 py-1 text-gray-700 transition-colors hover:text-primary cursor-pointer"
                     aria-label="Tài khoản"
-                    onClick={() => navigate('/profile/info')}
+                    onClick={() => navigate("/profile/info")}
                   >
                     <div className="flex size-[22px] items-center justify-center rounded-full bg-primary/10 text-primary font-bold text-[11px]">
                       {lastName ? lastName.charAt(0) : <User size={14} />}
@@ -155,13 +155,13 @@ export default function Navbar() {
                     </div>
                     <div className="p-1">
                       <button
-                        onClick={() => navigate('/profile/info')}
+                        onClick={() => navigate("/profile/info")}
                         className="flex w-full items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 rounded-md transition-colors text-left font-medium cursor-pointer"
                       >
                         Tài Khoản Của Tôi
                       </button>
                       <button
-                        onClick={() => navigate('/profile/orders')}
+                        onClick={() => navigate("/profile/orders")}
                         className="flex w-full items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 rounded-md transition-colors text-left font-medium cursor-pointer"
                       >
                         Đơn Mua

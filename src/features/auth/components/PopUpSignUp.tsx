@@ -296,9 +296,9 @@ export default function PopUpSignUp({ open, onClose, onSwitchToLogin }: PopUpSig
                 className={inputClassName(Boolean(finalizeForm.formState.errors.gender))}
                 {...finalizeForm.register("gender")}
               >
-                <option value={0}>Nam</option>
-                <option value={1}>Nữ</option>
-                <option value={2}>Khác</option>
+                <option value={1}>Nam</option>
+                <option value={2}>Nữ</option>
+                <option value={3}>Khác</option>
               </select>
             </AuthField>
 
@@ -307,7 +307,7 @@ export default function PopUpSignUp({ open, onClose, onSwitchToLogin }: PopUpSig
               label="Mật khẩu"
               error={finalizeForm.formState.errors.password?.message}
               hint={
-                <span className="text-xs text-gray-400">Tối thiểu 8 ký tự, có hoa/thường/số</span>
+                <span className="text-xs text-gray-400">Tối thiểu 5 ký tự, có hoa/thường/số</span>
               }
             >
               <div className="relative">

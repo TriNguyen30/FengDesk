@@ -36,7 +36,7 @@ export default function AddressModal({ isOpen, onClose, onSuccess, address }: Ad
   const [selectedProvinceId, setSelectedProvinceId] = useState<string>("");
   const [selectedDistrictId, setSelectedDistrictId] = useState<string>("");
   const [selectedWardId, setSelectedWardId] = useState<string>("");
-  
+
   const [changeLocation, setChangeLocation] = useState(false); // Used in edit mode to toggle location change
 
   useEffect(() => {
@@ -130,7 +130,7 @@ export default function AddressModal({ isOpen, onClose, onSuccess, address }: Ad
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target as HTMLInputElement;
     const checked = (e.target as HTMLInputElement).checked;
-    
+
     setFormData((prev) => ({
       ...prev,
       [name]: type === "checkbox" ? checked : value,
@@ -139,12 +139,12 @@ export default function AddressModal({ isOpen, onClose, onSuccess, address }: Ad
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (changeLocation && !selectedWardId) {
       toast.error("Vui lòng chọn đầy đủ Tỉnh/Thành, Quận/Huyện, Phường/Xã");
       return;
     }
-    
+
     // In edit mode, if not changing location, wardId remains the original one
     if (!formData.wardId) {
       toast.error("Thiếu thông tin Phường/Xã");
@@ -189,7 +189,9 @@ export default function AddressModal({ isOpen, onClose, onSuccess, address }: Ad
         <form onSubmit={handleSubmit} className="p-6">
           <div className="space-y-4">
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-gray-700">Họ tên người nhận</label>
+              <label className="mb-1.5 block text-sm font-medium text-gray-700">
+                Họ tên người nhận
+              </label>
               <input
                 type="text"
                 name="recipientName"
@@ -202,7 +204,9 @@ export default function AddressModal({ isOpen, onClose, onSuccess, address }: Ad
             </div>
 
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-gray-700">Số điện thoại</label>
+              <label className="mb-1.5 block text-sm font-medium text-gray-700">
+                Số điện thoại
+              </label>
               <input
                 type="tel"
                 name="recipientPhone"
@@ -229,7 +233,7 @@ export default function AddressModal({ isOpen, onClose, onSuccess, address }: Ad
             ) : (
               <div className="space-y-3 rounded-lg bg-gray-50 p-3 border border-gray-200">
                 <h3 className="text-sm font-semibold text-gray-900">Khu vực</h3>
-                
+
                 <select
                   value={selectedProvinceId}
                   onChange={(e) => setSelectedProvinceId(e.target.value)}
@@ -237,7 +241,9 @@ export default function AddressModal({ isOpen, onClose, onSuccess, address }: Ad
                 >
                   <option value="">Chọn Tỉnh/Thành</option>
                   {provinces.map((p) => (
-                    <option key={p.id} value={p.id}>{p.name}</option>
+                    <option key={p.id} value={p.id}>
+                      {p.name}
+                    </option>
                   ))}
                 </select>
 
@@ -249,7 +255,9 @@ export default function AddressModal({ isOpen, onClose, onSuccess, address }: Ad
                 >
                   <option value="">Chọn Quận/Huyện</option>
                   {districts.map((d) => (
-                    <option key={d.id} value={d.id}>{d.name}</option>
+                    <option key={d.id} value={d.id}>
+                      {d.name}
+                    </option>
                   ))}
                 </select>
 
@@ -261,7 +269,9 @@ export default function AddressModal({ isOpen, onClose, onSuccess, address }: Ad
                 >
                   <option value="">Chọn Phường/Xã</option>
                   {wards.map((w) => (
-                    <option key={w.id} value={w.id}>{w.name}</option>
+                    <option key={w.id} value={w.id}>
+                      {w.name}
+                    </option>
                   ))}
                 </select>
 
@@ -270,7 +280,7 @@ export default function AddressModal({ isOpen, onClose, onSuccess, address }: Ad
                     type="button"
                     onClick={() => {
                       setChangeLocation(false);
-                      setFormData(prev => ({ ...prev, wardId: address.wardId }));
+                      setFormData((prev) => ({ ...prev, wardId: address.wardId }));
                     }}
                     className="text-xs font-medium text-gray-500 hover:text-gray-700 mt-2 block cursor-pointer"
                   >
@@ -281,7 +291,9 @@ export default function AddressModal({ isOpen, onClose, onSuccess, address }: Ad
             )}
 
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-gray-700">Địa chỉ cụ thể</label>
+              <label className="mb-1.5 block text-sm font-medium text-gray-700">
+                Địa chỉ cụ thể
+              </label>
               <input
                 type="text"
                 name="streetAddress"
@@ -294,13 +306,19 @@ export default function AddressModal({ isOpen, onClose, onSuccess, address }: Ad
             </div>
 
             <div className="z-0 relative">
-              <label className="mb-1.5 block text-sm font-medium text-gray-700">Vị trí trên bản đồ</label>
-              <LocationPickerMap 
-                latitude={formData.latitude} 
-                longitude={formData.longitude} 
-                onChange={(lat, lng) => setFormData(prev => ({ ...prev, latitude: lat, longitude: lng }))} 
+              <label className="mb-1.5 block text-sm font-medium text-gray-700">
+                Vị trí trên bản đồ
+              </label>
+              <LocationPickerMap
+                latitude={formData.latitude}
+                longitude={formData.longitude}
+                onChange={(lat, lng) =>
+                  setFormData((prev) => ({ ...prev, latitude: lat, longitude: lng }))
+                }
               />
-              <p className="mt-1 text-xs text-gray-500">Chạm vào bản đồ để chọn vị trí chính xác của địa chỉ nhận hàng</p>
+              <p className="mt-1 text-xs text-gray-500">
+                Chạm vào bản đồ để chọn vị trí chính xác của địa chỉ nhận hàng
+              </p>
             </div>
 
             <div>
@@ -326,7 +344,10 @@ export default function AddressModal({ isOpen, onClose, onSuccess, address }: Ad
                 onChange={handleChange}
                 className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
               />
-              <label htmlFor="isDefault" className="text-sm font-medium text-gray-700 cursor-pointer">
+              <label
+                htmlFor="isDefault"
+                className="text-sm font-medium text-gray-700 cursor-pointer"
+              >
                 Đặt làm địa chỉ mặc định
               </label>
             </div>

@@ -29,7 +29,7 @@ export type GetCartResponse = ApiResponse<CartProduct>;
 export interface AddCartItemParams {
   productItemId: string;
   quantity: number;
-} 
+}
 
 export type AddCartItemResponse = ApiResponse<CartProduct>;
 

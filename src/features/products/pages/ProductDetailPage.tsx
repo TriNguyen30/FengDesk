@@ -1,9 +1,21 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ShoppingCart, AlertCircle, Check, ChevronLeft, Minus, Plus, Store, MessageSquare, MapPin, Phone, Clock } from "lucide-react";
+import {
+  ShoppingCart,
+  AlertCircle,
+  Check,
+  ChevronLeft,
+  Minus,
+  Plus,
+  Store,
+  MessageSquare,
+  MapPin,
+  Phone,
+  Clock,
+} from "lucide-react";
 import { toast } from "sonner";
-import { productApi } from "../api/product.api";
-import { ProductDetail, ProductItem } from "../types/product";
+import { ProductItem } from "../types/product";
+import { useProductDetail } from "../hooks/useProducts";
 import { useCart } from "@/features/cart";
 import { getShopRequestById } from "@/features/shop/api/shop.api";
 import { Shop } from "@/features/shop/types/shop";
@@ -12,10 +24,8 @@ export default function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { addItem } = useCart();
+  const { product, loading, failed } = useProductDetail(id);
 
-  const [product, setProduct] = useState<ProductDetail | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [selectedItem, setSelectedItem] = useState<ProductItem | null>(null);
   const [activeImage, setActiveImage] = useState<string>("");
   const [quantity, setQuantity] = useState<number>(1);
@@ -23,40 +33,26 @@ export default function ProductDetailPage() {
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
-    if (!id) return;
-
-    const fetchProduct = async () => {
-      try {
-        setLoading(true);
-        const response = await productApi.getProductById(id);
-        if (response.data.isSuccess && response.data.data) {
-          const productData = response.data.data;
-          setProduct(productData);
-          if (productData.items.length > 0) setSelectedItem(productData.items[0]);
-          if (productData.images.length > 0) setActiveImage(productData.images[0].url);
-
-          // Fetch shop info
-          if (productData.gardenStoreId) {
-            getShopRequestById(productData.gardenStoreId)
-              .then((shopRes) => {
-                if (shopRes.isSuccess && shopRes.data) {
-                  setShop(shopRes.data);
-                }
-              })
-              .catch(console.error);
-          }
-        } else {
-          setError(response.data.message || "Không thể tải thông tin sản phẩm");
-        }
-      } catch {
-        setError("Đã xảy ra lỗi khi tải thông tin sản phẩm");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProduct();
   }, [id]);
+
+  useEffect(() => {
+    if (!product) return;
+
+    setSelectedItem(product.items[0] ?? null);
+    setActiveImage(product.images[0]?.url ?? "");
+    setQuantity(1);
+    setShop(null);
+
+    if (product.gardenStoreId) {
+      getShopRequestById(product.gardenStoreId)
+        .then((shopRes) => {
+          if (shopRes.isSuccess && shopRes.data) {
+            setShop(shopRes.data);
+          }
+        })
+        .catch(console.error);
+    }
+  }, [product]);
 
   const handleAddToCart = () => {
     if (product && selectedItem) {
@@ -64,6 +60,8 @@ export default function ProductDetailPage() {
       toast.success("Đã thêm vào giỏ hàng");
     }
   };
+
+  const error = failed ? "Không thể tải thông tin sản phẩm" : null;
 
   // ── Loading skeleton ──────────────────────────────────────────────────────
   if (loading) {
@@ -129,7 +127,6 @@ export default function ProductDetailPage() {
 
       <div className="rounded-2xl bg-white shadow-sm ring-1 ring-gray-100">
         <div className="flex flex-col sm:flex-row">
-
           {/* ── Left: Images ─────────────────────────────────────────────── */}
           <div className="w-full shrink-0 p-4 sm:w-[360px] sm:p-6">
             {/* Main image */}
@@ -154,10 +151,11 @@ export default function ProductDetailPage() {
                   <button
                     key={img.id}
                     onClick={() => setActiveImage(img.url)}
-                    className={`h-16 w-16 shrink-0 overflow-hidden rounded-lg border-2 bg-gray-50 transition-all ${activeImage === img.url
-                      ? "border-primary"
-                      : "border-transparent hover:border-gray-300"
-                      }`}
+                    className={`h-16 w-16 shrink-0 overflow-hidden rounded-lg border-2 bg-gray-50 transition-all ${
+                      activeImage === img.url
+                        ? "border-primary"
+                        : "border-transparent hover:border-gray-300"
+                    }`}
                   >
                     <img src={img.url} alt="thumb" className="h-full w-full object-contain" />
                   </button>
@@ -168,7 +166,6 @@ export default function ProductDetailPage() {
 
           {/* ── Right: Info ───────────────────────────────────────────────── */}
           <div className="flex flex-1 flex-col gap-5 border-t border-gray-100 p-4 sm:border-l sm:border-t-0 sm:p-6">
-
             {/* Categories */}
             {product.categories.length > 0 && (
               <div className="flex flex-wrap gap-1.5">
@@ -189,8 +186,7 @@ export default function ProductDetailPage() {
                 {product.name}
               </h1>
               <p className="mt-1.5 text-sm text-gray-400">
-                Cửa hàng:{" "}
-                <span className="font-medium text-gray-600">{product.storeName}</span>
+                Cửa hàng: <span className="font-medium text-gray-600">{product.storeName}</span>
               </p>
             </div>
 
@@ -220,10 +216,11 @@ export default function ProductDetailPage() {
                       <button
                         key={item.id}
                         onClick={() => setSelectedItem(item)}
-                        className={`relative flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-all focus:outline-none cursor-not-allowed ${isSelected
-                          ? "border-primary bg-primary/5 text-primary"
-                          : "border-gray-200 text-gray-600 hover:border-primary/40 hover:bg-gray-50 cursor-pointer"
-                          }`}
+                        className={`relative flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-all focus:outline-none cursor-not-allowed ${
+                          isSelected
+                            ? "border-primary bg-primary/5 text-primary"
+                            : "border-gray-200 text-gray-600 hover:border-primary/40 hover:bg-gray-50 cursor-pointer"
+                        }`}
                       >
                         {item.name}
                         <span className="text-xs opacity-60">
@@ -275,8 +272,8 @@ export default function ProductDetailPage() {
                   inputMode="numeric"
                   value={quantity}
                   onChange={(e) => {
-                    const val = e.target.value.replace(/[^0-9]/g, '');
-                    setQuantity(val === '' ? ('' as any) : parseInt(val, 10));
+                    const val = e.target.value.replace(/[^0-9]/g, "");
+                    setQuantity(val === "" ? ("" as any) : parseInt(val, 10));
                   }}
                   onBlur={() => {
                     let val = Number(quantity);
@@ -287,7 +284,9 @@ export default function ProductDetailPage() {
                   className="flex-1 w-10 text-center text-sm font-semibold tabular-nums text-gray-900 focus:outline-none bg-transparent"
                 />
                 <button
-                  onClick={() => setQuantity((q) => (selectedItem ? Math.min(selectedItem.stock, q + 1) : q + 1))}
+                  onClick={() =>
+                    setQuantity((q) => (selectedItem ? Math.min(selectedItem.stock, q + 1) : q + 1))
+                  }
                   disabled={(selectedItem && quantity >= selectedItem.stock) || outOfStock}
                   className="flex h-full flex-1 items-center justify-center rounded-md text-gray-600 hover:bg-gray-100 disabled:opacity-50 transition-colors cursor-pointer"
                 >
@@ -304,7 +303,6 @@ export default function ProductDetailPage() {
                 {outOfStock ? "Hết hàng" : "Thêm vào giỏ hàng"}
               </button>
             </div>
-
           </div>
         </div>
       </div>
@@ -330,19 +328,29 @@ export default function ProductDetailPage() {
               </div>
             </div>
           </div>
-          
+
           <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-y-4 gap-x-6 text-sm">
             <div className="flex flex-col gap-1.5 text-gray-500">
-              <span className="flex items-center gap-1.5"><Phone className="h-4 w-4" /> Hotline</span>
+              <span className="flex items-center gap-1.5">
+                <Phone className="h-4 w-4" /> Hotline
+              </span>
               <span className="font-semibold text-primary">{shop.hotline || "Đang cập nhật"}</span>
             </div>
             <div className="flex flex-col gap-1.5 text-gray-500">
-              <span className="flex items-center gap-1.5"><Clock className="h-4 w-4" /> Giờ mở cửa</span>
-              <span className="font-medium text-gray-800">{shop.openingHours || "Đang cập nhật"}</span>
+              <span className="flex items-center gap-1.5">
+                <Clock className="h-4 w-4" /> Giờ mở cửa
+              </span>
+              <span className="font-medium text-gray-800">
+                {shop.openingHours || "Đang cập nhật"}
+              </span>
             </div>
             <div className="flex flex-col gap-1.5 text-gray-500 sm:col-span-2 lg:col-span-1">
-              <span className="flex items-center gap-1.5"><MapPin className="h-4 w-4" /> Địa chỉ</span>
-              <span className="font-medium text-gray-800 line-clamp-2">{shop.address || "Đang cập nhật"}</span>
+              <span className="flex items-center gap-1.5">
+                <MapPin className="h-4 w-4" /> Địa chỉ
+              </span>
+              <span className="font-medium text-gray-800 line-clamp-2">
+                {shop.address?.streetAddress || "Đang cập nhật"}
+              </span>
             </div>
           </div>
         </div>
