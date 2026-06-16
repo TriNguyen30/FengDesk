@@ -120,7 +120,8 @@ export default cartSlice.reducer;
 export const selectCart = (state: RootState) => state.cart.cart;
 export const selectCartStatus = (state: RootState) => state.cart.status;
 export const selectCartItems = (state: RootState) => state.cart.cart?.items || [];
-export const selectCartItemCount = (state: RootState) => {
+export const selectCartItemCount = (state: RootState) => state.cart.cart?.items.length ?? 0;
+export const selectCartTotalQuantity = (state: RootState) => {
   const items = state.cart.cart?.items;
   if (!items) return 0;
   return items.reduce((sum, item) => sum + (Number(item.quantity) || 1), 0);

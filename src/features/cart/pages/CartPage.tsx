@@ -9,6 +9,7 @@ import { useAppSelector } from "@/store/hooks";
 import { selectProductPrimaryImage } from "@/features/products/store/productSlice";
 import { YouMightAlsoLikeSection } from "@/features/products/components/ProductCard";
 import type { UpdateCartItemParams } from "@/features/cart/types/cart";
+import Modal from "@/components/ui/Modal";
 
 function formatVnd(n: number): string {
   return n.toLocaleString("vi-VN") + "đ";
@@ -109,8 +110,9 @@ function CartLineItem({
 export default function CartPage() {
   const { items, setQuantity, removeItem, deleteAll } = useCart();
   const navigate = useNavigate();
-  
+
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   // Scroll to top on mount
   useEffect(() => {
@@ -206,10 +208,7 @@ export default function CartPage() {
                 </div>
                 <button
                   onClick={() => {
-                    if (window.confirm("Bạn có chắc chắn muốn xóa tất cả sản phẩm trong giỏ hàng?")) {
-                      deleteAll();
-                      toast.success("Đã xóa giỏ hàng");
-                    }
+                    setIsDeleteModalOpen(true);
                   }}
                   className="text-sm font-medium text-red-500 hover:text-red-700 cursor-pointer transition-colors"
                 >
@@ -236,7 +235,7 @@ export default function CartPage() {
               <h2 className="text-lg font-bold leading-snug text-gray-900">
                 Tóm tắt đơn hàng
               </h2>
-              
+
               <div className="flex flex-col gap-4 text-sm text-gray-600">
                 <div className="flex justify-between">
                   <span>Tạm tính ({selectedCount} sản phẩm)</span>
@@ -247,7 +246,7 @@ export default function CartPage() {
                   <span className="font-semibold text-gray-900">Chưa tính</span>
                 </div>
               </div>
-              
+
               <div className="border-t border-dashed border-gray-200 pt-4">
                 <div className="flex justify-between items-end">
                   <span className="text-base font-bold text-gray-900">Tổng cộng</span>
@@ -278,6 +277,36 @@ export default function CartPage() {
 
       {/* ── You might also like ─────────────────────────────────────────────── */}
       <YouMightAlsoLikeSection />
+
+      <Modal
+        open={isDeleteModalOpen}
+        title="Xóa tất cả sản phẩm trong giỏ hàng"
+        onClose={() => setIsDeleteModalOpen(false)}
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-gray-600">
+            Bạn có chắc chắn muốn xóa tất cả sản phẩm trong giỏ hàng?
+          </p>
+          <div className="flex gap-3 pt-2">
+            <button
+              onClick={() => setIsDeleteModalOpen(false)}
+              className="flex-1 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 cursor-pointer"
+            >
+              Hủy
+            </button>
+            <button
+              onClick={() => {
+                deleteAll();
+                toast.success("Đã xóa giỏ hàng");
+                setIsDeleteModalOpen(false);
+              }}
+              className="flex-1 rounded-lg bg-red-600 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-red-700 cursor-pointer"
+            >
+              Xóa tất cả
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }
