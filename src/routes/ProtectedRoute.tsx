@@ -19,11 +19,11 @@ export default function ProtectedRoute({
   const { token, user } = useAppSelector((state) => state.auth);
 
   if (!token || !user) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/" replace />;
   }
 
   if (requireAdmin && user.role !== "Admin") {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/admin" replace />;
   }
 
   if (requireCustomer && user.role !== "Customer") {
@@ -31,11 +31,11 @@ export default function ProtectedRoute({
   }
 
   if (requireStaff && user.role !== "Staff") {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/manager" replace />;
   }
 
   if (requireManager && user.role !== "Manager") {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/manager" replace />;
   }
 
   return children;

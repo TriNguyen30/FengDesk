@@ -1,4 +1,4 @@
-import { Truck, Package, User, Leaf } from "lucide-react";
+import { Truck, Package, User, Leaf, Bell } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -13,7 +13,7 @@ import Logo from "@/assets/image/fengdesk_logo_2.png";
 
 export default function Navbar() {
   const navigate = useNavigate();
-  
+
   const handleSearch = (query: string) => {
     if (query.trim()) {
       navigate(`/products?search=${encodeURIComponent(query)}`);
@@ -49,6 +49,14 @@ export default function Navbar() {
       toast.success("Đăng xuất thành công");
     }
   };
+
+  const getLastName = (fullname?: string) => {
+    if (!fullname) return "";
+    const nameArr = fullname.split(" ");
+    return nameArr[nameArr.length - 1];
+  };
+
+  const lastName = getLastName(user?.fullName);
 
   return (
     <header className="sticky top-0 z-50 w-full min-w-0">
@@ -103,18 +111,37 @@ export default function Navbar() {
 
             {/* Icon group — always visible */}
             <div className="flex shrink-0 items-center gap-1 sm:gap-3">
+              {user && (
+                <button
+                  type="button"
+                  className="flex min-w-[44px] flex-col items-center gap-0.5 rounded-lg px-1 py-1 text-gray-700 transition-colors hover:text-primary cursor-pointer relative"
+                  aria-label="Thông báo"
+                >
+                  <div className="relative flex size-[22px] items-center justify-center">
+                    <Bell size={20} strokeWidth={1.8} />
+                    <span className="absolute -right-1 -top-1 flex h-3.5 min-w-[14px] items-center justify-center rounded-full bg-red-500 px-1 text-[8px] font-bold text-white shadow-sm ring-1 ring-white">
+                      3
+                    </span>
+                  </div>
+                  <span className="hidden text-[10px] font-medium sm:block sm:text-xs">
+                    Thông báo
+                  </span>
+                </button>
+              )}
+
               {user ? (
                 <div className="relative group flex flex-col items-center">
                   <button
                     type="button"
                     className="flex min-w-[44px] flex-col items-center gap-0.5 rounded-lg px-1 py-1 text-gray-700 transition-colors hover:text-primary cursor-pointer"
                     aria-label="Tài khoản"
+                    onClick={() => navigate('/profile/info')}
                   >
                     <div className="flex size-[22px] items-center justify-center rounded-full bg-primary/10 text-primary font-bold text-[11px]">
-                      {user.fullName ? user.fullName.charAt(0).toUpperCase() : <User size={14} />}
+                      {lastName ? lastName.charAt(0) : <User size={14} />}
                     </div>
                     <span className="hidden text-[10px] font-medium sm:block sm:text-xs max-w-[60px] truncate">
-                      {user.fullName || "User"}
+                      {lastName || "User"}
                     </span>
                   </button>
 
@@ -127,6 +154,18 @@ export default function Navbar() {
                       <p className="text-xs text-gray-500 truncate">{user.email}</p>
                     </div>
                     <div className="p-1">
+                      <button
+                        onClick={() => navigate('/profile/info')}
+                        className="flex w-full items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 rounded-md transition-colors text-left font-medium cursor-pointer"
+                      >
+                        Tài Khoản Của Tôi
+                      </button>
+                      <button
+                        onClick={() => navigate('/profile/orders')}
+                        className="flex w-full items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 rounded-md transition-colors text-left font-medium cursor-pointer"
+                      >
+                        Đơn Mua
+                      </button>
                       <button
                         onClick={handleLogout}
                         className="flex w-full items-center px-3 py-2 text-sm text-red-600 hover:bg-red-50 hover:text-red-700 rounded-md transition-colors text-left font-medium cursor-pointer"

@@ -3,27 +3,28 @@ import FeatureBar from "@/components/ui/FeatureBar";
 import CategoryBar from "@/components/ui/CategoryBar";
 import PopularCategories from "@/components/ui/PopularCategories";
 import { BestSellersSection } from "@/features/products/components/ProductCard";
+import FiveElementsSection from "../components/FiveElementsSection";
 
 const slides: HeroSlide[] = [
   {
     id: 1,
-    badge: "SALE UP TO",
-    title: "Siêu sale cuối mùa",
-    highlight: "50%",
-    desc1: "Hàng ngàn sản phẩm chính hãng",
-    desc2: "Giá tốt nhất dành cho bạn",
+    badge: "FENGDESK AI",
+    title: "Khám Phá Cây Phong Thủy",
+    highlight: "Tương Sinh",
+    desc1: "Tư vấn cây hợp mệnh bằng AI",
+    desc2: "Mang lại may mắn & tài lộc",
     image:
       "https://i.ex-cdn.com/danviet.vn/files/content/2026/01/01/031026tai-voi-lai-cay-canh-a-0222.jpg",
-    primaryBtn: "Mua ngay",
+    primaryBtn: "Trải nghiệm AI",
     secondaryBtn: "Xem thêm",
   },
   {
     id: 2,
-    badge: "HOT DEAL",
-    title: "Công nghệ mới nhất",
-    highlight: "30%",
-    desc1: "Điện thoại, laptop, phụ kiện",
-    desc2: "Giao hàng nhanh toàn quốc",
+    badge: "BỘ SƯU TẬP",
+    title: "Góc Làm Việc",
+    highlight: "Lý Tưởng",
+    desc1: "Thanh lọc không khí, giảm căng thẳng",
+    desc2: "Phù hợp mọi không gian văn phòng",
     image:
       "https://i.ex-cdn.com/danviet.vn/files/content/2025/12/30/025751ngoc-bich-cay-canh-a2-0254.jpg",
     primaryBtn: "Khám phá",
@@ -31,11 +32,11 @@ const slides: HeroSlide[] = [
   },
   {
     id: 3,
-    badge: "FLASH SALE",
-    title: "Thời trang hè 2025",
-    highlight: "40%",
-    desc1: "Phong cách trẻ trung, năng động",
-    desc2: "Cập nhật xu hướng mới nhất",
+    badge: "ƯU ĐÃI",
+    title: "Cây Cảnh Để Bàn",
+    highlight: "GIẢM 20%",
+    desc1: "Thiết kế chậu sành sứ cao cấp",
+    desc2: "Giao hàng an toàn tận nơi",
     image:
       "https://tapchivietnamhuongsac.vn/stores/news_dataimages/2026/042026/06/09/capture20260406090848.jpg?rt=20260406090850",
     primaryBtn: "Mua ngay",
@@ -49,6 +50,7 @@ export default function HomePage() {
       <CategoryBar />
       <HeroSlider slides={slides} />
       <FeatureBar />
+      <FiveElementsSection />
       <PopularCategories />
       <BestSellersSection />
     </main>

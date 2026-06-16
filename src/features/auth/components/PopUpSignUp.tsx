@@ -386,7 +386,7 @@ export default function PopUpSignUp({ open, onClose, onSwitchToLogin }: PopUpSig
       <div className="flex flex-col gap-5">
         {renderStep()}
 
-        {step === 1 && <SocialAuthButtons dividerLabel="hoặc đăng ký với" />}
+        {step === 1 && <SocialAuthButtons dividerLabel="HOẶC" />}
 
         <p className="text-center text-sm text-gray-600">
           Đã có tài khoản?{" "}

@@ -1,25 +1,25 @@
-import { Truck, RefreshCw, ShieldCheck, Clock } from "lucide-react";
+import { Truck, Sparkles, ShieldCheck, Clock } from "lucide-react";
 
 const features = [
+  {
+    icon: <Sparkles size={28} className="text-primary" />,
+    title: "AI Tư vấn phong thủy",
+    sub: "Đề xuất theo bản mệnh",
+  },
   {
     icon: <Truck size={28} className="text-primary" />,
     title: "Miễn phí vận chuyển",
     sub: "Cho đơn từ 500.000đ",
   },
   {
-    icon: <RefreshCw size={28} className="text-primary" />,
-    title: "Đổi trả dễ dàng",
-    sub: "Trong vòng 7 ngày",
-  },
-  {
     icon: <ShieldCheck size={28} className="text-primary" />,
-    title: "Thanh toán an toàn",
-    sub: "Bảo mật 100%",
+    title: "Cây khỏe mạnh",
+    sub: "Bảo hành 7 ngày",
   },
   {
     icon: <Clock size={28} className="text-primary" />,
     title: "Hỗ trợ 24/7",
-    sub: "1900 1234",
+    sub: "Chuyên gia tư vấn",
   },
 ];
 
