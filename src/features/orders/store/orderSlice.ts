@@ -63,13 +63,10 @@ export const fetchOrders = createAsyncThunk(
   },
 );
 
-export const fetchOrderById = createAsyncThunk(
-  "order/fetchOrderById",
-  async (id: string) => {
-    const response = await ordersApi.getOrderById(id);
-    return response.data;
-  },
-);
+export const fetchOrderById = createAsyncThunk("order/fetchOrderById", async (id: string) => {
+  const response = await ordersApi.getOrderById(id);
+  return response.data;
+});
 
 export const createOrder = createAsyncThunk(
   "order/createOrder",

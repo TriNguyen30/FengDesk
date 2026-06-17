@@ -11,12 +11,10 @@ export const notificationApi = {
   getNotifications: (params?: GetNotificationsParams) =>
     fetchHttpClient.get<GetNotificationsResponse>("/notifications", params),
 
-  getUnreadCount: () =>
-    fetchHttpClient.get<GetUnreadCountResponse>("/notifications/unread-count"),
+  getUnreadCount: () => fetchHttpClient.get<GetUnreadCountResponse>("/notifications/unread-count"),
 
   markAsRead: (id: string) =>
     fetchHttpClient.patch<MarkAsReadResponse>(`/notifications/${id}/read`),
 
-  markAllAsRead: () =>
-    fetchHttpClient.patch<MarkAllAsReadResponse>("/notifications/read-all"),
+  markAllAsRead: () => fetchHttpClient.patch<MarkAllAsReadResponse>("/notifications/read-all"),
 };

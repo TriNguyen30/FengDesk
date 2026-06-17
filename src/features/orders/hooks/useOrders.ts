@@ -38,20 +38,14 @@ export function useOrders() {
     [dispatch],
   );
 
-  const getOrderById = useCallback(
-    (id: string) => dispatch(fetchOrderById(id)),
-    [dispatch],
-  );
+  const getOrderById = useCallback((id: string) => dispatch(fetchOrderById(id)), [dispatch]);
 
   const placeOrder = useCallback(
     (payload: CreateOrders) => dispatch(createOrder(payload)),
     [dispatch],
   );
 
-  const cancelOrderById = useCallback(
-    (id: string) => dispatch(cancelOrder(id)),
-    [dispatch],
-  );
+  const cancelOrderById = useCallback((id: string) => dispatch(cancelOrder(id)), [dispatch]);
 
   const getStoreDeliveries = useCallback(
     (storeId: string, params?: GetOrdersParams) =>

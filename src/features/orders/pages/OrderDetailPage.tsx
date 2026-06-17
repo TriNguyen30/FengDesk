@@ -52,7 +52,10 @@ export default function OrderDetailPage() {
       <div className="flex flex-col items-center justify-center py-16 text-center">
         <Package className="mb-3 h-12 w-12 text-gray-300" />
         <p className="text-gray-600">Không tìm thấy đơn hàng</p>
-        <Link to="/profile/orders" className="mt-4 text-sm font-medium text-primary hover:underline">
+        <Link
+          to="/profile/orders"
+          className="mt-4 text-sm font-medium text-primary hover:underline"
+        >
           Quay lại danh sách
         </Link>
       </div>
@@ -94,7 +97,11 @@ export default function OrderDetailPage() {
                 <li key={item.id} className="flex gap-4 py-4 first:pt-0 last:pb-0">
                   <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-gray-50 ring-1 ring-gray-100">
                     {item.imageUrl ? (
-                      <img src={item.imageUrl} alt={item.productName} className="h-full w-full object-cover" />
+                      <img
+                        src={item.imageUrl}
+                        alt={item.productName}
+                        className="h-full w-full object-cover"
+                      />
                     ) : (
                       <Package className="h-6 w-6 text-gray-300" />
                     )}
@@ -108,7 +115,9 @@ export default function OrderDetailPage() {
                       {formatVnd(item.unitPrice)} x {item.quantity}
                     </p>
                   </div>
-                  <p className="shrink-0 font-semibold text-gray-900">{formatVnd(item.lineTotal)}</p>
+                  <p className="shrink-0 font-semibold text-gray-900">
+                    {formatVnd(item.lineTotal)}
+                  </p>
                 </li>
               ))}
             </ul>
@@ -126,7 +135,11 @@ export default function OrderDetailPage() {
               <p className="mt-1 text-sm text-gray-600">{order.shippingAddress.streetAddress}</p>
               {(order.shippingAddress.wardName || order.shippingAddress.provinceName) && (
                 <p className="mt-1 text-sm text-gray-500">
-                  {[order.shippingAddress.wardName, order.shippingAddress.districtName, order.shippingAddress.provinceName]
+                  {[
+                    order.shippingAddress.wardName,
+                    order.shippingAddress.districtName,
+                    order.shippingAddress.provinceName,
+                  ]
                     .filter(Boolean)
                     .join(", ")}
                 </p>
@@ -152,7 +165,9 @@ export default function OrderDetailPage() {
               </div>
               <div className="flex justify-between text-gray-600">
                 <span>Phí vận chuyển</span>
-                <span>{order.shippingFee != null ? formatVnd(order.shippingFee) : "Chưa tính"}</span>
+                <span>
+                  {order.shippingFee != null ? formatVnd(order.shippingFee) : "Chưa tính"}
+                </span>
               </div>
               <div className="flex justify-between border-t border-gray-100 pt-3 text-base font-bold text-gray-900">
                 <span>Tổng cộng</span>
@@ -185,7 +200,11 @@ export default function OrderDetailPage() {
         </aside>
       </div>
 
-      <Modal open={isCancelModalOpen} title="Hủy đơn hàng" onClose={() => setIsCancelModalOpen(false)}>
+      <Modal
+        open={isCancelModalOpen}
+        title="Hủy đơn hàng"
+        onClose={() => setIsCancelModalOpen(false)}
+      >
         <div className="space-y-4">
           <p className="text-sm text-gray-600">Bạn có chắc chắn muốn hủy đơn hàng này?</p>
           <div className="flex gap-3">

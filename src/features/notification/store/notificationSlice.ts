@@ -37,13 +37,10 @@ export const fetchNotifications = createAsyncThunk(
   },
 );
 
-export const fetchUnreadCount = createAsyncThunk(
-  "notification/fetchUnreadCount",
-  async () => {
-    const response = await notificationApi.getUnreadCount();
-    return response.data;
-  },
-);
+export const fetchUnreadCount = createAsyncThunk("notification/fetchUnreadCount", async () => {
+  const response = await notificationApi.getUnreadCount();
+  return response.data;
+});
 
 export const markNotificationAsRead = createAsyncThunk(
   "notification/markNotificationAsRead",
