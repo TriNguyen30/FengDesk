@@ -6,6 +6,7 @@ import SearchBar from "./Search";
 import PopUpLogin from "@/features/auth/components/PopUpLogin";
 import PopUpSignUp from "@/features/auth/components/PopUpSignUp";
 import { CartDropDown, useCart } from "@/features/cart";
+import { NotificationDropdown } from "@/features/notification";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { logout, setAuthModal } from "@/features/auth/store/authSlice";
 import { logoutRequest } from "@/features/auth/api/auth.api";
@@ -111,23 +112,7 @@ export default function Navbar() {
 
             {/* Icon group — always visible */}
             <div className="flex shrink-0 items-center gap-1 sm:gap-3">
-              {user && (
-                <button
-                  type="button"
-                  className="flex min-w-[44px] flex-col items-center gap-0.5 rounded-lg px-1 py-1 text-gray-700 transition-colors hover:text-primary cursor-pointer relative"
-                  aria-label="Thông báo"
-                >
-                  <div className="relative flex size-[22px] items-center justify-center">
-                    <Bell size={20} strokeWidth={1.8} />
-                    <span className="absolute -right-1 -top-1 flex h-3.5 min-w-[14px] items-center justify-center rounded-full bg-red-500 px-1 text-[8px] font-bold text-white shadow-sm ring-1 ring-white">
-                      3
-                    </span>
-                  </div>
-                  <span className="hidden text-[10px] font-medium sm:block sm:text-xs">
-                    Thông báo
-                  </span>
-                </button>
-              )}
+              {user && <NotificationDropdown />}
 
               {user ? (
                 <div className="relative group flex flex-col items-center">
