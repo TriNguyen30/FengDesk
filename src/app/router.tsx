@@ -5,6 +5,9 @@ import HomePage from "@/features/home/pages/Home";
 import ProductsPage from "@/features/products/pages/ProductsPage";
 import ProductDetailPage from "@/features/products/pages/ProductDetailPage";
 import DashboardPage from "@/features/manager/pages/DashboardPage";
+import ManageProductsPage from "@/features/manager/pages/ManageProductsPage";
+import CreateProductPage from "@/features/manager/pages/CreateProductPage";
+import EditProductPage from "@/features/manager/pages/EditProductPage";
 import CartPage from "@/features/cart/pages/CartPage";
 import ProtectedRoute from "./ProtectedRoute";
 
@@ -76,6 +79,9 @@ export default function AppRoutes() {
       >
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard" element={<DashboardPage />} />
+        <Route path="products" element={<ManageProductsPage />} />
+        <Route path="products/new" element={<CreateProductPage />} />
+        <Route path="products/:id/edit" element={<EditProductPage />} />
       </Route>
     </Routes>
   );

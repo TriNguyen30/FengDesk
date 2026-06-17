@@ -25,13 +25,10 @@ const initialState: PaymentState = {
   error: null,
 };
 
-export const createPayment = createAsyncThunk(
-  "payment/createPayment",
-  async (orderId: string) => {
-    const response = await paymentApi.createPayment(orderId);
-    return response.data;
-  },
-);
+export const createPayment = createAsyncThunk("payment/createPayment", async (orderId: string) => {
+  const response = await paymentApi.createPayment(orderId);
+  return response.data;
+});
 
 export const fetchPaymentStatus = createAsyncThunk(
   "payment/fetchPaymentStatus",
@@ -49,13 +46,10 @@ export const cancelPayment = createAsyncThunk(
   },
 );
 
-export const simulatePaid = createAsyncThunk(
-  "payment/simulatePaid",
-  async (orderId: string) => {
-    const response = await paymentApi.simulatePaid(orderId);
-    return { orderId, data: response.data };
-  },
-);
+export const simulatePaid = createAsyncThunk("payment/simulatePaid", async (orderId: string) => {
+  const response = await paymentApi.simulatePaid(orderId);
+  return { orderId, data: response.data };
+});
 
 const paymentSlice = createSlice({
   name: "payment",

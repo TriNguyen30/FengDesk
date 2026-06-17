@@ -90,3 +90,50 @@ export interface ProductDetail {
   createdAt: string;
   updatedAt: string;
 }
+
+// ============================================================
+// Write/Request Payloads
+// ============================================================
+
+export interface CreateProductRequest {
+  gardenStoreId: string;
+  name: string;
+  description: string;
+  item: ProductItem[];
+  images: ProductImage[];
+  categoriesIds: string[];
+  tagIds: string[];
+  isActive: boolean;
+}
+
+export interface UpdateProductRequest {
+  name: string;
+  description: string;
+  isActive: boolean;
+}
+
+export interface CreateProductItemRequest {
+  name: string;
+  price: number;
+  stock: number;
+  sku: string;
+}
+
+export interface UpdateProductItemRequest {
+  name: string;
+  price: number;
+  stock: number;
+  sku: string;
+}
+
+export interface AddProductImageRequest {
+  file: File;
+  sortOrder: number;
+}
+
+export interface UpdateProductFengShuiRequest {
+  element: string;
+  compatibility?: string;
+  description?: string;
+  [key: string]: any;
+}

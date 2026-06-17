@@ -10,10 +10,11 @@ export default function PaymentCancelPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const queryOrderCode = searchParams.get("orderCode");
-  
-  const { paymentStatus, status, getPaymentStatus, createPayment, cancelPayment, simulatePaid } = usePayment();
+
+  const { paymentStatus, status, getPaymentStatus, createPayment, cancelPayment, simulatePaid } =
+    usePayment();
   const { currentOrder, getOrderById, getOrders, cancelOrderById } = useOrders();
-  
+
   const [orderId, setOrderId] = useState<string | null>(null);
   const [searchingOrder, setSearchingOrder] = useState(false);
   const [retrying, setRetrying] = useState(false);
@@ -33,7 +34,7 @@ export default function PaymentCancelPage() {
         .then((res) => {
           if (res.data.isSuccess && res.data.data && res.data.data.items) {
             const found = res.data.data.items.find(
-              (o: any) => String(o.orderCode) === String(queryOrderCode)
+              (o: any) => String(o.orderCode) === String(queryOrderCode),
             );
             if (found) {
               setOrderId(found.id);
@@ -138,7 +139,8 @@ export default function PaymentCancelPage() {
   }
 
   const isDev = import.meta.env.DEV || import.meta.env.VITE_ENV !== "production";
-  const orderCancelled = currentOrder?.status === "Cancelled" || paymentStatus?.orderStatus === "Cancelled";
+  const orderCancelled =
+    currentOrder?.status === "Cancelled" || paymentStatus?.orderStatus === "Cancelled";
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-12 sm:px-6 lg:py-16">
@@ -267,7 +269,7 @@ export default function PaymentCancelPage() {
               Thử thanh toán lại
             </button>
           )}
-          
+
           <Link
             to={orderId ? `/profile/orders/${orderId}` : "/profile/orders"}
             className="flex-1 flex items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-6 py-3.5 text-base font-bold text-gray-700 hover:bg-gray-50 transition cursor-pointer"
