@@ -1,6 +1,14 @@
 import { useEffect, useState, useRef } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { ChevronRight, ShoppingBag, Calendar, DollarSign, FileText, Loader2, Sparkles } from "lucide-react";
+import {
+  ChevronRight,
+  ShoppingBag,
+  Calendar,
+  DollarSign,
+  FileText,
+  Loader2,
+  Sparkles,
+} from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { usePayment } from "../hooks/usePayment";
@@ -9,10 +17,10 @@ import { useOrders } from "@/features/orders/hooks/useOrders";
 export default function PaymentSuccessPage() {
   const [searchParams] = useSearchParams();
   const queryOrderCode = searchParams.get("orderCode");
-  
+
   const { paymentStatus, status, getPaymentStatus, simulatePaid } = usePayment();
   const { currentOrder, getOrderById, getOrders } = useOrders();
-  
+
   const [orderId, setOrderId] = useState<string | null>(null);
   const [searchingOrder, setSearchingOrder] = useState(false);
   const [simulating, setSimulating] = useState(false);
@@ -30,7 +38,7 @@ export default function PaymentSuccessPage() {
         .then((res) => {
           if (res.data.isSuccess && res.data.data && res.data.data.items) {
             const found = res.data.data.items.find(
-              (o: any) => String(o.orderCode) === String(queryOrderCode)
+              (o: any) => String(o.orderCode) === String(queryOrderCode),
             );
             if (found) {
               setOrderId(found.id);
@@ -87,7 +95,9 @@ export default function PaymentSuccessPage() {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 text-center">
         <Loader2 className="h-10 w-10 animate-spin text-primary" />
-        <p className="text-gray-500 font-medium animate-pulse">Đang xác nhận kết quả giao dịch...</p>
+        <p className="text-gray-500 font-medium animate-pulse">
+          Đang xác nhận kết quả giao dịch...
+        </p>
       </div>
     );
   }
@@ -149,7 +159,8 @@ export default function PaymentSuccessPage() {
           transition={{ duration: 0.4, delay: 0.25 }}
           className="mt-3 text-base text-gray-500 max-w-md"
         >
-          Giao dịch của bạn đã được xử lý hoàn tất. Cảm ơn bạn đã tin tưởng mua sắm tại FengShui Garden.
+          Giao dịch của bạn đã được xử lý hoàn tất. Cảm ơn bạn đã tin tưởng mua sắm tại FengShui
+          Garden.
         </motion.p>
       </div>
 

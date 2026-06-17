@@ -1,4 +1,5 @@
-import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import { createAsyncThunk, createSlice, createAction } from "@reduxjs/toolkit";
+import type { PayloadAction } from "@reduxjs/toolkit";
 import type { RootState } from "@/app/store";
 import { productApi } from "../api/product.api";
 import type { GetProductsParams, Product, ProductDetail } from "../types/product";
@@ -42,18 +43,36 @@ export const fetchProducts = createAsyncThunk(
   },
 );
 
-export const fetchProductById = createAsyncThunk("product/fetchProductById", async (id: string) => {
-  const response = await productApi.getProductById(id);
-  return { id, data: response.data };
-});
+export const fetchProductById = createAsyncThunk(
+  "product/fetchProductById",
+  async (id: string) => {
+    const response = await productApi.getProductById(id);
+    return { id, data: response.data };
+  },
+  {
+    condition: (id, { getState }) => {
+      const state = getState() as RootState;
+      const status = state.product.detailStatus[id];
+      if (status === "loading") {
+        return false;
+      }
+    },
+  },
+);
+
+export const setDetailsLoading = createAction<string[]>("product/setDetailsLoading");
 
 export const fetchProductDetailsByIds = createAsyncThunk(
   "product/fetchProductDetailsByIds",
-  async (ids: string[], { getState }) => {
+  async (ids: string[], { getState, dispatch }) => {
     const state = getState() as RootState;
     const missingIds = ids.filter(
       (id) => id && !state.product.details[id] && state.product.detailStatus[id] !== "loading",
     );
+
+    if (missingIds.length > 0) {
+      dispatch(setDetailsLoading(missingIds));
+    }
 
     const results: Record<string, ProductDetail> = {};
 
@@ -70,7 +89,7 @@ export const fetchProductDetailsByIds = createAsyncThunk(
       }),
     );
 
-    return results;
+    return { missingIds, results };
   },
 );
 
@@ -129,10 +148,28 @@ const productSlice = createSlice({
       .addCase(fetchProductById.rejected, (state, action) => {
         state.detailStatus[action.meta.arg] = "failed";
       })
+      .addCase(setDetailsLoading, (state, action) => {
+        action.payload.forEach((id) => {
+          state.detailStatus[id] = "loading";
+        });
+      })
       .addCase(fetchProductDetailsByIds.fulfilled, (state, action) => {
-        Object.assign(state.details, action.payload);
-        Object.keys(action.payload).forEach((id) => {
-          state.detailStatus[id] = "idle";
+        const { missingIds, results } = action.payload;
+        Object.assign(state.details, results);
+        missingIds.forEach((id) => {
+          if (results[id]) {
+            state.detailStatus[id] = "idle";
+          } else {
+            state.detailStatus[id] = "failed";
+          }
+        });
+      })
+      .addCase(fetchProductDetailsByIds.rejected, (state, action) => {
+        const ids = action.meta.arg || [];
+        ids.forEach((id) => {
+          if (state.detailStatus[id] === "loading") {
+            state.detailStatus[id] = "failed";
+          }
         });
       });
   },
@@ -152,5 +189,14 @@ export const selectProductDetailStatus = (id: string) => (state: RootState) =>
 
 export const selectProductPrimaryImage = (productId: string) => (state: RootState) => {
   const detail = state.product.details[productId];
-  return detail?.images?.[0]?.url;
+  if (detail?.images?.[0]?.url) return detail.images[0].url;
+
+  // Fallback to searching in listed products
+  for (const listKey in state.product.lists) {
+    const product = state.product.lists[listKey]?.items.find((p) => p.id === productId);
+    if (product?.primaryImageUrl) {
+      return product.primaryImageUrl;
+    }
+  }
+  return undefined;
 };

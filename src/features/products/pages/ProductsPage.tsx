@@ -106,7 +106,7 @@ export default function ProductsPage() {
                   <span className="font-semibold text-gray-900">"{search}"</span>
                   <button
                     onClick={handleSearchReset}
-                    className="ml-2 text-xs text-primary hover:underline"
+                    className="ml-2 text-xs text-primary hover:underline cursor-pointer"
                   >
                     Xóa tìm kiếm
                   </button>

@@ -5,12 +5,16 @@ import HomePage from "@/features/home/pages/Home";
 import ProductsPage from "@/features/products/pages/ProductsPage";
 import ProductDetailPage from "@/features/products/pages/ProductDetailPage";
 import DashboardPage from "@/features/manager/pages/DashboardPage";
+import ManageProductsPage from "@/features/manager/pages/ManageProductsPage";
+import CreateProductPage from "@/features/manager/pages/CreateProductPage";
+import EditProductPage from "@/features/manager/pages/EditProductPage";
 import CartPage from "@/features/cart/pages/CartPage";
 import ProtectedRoute from "./ProtectedRoute";
 
 // Profile Pages
 import ProfileLayout from "@/features/users/pages/ProfileLayout";
 import ProfileInfoPage from "@/features/users/pages/ProfileInfoPage";
+import ProfileWorkspace from "@/features/users/pages/ProfileWorkspace";
 import AddressBookPage from "@/features/users/pages/AddressBookPage";
 import CheckoutPage from "@/features/orders/pages/CheckoutPage";
 import OrdersPage from "@/features/orders/pages/OrdersPage";
@@ -62,6 +66,7 @@ export default function AppRoutes() {
           <Route index element={<Navigate to="info" replace />} />
           <Route path="info" element={<ProfileInfoPage />} />
           <Route path="addresses" element={<AddressBookPage />} />
+          <Route path="workspace" element={<ProfileWorkspace />} />
           <Route path="orders" element={<OrdersPage />} />
           <Route path="orders/:id" element={<OrderDetailPage />} />
         </Route>
@@ -76,6 +81,9 @@ export default function AppRoutes() {
       >
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard" element={<DashboardPage />} />
+        <Route path="products" element={<ManageProductsPage />} />
+        <Route path="products/new" element={<CreateProductPage />} />
+        <Route path="products/:id/edit" element={<EditProductPage />} />
       </Route>
     </Routes>
   );

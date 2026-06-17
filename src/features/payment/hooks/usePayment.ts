@@ -16,7 +16,7 @@ import type { CancelPaymentRequest } from "../types/payment";
 
 export function usePayment() {
   const dispatch = useAppDispatch();
-  
+
   const currentPayment = useAppSelector(selectCurrentPayment);
   const paymentStatus = useAppSelector(selectPaymentStatus);
   const status = useAppSelector(selectPaymentLoadingStatus);

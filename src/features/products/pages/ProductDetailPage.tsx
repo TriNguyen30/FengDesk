@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   ShoppingCart,
   AlertCircle,
   Check,
   ChevronLeft,
+  ChevronRight,
   Minus,
   Plus,
   Store,
@@ -12,7 +13,13 @@ import {
   MapPin,
   Phone,
   Clock,
+  ZoomIn,
+  ZoomOut,
+  RotateCcw,
+  Maximize2,
+  X,
 } from "lucide-react";
+import { AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { ProductItem } from "../types/product";
 import { useProductDetail } from "../hooks/useProducts";
@@ -30,6 +37,18 @@ export default function ProductDetailPage() {
   const [activeImage, setActiveImage] = useState<string>("");
   const [quantity, setQuantity] = useState<number>(1);
   const [shop, setShop] = useState<Shop | null>(null);
+
+  // Zoom on hover state (Desktop main image)
+  const [zoomPos, setZoomPos] = useState({ x: 0, y: 0 });
+  const [isHovering, setIsHovering] = useState(false);
+
+  // Lightbox modal state
+  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
+  const [scale, setScale] = useState(1);
+  const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -60,6 +79,116 @@ export default function ProductDetailPage() {
       toast.success("Đã thêm vào giỏ hàng");
     }
   };
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
+    const x = ((e.clientX - left) / width) * 100;
+    const y = ((e.clientY - top) / height) * 100;
+    setZoomPos({ x, y });
+  };
+
+  const openLightbox = () => {
+    if (!product || product.images.length === 0) return;
+    const idx = product.images.findIndex((img) => img.url === activeImage);
+    setLightboxIndex(idx >= 0 ? idx : 0);
+    setScale(1);
+    setPanOffset({ x: 0, y: 0 });
+    setIsLightboxOpen(true);
+  };
+
+  const handleNextImage = useCallback(() => {
+    if (!product || product.images.length === 0) return;
+    const nextIdx = (lightboxIndex + 1) % product.images.length;
+    setLightboxIndex(nextIdx);
+    setActiveImage(product.images[nextIdx].url);
+    setScale(1);
+    setPanOffset({ x: 0, y: 0 });
+  }, [lightboxIndex, product, setActiveImage]);
+
+  const handlePrevImage = useCallback(() => {
+    if (!product || product.images.length === 0) return;
+    const prevIdx = (lightboxIndex - 1 + product.images.length) % product.images.length;
+    setLightboxIndex(prevIdx);
+    setActiveImage(product.images[prevIdx].url);
+    setScale(1);
+    setPanOffset({ x: 0, y: 0 });
+  }, [lightboxIndex, product, setActiveImage]);
+
+  const handleZoomIn = () => {
+    setScale((s) => Math.min(s + 0.5, 4));
+  };
+
+  const handleZoomOut = () => {
+    setScale((s) => {
+      const next = Math.max(s - 0.5, 1);
+      if (next === 1) setPanOffset({ x: 0, y: 0 });
+      return next;
+    });
+  };
+
+  const handleResetZoom = () => {
+    setScale(1);
+    setPanOffset({ x: 0, y: 0 });
+  };
+
+  const handleDoubleClick = () => {
+    if (scale > 1) {
+      handleResetZoom();
+    } else {
+      setScale(2);
+    }
+  };
+
+  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (scale <= 1) return;
+    setIsDragging(true);
+    setDragStart({ x: e.clientX - panOffset.x, y: e.clientY - panOffset.y });
+  };
+
+  const handleMouseMoveModal = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!isDragging || scale <= 1) return;
+    setPanOffset({
+      x: e.clientX - dragStart.x,
+      y: e.clientY - dragStart.y,
+    });
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (scale <= 1 || e.touches.length !== 1) return;
+    setIsDragging(true);
+    const touch = e.touches[0];
+    setDragStart({ x: touch.clientX - panOffset.x, y: touch.clientY - panOffset.y });
+  };
+
+  const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (!isDragging || scale <= 1 || e.touches.length !== 1) return;
+    const touch = e.touches[0];
+    setPanOffset({
+      x: touch.clientX - dragStart.x,
+      y: touch.clientY - dragStart.y,
+    });
+  };
+
+  useEffect(() => {
+    if (!isLightboxOpen) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setIsLightboxOpen(false);
+      } else if (e.key === "ArrowRight") {
+        handleNextImage();
+      } else if (e.key === "ArrowLeft") {
+        handlePrevImage();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isLightboxOpen, handleNextImage, handlePrevImage]);
 
   const error = failed ? "Không thể tải thông tin sản phẩm" : null;
 
@@ -128,15 +257,35 @@ export default function ProductDetailPage() {
       <div className="rounded-2xl bg-white shadow-sm ring-1 ring-gray-100">
         <div className="flex flex-col sm:flex-row">
           {/* ── Left: Images ─────────────────────────────────────────────── */}
-          <div className="w-full shrink-0 p-4 sm:w-[360px] sm:p-6">
+          <div className="w-full shrink-0 p-4 sm:w-[440px] sm:p-6 lg:w-[520px]">
             {/* Main image */}
-            <div className="aspect-square w-full overflow-hidden rounded-xl bg-gray-50 p-4 shadow-inner">
+            <div
+              className="relative aspect-square w-full overflow-hidden shadow-inner cursor-zoom-in group select-none"
+              onMouseMove={handleMouseMove}
+              onMouseEnter={() => setIsHovering(true)}
+              onMouseLeave={() => setIsHovering(false)}
+              onClick={openLightbox}
+            >
               {activeImage ? (
-                <img
-                  src={activeImage}
-                  alt={product.name}
-                  className="h-full w-full object-contain"
-                />
+                <>
+                  <img
+                    src={activeImage}
+                    alt={product.name}
+                    style={
+                      isHovering
+                        ? {
+                            transformOrigin: `${zoomPos.x}% ${zoomPos.y}%`,
+                            transform: "scale(2.2)",
+                          }
+                        : undefined
+                    }
+                    className="h-full w-full object-contain transition-transform duration-100 ease-out"
+                  />
+                  {/* Zoom hint overlay */}
+                  <div className="absolute right-3 bottom-3 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-gray-600 shadow-md backdrop-blur-sm opacity-0 transition-all duration-200 group-hover:opacity-100 scale-95 group-hover:scale-100 pointer-events-none">
+                    <Maximize2 size={16} />
+                  </div>
+                </>
               ) : (
                 <div className="flex h-full items-center justify-center text-sm text-gray-300">
                   Không có ảnh
@@ -355,6 +504,138 @@ export default function ProductDetailPage() {
           </div>
         </div>
       )}
+
+      {/* Lightbox Modal */}
+      <AnimatePresence>
+        {isLightboxOpen && (
+          <div className="fixed inset-0 z-[120] flex flex-col items-center justify-between bg-black/95 backdrop-blur-md p-4 select-none">
+            {/* Top bar */}
+            <div className="w-full flex items-center justify-between px-4 py-2 text-white z-10">
+              <div className="flex flex-col">
+                <span className="text-sm font-semibold text-gray-300 truncate max-w-[200px] sm:max-w-md">
+                  {product.name}
+                </span>
+                {product.images.length > 0 && (
+                  <span className="text-xs text-gray-400 mt-0.5">
+                    {lightboxIndex + 1} / {product.images.length}
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center gap-2 sm:gap-4">
+                <button
+                  onClick={handleZoomOut}
+                  disabled={scale <= 1}
+                  className="p-2 rounded-full bg-white/5 hover:bg-white/10 text-white disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
+                  title="Thu nhỏ"
+                >
+                  <ZoomOut size={18} />
+                </button>
+                <button
+                  onClick={handleZoomIn}
+                  disabled={scale >= 4}
+                  className="p-2 rounded-full bg-white/5 hover:bg-white/10 text-white disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
+                  title="Phóng to"
+                >
+                  <ZoomIn size={18} />
+                </button>
+                <button
+                  onClick={handleResetZoom}
+                  disabled={scale === 1 && panOffset.x === 0 && panOffset.y === 0}
+                  className="p-2 rounded-full bg-white/5 hover:bg-white/10 text-white disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
+                  title="Đặt lại"
+                >
+                  <RotateCcw size={18} />
+                </button>
+                <button
+                  onClick={() => setIsLightboxOpen(false)}
+                  className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white cursor-pointer transition-colors"
+                  title="Đóng (Esc)"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+            </div>
+
+            {/* Main view area */}
+            <div className="relative flex-1 w-full flex items-center justify-center overflow-hidden my-4">
+              {/* Prev Button */}
+              {product.images.length > 1 && (
+                <button
+                  onClick={handlePrevImage}
+                  className="absolute left-2 sm:left-4 z-10 p-3 rounded-full bg-black/40 hover:bg-black/60 text-white cursor-pointer transition-colors"
+                >
+                  <ChevronLeft size={24} />
+                </button>
+              )}
+
+              {/* Image Container with Zoom & Pan */}
+              <div
+                className="w-full h-full flex items-center justify-center overflow-hidden"
+                onMouseMove={handleMouseMoveModal}
+                onMouseDown={handleMouseDown}
+                onMouseUp={handleMouseUp}
+                onMouseLeave={handleMouseUp}
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleMouseUp}
+              >
+                {product.images[lightboxIndex] && (
+                  <img
+                    src={product.images[lightboxIndex].url}
+                    alt="Product preview"
+                    onDoubleClick={handleDoubleClick}
+                    draggable={false}
+                    style={{
+                      transform: `translate(${panOffset.x}px, ${panOffset.y}px) scale(${scale})`,
+                      cursor: scale > 1 ? (isDragging ? "grabbing" : "grab") : "zoom-in",
+                      transition: isDragging ? "none" : "transform 0.15s ease-out",
+                    }}
+                    className="max-h-full max-w-full object-contain pointer-events-auto select-none"
+                  />
+                )}
+              </div>
+
+              {/* Next Button */}
+              {product.images.length > 1 && (
+                <button
+                  onClick={handleNextImage}
+                  className="absolute right-2 sm:right-4 z-10 p-3 rounded-full bg-black/40 hover:bg-black/60 text-white cursor-pointer transition-colors"
+                >
+                  <ChevronRight size={24} />
+                </button>
+              )}
+            </div>
+
+            {/* Bottom thumbnail bar */}
+            {product.images.length > 1 && (
+              <div className="w-full max-w-xl px-4 py-2 overflow-x-auto flex justify-center gap-2 select-none z-10 pb-4">
+                {product.images.map((img, idx) => (
+                  <button
+                    key={img.id}
+                    onClick={() => {
+                      setLightboxIndex(idx);
+                      setActiveImage(img.url);
+                      setScale(1);
+                      setPanOffset({ x: 0, y: 0 });
+                    }}
+                    className={`h-12 w-12 sm:h-16 sm:w-16 shrink-0 overflow-hidden rounded-lg border-2 bg-gray-900 transition-all ${
+                      lightboxIndex === idx
+                        ? "border-primary"
+                        : "border-transparent opacity-50 hover:opacity-100"
+                    }`}
+                  >
+                    <img
+                      src={img.url}
+                      alt="Lightbox thumb"
+                      className="h-full w-full object-contain"
+                    />
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
