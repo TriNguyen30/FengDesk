@@ -45,3 +45,17 @@ export interface CreateWorkspaceDto {
   deskArea: number;
   isDefault: boolean;
 }
+
+export interface UpdateWorkspaceDto {
+  name: string;
+  locationType: string;
+  workspaceTypeId: string;
+  styleCode: string;
+  lighting: string;
+  deskType: string;
+  deskOrientation: string;
+  roomFacingDirection: string;
+  workPurpose: string;
+  fengShuiElement: string;
+  deskArea: number;
+}

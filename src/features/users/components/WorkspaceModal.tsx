@@ -1,14 +1,14 @@
 import { useState, useEffect } from "react";
 import { X } from "lucide-react";
-import { CreateWorkspaceDto } from "../types/workspace";
-import { WorkspaceType, Style } from "../types/workspace";
-import { createWorkspace, getWorkspaceTypes, getStyles } from "../api/workspace.api";
+import { Workspace, WorkspaceType, Style } from "../types/workspace";
+import { createWorkspace, updateWorkspace, getWorkspaceTypes, getStyles } from "../api/workspace.api";
 import { toast } from "sonner";
 
 interface WorkspaceModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
+  workspace?: Workspace | null; // If passed, it's edit mode
 }
 
 const locationTypes = ["Home", "Office", "Cafe", "Studio", "Other"];
@@ -18,47 +18,56 @@ const compassDirections = ["North", "Northeast", "East", "Southeast", "South", "
 const workPurposes = ["Office", "Study", "Creative", "Reading", "Gaming", "Mixed", "Other"];
 const fengShuiElements = ["Kim", "Moc", "Thuy", "Hoa", "Tho"];
 
-export default function WorkspaceModal({ isOpen, onClose, onSuccess }: WorkspaceModalProps) {
-  const [formData, setFormData] = useState<CreateWorkspaceDto>({
-    name: "",
-    locationType: "Home",
-    workspaceTypeId: "",
-    styleCode: "",
-    lighting: "Natural",
-    deskType: "Sitting",
-    deskOrientation: "North",
-    roomFacingDirection: "North",
-    workPurpose: "Office",
-    fengShuiElement: "Kim",
-    deskArea: 1,
-    isDefault: false,
-  });
+const defaultFormData = {
+  name: "",
+  locationType: "Home",
+  workspaceTypeId: "",
+  styleCode: "",
+  lighting: "Natural",
+  deskType: "Sitting",
+  deskOrientation: "North",
+  roomFacingDirection: "North",
+  workPurpose: "Office",
+  fengShuiElement: "Kim",
+  deskArea: 1,
+  isDefault: false,
+};
+
+export default function WorkspaceModal({ isOpen, onClose, onSuccess, workspace }: WorkspaceModalProps) {
+  const [formData, setFormData] = useState(defaultFormData);
 
   const [isLoading, setIsLoading] = useState(false);
   const [workspaceTypes, setWorkspaceTypes] = useState<WorkspaceType[]>([]);
   const [styles, setStyles] = useState<Style[]>([]);
   const [loadingOptions, setLoadingOptions] = useState(false);
 
+  const isEditMode = !!workspace;
+
   useEffect(() => {
     if (isOpen) {
       fetchOptions();
-      // Reset form
-      setFormData({
-        name: "",
-        locationType: "Home",
-        workspaceTypeId: "",
-        styleCode: "",
-        lighting: "Natural",
-        deskType: "Sitting",
-        deskOrientation: "North",
-        roomFacingDirection: "North",
-        workPurpose: "Office",
-        fengShuiElement: "Kim",
-        deskArea: 1,
-        isDefault: false,
-      });
+      if (workspace) {
+        // Populate form with existing workspace data
+        setFormData({
+          name: workspace.name,
+          locationType: workspace.locationType,
+          workspaceTypeId: workspace.workspaceTypeId,
+          styleCode: workspace.styleCode,
+          lighting: workspace.lighting,
+          deskType: workspace.deskType,
+          deskOrientation: workspace.deskOrientation,
+          roomFacingDirection: workspace.roomFacingDirection,
+          workPurpose: workspace.workPurpose,
+          fengShuiElement: workspace.fengShuiElement,
+          deskArea: workspace.deskArea,
+          isDefault: workspace.isDefault,
+        });
+      } else {
+        // Reset form for new workspace
+        setFormData(defaultFormData);
+      }
     }
-  }, [isOpen]);
+  }, [isOpen, workspace]);
 
   const fetchOptions = async () => {
     setLoadingOptions(true);
@@ -107,12 +116,19 @@ export default function WorkspaceModal({ isOpen, onClose, onSuccess }: Workspace
 
     setIsLoading(true);
     try {
-      await createWorkspace(formData);
-      toast.success("Tạo không gian làm việc thành công");
+      if (isEditMode) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { isDefault, ...updateData } = formData;
+        await updateWorkspace(workspace.id, updateData);
+        toast.success("Cập nhật không gian làm việc thành công");
+      } else {
+        await createWorkspace(formData);
+        toast.success("Tạo không gian làm việc thành công");
+      }
       onSuccess();
       onClose();
     } catch (error) {
-      toast.error("Lỗi khi tạo không gian làm việc");
+      toast.error(isEditMode ? "Lỗi khi cập nhật không gian làm việc" : "Lỗi khi tạo không gian làm việc");
       console.error(error);
     } finally {
       setIsLoading(false);
@@ -131,7 +147,7 @@ export default function WorkspaceModal({ isOpen, onClose, onSuccess }: Workspace
         {/* Header */}
         <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4 sticky top-0 bg-white z-10">
           <h2 className="text-lg font-bold text-gray-900">
-            Tạo không gian làm việc mới
+            {isEditMode ? "Chỉnh sửa không gian làm việc" : "Tạo không gian làm việc mới"}
           </h2>
           <button
             onClick={onClose}
@@ -335,23 +351,25 @@ export default function WorkspaceModal({ isOpen, onClose, onSuccess }: Workspace
                 />
               </div>
 
-              {/* Is Default */}
-              <div className="flex items-center gap-2 pt-2">
-                <input
-                  type="checkbox"
-                  id="isDefaultWorkspace"
-                  name="isDefault"
-                  checked={formData.isDefault}
-                  onChange={handleChange}
-                  className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
-                />
-                <label
-                  htmlFor="isDefaultWorkspace"
-                  className="text-sm font-medium text-gray-700 cursor-pointer"
-                >
-                  Đặt làm không gian mặc định
-                </label>
-              </div>
+              {/* Is Default - only show for create mode */}
+              {!isEditMode && (
+                <div className="flex items-center gap-2 pt-2">
+                  <input
+                    type="checkbox"
+                    id="isDefaultWorkspace"
+                    name="isDefault"
+                    checked={formData.isDefault}
+                    onChange={handleChange}
+                    className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
+                  />
+                  <label
+                    htmlFor="isDefaultWorkspace"
+                    className="text-sm font-medium text-gray-700 cursor-pointer"
+                  >
+                    Đặt làm không gian mặc định
+                  </label>
+                </div>
+              )}
             </div>
 
             {/* Buttons */}
@@ -368,7 +386,9 @@ export default function WorkspaceModal({ isOpen, onClose, onSuccess }: Workspace
                 disabled={isLoading}
                 className="flex-1 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-white hover:bg-primary/90 disabled:opacity-50 transition-colors cursor-pointer"
               >
-                {isLoading ? "Đang tạo..." : "Tạo không gian"}
+                {isLoading
+                  ? (isEditMode ? "Đang cập nhật..." : "Đang tạo...")
+                  : (isEditMode ? "Cập nhật" : "Tạo không gian")}
               </button>
             </div>
           </form>

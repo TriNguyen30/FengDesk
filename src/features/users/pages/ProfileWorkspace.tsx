@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getWorkspaces } from "../api/workspace.api";
+import { getWorkspaces, deleteWorkspace, setDefaultWorkspace } from "../api/workspace.api";
 import { Workspace } from "../types/workspace";
 import { toast } from "sonner";
 import WorkspaceModal from "../components/WorkspaceModal";
@@ -13,6 +13,9 @@ import {
   Sparkles,
   Maximize2,
   Star,
+  Pencil,
+  Trash,
+  AlertTriangle,
 } from "lucide-react";
 
 const fieldConfig = [
@@ -27,10 +30,102 @@ const fieldConfig = [
   { key: "deskArea", label: "Diện tích bàn (m²)", icon: Maximize2 },
 ] as const;
 
+// ── Confirm Dialog ──────────────────────────────────────────
+interface ConfirmDeleteDialogProps {
+  workspaceName: string;
+  onConfirm: () => void;
+  onCancel: () => void;
+}
+
+function ConfirmDeleteDialog({ workspaceName, onConfirm, onCancel }: ConfirmDeleteDialogProps) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      {/* Backdrop */}
+      <div
+        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+        onClick={onCancel}
+      />
+      {/* Dialog */}
+      <div className="relative z-10 w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl">
+        <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-50">
+          <AlertTriangle size={22} className="text-red-500" />
+        </div>
+        <h2 className="text-base font-semibold text-gray-900">
+          Xóa không gian làm việc?
+        </h2>
+        <p className="mt-1.5 text-sm text-gray-500">
+          Bạn có chắc muốn xóa{" "}
+          <span className="font-medium text-gray-700">"{workspaceName}"</span>?
+          Hành động này không thể hoàn tác.
+        </p>
+        <div className="mt-5 flex gap-3">
+          <button
+            onClick={onCancel}
+            className="flex-1 rounded-lg border border-gray-200 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors cursor-pointer"
+          >
+            Hủy
+          </button>
+          <button
+            onClick={onConfirm}
+            className="flex-1 rounded-lg bg-red-500 py-2 text-sm font-medium text-white hover:bg-red-600 transition-colors cursor-pointer"
+          >
+            Xóa
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Main Page ───────────────────────────────────────────────
 export default function ProfileWorkspace() {
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingWorkspace, setEditingWorkspace] = useState<Workspace | null>(null);
+  const [deletingWorkspace, setDeletingWorkspace] = useState<Workspace | null>(null);
+
+  const handleOpenCreate = () => {
+    setEditingWorkspace(null);
+    setIsModalOpen(true);
+  };
+
+  const handleOpenEdit = (workspace: Workspace) => {
+    setEditingWorkspace(workspace);
+    setIsModalOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deletingWorkspace) return;
+    const idToDelete = deletingWorkspace.id;
+    setDeletingWorkspace(null); // đóng dialog ngay
+    try {
+      setLoading(true);
+      await deleteWorkspace(idToDelete);
+      // Xóa khỏi state local thay vì dùng data trả về từ API
+      setWorkspaces((prev) => prev.filter((w) => w.id !== idToDelete));
+    } catch (error) {
+      toast.error("Không thể xóa không gian làm việc");
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSetDefault = async (workspace: Workspace) => {
+    if (workspace.isDefault) return; // đã là default rồi thì bỏ qua
+    try {
+      await setDefaultWorkspace(workspace.id);
+      // Cập nhật state local: bật isDefault cho workspace được chọn, tắt các cái còn lại
+      setWorkspaces((prev) =>
+        prev.map((w) => ({ ...w, isDefault: w.id === workspace.id }))
+      );
+      toast.success("Đã đặt làm mặc định");
+    } catch (error) {
+      toast.error("Không thể đặt làm mặc định");
+      console.error(error);
+    }
+  };
 
   useEffect(() => {
     fetchWorkspaces();
@@ -51,12 +146,21 @@ export default function ProfileWorkspace() {
 
   return (
     <div>
+      {/* Confirm Delete Dialog */}
+      {deletingWorkspace && (
+        <ConfirmDeleteDialog
+          workspaceName={deletingWorkspace.name}
+          onConfirm={handleDeleteConfirm}
+          onCancel={() => setDeletingWorkspace(null)}
+        />
+      )}
+
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-2xl font-bold text-gray-900">
           Không gian làm việc
         </h1>
         <button
-          onClick={() => setIsModalOpen(true)}
+          onClick={handleOpenCreate}
           className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90 transition-colors cursor-pointer"
         >
           + Tạo mới
@@ -65,7 +169,7 @@ export default function ProfileWorkspace() {
 
       {loading ? (
         <div className="flex h-40 items-center justify-center">
-          <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
         </div>
       ) : workspaces.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-200 py-12 text-center">
@@ -98,6 +202,34 @@ export default function ProfileWorkspace() {
                       Mặc định
                     </span>
                   )}
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handleOpenEdit(workspace)}
+                    className="flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 hover:text-primary transition-colors cursor-pointer"
+                  >
+                    <Pencil size={14} />
+                    Chỉnh sửa
+                  </button>
+                  <button
+                    onClick={() => setDeletingWorkspace(workspace)}
+                    className="flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-red-50 hover:text-red-500 hover:border-red-200 transition-colors cursor-pointer"
+                  >
+                    <Trash size={14} />
+                    Xóa
+                  </button>
+                  <button
+                    onClick={() => handleSetDefault(workspace)}
+                    disabled={workspace.isDefault}
+                    className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors cursor-pointer
+                    ${workspace.isDefault
+                        ? "border-primary/20 bg-primary/5 text-primary cursor-default"
+                        : "border-gray-200 text-gray-600 hover:bg-primary/5 hover:text-primary hover:border-primary/30"
+                      }`}
+                  >
+                    <Star size={14} />
+                    {workspace.isDefault ? "Mặc định" : "Đặt mặc định"}
+                  </button>
                 </div>
               </div>
 
@@ -133,8 +265,12 @@ export default function ProfileWorkspace() {
 
       <WorkspaceModal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={() => {
+          setIsModalOpen(false);
+          setEditingWorkspace(null);
+        }}
         onSuccess={fetchWorkspaces}
+        workspace={editingWorkspace}
       />
     </div>
   );
