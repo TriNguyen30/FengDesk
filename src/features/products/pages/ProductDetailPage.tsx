@@ -257,7 +257,7 @@ export default function ProductDetailPage() {
       <div className="rounded-2xl bg-white shadow-sm ring-1 ring-gray-100">
         <div className="flex flex-col sm:flex-row">
           {/* ── Left: Images ─────────────────────────────────────────────── */}
-          <div className="w-full shrink-0 p-4 sm:w-[360px] sm:p-6">
+          <div className="w-full shrink-0 p-4 sm:w-[440px] sm:p-6 lg:w-[520px]">
             {/* Main image */}
             <div
               className="relative aspect-square w-full overflow-hidden shadow-inner cursor-zoom-in group select-none"

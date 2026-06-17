@@ -14,6 +14,7 @@ import ProtectedRoute from "./ProtectedRoute";
 // Profile Pages
 import ProfileLayout from "@/features/users/pages/ProfileLayout";
 import ProfileInfoPage from "@/features/users/pages/ProfileInfoPage";
+import ProfileWorkspace from "@/features/users/pages/ProfileWorkspace";
 import AddressBookPage from "@/features/users/pages/AddressBookPage";
 import CheckoutPage from "@/features/orders/pages/CheckoutPage";
 import OrdersPage from "@/features/orders/pages/OrdersPage";
@@ -65,6 +66,7 @@ export default function AppRoutes() {
           <Route index element={<Navigate to="info" replace />} />
           <Route path="info" element={<ProfileInfoPage />} />
           <Route path="addresses" element={<AddressBookPage />} />
+          <Route path="workspace" element={<ProfileWorkspace />} />
           <Route path="orders" element={<OrdersPage />} />
           <Route path="orders/:id" element={<OrderDetailPage />} />
         </Route>

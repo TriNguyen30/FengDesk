@@ -101,7 +101,9 @@ export default function EditProductPage() {
         const rawP = p as any;
         setFsElement(rawP.element || rawP.fengShui?.element || "Kim");
         setFsCompatibility(rawP.compatibility || rawP.fengShui?.compatibility || "");
-        setFsDescription(rawP.descriptionFengShui || rawP.fengShuiDescription || rawP.fengShui?.description || "");
+        setFsDescription(
+          rawP.descriptionFengShui || rawP.fengShuiDescription || rawP.fengShui?.description || "",
+        );
       } else {
         toast.error("Không thể tải chi tiết sản phẩm");
         navigate("/manager/products");
@@ -120,10 +122,7 @@ export default function EditProductPage() {
 
     const fetchOptions = async () => {
       try {
-        const [categoriesRes, tagsRes] = await Promise.all([
-          getCategoriesRequest(),
-          getTags(),
-        ]);
+        const [categoriesRes, tagsRes] = await Promise.all([getCategoriesRequest(), getTags()]);
         if (categoriesRes.isSuccess && categoriesRes.data) {
           setCategories(categoriesRes.data.filter((c) => c.isActive));
         }
@@ -183,7 +182,8 @@ export default function EditProductPage() {
         toast.success("Đã cập nhật danh mục và nhãn thành công");
         fetchProductDetail();
       } else {
-        if (!catRes.data.isSuccess) toast.error(catRes.data.message || "Cập nhật danh mục thất bại");
+        if (!catRes.data.isSuccess)
+          toast.error(catRes.data.message || "Cập nhật danh mục thất bại");
         if (!tagRes.data.isSuccess) toast.error(tagRes.data.message || "Cập nhật nhãn thất bại");
       }
     } catch (err) {
@@ -208,12 +208,13 @@ export default function EditProductPage() {
       setVariantPrice(0);
       setVariantStock(10);
       // Auto generate SKU prefix
-      const prefix = product?.name
-        .toUpperCase()
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .replace(/[^A-Z0-9]/g, "")
-        .slice(0, 6) || "SKU";
+      const prefix =
+        product?.name
+          .toUpperCase()
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .replace(/[^A-Z0-9]/g, "")
+          .slice(0, 6) || "SKU";
       setVariantSku(`${prefix}-${Math.floor(1000 + Math.random() * 9000)}`);
     }
     setItemModalOpen(true);
@@ -429,7 +430,11 @@ export default function EditProductPage() {
           {(
             [
               { id: "basic", label: "Thông tin cơ bản", icon: Info },
-              { id: "variants", label: `Biến thể (${product.items?.length || 0})`, icon: DollarSign },
+              {
+                id: "variants",
+                label: `Biến thể (${product.items?.length || 0})`,
+                icon: DollarSign,
+              },
               { id: "images", label: `Hình ảnh (${product.images?.length || 0})`, icon: ImageIcon },
               { id: "categories-tags", label: "Danh mục & Nhãn", icon: Layers },
               { id: "feng-shui", label: "Phong thủy", icon: Sparkles },
@@ -440,10 +445,11 @@ export default function EditProductPage() {
               <button
                 key={t.id}
                 onClick={() => setActiveTab(t.id)}
-                className={`flex items-center gap-2 border-b-2 py-3 px-1 text-sm font-semibold cursor-pointer transition-all ${isSelected
+                className={`flex items-center gap-2 border-b-2 py-3 px-1 text-sm font-semibold cursor-pointer transition-all ${
+                  isSelected
                     ? "border-primary text-primary"
                     : "border-transparent text-gray-550 hover:border-gray-300 hover:text-gray-700"
-                  }`}
+                }`}
               >
                 <t.icon size={16} />
                 {t.label}
@@ -455,7 +461,10 @@ export default function EditProductPage() {
 
       {/* ── TAB CONTENT: BASIC INFO ───────────────────────────────────────── */}
       {activeTab === "basic" && (
-        <form onSubmit={handleSaveBasic} className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-100 space-y-5">
+        <form
+          onSubmit={handleSaveBasic}
+          className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-100 space-y-5"
+        >
           <div className="flex items-center gap-2 border-b border-gray-100 pb-3">
             <Info size={18} className="text-primary" />
             <h2 className="text-base font-bold text-gray-950">Chỉnh sửa thông tin cơ bản</h2>
@@ -526,7 +535,9 @@ export default function EditProductPage() {
       {activeTab === "variants" && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold text-gray-900">Danh sách phân loại sản phẩm (Biến thể)</h2>
+            <h2 className="text-lg font-bold text-gray-900">
+              Danh sách phân loại sản phẩm (Biến thể)
+            </h2>
             <button
               onClick={() => handleOpenItemModal()}
               className="flex items-center gap-1.5 rounded-xl bg-primary px-3 py-2 text-xs font-semibold text-white hover:bg-primary-dark cursor-pointer transition-colors"
@@ -703,10 +714,12 @@ export default function EditProductPage() {
               <Upload size={16} className="text-primary" />
               <h3 className="text-sm font-bold text-gray-900">Tải lên hình ảnh</h3>
             </div>
-            
+
             <div className="space-y-4">
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-gray-700 font-medium">Thứ tự sắp xếp trước khi tải ảnh</label>
+                <label className="text-xs font-semibold text-gray-700 font-medium">
+                  Thứ tự sắp xếp trước khi tải ảnh
+                </label>
                 <input
                   type="number"
                   min={1}
@@ -718,7 +731,9 @@ export default function EditProductPage() {
 
               {/* Direct Drag & Drop Zone */}
               <div
-                onClick={() => !addingImage && document.getElementById("edit-file-upload-input")?.click()}
+                onClick={() =>
+                  !addingImage && document.getElementById("edit-file-upload-input")?.click()
+                }
                 onDragOver={(e) => e.preventDefault()}
                 onDrop={async (e) => {
                   e.preventDefault();
@@ -727,7 +742,9 @@ export default function EditProductPage() {
                   }
                 }}
                 className={`border-2 border-dashed border-gray-200 rounded-2xl p-6 text-center cursor-pointer transition-all duration-200 flex flex-col items-center justify-center gap-2 group ${
-                  addingImage ? "opacity-60 cursor-not-allowed bg-gray-50" : "hover:border-primary hover:bg-primary/5"
+                  addingImage
+                    ? "opacity-60 cursor-not-allowed bg-gray-50"
+                    : "hover:border-primary hover:bg-primary/5"
                 }`}
               >
                 <input
@@ -749,7 +766,9 @@ export default function EditProductPage() {
                   <p className="text-sm font-semibold text-gray-750">
                     {addingImage ? "Đang tải ảnh lên..." : "Kéo thả hoặc click chọn ảnh"}
                   </p>
-                  <p className="text-xs text-gray-400 mt-1">Hỗ trợ JPG, PNG, WEBP. Ảnh tải trực tiếp vào sản phẩm.</p>
+                  <p className="text-xs text-gray-400 mt-1">
+                    Hỗ trợ JPG, PNG, WEBP. Ảnh tải trực tiếp vào sản phẩm.
+                  </p>
                 </div>
               </div>
             </div>
@@ -775,10 +794,16 @@ export default function EditProductPage() {
                     className="relative group rounded-xl overflow-hidden bg-gray-50 ring-1 ring-gray-150 flex flex-col items-center justify-center p-2"
                   >
                     <div className="aspect-square w-full overflow-hidden flex items-center justify-center rounded-lg">
-                      <img src={img.url} alt="product" className="max-h-full max-w-full object-contain" />
+                      <img
+                        src={img.url}
+                        alt="product"
+                        className="max-h-full max-w-full object-contain"
+                      />
                     </div>
                     <div className="mt-2 w-full flex items-center justify-between px-1">
-                      <span className="text-xs text-gray-400 font-medium">Thứ tự: {img.sortOrder}</span>
+                      <span className="text-xs text-gray-400 font-medium">
+                        Thứ tự: {img.sortOrder}
+                      </span>
                       <button
                         type="button"
                         onClick={() => handleDeleteImage(img.id)}
@@ -817,13 +842,18 @@ export default function EditProductPage() {
               ) : (
                 <div className="max-h-72 overflow-y-auto space-y-2 pr-1">
                   {categories.map((cat) => (
-                    <label key={cat.id} className="flex items-center gap-2.5 text-sm font-medium text-gray-700 cursor-pointer">
+                    <label
+                      key={cat.id}
+                      className="flex items-center gap-2.5 text-sm font-medium text-gray-700 cursor-pointer"
+                    >
                       <input
                         type="checkbox"
                         checked={selectedCategoryIds.includes(cat.id)}
                         onChange={() => {
                           setSelectedCategoryIds((prev) =>
-                            prev.includes(cat.id) ? prev.filter((id) => id !== cat.id) : [...prev, cat.id]
+                            prev.includes(cat.id)
+                              ? prev.filter((id) => id !== cat.id)
+                              : [...prev, cat.id],
                           );
                         }}
                         className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
@@ -847,13 +877,18 @@ export default function EditProductPage() {
               ) : (
                 <div className="max-h-72 overflow-y-auto space-y-2 pr-1">
                   {tags.map((tag) => (
-                    <label key={tag.id} className="flex items-center gap-2.5 text-sm font-medium text-gray-700 cursor-pointer">
+                    <label
+                      key={tag.id}
+                      className="flex items-center gap-2.5 text-sm font-medium text-gray-700 cursor-pointer"
+                    >
                       <input
                         type="checkbox"
                         checked={selectedTagIds.includes(tag.id)}
                         onChange={() => {
                           setSelectedTagIds((prev) =>
-                            prev.includes(tag.id) ? prev.filter((id) => id !== tag.id) : [...prev, tag.id]
+                            prev.includes(tag.id)
+                              ? prev.filter((id) => id !== tag.id)
+                              : [...prev, tag.id],
                           );
                         }}
                         className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
@@ -872,7 +907,11 @@ export default function EditProductPage() {
               disabled={savingRelations}
               className="flex items-center justify-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-white shadow-md hover:bg-primary-dark active:scale-95 disabled:opacity-50 cursor-pointer"
             >
-              {savingRelations ? <RefreshCw size={16} className="animate-spin" /> : <Save size={16} />}
+              {savingRelations ? (
+                <RefreshCw size={16} className="animate-spin" />
+              ) : (
+                <Save size={16} />
+              )}
               Lưu danh mục & nhãn
             </button>
           </div>
@@ -881,7 +920,10 @@ export default function EditProductPage() {
 
       {/* ── TAB CONTENT: FENG SHUI ────────────────────────────────────────── */}
       {activeTab === "feng-shui" && (
-        <form onSubmit={handleSaveFengShui} className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-100 space-y-5">
+        <form
+          onSubmit={handleSaveFengShui}
+          className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-100 space-y-5"
+        >
           <div className="flex items-center gap-2 border-b border-gray-100 pb-3">
             <Sparkles size={18} className="text-primary" />
             <h2 className="text-base font-bold text-gray-950">Thuộc tính ngũ hành phong thủy</h2>
@@ -889,7 +931,9 @@ export default function EditProductPage() {
 
           <div className="space-y-4">
             <div className="space-y-1.5 max-w-sm">
-              <label className="text-sm font-semibold text-gray-700">Mệnh / Hành phong thủy *</label>
+              <label className="text-sm font-semibold text-gray-700">
+                Mệnh / Hành phong thủy *
+              </label>
               <select
                 value={fsElement}
                 onChange={(e) => setFsElement(e.target.value)}
@@ -932,7 +976,11 @@ export default function EditProductPage() {
               disabled={savingFengShui}
               className="flex items-center justify-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-white shadow-md hover:bg-primary-dark active:scale-95 disabled:opacity-50 cursor-pointer"
             >
-              {savingFengShui ? <RefreshCw size={16} className="animate-spin" /> : <Save size={16} />}
+              {savingFengShui ? (
+                <RefreshCw size={16} className="animate-spin" />
+              ) : (
+                <Save size={16} />
+              )}
               Lưu phong thủy
             </button>
           </div>

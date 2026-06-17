@@ -96,12 +96,13 @@ export default function CreateProductPage() {
   // Set default SKU based on name if empty
   useEffect(() => {
     if (!itemSku && name) {
-      const generatedSku = name
-        .toUpperCase()
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .replace(/[^A-Z0-9]/g, "")
-        .slice(0, 8) + "-STD";
+      const generatedSku =
+        name
+          .toUpperCase()
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .replace(/[^A-Z0-9]/g, "")
+          .slice(0, 8) + "-STD";
       setItemSku(generatedSku);
     }
   }, [name, itemSku]);
@@ -133,10 +134,8 @@ export default function CreateProductPage() {
         if (uploadedUrl && typeof uploadedUrl === "string") {
           setImages((prev) =>
             prev.map((img) =>
-              img.id === tempId
-                ? { ...img, url: uploadedUrl, uploading: false }
-                : img
-            )
+              img.id === tempId ? { ...img, url: uploadedUrl, uploading: false } : img,
+            ),
           );
         } else {
           throw new Error("Failed to get URL string from upload response");
@@ -145,11 +144,7 @@ export default function CreateProductPage() {
         console.error(err);
         toast.error(`Lỗi khi tải lên file ${file.name}`);
         setImages((prev) =>
-          prev.map((img) =>
-            img.id === tempId
-              ? { ...img, error: true, uploading: false }
-              : img
-          )
+          prev.map((img) => (img.id === tempId ? { ...img, error: true, uploading: false } : img)),
         );
       }
     }
@@ -176,14 +171,14 @@ export default function CreateProductPage() {
   // Category selection handler
   const handleCategoryToggle = (id: string) => {
     setSelectedCategoryIds((prev) =>
-      prev.includes(id) ? prev.filter((cId) => cId !== id) : [...prev, id]
+      prev.includes(id) ? prev.filter((cId) => cId !== id) : [...prev, id],
     );
   };
 
   // Tag selection handler
   const handleTagToggle = (id: string) => {
     setSelectedTagIds((prev) =>
-      prev.includes(id) ? prev.filter((tId) => tId !== id) : [...prev, id]
+      prev.includes(id) ? prev.filter((tId) => tId !== id) : [...prev, id],
     );
   };
 
@@ -284,7 +279,9 @@ export default function CreateProductPage() {
         </button>
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-gray-900">Thêm sản phẩm mới</h1>
-          <p className="text-sm text-gray-500 mt-0.5">Tạo sản phẩm, liên kết danh mục, hình ảnh và phong thủy.</p>
+          <p className="text-sm text-gray-500 mt-0.5">
+            Tạo sản phẩm, liên kết danh mục, hình ảnh và phong thủy.
+          </p>
         </div>
       </div>
 
@@ -478,15 +475,21 @@ export default function CreateProductPage() {
                 <Upload size={20} />
               </div>
               <div>
-                <p className="text-sm font-semibold text-gray-750">Chọn hoặc kéo thả hình ảnh vào đây</p>
-                <p className="text-xs text-gray-400 mt-1">Hỗ trợ JPG, PNG, WEBP. Chọn được nhiều ảnh cùng lúc.</p>
+                <p className="text-sm font-semibold text-gray-750">
+                  Chọn hoặc kéo thả hình ảnh vào đây
+                </p>
+                <p className="text-xs text-gray-400 mt-1">
+                  Hỗ trợ JPG, PNG, WEBP. Chọn được nhiều ảnh cùng lúc.
+                </p>
               </div>
             </div>
 
             {/* Images Grid Preview */}
             {images.length > 0 && (
               <div className="space-y-3 pt-2">
-                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Danh sách hình ảnh ({images.length})</p>
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">
+                  Danh sách hình ảnh ({images.length})
+                </p>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                   {images.map((img, idx) => (
                     <div
@@ -501,12 +504,14 @@ export default function CreateProductPage() {
                             img.uploading ? "blur-[2px] opacity-60" : ""
                           }`}
                         />
-                        
+
                         {/* Loading Overlay */}
                         {img.uploading && (
                           <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/40 gap-1.5">
                             <RefreshCw size={18} className="animate-spin text-primary" />
-                            <span className="text-[10px] font-bold text-primary">Đang tải lên...</span>
+                            <span className="text-[10px] font-bold text-primary">
+                              Đang tải lên...
+                            </span>
                           </div>
                         )}
 
@@ -519,7 +524,9 @@ export default function CreateProductPage() {
                       </div>
 
                       <div className="mt-2 w-full flex items-center justify-between px-1">
-                        <span className="text-[10px] text-gray-400 font-bold">Thứ tự: {idx + 1}</span>
+                        <span className="text-[10px] text-gray-400 font-bold">
+                          Thứ tự: {idx + 1}
+                        </span>
                         <button
                           type="button"
                           onClick={() => handleRemoveImage(img.id)}
@@ -548,7 +555,9 @@ export default function CreateProductPage() {
 
             <div className="space-y-4">
               <div className="space-y-1.5">
-                <label className="text-sm font-semibold text-gray-700">Mệnh / Hành phong thủy *</label>
+                <label className="text-sm font-semibold text-gray-700">
+                  Mệnh / Hành phong thủy *
+                </label>
                 <select
                   value={fengShuiElement}
                   onChange={(e) => setFengShuiElement(e.target.value)}
@@ -598,7 +607,10 @@ export default function CreateProductPage() {
             ) : (
               <div className="max-h-56 overflow-y-auto space-y-2 pr-1">
                 {categories.map((cat) => (
-                  <label key={cat.id} className="flex items-center gap-2.5 text-sm font-medium text-gray-700 cursor-pointer">
+                  <label
+                    key={cat.id}
+                    className="flex items-center gap-2.5 text-sm font-medium text-gray-700 cursor-pointer"
+                  >
                     <input
                       type="checkbox"
                       checked={selectedCategoryIds.includes(cat.id)}
@@ -624,7 +636,10 @@ export default function CreateProductPage() {
             ) : (
               <div className="max-h-56 overflow-y-auto space-y-2 pr-1">
                 {tags.map((tag) => (
-                  <label key={tag.id} className="flex items-center gap-2.5 text-sm font-medium text-gray-700 cursor-pointer">
+                  <label
+                    key={tag.id}
+                    className="flex items-center gap-2.5 text-sm font-medium text-gray-700 cursor-pointer"
+                  >
                     <input
                       type="checkbox"
                       checked={selectedTagIds.includes(tag.id)}

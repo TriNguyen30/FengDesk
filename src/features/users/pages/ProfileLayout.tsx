@@ -1,11 +1,12 @@
 import { Outlet, NavLink } from "react-router-dom";
-import { User, MapPin, Package } from "lucide-react";
+import { User, MapPin, Package, HousePlus } from "lucide-react";
 import { useEffect } from "react";
 
 export default function ProfileLayout() {
   const navItems = [
     { name: "Thông tin tài khoản", path: "/profile/info", icon: User },
     { name: "Địa chỉ", path: "/profile/addresses", icon: MapPin },
+    { name: "Không gian làm việc", path: "/profile/workspace", icon: HousePlus },
     { name: "Đơn hàng của tôi", path: "/profile/orders", icon: Package },
   ];
 

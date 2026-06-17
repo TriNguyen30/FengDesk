@@ -62,14 +62,11 @@ export default function ManagerLayout() {
     dispatch(logout());
   };
 
-  const currentNav = navigation.find((item) =>
-    location.pathname.startsWith(item.href)
-  );
+  const currentNav = navigation.find((item) => location.pathname.startsWith(item.href));
   const pageTitle = currentNav?.name ?? "Tổng quan";
 
   const initial = user?.fullName?.charAt(0) || user?.email?.charAt(0) || "Q";
-  const roleLabel =
-    roleLabels[user?.role?.toLowerCase() ?? ""] ?? user?.role ?? "Quản lý";
+  const roleLabel = roleLabels[user?.role?.toLowerCase() ?? ""] ?? user?.role ?? "Quản lý";
 
   return (
     <div className="flex h-screen overflow-hidden bg-gray-50 text-gray-900">
@@ -83,24 +80,20 @@ export default function ManagerLayout() {
 
       {/* Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-30 flex w-64 flex-col border-r border-gray-200 bg-white transition-all duration-300 lg:static lg:inset-0 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"
-          } lg:translate-x-0 ${collapsed ? "lg:w-20" : "lg:w-64"}`}
+        className={`fixed inset-y-0 left-0 z-30 flex w-64 flex-col border-r border-gray-200 bg-white transition-all duration-300 lg:static lg:inset-0 ${
+          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        } lg:translate-x-0 ${collapsed ? "lg:w-20" : "lg:w-64"}`}
       >
         {/* Logo */}
         <div className="flex h-16 shrink-0 items-center justify-between border-b border-gray-200 px-4">
-          <Link
-            to="/manager/dashboard"
-            className="flex items-center gap-2.5 overflow-hidden"
-          >
+          <Link to="/manager/dashboard" className="flex items-center gap-2.5 overflow-hidden">
             <img src={FengDesk} alt="FengDesk" className="h-9 w-9" />
             {!collapsed && (
               <span className="whitespace-nowrap">
                 <span className="block text-base font-bold leading-tight text-gray-900">
                   FengShui
                 </span>
-                <span className="block text-xs leading-tight text-gray-500">
-                  Quản lý cửa hàng
-                </span>
+                <span className="block text-xs leading-tight text-gray-500">Quản lý cửa hàng</span>
               </span>
             )}
           </Link>
@@ -118,10 +111,11 @@ export default function ManagerLayout() {
                 key={item.name}
                 to={item.href}
                 title={collapsed ? item.name : undefined}
-                className={`group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${isActive
-                  ? "bg-primary/10 text-primary"
-                  : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
-                  } ${collapsed ? "justify-center" : ""}`}
+                className={`group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
+                  isActive
+                    ? "bg-primary/10 text-primary"
+                    : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                } ${collapsed ? "justify-center" : ""}`}
               >
                 {isActive && (
                   <span className="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-full bg-primary" />
@@ -148,8 +142,9 @@ export default function ManagerLayout() {
         {/* User + logout */}
         <div className="border-t border-gray-200 p-3">
           <div
-            className={`mb-2 flex items-center gap-3 rounded-lg px-2 py-2 ${collapsed ? "justify-center" : ""
-              }`}
+            className={`mb-2 flex items-center gap-3 rounded-lg px-2 py-2 ${
+              collapsed ? "justify-center" : ""
+            }`}
           >
             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/15 font-bold text-primary">
               {initial}
@@ -166,8 +161,9 @@ export default function ManagerLayout() {
           <button
             onClick={handleLogout}
             title={collapsed ? "Đăng xuất" : undefined}
-            className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 ${collapsed ? "justify-center" : ""
-              }`}
+            className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 ${
+              collapsed ? "justify-center" : ""
+            }`}
           >
             <LogOut size={19} />
             {!collapsed && "Đăng xuất"}
@@ -187,12 +183,8 @@ export default function ManagerLayout() {
           </button>
 
           <div className="min-w-0">
-            <p className="text-xs font-medium uppercase tracking-wide text-gray-400">
-              Quản lý
-            </p>
-            <h1 className="truncate text-lg font-semibold text-gray-900">
-              {pageTitle}
-            </h1>
+            <p className="text-xs font-medium uppercase tracking-wide text-gray-400">Quản lý</p>
+            <h1 className="truncate text-lg font-semibold text-gray-900">{pageTitle}</h1>
           </div>
 
           <div className="ml-auto flex items-center gap-3 sm:gap-5">
@@ -224,15 +216,10 @@ export default function ManagerLayout() {
 
               {notifOpen && (
                 <>
-                  <div
-                    className="fixed inset-0 z-30"
-                    onClick={() => setNotifOpen(false)}
-                  />
+                  <div className="fixed inset-0 z-30" onClick={() => setNotifOpen(false)} />
                   <div className="absolute right-0 top-full z-40 mt-2 w-80 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg">
                     <div className="border-b border-gray-100 px-4 py-3">
-                      <p className="text-sm font-semibold text-gray-900">
-                        Thông báo
-                      </p>
+                      <p className="text-sm font-semibold text-gray-900">Thông báo</p>
                     </div>
                     <ul className="max-h-72 overflow-y-auto">
                       {notifications.map((n) => (

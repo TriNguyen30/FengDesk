@@ -273,7 +273,8 @@ export default function ManageProductsPage() {
               </thead>
               <tbody className="divide-y divide-gray-100 text-sm text-gray-600">
                 {products.map((product) => {
-                  const shopName = shops.find((s) => s.id === product.gardenStoreId)?.name || "Chưa xác định";
+                  const shopName =
+                    shops.find((s) => s.id === product.gardenStoreId)?.name || "Chưa xác định";
                   return (
                     <tr key={product.id} className="hover:bg-gray-50/50 transition-colors">
                       <td className="whitespace-nowrap px-6 py-4">
@@ -292,7 +293,9 @@ export default function ManageProductsPage() {
                       <td className="px-6 py-4">
                         <div className="max-w-[200px] sm:max-w-md">
                           <p className="font-bold text-gray-900 line-clamp-1">{product.name}</p>
-                          <p className="text-xs text-gray-400 mt-0.5 font-mono truncate">{product.id}</p>
+                          <p className="text-xs text-gray-400 mt-0.5 font-mono truncate">
+                            {product.id}
+                          </p>
                         </div>
                       </td>
                       <td className="whitespace-nowrap px-6 py-4">
@@ -393,12 +396,14 @@ export default function ManageProductsPage() {
             <div>
               <p className="text-sm font-semibold">Cảnh báo: Hành động không thể hoàn tác</p>
               <p className="text-xs text-red-700 mt-0.5">
-                Xóa sản phẩm sẽ đồng thời xóa toàn bộ các biến thể, hình ảnh và dữ liệu phong thủy liên quan.
+                Xóa sản phẩm sẽ đồng thời xóa toàn bộ các biến thể, hình ảnh và dữ liệu phong thủy
+                liên quan.
               </p>
             </div>
           </div>
           <p className="text-sm text-gray-600">
-            Bạn có chắc chắn muốn xóa sản phẩm <span className="font-bold text-gray-900">{deleteName}</span> không?
+            Bạn có chắc chắn muốn xóa sản phẩm{" "}
+            <span className="font-bold text-gray-900">{deleteName}</span> không?
           </p>
           <div className="flex gap-3 pt-2">
             <button
