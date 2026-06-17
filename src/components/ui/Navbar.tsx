@@ -146,6 +146,12 @@ export default function Navbar() {
                         Tài Khoản Của Tôi
                       </button>
                       <button
+                        onClick={() => navigate("/profile/workspace")}
+                        className="flex w-full items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 rounded-md transition-colors text-left font-medium cursor-pointer"
+                      >
+                        Không gian làm việc
+                      </button>
+                      <button
                         onClick={() => navigate("/profile/orders")}
                         className="flex w-full items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 rounded-md transition-colors text-left font-medium cursor-pointer"
                       >

@@ -1,11 +1,12 @@
 import { Outlet, NavLink } from "react-router-dom";
-import { User, MapPin, Package } from "lucide-react";
+import { User, MapPin, Package, HousePlus } from "lucide-react";
 import { useEffect } from "react";
 
 export default function ProfileLayout() {
   const navItems = [
     { name: "Thông tin tài khoản", path: "/profile/info", icon: User },
     { name: "Địa chỉ", path: "/profile/addresses", icon: MapPin },
+    { name: "Không gian làm việc", path: "/profile/workspace", icon: HousePlus },
     { name: "Đơn hàng của tôi", path: "/profile/orders", icon: Package },
   ];
 
@@ -28,10 +29,9 @@ export default function ProfileLayout() {
                     key={item.path}
                     to={item.path}
                     className={({ isActive }) =>
-                      `flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
-                        isActive
-                          ? "bg-primary/10 text-primary"
-                          : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                      `flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${isActive
+                        ? "bg-primary/10 text-primary"
+                        : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                       }`
                     }
                   >
