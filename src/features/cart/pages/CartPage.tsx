@@ -255,7 +255,13 @@ export default function CartPage() {
 
               <div className="mt-auto pt-2">
                 <button
-                  onClick={() => toast.info("Chức năng thanh toán đang được hoàn thiện")}
+                  onClick={() => {
+                    if (selectedItems.length === 0) {
+                      toast.error("Vui lòng chọn ít nhất một sản phẩm");
+                      return;
+                    }
+                    navigate("/checkout", { state: { selectedItemIds: selectedItems } });
+                  }}
                   disabled={selectedItems.length === 0}
                   className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-8 py-3.5 text-base font-bold text-white shadow-md transition-all hover:bg-primary-dark hover:shadow-lg active:scale-95 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:shadow-none cursor-pointer"
                 >

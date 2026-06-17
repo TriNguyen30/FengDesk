@@ -12,6 +12,9 @@ import ProtectedRoute from "./ProtectedRoute";
 import ProfileLayout from "@/features/users/pages/ProfileLayout";
 import ProfileInfoPage from "@/features/users/pages/ProfileInfoPage";
 import AddressBookPage from "@/features/users/pages/AddressBookPage";
+import CheckoutPage from "@/features/orders/pages/CheckoutPage";
+import OrdersPage from "@/features/orders/pages/OrdersPage";
+import OrderDetailPage from "@/features/orders/pages/OrderDetailPage";
 
 export default function AppRoutes() {
   return (
@@ -21,6 +24,14 @@ export default function AppRoutes() {
         <Route path="/products" element={<ProductsPage />} />
         <Route path="/products/:id" element={<ProductDetailPage />} />
         <Route path="/cart" element={<CartPage />} />
+        <Route
+          path="/checkout"
+          element={
+            <ProtectedRoute>
+              <CheckoutPage />
+            </ProtectedRoute>
+          }
+        />
 
         {/* Protected Profile Routes */}
         <Route
@@ -34,10 +45,8 @@ export default function AppRoutes() {
           <Route index element={<Navigate to="info" replace />} />
           <Route path="info" element={<ProfileInfoPage />} />
           <Route path="addresses" element={<AddressBookPage />} />
-          <Route
-            path="orders"
-            element={<div className="p-4 text-center">Đơn hàng của tôi đang phát triển...</div>}
-          />
+          <Route path="orders" element={<OrdersPage />} />
+          <Route path="orders/:id" element={<OrderDetailPage />} />
         </Route>
       </Route>
       <Route
