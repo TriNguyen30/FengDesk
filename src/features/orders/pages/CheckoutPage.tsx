@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { ChevronLeft, Loader2, MapPin, ShoppingBag, CreditCard } from "lucide-react";
 import { toast } from "sonner";
-import { useAppDispatch } from "@/store/hooks";
+import { useAppDispatch } from "@/app/store";
 import { useCart } from "@/features/cart";
 import { createOrder } from "@/features/orders/store/orderSlice";
 import { getAddresses } from "@/features/users/api/address.api";

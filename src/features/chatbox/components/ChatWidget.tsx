@@ -1,7 +1,7 @@
 import { useCallback } from "react";
 import { MessageCircle, X } from "lucide-react";
 import { useChatbox } from "@/features/chatbox/hooks/useChatbox";
-import { useAppSelector } from "@/store/hooks";
+import { useAppSelector } from "@/app/store";
 import ChatPanel from "./ChatPanel";
 
 export default function ChatWidget() {

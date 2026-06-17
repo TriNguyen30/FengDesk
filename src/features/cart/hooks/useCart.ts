@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { useAppDispatch, useAppSelector } from "@/app/store";
 import {
   fetchCart,
   addCartItem,

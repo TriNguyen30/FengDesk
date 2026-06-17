@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useAppSelector } from "@/store/hooks";
+import { useAppSelector } from "@/app/store";
 
 export default function ProfileInfoPage() {
   const user = useAppSelector((state) => state.auth.user);

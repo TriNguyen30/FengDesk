@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { ChevronLeft, Loader2, MapPin, Package } from "lucide-react";
 import { toast } from "sonner";
 import Modal from "@/components/ui/Modal";
-import { useAppDispatch } from "@/store/hooks";
+import { useAppDispatch } from "@/app/store";
 import { cancelOrder } from "../store/orderSlice";
 import { useOrders } from "../hooks/useOrders";
 import { formatOrderDate, formatVnd, getOrderStatusMeta } from "../utils/orderUtils";

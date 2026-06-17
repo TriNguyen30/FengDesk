@@ -5,7 +5,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Minus, Plus, ShoppingCart, Trash2, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { useAppSelector } from "@/store/hooks";
+import { useAppSelector } from "@/app/store";
 import { selectProductPrimaryImage } from "@/features/products/store/productSlice";
 import type { UpdateCartItemParams } from "@/features/cart/types/cart";
 

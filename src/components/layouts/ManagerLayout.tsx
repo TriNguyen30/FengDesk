@@ -11,7 +11,7 @@ import {
   X,
   Bell,
 } from "lucide-react";
-import { useAppSelector, useAppDispatch } from "@/store/hooks";
+import { useAppSelector, useAppDispatch } from "@/app/store";
 import { logout } from "@/features/auth/store/authSlice";
 
 const navigation = [

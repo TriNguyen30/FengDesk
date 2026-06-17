@@ -2,7 +2,7 @@ import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
 import { axiosBaseConfig } from "@/config/axios.config";
 import { clearTokens, getAccessToken, getRefreshToken, setTokens } from "@/utils";
 import { HTTP_STATUS } from "@/constants";
-import { store } from "@/store";
+import { store } from "@/app/store";
 import { setToken, logout } from "@/features/auth/store/authSlice";
 
 export class FetchHttpClient {
