@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import { useAppDispatch } from "@/store/hooks";
+import { useAppDispatch } from "@/app/store";
 import { setRole, setToken, setUser } from "@/features/auth/store/authSlice";
 import type { LoginResponseData } from "@/features/auth/types/auth";
 

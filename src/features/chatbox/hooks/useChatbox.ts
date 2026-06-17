@@ -17,7 +17,7 @@ import {
 } from "@/features/chatbox/store/chatboxSlice";
 import { getChatRoomId } from "@/features/chatbox/utils/chatUtils";
 import { setAuthModal } from "@/features/auth/store/authSlice";
-import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { useAppDispatch, useAppSelector } from "@/app/store";
 
 export function useChatbox() {
   const dispatch = useAppDispatch();

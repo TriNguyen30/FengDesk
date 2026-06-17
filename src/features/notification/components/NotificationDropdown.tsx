@@ -173,12 +173,7 @@ export default function NotificationDropdown() {
         }
       `}</style>
 
-      <div
-        ref={rootRef}
-        className="relative group"
-        onMouseEnter={open_}
-        onMouseLeave={close}
-      >
+      <div ref={rootRef} className="relative group" onMouseEnter={open_} onMouseLeave={close}>
         <button
           type="button"
           onClick={() => (open ? close() : open_())}
@@ -195,9 +190,7 @@ export default function NotificationDropdown() {
               </span>
             )}
           </div>
-          <span className="hidden text-[10px] font-medium sm:block sm:text-xs">
-            Thông báo
-          </span>
+          <span className="hidden text-[10px] font-medium sm:block sm:text-xs">Thông báo</span>
         </button>
 
         {open && (
@@ -237,7 +230,9 @@ export default function NotificationDropdown() {
                       <Bell size={24} strokeWidth={1.5} />
                     </div>
                     <p className="text-sm font-medium text-gray-700">Chưa có thông báo nào</p>
-                    <p className="text-xs text-gray-400">Chúng tôi sẽ thông báo cho bạn khi có cập nhật mới.</p>
+                    <p className="text-xs text-gray-400">
+                      Chúng tôi sẽ thông báo cho bạn khi có cập nhật mới.
+                    </p>
                   </div>
                 ) : (
                   notifications.map((item) => (
@@ -252,9 +247,11 @@ export default function NotificationDropdown() {
                       {getNotificationIcon(item.type)}
                       <div className="min-w-0 flex-1">
                         <div className="flex items-start justify-between gap-2">
-                          <p className={`text-xs sm:text-sm leading-tight text-gray-900 ${
-                            !item.isRead ? "font-semibold" : "font-medium"
-                          }`}>
+                          <p
+                            className={`text-xs sm:text-sm leading-tight text-gray-900 ${
+                              !item.isRead ? "font-semibold" : "font-medium"
+                            }`}
+                          >
                             {item.title}
                           </p>
                           {!item.isRead && (

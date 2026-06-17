@@ -1,5 +1,5 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import type { RootState } from "@/store";
+import type { RootState } from "@/app/store";
 import { notificationApi } from "../api/notificationApi";
 import type { GetNotificationsParams, NotificationItem } from "../types/notification";
 
@@ -37,13 +37,10 @@ export const fetchNotifications = createAsyncThunk(
   },
 );
 
-export const fetchUnreadCount = createAsyncThunk(
-  "notification/fetchUnreadCount",
-  async () => {
-    const response = await notificationApi.getUnreadCount();
-    return response.data;
-  },
-);
+export const fetchUnreadCount = createAsyncThunk("notification/fetchUnreadCount", async () => {
+  const response = await notificationApi.getUnreadCount();
+  return response.data;
+});
 
 export const markNotificationAsRead = createAsyncThunk(
   "notification/markNotificationAsRead",

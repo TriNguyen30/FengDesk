@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { ChevronLeft, Loader2, MapPin, ShoppingBag, CreditCard } from "lucide-react";
 import { toast } from "sonner";
-import { useAppDispatch } from "@/store/hooks";
+import { useAppDispatch } from "@/app/store";
 import { useCart } from "@/features/cart";
 import { createOrder } from "@/features/orders/store/orderSlice";
 import { getAddresses } from "@/features/users/api/address.api";
@@ -10,6 +10,7 @@ import type { Address } from "@/features/users/types/address";
 import type { PaymentMethod } from "@/features/orders/types/orders";
 import { formatVnd, PAYMENT_METHODS } from "@/features/orders/utils/orderUtils";
 import AddressModal from "@/features/users/components/AddressModal";
+import { paymentApi } from "@/features/payment";
 
 interface CheckoutLocationState {
   selectedItemIds?: string[];
@@ -97,8 +98,21 @@ export default function CheckoutPage() {
       if (result.isSuccess && result.data) {
         toast.success("Đặt hàng thành công");
 
-        if (result.data.paymentUrl) {
-          window.location.href = result.data.paymentUrl;
+        if (paymentMethod === "PayOS") {
+          try {
+            const paymentRes = await paymentApi.createPayment(result.data.id);
+            if (paymentRes.data.isSuccess && paymentRes.data.data.checkoutUrl) {
+              localStorage.setItem("pending_payment_order_id", result.data.id);
+              window.location.href = paymentRes.data.data.checkoutUrl;
+              return;
+            } else {
+              toast.error(paymentRes.data.message || "Không thể tạo liên kết thanh toán");
+            }
+          } catch {
+            toast.error("Lỗi khi kết nối cổng thanh toán PayOS");
+          }
+          // Fallback if payment generation failed
+          navigate(`/profile/orders/${result.data.id}`, { replace: true });
           return;
         }
 

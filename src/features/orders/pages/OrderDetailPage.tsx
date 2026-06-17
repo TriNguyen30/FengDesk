@@ -3,10 +3,11 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { ChevronLeft, Loader2, MapPin, Package } from "lucide-react";
 import { toast } from "sonner";
 import Modal from "@/components/ui/Modal";
-import { useAppDispatch } from "@/store/hooks";
+import { useAppDispatch } from "@/app/store";
 import { cancelOrder } from "../store/orderSlice";
 import { useOrders } from "../hooks/useOrders";
 import { formatOrderDate, formatVnd, getOrderStatusMeta } from "../utils/orderUtils";
+import { paymentApi } from "@/features/payment";
 
 export default function OrderDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -15,10 +16,13 @@ export default function OrderDetailPage() {
   const { currentOrder, detailStatus, getOrderById, clearOrder } = useOrders();
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
   const [cancelling, setCancelling] = useState(false);
+  const [paying, setPaying] = useState(false);
 
   useEffect(() => {
     if (id) getOrderById(id);
-    return () => clearOrder();
+    return () => {
+      clearOrder();
+    };
   }, [id, getOrderById, clearOrder]);
 
   const handleCancel = async () => {
@@ -39,6 +43,24 @@ export default function OrderDetailPage() {
     }
   };
 
+  const handlePayNow = async () => {
+    if (!order) return;
+    setPaying(true);
+    try {
+      const paymentRes = await paymentApi.createPayment(order.id);
+      if (paymentRes.data.isSuccess && paymentRes.data.data.checkoutUrl) {
+        localStorage.setItem("pending_payment_order_id", order.id);
+        window.location.href = paymentRes.data.data.checkoutUrl;
+      } else {
+        toast.error(paymentRes.data.message || "Không thể tạo liên kết thanh toán");
+      }
+    } catch {
+      toast.error("Lỗi khi kết nối tới cổng thanh toán");
+    } finally {
+      setPaying(false);
+    }
+  };
+
   if (detailStatus === "loading") {
     return (
       <div className="flex h-64 items-center justify-center">
@@ -52,7 +74,10 @@ export default function OrderDetailPage() {
       <div className="flex flex-col items-center justify-center py-16 text-center">
         <Package className="mb-3 h-12 w-12 text-gray-300" />
         <p className="text-gray-600">Không tìm thấy đơn hàng</p>
-        <Link to="/profile/orders" className="mt-4 text-sm font-medium text-primary hover:underline">
+        <Link
+          to="/profile/orders"
+          className="mt-4 text-sm font-medium text-primary hover:underline"
+        >
           Quay lại danh sách
         </Link>
       </div>
@@ -94,7 +119,11 @@ export default function OrderDetailPage() {
                 <li key={item.id} className="flex gap-4 py-4 first:pt-0 last:pb-0">
                   <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-gray-50 ring-1 ring-gray-100">
                     {item.imageUrl ? (
-                      <img src={item.imageUrl} alt={item.productName} className="h-full w-full object-cover" />
+                      <img
+                        src={item.imageUrl}
+                        alt={item.productName}
+                        className="h-full w-full object-cover"
+                      />
                     ) : (
                       <Package className="h-6 w-6 text-gray-300" />
                     )}
@@ -108,7 +137,9 @@ export default function OrderDetailPage() {
                       {formatVnd(item.unitPrice)} x {item.quantity}
                     </p>
                   </div>
-                  <p className="shrink-0 font-semibold text-gray-900">{formatVnd(item.lineTotal)}</p>
+                  <p className="shrink-0 font-semibold text-gray-900">
+                    {formatVnd(item.lineTotal)}
+                  </p>
                 </li>
               ))}
             </ul>
@@ -126,7 +157,11 @@ export default function OrderDetailPage() {
               <p className="mt-1 text-sm text-gray-600">{order.shippingAddress.streetAddress}</p>
               {(order.shippingAddress.wardName || order.shippingAddress.provinceName) && (
                 <p className="mt-1 text-sm text-gray-500">
-                  {[order.shippingAddress.wardName, order.shippingAddress.districtName, order.shippingAddress.provinceName]
+                  {[
+                    order.shippingAddress.wardName,
+                    order.shippingAddress.districtName,
+                    order.shippingAddress.provinceName,
+                  ]
                     .filter(Boolean)
                     .join(", ")}
                 </p>
@@ -152,7 +187,9 @@ export default function OrderDetailPage() {
               </div>
               <div className="flex justify-between text-gray-600">
                 <span>Phí vận chuyển</span>
-                <span>{order.shippingFee != null ? formatVnd(order.shippingFee) : "Chưa tính"}</span>
+                <span>
+                  {order.shippingFee != null ? formatVnd(order.shippingFee) : "Chưa tính"}
+                </span>
               </div>
               <div className="flex justify-between border-t border-gray-100 pt-3 text-base font-bold text-gray-900">
                 <span>Tổng cộng</span>
@@ -165,13 +202,21 @@ export default function OrderDetailPage() {
             </p>
           </section>
 
-          {order.paymentUrl && order.status === "Pending" && (
-            <a
-              href={order.paymentUrl}
-              className="flex w-full items-center justify-center rounded-xl bg-primary px-4 py-3 text-sm font-bold text-white hover:bg-primary-dark"
+          {order.paymentMethod === "PayOS" && order.status === "Pending" && (
+            <button
+              onClick={handlePayNow}
+              disabled={paying}
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-bold text-white hover:bg-primary-dark disabled:opacity-60 cursor-pointer"
             >
-              Thanh toán ngay
-            </a>
+              {paying ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Đang xử lý...
+                </>
+              ) : (
+                "Thanh toán ngay"
+              )}
+            </button>
           )}
 
           {canCancel && (
@@ -185,7 +230,11 @@ export default function OrderDetailPage() {
         </aside>
       </div>
 
-      <Modal open={isCancelModalOpen} title="Hủy đơn hàng" onClose={() => setIsCancelModalOpen(false)}>
+      <Modal
+        open={isCancelModalOpen}
+        title="Hủy đơn hàng"
+        onClose={() => setIsCancelModalOpen(false)}
+      >
         <div className="space-y-4">
           <p className="text-sm text-gray-600">Bạn có chắc chắn muốn hủy đơn hàng này?</p>
           <div className="flex gap-3">

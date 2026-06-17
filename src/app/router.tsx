@@ -15,6 +15,7 @@ import AddressBookPage from "@/features/users/pages/AddressBookPage";
 import CheckoutPage from "@/features/orders/pages/CheckoutPage";
 import OrdersPage from "@/features/orders/pages/OrdersPage";
 import OrderDetailPage from "@/features/orders/pages/OrderDetailPage";
+import { PaymentSuccessPage, PaymentCancelPage } from "@/features/payment";
 
 export default function AppRoutes() {
   return (
@@ -29,6 +30,22 @@ export default function AppRoutes() {
           element={
             <ProtectedRoute>
               <CheckoutPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/payment/success"
+          element={
+            <ProtectedRoute>
+              <PaymentSuccessPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/payment/cancel"
+          element={
+            <ProtectedRoute>
+              <PaymentCancelPage />
             </ProtectedRoute>
           }
         />
