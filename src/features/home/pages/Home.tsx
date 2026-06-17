@@ -4,6 +4,7 @@ import CategoryBar from "@/components/ui/CategoryBar";
 import PopularCategories from "@/components/ui/PopularCategories";
 import { BestSellersSection } from "@/features/products/components/ProductCard";
 import FiveElementsSection from "../components/FiveElementsSection";
+import ImageCollections from "../components/ImageCollections";
 
 const slides: HeroSlide[] = [
   {
@@ -53,6 +54,7 @@ export default function HomePage() {
       <FiveElementsSection />
       <PopularCategories />
       <BestSellersSection />
+      <ImageCollections />
     </main>
   );
 }
