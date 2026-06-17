@@ -6,6 +6,7 @@ import orderReducer from "@/features/orders/store/orderSlice";
 import chatboxReducer from "@/features/chatbox/store/chatboxSlice";
 import themeReducer from "@/store/slices/themeSlice";
 import notificationReducer from "@/features/notification/store/notificationSlice";
+import paymentReducer from "@/features/payment/store/paymentSlice";
 
 export const store = configureStore({
   reducer: {
@@ -16,6 +17,7 @@ export const store = configureStore({
     chatbox: chatboxReducer,
     theme: themeReducer,
     notification: notificationReducer,
+    payment: paymentReducer,
   },
 });
 

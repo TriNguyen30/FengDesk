@@ -7,6 +7,7 @@ import { useAppDispatch } from "@/store/hooks";
 import { cancelOrder } from "../store/orderSlice";
 import { useOrders } from "../hooks/useOrders";
 import { formatOrderDate, formatVnd, getOrderStatusMeta } from "../utils/orderUtils";
+import { paymentApi } from "@/features/payment";
 
 export default function OrderDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -15,10 +16,13 @@ export default function OrderDetailPage() {
   const { currentOrder, detailStatus, getOrderById, clearOrder } = useOrders();
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
   const [cancelling, setCancelling] = useState(false);
+  const [paying, setPaying] = useState(false);
 
   useEffect(() => {
     if (id) getOrderById(id);
-    return () => clearOrder();
+    return () => {
+      clearOrder();
+    };
   }, [id, getOrderById, clearOrder]);
 
   const handleCancel = async () => {
@@ -36,6 +40,24 @@ export default function OrderDetailPage() {
       toast.error("Không thể hủy đơn hàng");
     } finally {
       setCancelling(false);
+    }
+  };
+
+  const handlePayNow = async () => {
+    if (!order) return;
+    setPaying(true);
+    try {
+      const paymentRes = await paymentApi.createPayment(order.id);
+      if (paymentRes.data.isSuccess && paymentRes.data.data.checkoutUrl) {
+        localStorage.setItem("pending_payment_order_id", order.id);
+        window.location.href = paymentRes.data.data.checkoutUrl;
+      } else {
+        toast.error(paymentRes.data.message || "Không thể tạo liên kết thanh toán");
+      }
+    } catch {
+      toast.error("Lỗi khi kết nối tới cổng thanh toán");
+    } finally {
+      setPaying(false);
     }
   };
 
@@ -180,13 +202,21 @@ export default function OrderDetailPage() {
             </p>
           </section>
 
-          {order.paymentUrl && order.status === "Pending" && (
-            <a
-              href={order.paymentUrl}
-              className="flex w-full items-center justify-center rounded-xl bg-primary px-4 py-3 text-sm font-bold text-white hover:bg-primary-dark"
+          {order.paymentMethod === "PayOS" && order.status === "Pending" && (
+            <button
+              onClick={handlePayNow}
+              disabled={paying}
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-bold text-white hover:bg-primary-dark disabled:opacity-60 cursor-pointer"
             >
-              Thanh toán ngay
-            </a>
+              {paying ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Đang xử lý...
+                </>
+              ) : (
+                "Thanh toán ngay"
+              )}
+            </button>
           )}
 
           {canCancel && (
