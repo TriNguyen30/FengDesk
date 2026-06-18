@@ -174,8 +174,8 @@ export default function EditProductPage() {
     try {
       // Call both APIs concurrently
       const [catRes, tagRes] = await Promise.all([
-        productApi.updateProductCategories(id, selectedCategoryIds),
-        productApi.updateProductTags(id, selectedTagIds),
+        productApi.updateProductCategories(id, { categoryIds: selectedCategoryIds }),
+        productApi.updateProductTags(id, { tagIds: selectedTagIds }),
       ]);
 
       if (catRes.data.isSuccess && tagRes.data.isSuccess) {

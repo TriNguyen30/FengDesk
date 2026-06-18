@@ -12,6 +12,8 @@ import type {
   UpdateProductItemRequest,
   AddProductImageRequest,
   UpdateProductFengShuiRequest,
+  SetProductCategoriesRequest,
+  SetProductTagsRequest,
 } from "../types/product";
 
 export const productApi = {
@@ -67,15 +69,12 @@ export const productApi = {
     return fetchHttpClient.delete<ApiResponse<null>>(`/products/${id}/images/${imageId}`);
   },
 
-  updateProductCategories: (id: string, categoryIds: string[] | { categoryIds: string[] }) => {
-    return fetchHttpClient.put<ApiResponse<ProductDetail>>(
-      `/products/${id}/categories`,
-      categoryIds,
-    );
+  updateProductCategories: (id: string, data: SetProductCategoriesRequest) => {
+    return fetchHttpClient.put<ApiResponse<ProductDetail>>(`/products/${id}/categories`, data);
   },
 
-  updateProductTags: (id: string, tagIds: string[] | { tagIds: string[] }) => {
-    return fetchHttpClient.put<ApiResponse<ProductDetail>>(`/products/${id}/tags`, tagIds);
+  updateProductTags: (id: string, data: SetProductTagsRequest) => {
+    return fetchHttpClient.put<ApiResponse<ProductDetail>>(`/products/${id}/tags`, data);
   },
 
   updateProductFengShui: (id: string, data: UpdateProductFengShuiRequest) => {
