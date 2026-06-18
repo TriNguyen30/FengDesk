@@ -45,6 +45,25 @@ export default function ProductCard({ product, soldCount }: ProductCardProps) {
   );
 }
 
+export function ProductCardSkeleton() {
+  return (
+    <div className="flex flex-col rounded-md bg-white border border-gray-100 overflow-hidden animate-pulse">
+      {/* Square image */}
+      <div className="aspect-square w-full bg-gray-100" />
+      {/* Info */}
+      <div className="flex flex-col gap-1.5 p-2">
+        {/* Name */}
+        <div className="flex flex-col gap-1 min-h-[33px] justify-center">
+          <div className="h-3 w-11/12 rounded bg-gray-200" />
+          <div className="h-3 w-8/12 rounded bg-gray-200" />
+        </div>
+        {/* Price */}
+        <div className="h-4 w-1/2 rounded bg-gray-200" />
+      </div>
+    </div>
+  );
+}
+
 function useProducts(pageSize: number) {
   return useProductList({ pageSize });
 }
@@ -71,8 +90,10 @@ export function BestSellersSection() {
       </div>
 
       {loading ? (
-        <div className="flex h-40 items-center justify-center">
-          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <ProductCardSkeleton key={i} />
+          ))}
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
@@ -107,8 +128,10 @@ export function YouMightAlsoLikeSection() {
       </div>
 
       {loading ? (
-        <div className="flex h-40 items-center justify-center">
-          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <ProductCardSkeleton key={i} />
+          ))}
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5">

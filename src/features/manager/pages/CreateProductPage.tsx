@@ -213,15 +213,14 @@ export default function CreateProductPage() {
       // Filter empty image URLs
       const validImages = images
         .filter((img) => img.url && !img.error)
-        .map((img, idx) => ({ id: "", url: img.url, sortOrder: idx + 1 }));
+        .map((img, idx) => ({ url: img.url, sortOrder: idx + 1 }));
 
       const payload = {
         gardenStoreId,
         name: name.trim(),
         description: description.trim(),
-        item: [
+        items: [
           {
-            id: "",
             name: itemName.trim() || "Tiêu chuẩn",
             price: Number(itemPrice),
             stock: Number(itemStock),
@@ -229,7 +228,7 @@ export default function CreateProductPage() {
           },
         ],
         images: validImages,
-        categoriesIds: selectedCategoryIds,
+        categoryIds: selectedCategoryIds,
         tagIds: selectedTagIds,
         isActive,
       };

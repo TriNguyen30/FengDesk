@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { useAppSelector, useAppDispatch } from "@/app/store";
 import { logout } from "@/features/auth/store/authSlice";
+import { clearSession } from "@/utils";
 import FengDesk from "@/assets/image/fengdesk_logo_2.png";
 
 const navigation = [
@@ -59,6 +60,7 @@ export default function ManagerLayout() {
   const { user } = useAppSelector((state) => state.auth);
 
   const handleLogout = () => {
+    clearSession();
     dispatch(logout());
   };
 
@@ -87,7 +89,7 @@ export default function ManagerLayout() {
         {/* Logo */}
         <div className="flex h-16 shrink-0 items-center justify-between border-b border-gray-200 px-4">
           <Link to="/manager/dashboard" className="flex items-center gap-2.5 overflow-hidden">
-            <img src={FengDesk} alt="FengDesk" className="h-9 w-9" />
+            <img src={FengDesk} alt="FengDesk" className="h-9 w-9 ml-1.5" />
             {!collapsed && (
               <span className="whitespace-nowrap">
                 <span className="block text-base font-bold leading-tight text-gray-900">
@@ -133,7 +135,7 @@ export default function ManagerLayout() {
         {/* Collapse toggle (desktop only) */}
         <button
           onClick={() => setCollapsed((c) => !c)}
-          className="mx-3 mb-2 hidden items-center justify-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-50 hover:text-gray-700 lg:flex"
+          className="mx-3 mb-2 hidden items-center justify-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-50 hover:text-gray-700 lg:flex cursor-pointer"
         >
           {collapsed ? <ChevronsRight size={16} /> : <ChevronsLeft size={16} />}
           {!collapsed && "Thu gọn"}
@@ -161,7 +163,7 @@ export default function ManagerLayout() {
           <button
             onClick={handleLogout}
             title={collapsed ? "Đăng xuất" : undefined}
-            className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 ${
+            className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 cursor-pointer ${
               collapsed ? "justify-center" : ""
             }`}
           >
@@ -189,7 +191,7 @@ export default function ManagerLayout() {
 
           <div className="ml-auto flex items-center gap-3 sm:gap-5">
             {/* Search */}
-            <div className="relative hidden w-64 md:block">
+            {/* <div className="relative hidden w-64 md:block">
               <Search
                 size={16}
                 className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
@@ -199,10 +201,10 @@ export default function ManagerLayout() {
                 placeholder="Tìm đơn hàng, sản phẩm, khách hàng..."
                 className="w-full rounded-lg border border-gray-200 bg-gray-50 py-2 pl-9 pr-3 text-sm text-gray-700 placeholder:text-gray-400 focus:border-primary focus:bg-white focus:outline-none focus:ring-1 focus:ring-primary/30"
               />
-            </div>
+            </div> */}
 
             {/* Notifications */}
-            <div className="relative">
+            {/* <div className="relative">
               <button
                 onClick={() => setNotifOpen((o) => !o)}
                 aria-label="Thông báo"
@@ -242,7 +244,7 @@ export default function ManagerLayout() {
                   </div>
                 </>
               )}
-            </div>
+            </div> */}
           </div>
         </header>
 

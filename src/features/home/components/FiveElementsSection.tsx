@@ -1,7 +1,8 @@
 import { Diamond, Leaf, Droplets, Flame, Mountain } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import * as THREE from "three";
 
 const elements = [
   {
@@ -82,475 +83,657 @@ const elements = [
 ];
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-interface Particle {
+type ElementType = "fire" | "water" | "wood" | "metal" | "earth";
+
+interface Particle3D {
+  active: boolean;
+  obj: THREE.Object3D;
+  type: ElementType;
   x: number;
   y: number;
+  z: number;
   vx: number;
   vy: number;
-  ax: number; // acceleration x
-  ay: number; // acceleration y
+  vz: number;
+  ax: number;
+  ay: number;
+  az: number;
   size: number;
   life: number;
   maxLife: number;
   hue: number;
   sat: number;
   lit: number;
-  alpha: number;
-  angle: number;
-  spin: number;
-  type: "fire" | "water" | "wood" | "metal" | "earth";
-  // per-type extra state
+  angle: THREE.Euler;
+  spin: THREE.Vector3;
   wobble: number;
   phase: number;
+}
+
+interface SharedAssets {
+  glowTexture: THREE.Texture;
+  ringTexture: THREE.Texture;
+  sphereGeo: THREE.SphereGeometry;
+  leafGeo: THREE.ExtrudeGeometry;
+  rockGeo: THREE.IcosahedronGeometry;
+  sparkGeo: THREE.CylinderGeometry;
+  createVeins: () => THREE.Group;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const rand = (min: number, max: number) => Math.random() * (max - min) + min;
 const lerpFn = (a: number, b: number, t: number) => a * (1 - t) + b * t;
 
-// ─── Canvas particle overlay ──────────────────────────────────────────────────
+// ─── Procedural textures & geometries (built once, shared by every particle) ──
+function createGlowTexture(): THREE.Texture {
+  const size = 128;
+  const canvas = document.createElement("canvas");
+  canvas.width = canvas.height = size;
+  const ctx = canvas.getContext("2d")!;
+  const grad = ctx.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
+  grad.addColorStop(0, "rgba(255,255,255,1)");
+  grad.addColorStop(0.4, "rgba(255,255,255,0.55)");
+  grad.addColorStop(1, "rgba(255,255,255,0)");
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, size, size);
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.needsUpdate = true;
+  return tex;
+}
+
+function createRingTexture(): THREE.Texture {
+  const size = 128;
+  const canvas = document.createElement("canvas");
+  canvas.width = canvas.height = size;
+  const ctx = canvas.getContext("2d")!;
+  ctx.strokeStyle = "rgba(255,255,255,0.9)";
+  ctx.lineWidth = 6;
+  ctx.beginPath();
+  ctx.arc(size / 2, size / 2, size / 2 - 10, 0, Math.PI * 2);
+  ctx.stroke();
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.needsUpdate = true;
+  return tex;
+}
+
+function createLeafGeometry(): THREE.ExtrudeGeometry {
+  const shape = new THREE.Shape();
+  shape.moveTo(0, -1);
+  shape.bezierCurveTo(0.85, -0.3, 0.85, 0.45, 0, 0.85);
+  shape.bezierCurveTo(-0.85, 0.45, -0.85, -0.3, 0, -1);
+  return new THREE.ExtrudeGeometry(shape, { depth: 0.04, bevelEnabled: false });
+}
+
+function createVeinLines(): THREE.Group {
+  const group = new THREE.Group();
+  const material = new THREE.LineBasicMaterial({
+    color: 0x1f3d1f,
+    transparent: true,
+    opacity: 0.45,
+  });
+
+  // Midrib
+  const midPoints: THREE.Vector3[] = [];
+  for (let t = 0; t <= 1; t += 0.1) {
+    midPoints.push(new THREE.Vector3(Math.sin(t * Math.PI) * 0.06, lerpFn(-1, 0.85, t), 0.03));
+  }
+  group.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(midPoints), material));
+
+  // Side veins
+  for (let i = 1; i <= 3; i++) {
+    const t = i / 4;
+    const vy = lerpFn(-1, 0.85, t);
+    const sideX = 0.5 * (1 - Math.abs(t - 0.5) * 1.5);
+    [1, -1].forEach((dir) => {
+      const pts = [new THREE.Vector3(0, vy, 0.03), new THREE.Vector3(sideX * dir, vy + 0.15, 0.03)];
+      group.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), material));
+    });
+  }
+  return group;
+}
+
+function createSharedAssets(): SharedAssets {
+  const sparkGeo = new THREE.CylinderGeometry(0.05, 0.015, 1, 6, 1, true);
+  sparkGeo.translate(0, 0.5, 0); // pivot at the base so it can be aimed from the particle's origin
+  return {
+    glowTexture: createGlowTexture(),
+    ringTexture: createRingTexture(),
+    sphereGeo: new THREE.SphereGeometry(0.5, 12, 12),
+    leafGeo: createLeafGeometry(),
+    rockGeo: new THREE.IcosahedronGeometry(0.5, 0),
+    sparkGeo,
+    createVeins: createVeinLines,
+  };
+}
+
+// ─── Pooled scene objects (one real Object3D per particle slot, reused) ───────
+function createPooledObject(type: ElementType, shared: SharedAssets): THREE.Object3D {
+  switch (type) {
+    case "fire": {
+      const mat = new THREE.SpriteMaterial({
+        map: shared.glowTexture,
+        color: new THREE.Color(),
+        transparent: true,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      });
+      const sprite = new THREE.Sprite(mat);
+      sprite.visible = false;
+      return sprite;
+    }
+
+    case "metal": {
+      const group = new THREE.Group();
+      const trailMat = new THREE.MeshBasicMaterial({
+        color: 0xffffff,
+        transparent: true,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      });
+      group.add(new THREE.Mesh(shared.sparkGeo, trailMat));
+
+      const headMat = new THREE.SpriteMaterial({
+        map: shared.glowTexture,
+        color: new THREE.Color(0xffffff),
+        transparent: true,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      });
+      group.add(new THREE.Sprite(headMat));
+
+      group.visible = false;
+      return group;
+    }
+
+    case "water": {
+      const mat = new THREE.MeshPhongMaterial({
+        color: 0x3b82f6,
+        transparent: true,
+        opacity: 0.8,
+        shininess: 120,
+        specular: 0xffffff,
+      });
+      const mesh = new THREE.Mesh(shared.sphereGeo, mat);
+      mesh.visible = false;
+      return mesh;
+    }
+
+    case "wood": {
+      const group = new THREE.Group();
+      const mat = new THREE.MeshStandardMaterial({
+        color: 0x4ade80,
+        side: THREE.DoubleSide,
+        transparent: true,
+        opacity: 0.9,
+        roughness: 0.6,
+      });
+      group.add(new THREE.Mesh(shared.leafGeo, mat));
+      group.add(shared.createVeins());
+      group.visible = false;
+      return group;
+    }
+
+    case "earth":
+    default: {
+      const mat = new THREE.MeshStandardMaterial({
+        color: 0xb45309,
+        roughness: 0.9,
+        transparent: true,
+        opacity: 0.9,
+      });
+      const mesh = new THREE.Mesh(shared.rockGeo, mat);
+      mesh.visible = false;
+      return mesh;
+    }
+  }
+}
+
+function makeBlankParticle(obj: THREE.Object3D, type: ElementType): Particle3D {
+  return {
+    active: false,
+    obj,
+    type,
+    x: 0,
+    y: 0,
+    z: 0,
+    vx: 0,
+    vy: 0,
+    vz: 0,
+    ax: 0,
+    ay: 0,
+    az: 0,
+    size: 1,
+    life: 0,
+    maxLife: 1,
+    hue: 0,
+    sat: 0,
+    lit: 0,
+    angle: new THREE.Euler(),
+    spin: new THREE.Vector3(),
+    wobble: 0,
+    phase: 0,
+  };
+}
+
+// ─── Three.js scene overlay ─────────────────────────────────────────────────
 export function ElementCanvas({ elementId }: { elementId: string }) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const animFrameRef = useRef<number>(0);
-  const particlesRef = useRef<Particle[]>([]);
-  const frameRef = useRef(0);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+    const container = containerRef.current;
+    if (!container) return;
+    const type = elementId as ElementType;
 
-    const resize = () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
+    // ── renderer / scene / camera ──────────────────────────────────────────
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    container.appendChild(renderer.domElement);
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(
+      45,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      1000,
+    );
+    const BASE_DISTANCE = 70;
+    camera.position.set(0, 0, BASE_DISTANCE);
+
+    scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+    const dirLight = new THREE.DirectionalLight(0xffffff, 1.1);
+    dirLight.position.set(20, 30, 40);
+    scene.add(dirLight);
+
+    const shared = createSharedAssets();
+
+    // ── pixel <-> world-unit mapping, so spawn points line up with the screen ──
+    const W = () => window.innerWidth;
+    const H = () => window.innerHeight;
+    const worldSizeAt = (z: number) => {
+      const distance = camera.position.z - z;
+      const vFov = (camera.fov * Math.PI) / 180;
+      const height = 2 * Math.tan(vFov / 2) * distance;
+      return { width: height * camera.aspect, height };
     };
-    resize();
-    window.addEventListener("resize", resize);
-
-    const W = () => canvas.width;
-    const H = () => canvas.height;
-
-    // ── Spawn factories ───────────────────────────────────────────────────────
-    const spawnParticle = (): Particle => {
-      const base: Partial<Particle> = {
-        life: 0,
-        ax: 0,
-        ay: 0,
-        wobble: 0,
-        phase: rand(0, Math.PI * 2),
-        spin: 0,
-        angle: 0,
+    const pxToWorld = (px: number, py: number, z: number) => {
+      const { width, height } = worldSizeAt(z);
+      return {
+        x: (px / W() - 0.5) * width,
+        y: -(py / H() - 0.5) * height,
       };
+    };
+    const spawnDepth = () => rand(-18, 18);
 
-      switch (elementId) {
+    // ── particle pool (real Object3D instances, recycled instead of rebuilt) ──
+    const poolSize = type === "metal" ? 90 : type === "water" ? 110 : 70;
+    const pool: Particle3D[] = [];
+    for (let i = 0; i < poolSize; i++) {
+      const obj = createPooledObject(type, shared);
+      scene.add(obj);
+      pool.push(makeBlankParticle(obj, type));
+    }
+
+    const ripplePool: Particle3D[] = [];
+    if (type === "water") {
+      for (let i = 0; i < 30; i++) {
+        const mat = new THREE.SpriteMaterial({
+          map: shared.ringTexture,
+          color: new THREE.Color(0x60a5fa),
+          transparent: true,
+          depthWrite: false,
+        });
+        const sprite = new THREE.Sprite(mat);
+        sprite.visible = false;
+        scene.add(sprite);
+        ripplePool.push(makeBlankParticle(sprite, "water"));
+      }
+    }
+
+    let cursor = 0;
+    const acquire = (list: Particle3D[]) => {
+      for (let i = 0; i < list.length; i++) {
+        const idx = (cursor + i) % list.length;
+        if (!list[idx].active) return list[idx];
+      }
+      return list[cursor++ % list.length]; // pool exhausted: steal the oldest slot
+    };
+
+    const spawn = () => {
+      const p = acquire(pool);
+      p.active = true;
+      p.life = 0;
+      p.z = spawnDepth();
+      p.angle.set(0, 0, 0);
+      p.obj.visible = true;
+
+      switch (type) {
         case "fire": {
-          // Embers rise from bottom in clusters
-          const clusterX = rand(0.1, 0.9) * W();
-          const size = rand(6, 22);
-          return {
-            ...base,
-            type: "fire",
-            x: clusterX + rand(-30, 30),
-            y: H() + rand(0, 20),
-            vx: rand(-1.2, 1.2),
-            vy: rand(-7, -4),
-            ax: 0,
-            ay: -0.06, // buoyancy
-            size,
-            maxLife: rand(70, 130),
-            hue: rand(0, 45), // red → orange → yellow
-            sat: 95,
-            lit: 60,
-            alpha: 1,
-            wobble: rand(0.03, 0.07),
-            spin: rand(-0.05, 0.05),
-          } as Particle;
+          const { x } = pxToWorld(rand(0.1, 0.9) * W() + rand(-20, 20), H(), p.z);
+          p.x = x;
+          p.y = pxToWorld(0, H(), p.z).y;
+          p.vx = rand(-0.6, 0.6);
+          p.vy = rand(2.2, 3.4);
+          p.vz = rand(-0.2, 0.2);
+          p.ax = 0;
+          p.ay = 0.02; // buoyancy, world-up is +y
+          p.az = 0;
+          p.size = rand(2.2, 5.5);
+          p.maxLife = rand(70, 130);
+          p.hue = rand(0, 45);
+          p.sat = 95;
+          p.lit = 60;
+          p.wobble = rand(0.03, 0.07);
+          p.phase = rand(0, Math.PI * 2);
+          break;
         }
-
         case "water": {
-          // Droplets fall with realistic parabolic arcs; also surface ripples
-          const isStream = Math.random() < 0.7;
-          const size = isStream ? rand(4, 10) : rand(8, 14);
-          return {
-            ...base,
-            type: "water",
-            x: rand(0, W()),
-            y: rand(-60, -10),
-            vx: rand(-0.8, 0.8),
-            vy: rand(2, 6),
-            ax: 0,
-            ay: 0.18, // gravity
-            size,
-            maxLife: rand(80, 140),
-            hue: rand(195, 220),
-            sat: 80,
-            lit: 65,
-            alpha: 1,
-            wobble: 0,
-            spin: 0,
-            phase: rand(0, 1), // reuse as "has hit ground" flag (0 = airborne)
-          } as Particle;
+          const { x } = pxToWorld(rand(0, W()), 0, p.z);
+          p.x = x;
+          p.y = pxToWorld(0, rand(-60, -10), p.z).y;
+          p.vx = rand(-0.3, 0.3);
+          p.vy = rand(-2.4, -1.4);
+          p.vz = 0;
+          p.ax = 0;
+          p.ay = -0.07; // gravity
+          p.az = 0;
+          p.size = rand(0.7, 1.4);
+          p.maxLife = rand(80, 140);
+          p.hue = rand(195, 220);
+          p.sat = 80;
+          p.lit = 65;
+          break;
         }
-
         case "wood": {
-          // Leaves tumble in with realistic flutter (varying aspect ratio + spin)
           const fromLeft = Math.random() > 0.5;
-          const size = rand(10, 20);
-          const speed = rand(1.5, 3.5);
-          return {
-            ...base,
-            type: "wood",
-            x: fromLeft ? rand(-40, -10) : rand(W() + 10, W() + 40),
-            y: rand(-20, H() * 0.85),
-            vx: fromLeft ? speed : -speed,
-            vy: rand(-0.5, 1.5),
-            ax: 0,
-            ay: 0.012, // very gentle gravity
-            size,
-            maxLife: rand(160, 260),
-            hue: rand(90, 135),
-            sat: rand(55, 75),
-            lit: rand(35, 50),
-            alpha: 1,
-            wobble: rand(0.04, 0.09), // flutter frequency
-            spin: rand(-0.04, 0.04),
-            angle: rand(0, Math.PI * 2),
-          } as Particle;
-        }
-
-        case "metal": {
-          // Sparks: burst from random points, decelerate, fall with gravity
-          const cx = rand(0.2, 0.8) * W();
-          const cy = rand(0.2, 0.7) * H();
-          const speed = rand(3, 9);
-          const dir = rand(0, Math.PI * 2);
-          return {
-            ...base,
-            type: "metal",
-            x: cx,
-            y: cy,
-            vx: Math.cos(dir) * speed,
-            vy: Math.sin(dir) * speed,
-            ax: 0,
-            ay: 0.15, // gravity
-            size: rand(2, 5),
-            maxLife: rand(40, 80),
-            hue: rand(40, 55), // gold/silver shimmer
-            sat: rand(10, 60),
-            lit: rand(75, 95),
-            alpha: 1,
-            wobble: 0,
-            spin: 0,
-            phase: 0, // streak length multiplier
-          } as Particle;
-        }
-
-        case "earth":
-        default: {
-          // Sand/dust grains: rise from bottom, drift, tumble, settle
-          const size = rand(5, 18);
-          return {
-            ...base,
-            type: "earth",
-            x: rand(0, W()),
-            y: H() + rand(0, 30),
-            vx: rand(-2, 2),
-            vy: rand(-3.5, -1),
-            ax: rand(-0.02, 0.02),
-            ay: 0.04,
-            size,
-            maxLife: rand(120, 200),
-            hue: rand(25, 48),
-            sat: rand(40, 65),
-            lit: rand(55, 72),
-            alpha: 1,
-            wobble: rand(0.01, 0.04),
-            spin: rand(-0.03, 0.03),
-            angle: rand(0, Math.PI * 2),
-          } as Particle;
-        }
-      }
-    };
-
-    // ── Draw routines ─────────────────────────────────────────────────────────
-    const drawParticle = (ctx: CanvasRenderingContext2D, p: Particle) => {
-      const progress = p.life / p.maxLife;
-
-      // eased alpha: fade in over first 15%, fade out over last 25%
-      let alpha = 1;
-      if (progress < 0.15) alpha = progress / 0.15;
-      else if (progress > 0.75) alpha = 1 - (progress - 0.75) / 0.25;
-      alpha = Math.max(0, Math.min(1, alpha));
-
-      ctx.save();
-
-      switch (p.type) {
-        case "fire": {
-          // Softbox glow: two overlapping radial gradients (core + halo)
-          const hue = p.hue + progress * 15; // shift redder as particle rises and cools
-          const r = p.size * (1 - progress * 0.55);
-
-          // Outer halo
-          const halo = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, r * 2.2);
-          halo.addColorStop(0, `hsla(${hue + 30}, 100%, 72%, ${alpha * 0.25})`);
-          halo.addColorStop(1, `hsla(${hue}, 90%, 50%, 0)`);
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, r * 2.2, 0, Math.PI * 2);
-          ctx.fillStyle = halo;
-          ctx.fill();
-
-          // Core teardrop (taller than wide, tapered upward)
-          const grad = ctx.createRadialGradient(p.x, p.y + r * 0.15, r * 0.05, p.x, p.y, r);
-          grad.addColorStop(0, `hsla(60, 100%, 96%, ${alpha})`);
-          grad.addColorStop(0.25, `hsla(${hue + 25}, 100%, 82%, ${alpha})`);
-          grad.addColorStop(0.6, `hsla(${hue + 5}, 100%, 58%, ${alpha * 0.9})`);
-          grad.addColorStop(1, `hsla(${hue}, 100%, 40%, 0)`);
-          ctx.beginPath();
-          ctx.save();
-          ctx.translate(p.x, p.y);
-          // Wobble: subtle horizontal sway
-          ctx.rotate(Math.sin(p.life * p.wobble + p.phase) * 0.18);
-          ctx.scale(0.6, 1); // squish horizontally for teardrop
-          ctx.arc(0, 0, r, 0, Math.PI * 2);
-          ctx.fillStyle = grad;
-          ctx.fill();
-          ctx.restore();
-          break;
-        }
-
-        case "water": {
-          const r = p.size * 0.55;
-          const haHitGround = p.y > H() - r * 2;
-
-          if (!haHitGround) {
-            // Airborne droplet: slightly elongated in direction of travel
-            const speed = Math.sqrt(p.vx * p.vx + p.vy * p.vy);
-            const stretch = Math.min(2.4, 1 + speed * 0.06);
-            const dropAngle = Math.atan2(p.vy, p.vx) + Math.PI / 2;
-
-            ctx.save();
-            ctx.translate(p.x, p.y);
-            ctx.rotate(dropAngle);
-            ctx.scale(1, stretch);
-
-            const grad = ctx.createRadialGradient(-r * 0.25, -r * 0.25, 0, 0, 0, r);
-            grad.addColorStop(0, `hsla(${p.hue - 10}, 70%, 90%, ${alpha * 0.95})`);
-            grad.addColorStop(0.5, `hsla(${p.hue}, 80%, 65%, ${alpha * 0.85})`);
-            grad.addColorStop(1, `hsla(${p.hue + 10}, 90%, 45%, 0)`);
-
-            ctx.beginPath();
-            ctx.arc(0, 0, r, 0, Math.PI * 2);
-            ctx.fillStyle = grad;
-            ctx.fill();
-
-            // Highlight
-            ctx.beginPath();
-            ctx.arc(-r * 0.3, -r * 0.3, r * 0.25, 0, Math.PI * 2);
-            ctx.fillStyle = `rgba(255,255,255,${alpha * 0.65})`;
-            ctx.fill();
-            ctx.restore();
-          } else {
-            // Ground ripple splash
-            const rippleProgress = Math.min(1, (p.y - (H() - r * 2)) / (r * 6));
-            const rippleR = r * 2.5 * rippleProgress;
-            ctx.beginPath();
-            ctx.ellipse(p.x, H() - 4, rippleR, rippleR * 0.35, 0, 0, Math.PI * 2);
-            ctx.strokeStyle = `hsla(${p.hue}, 75%, 68%, ${alpha * (1 - rippleProgress) * 0.6})`;
-            ctx.lineWidth = 1.5;
-            ctx.stroke();
-          }
-          break;
-        }
-
-        case "wood": {
-          // Leaf: bezier shape + midrib + veins, rotating on its travel axis
-          const s = p.size;
-          ctx.save();
-          ctx.translate(p.x, p.y);
-          ctx.rotate(p.angle);
-          // "flutter": squish width sinusoidally to simulate tumbling in 3D
-          const flutter = Math.abs(Math.cos(p.life * p.wobble + p.phase));
-          ctx.scale(flutter * 0.9 + 0.1, 1);
-
-          // Leaf body
-          ctx.beginPath();
-          ctx.moveTo(0, -s);
-          ctx.bezierCurveTo(s * 0.85, -s * 0.3, s * 0.85, s * 0.45, 0, s * 0.85);
-          ctx.bezierCurveTo(-s * 0.85, s * 0.45, -s * 0.85, -s * 0.3, 0, -s);
-          ctx.fillStyle = `hsla(${p.hue}, ${p.sat}%, ${p.lit}%, ${alpha * 0.82})`;
-          ctx.fill();
-
-          // Midrib
-          ctx.beginPath();
-          ctx.moveTo(0, -s);
-          ctx.quadraticCurveTo(s * 0.1, 0, 0, s * 0.85);
-          ctx.strokeStyle = `hsla(${p.hue + 15}, ${p.sat - 10}%, ${p.lit - 15}%, ${alpha * 0.5})`;
-          ctx.lineWidth = 1.2;
-          ctx.stroke();
-
-          // Side veins
-          const veinCount = 3;
-          for (let i = 1; i <= veinCount; i++) {
-            const t = i / (veinCount + 1);
-            const vy2 = lerpFn(-s, s * 0.85, t);
-            const sideX = s * 0.5 * (1 - Math.abs(t - 0.5) * 1.5);
-            ctx.beginPath();
-            ctx.moveTo(0, vy2);
-            ctx.lineTo(sideX, vy2 + s * 0.15);
-            ctx.moveTo(0, vy2);
-            ctx.lineTo(-sideX, vy2 + s * 0.15);
-            ctx.strokeStyle = `hsla(${p.hue + 15}, ${p.sat - 10}%, ${p.lit - 15}%, ${alpha * 0.28})`;
-            ctx.lineWidth = 0.8;
-            ctx.stroke();
-          }
-          ctx.restore();
-          break;
-        }
-
-        case "metal": {
-          // Spark trail: draw a tapered line in velocity direction
-          const speed = Math.sqrt(p.vx * p.vx + p.vy * p.vy);
-          const trailLen = speed * 3.5;
-          const dir2 = Math.atan2(p.vy, p.vx);
-
-          // Trail
-          const trailGrad = ctx.createLinearGradient(
-            p.x,
-            p.y,
-            p.x - Math.cos(dir2) * trailLen,
-            p.y - Math.sin(dir2) * trailLen,
+          const start = pxToWorld(
+            fromLeft ? rand(-40, -10) : rand(W() + 10, W() + 40),
+            rand(-20, H() * 0.85),
+            p.z,
           );
-          trailGrad.addColorStop(0, `hsla(${p.hue}, ${p.sat}%, ${p.lit}%, ${alpha * 0.9})`);
-          trailGrad.addColorStop(1, `hsla(${p.hue}, ${p.sat}%, ${p.lit}%, 0)`);
-          ctx.beginPath();
-          ctx.moveTo(p.x, p.y);
-          ctx.lineTo(p.x - Math.cos(dir2) * trailLen, p.y - Math.sin(dir2) * trailLen);
-          ctx.strokeStyle = trailGrad;
-          ctx.lineWidth = p.size * 0.9;
-          ctx.lineCap = "round";
-          ctx.stroke();
-
-          // Bright head
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, p.size * 0.9, 0, Math.PI * 2);
-          ctx.fillStyle = `hsla(${p.hue + 10}, 20%, 98%, ${alpha})`;
-          ctx.fill();
+          p.x = start.x;
+          p.y = start.y;
+          const speed = rand(0.6, 1.3);
+          p.vx = fromLeft ? speed : -speed;
+          p.vy = rand(-0.5, 0.2);
+          p.vz = rand(-0.15, 0.15);
+          p.ax = 0;
+          p.ay = -0.005; // gentle gravity
+          p.az = 0;
+          p.size = rand(0.7, 1.4);
+          p.maxLife = rand(160, 260);
+          p.hue = rand(90, 135);
+          p.sat = rand(55, 75);
+          p.lit = rand(35, 50);
+          p.wobble = rand(0.04, 0.09);
+          p.spin.set(rand(-0.05, 0.05), rand(-0.05, 0.05), rand(-0.03, 0.03));
+          p.angle.set(rand(0, Math.PI * 2), rand(0, Math.PI * 2), rand(0, Math.PI * 2));
           break;
         }
-
+        case "metal": {
+          const { x, y } = pxToWorld(rand(0.2, 0.8) * W(), rand(0.2, 0.7) * H(), p.z);
+          p.x = x;
+          p.y = y;
+          const speed = rand(1.2, 3.4);
+          const dir = rand(0, Math.PI * 2);
+          const tilt = rand(-0.4, 0.4);
+          p.vx = Math.cos(dir) * speed;
+          p.vy = Math.sin(dir) * speed;
+          p.vz = tilt * speed;
+          p.ax = 0;
+          p.ay = -0.06; // gravity
+          p.az = 0;
+          p.size = rand(0.06, 0.16);
+          p.maxLife = rand(40, 80);
+          p.hue = rand(40, 55);
+          p.sat = rand(10, 60);
+          p.lit = rand(75, 95);
+          break;
+        }
         case "earth":
         default: {
-          // Irregular dust grain: rotated ellipse
-          const rw = p.size * rand(0.4, 0.7);
-          const rh = p.size * rand(0.3, 0.6);
-          ctx.save();
-          ctx.translate(p.x, p.y);
-          ctx.rotate(p.angle);
-          const grad = ctx.createRadialGradient(0, 0, 0, 0, 0, Math.max(rw, rh));
-          grad.addColorStop(0, `hsla(${p.hue}, ${p.sat}%, ${p.lit + 10}%, ${alpha * 0.85})`);
-          grad.addColorStop(0.6, `hsla(${p.hue - 5}, ${p.sat}%, ${p.lit}%, ${alpha * 0.7})`);
-          grad.addColorStop(1, `hsla(${p.hue - 10}, ${p.sat - 10}%, ${p.lit - 10}%, 0)`);
-          ctx.beginPath();
-          ctx.ellipse(0, 0, rw, rh, 0, 0, Math.PI * 2);
-          ctx.fillStyle = grad;
-          ctx.fill();
-          ctx.restore();
+          const { x } = pxToWorld(rand(0, W()), 0, p.z);
+          p.x = x;
+          p.y = pxToWorld(0, H(), p.z).y;
+          p.vx = rand(-0.7, 0.7);
+          p.vy = rand(1.0, 1.8);
+          p.vz = rand(-0.3, 0.3);
+          p.ax = rand(-0.01, 0.01);
+          p.ay = -0.018; // gravity arcs it back down
+          p.az = 0;
+          p.size = rand(0.6, 1.5);
+          p.maxLife = rand(120, 200);
+          p.hue = rand(25, 48);
+          p.sat = rand(40, 65);
+          p.lit = rand(55, 72);
+          p.wobble = rand(0.01, 0.04);
+          p.spin.set(rand(-0.04, 0.04), rand(-0.04, 0.04), rand(-0.04, 0.04));
+          p.angle.set(rand(0, Math.PI * 2), rand(0, Math.PI * 2), rand(0, Math.PI * 2));
           break;
         }
       }
-
-      ctx.restore();
     };
 
-    // ── Spawn rates and burst logic ───────────────────────────────────────────
-    const spawnConfig: Record<string, { rate: number; interval: number; burst?: number }> = {
-      fire: { rate: 5, interval: 2, burst: 2 },
-      water: { rate: 4, interval: 2 },
-      wood: { rate: 2, interval: 4 },
-      metal: { rate: 0, interval: 1, burst: 12 }, // burst every N frames
-      earth: { rate: 3, interval: 3 },
+    const spawnRipple = (x: number, y: number, z: number, hue: number) => {
+      const r = acquire(ripplePool);
+      r.active = true;
+      r.life = 0;
+      r.x = x;
+      r.y = y;
+      r.z = z;
+      r.maxLife = rand(30, 45);
+      r.obj.visible = true;
+      (r.obj as THREE.Sprite).material.color.setHSL(hue / 360, 0.75, 0.7);
     };
 
-    const cfg = spawnConfig[elementId] ?? spawnConfig.earth;
+    // ── spawn cadence ──────────────────────────────────────────────────────
+    const cadence: Record<ElementType, { rate: number; interval: number }> = {
+      fire: { rate: 3, interval: 2 },
+      water: { rate: 3, interval: 2 },
+      wood: { rate: 1, interval: 4 },
+      metal: { rate: 0, interval: 1 },
+      earth: { rate: 2, interval: 3 },
+    };
+    const conf = cadence[type];
     let burstTimer = 0;
+    let frame = 0;
+    let animId = 0;
 
-    const tick = () => {
-      ctx.clearRect(0, 0, W(), H());
-      const frame = frameRef.current;
+    const tmpVec = new THREE.Vector3();
+    const tmpVec2 = new THREE.Vector3();
+    const tmpQuat = new THREE.Quaternion();
+    const tmpColor = new THREE.Color();
+    const upAxis = new THREE.Vector3(0, 1, 0);
 
-      // Spawning
-      if (elementId === "metal") {
+    const animate = () => {
+      frame++;
+
+      if (type === "metal") {
         burstTimer++;
-        if (burstTimer % 55 === 0) {
-          // Burst of sparks from a random point
-          for (let i = 0; i < 18; i++) particlesRef.current.push(spawnParticle());
+        if (burstTimer % 50 === 0) {
+          for (let i = 0; i < 16; i++) spawn();
         }
-      } else {
-        if (frame % cfg.interval === 0) {
-          for (let i = 0; i < cfg.rate; i++) particlesRef.current.push(spawnParticle());
-        }
+      } else if (frame % conf.interval === 0) {
+        for (let i = 0; i < conf.rate; i++) spawn();
       }
 
-      // Update + draw
-      particlesRef.current = particlesRef.current.filter((p) => {
+      const groundY = pxToWorld(0, H(), 0).y;
+
+      for (const p of pool) {
+        if (!p.active) continue;
         p.life++;
-        // Apply acceleration
+
         p.vx += p.ax;
         p.vy += p.ay;
-        // Element-specific physics
+        p.vz += p.az;
+
         if (p.type === "fire") {
-          p.vx += Math.sin(p.life * p.wobble + p.phase) * 0.35;
-          p.vy -= 0.04; // extra buoyancy as fire rises
+          p.vx += Math.sin(p.life * p.wobble + p.phase) * 0.05;
+          p.vy += 0.015; // extra buoyancy as it rises
           p.size *= 0.993;
-          p.hue = Math.min(55, p.hue + 0.3); // shift toward yellow as flame cools
-        } else if (p.type === "water") {
-          // drag
-          p.vx *= 0.995;
+          p.hue = Math.min(55, p.hue + 0.3);
         } else if (p.type === "wood") {
-          // flutter spin + gentle drift
-          p.angle += p.spin;
-          p.vy += Math.sin(p.life * 0.07) * 0.04;
+          p.angle.x += p.spin.x;
+          p.angle.y += p.spin.y;
+          p.angle.z += p.spin.z;
+          p.vy += Math.sin(p.life * 0.07) * 0.01;
           p.vx *= 0.998;
         } else if (p.type === "metal") {
-          // deceleration (air resistance)
           p.vx *= 0.96;
           p.vy *= 0.96;
-        } else {
-          // earth: tumble + air resistance
-          p.angle += p.spin;
-          p.vx += Math.sin(p.life * p.wobble) * 0.08;
+          p.vz *= 0.96;
+        } else if (p.type === "earth") {
+          p.angle.x += p.spin.x;
+          p.angle.y += p.spin.y;
+          p.angle.z += p.spin.z;
+          p.vx += Math.sin(p.life * p.wobble) * 0.012;
           p.vx *= 0.99;
+        } else if (p.type === "water") {
+          p.vx *= 0.995;
         }
 
         p.x += p.vx;
         p.y += p.vy;
+        p.z += p.vz;
 
-        drawParticle(ctx, p);
-        return p.life < p.maxLife;
-      });
+        let alpha = 1;
+        const progress = p.life / p.maxLife;
+        if (progress < 0.15) alpha = progress / 0.15;
+        else if (progress > 0.75) alpha = 1 - (progress - 0.75) / 0.25;
+        alpha = Math.max(0, Math.min(1, alpha));
 
-      frameRef.current++;
-      animFrameRef.current = requestAnimationFrame(tick);
+        if (p.type === "water" && p.y <= groundY + p.size) {
+          spawnRipple(p.x, groundY, p.z, p.hue);
+          p.active = false;
+          p.obj.visible = false;
+          continue;
+        }
+        if (p.life >= p.maxLife) {
+          p.active = false;
+          p.obj.visible = false;
+          continue;
+        }
+
+        p.obj.position.set(p.x, p.y, p.z);
+
+        if (p.type === "fire") {
+          const sprite = p.obj as THREE.Sprite;
+          sprite.scale.set(p.size * 1.4, p.size * 2.0, 1);
+          tmpColor.setHSL(((p.hue + progress * 15) % 360) / 360, p.sat / 100, p.lit / 100);
+          const mat = sprite.material as THREE.SpriteMaterial;
+          mat.color.copy(tmpColor);
+          mat.opacity = alpha * 0.9;
+        } else if (p.type === "water") {
+          const mesh = p.obj as THREE.Mesh;
+          mesh.scale.setScalar(p.size);
+          const mat = mesh.material as THREE.MeshPhongMaterial;
+          mat.opacity = alpha * 0.85;
+          tmpColor.setHSL(p.hue / 360, p.sat / 100, p.lit / 100);
+          mat.color.copy(tmpColor);
+        } else if (p.type === "wood") {
+          const group = p.obj as THREE.Group;
+          group.scale.setScalar(p.size);
+          group.rotation.set(p.angle.x, p.angle.y, p.angle.z);
+          const leafMesh = group.children[0] as THREE.Mesh;
+          const mat = leafMesh.material as THREE.MeshStandardMaterial;
+          mat.opacity = alpha * 0.92;
+          tmpColor.setHSL(p.hue / 360, p.sat / 100, p.lit / 100);
+          mat.color.copy(tmpColor);
+        } else if (p.type === "metal") {
+          const group = p.obj as THREE.Group;
+          tmpVec.set(p.vx, p.vy, p.vz);
+          const speed = tmpVec.length();
+          if (speed > 0.0001) tmpVec.normalize();
+          else tmpVec.set(0, 1, 0);
+          tmpVec2.copy(tmpVec).negate(); // trail points back the way it came from
+          tmpQuat.setFromUnitVectors(upAxis, tmpVec2);
+
+          const trail = group.children[0] as THREE.Mesh;
+          trail.quaternion.copy(tmpQuat);
+          const trailLen = Math.max(0.6, speed * 2.4);
+          trail.scale.set(p.size * 5, trailLen, p.size * 5);
+          const trailMat = trail.material as THREE.MeshBasicMaterial;
+          tmpColor.setHSL(p.hue / 360, p.sat / 100, p.lit / 100);
+          trailMat.color.copy(tmpColor);
+          trailMat.opacity = alpha * 0.85;
+
+          const head = group.children[1] as THREE.Sprite;
+          head.scale.set(p.size * 7, p.size * 7, 1);
+          const headMat = head.material as THREE.SpriteMaterial;
+          headMat.opacity = alpha;
+        } else {
+          const mesh = p.obj as THREE.Mesh;
+          mesh.scale.set(p.size, p.size * 0.8, p.size * 0.6);
+          mesh.rotation.set(p.angle.x, p.angle.y, p.angle.z);
+          const mat = mesh.material as THREE.MeshStandardMaterial;
+          mat.opacity = alpha * 0.85;
+          tmpColor.setHSL(p.hue / 360, p.sat / 100, p.lit / 100);
+          mat.color.copy(tmpColor);
+        }
+      }
+
+      for (const r of ripplePool) {
+        if (!r.active) continue;
+        r.life++;
+        if (r.life >= r.maxLife) {
+          r.active = false;
+          r.obj.visible = false;
+          continue;
+        }
+        const t = r.life / r.maxLife;
+        const sprite = r.obj as THREE.Sprite;
+        sprite.position.set(r.x, r.y, r.z);
+        sprite.scale.setScalar(1.2 + t * 4.5);
+        (sprite.material as THREE.SpriteMaterial).opacity = (1 - t) * 0.6;
+      }
+
+      // gentle automatic camera drift for parallax / a genuine sense of depth
+      camera.position.x = Math.sin(frame * 0.004) * 6;
+      camera.position.y = Math.cos(frame * 0.003) * 3;
+      camera.lookAt(0, 0, 0);
+
+      renderer.render(scene, camera);
+      animId = requestAnimationFrame(animate);
     };
+    animate();
 
-    tick();
+    const handleResize = () => {
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+    };
+    window.addEventListener("resize", handleResize);
 
     return () => {
-      cancelAnimationFrame(animFrameRef.current);
-      window.removeEventListener("resize", resize);
-      particlesRef.current = [];
-      frameRef.current = 0;
+      cancelAnimationFrame(animId);
+      window.removeEventListener("resize", handleResize);
+
+      // Dispose every per-particle material (each instance owns its own, so
+      // this never touches anything shared). Geometries that ARE shared across
+      // the pool are disposed explicitly below instead of via traversal.
+      scene.traverse((obj) => {
+        const material = (obj as THREE.Mesh | THREE.Sprite).material as
+          | THREE.Material
+          | THREE.Material[]
+          | undefined;
+        if (Array.isArray(material)) material.forEach((m) => m.dispose());
+        else material?.dispose();
+      });
+
+      shared.glowTexture.dispose();
+      shared.ringTexture.dispose();
+      shared.sphereGeo.dispose();
+      shared.leafGeo.dispose();
+      shared.rockGeo.dispose();
+      shared.sparkGeo.dispose();
+      renderer.dispose();
+      if (renderer.domElement.parentNode === container) {
+        container.removeChild(renderer.domElement);
+      }
     };
   }, [elementId]);
 
-  return (
-    <canvas
-      ref={canvasRef}
-      className="absolute inset-0 w-full h-full pointer-events-none"
-      style={{ mixBlendMode: "screen" }}
-    />
-  );
+  return <div ref={containerRef} className="absolute inset-0 h-full w-full pointer-events-none" />;
 }
 
 // ─── Component ─────────────────────────────────────────────────────────────────
@@ -620,7 +803,7 @@ export default function FiveElementsSection() {
         ))}
       </div>
 
-      {/* ── Full-screen elemental animation overlay ── */}
+      {/* ── Full-screen elemental animation overlay (now a real 3D scene) ── */}
       <AnimatePresence>
         {animatingElement && activeElem && (
           <motion.div
@@ -631,7 +814,6 @@ export default function FiveElementsSection() {
             className="fixed inset-0 z-[9999] overflow-hidden"
             style={{ backgroundColor: activeElem.overlayColor }}
           >
-            {/* Radial vignette so particles pop */}
             <div
               className="absolute inset-0"
               style={{
@@ -639,10 +821,8 @@ export default function FiveElementsSection() {
               }}
             />
 
-            {/* Canvas particle system */}
             <ElementCanvas elementId={animatingElement} />
 
-            {/* Center text */}
             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
               <motion.div
                 initial={{ scale: 0.4, opacity: 0, y: 30 }}
