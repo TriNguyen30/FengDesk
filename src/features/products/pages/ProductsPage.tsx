@@ -2,9 +2,9 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { getCategoriesRequest } from "@/features/category/api/category.api";
 import type { Category } from "@/features/category/types/category";
-import ProductCard from "@/features/products/components/ProductCard";
+import ProductCard, { ProductCardSkeleton } from "@/features/products/components/ProductCard";
 import { useProductList } from "@/features/products/hooks/useProducts";
-import { Filter, SearchX, Loader2 } from "lucide-react";
+import { Filter, SearchX } from "lucide-react";
 
 export default function ProductsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -12,6 +12,7 @@ export default function ProductsPage() {
   const categoryId = searchParams.get("categoryId") || "";
 
   const [categories, setCategories] = useState<Category[]>([]);
+  const [loadingCategories, setLoadingCategories] = useState(true);
 
   const { products, loading } = useProductList({
     search: search || undefined,
@@ -28,6 +29,8 @@ export default function ProductsPage() {
         }
       } catch (error) {
         console.error("Failed to fetch categories", error);
+      } finally {
+        setLoadingCategories(false);
       }
     }
     fetchCategories();
@@ -66,29 +69,39 @@ export default function ProductsPage() {
               Danh mục sản phẩm
             </h2>
             <div className="flex flex-col gap-1.5">
-              <button
-                onClick={() => handleCategorySelect("")}
-                className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors ${
-                  !categoryId
-                    ? "bg-primary/10 text-primary"
-                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-900 cursor-pointer"
-                }`}
-              >
-                Tất cả sản phẩm
-              </button>
-              {categories.map((cat) => (
-                <button
-                  key={cat.id}
-                  onClick={() => handleCategorySelect(cat.id)}
-                  className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors ${
-                    categoryId === cat.id
-                      ? "bg-primary/10 text-primary"
-                      : "text-gray-600 hover:bg-gray-50 hover:text-gray-900 cursor-pointer"
-                  }`}
-                >
-                  {cat.name}
-                </button>
-              ))}
+              {loadingCategories ? (
+                <div className="flex flex-col gap-2.5 animate-pulse">
+                  {[1, 2, 3, 4, 5].map((i) => (
+                    <div key={i} className="h-8 w-full rounded-lg bg-gray-100" />
+                  ))}
+                </div>
+              ) : (
+                <>
+                  <button
+                    onClick={() => handleCategorySelect("")}
+                    className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors ${
+                      !categoryId
+                        ? "bg-primary/10 text-primary"
+                        : "text-gray-600 hover:bg-gray-50 hover:text-gray-900 cursor-pointer"
+                    }`}
+                  >
+                    Tất cả sản phẩm
+                  </button>
+                  {categories.map((cat) => (
+                    <button
+                      key={cat.id}
+                      onClick={() => handleCategorySelect(cat.id)}
+                      className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors ${
+                        categoryId === cat.id
+                          ? "bg-primary/10 text-primary"
+                          : "text-gray-600 hover:bg-gray-50 hover:text-gray-900 cursor-pointer"
+                      }`}
+                    >
+                      {cat.name}
+                    </button>
+                  ))}
+                </>
+              )}
             </div>
           </div>
         </aside>
@@ -97,9 +110,13 @@ export default function ProductsPage() {
         <div className="flex-1 min-w-0">
           <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
             <div>
-              <h1 className="text-lg font-medium text-gray-900">
-                {selectedCategoryName ? selectedCategoryName : "Tất cả sản phẩm"}
-              </h1>
+              {loadingCategories ? (
+                <div className="h-6 w-48 rounded bg-gray-200 animate-pulse" />
+              ) : (
+                <h1 className="text-lg font-medium text-gray-900">
+                  {selectedCategoryName ? selectedCategoryName : "Tất cả sản phẩm"}
+                </h1>
+              )}
               {search && (
                 <p className="mt-1 flex items-center gap-2 text-sm text-gray-600">
                   Kết quả tìm kiếm cho:{" "}
@@ -119,8 +136,10 @@ export default function ProductsPage() {
           </div>
 
           {loading ? (
-            <div className="flex h-64 items-center justify-center">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 sm:gap-4 lg:gap-6">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <ProductCardSkeleton key={i} />
+              ))}
             </div>
           ) : products.length > 0 ? (
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 sm:gap-4 lg:gap-6">
