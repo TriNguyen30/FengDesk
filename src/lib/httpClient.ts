@@ -1,9 +1,9 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
 import { axiosBaseConfig } from "@/config/axios.config";
-import { clearTokens, getAccessToken, getRefreshToken, setTokens } from "@/utils";
+import { clearSession, getAccessToken, getRefreshToken, setTokens } from "@/utils";
 import { HTTP_STATUS } from "@/constants";
 import { store } from "@/app/store";
-import { setToken, logout } from "@/features/auth/store/authSlice";
+import { updateTokens, logout } from "@/features/auth/store/authSlice";
 
 export class FetchHttpClient {
   private baseURL: string;
@@ -100,6 +100,7 @@ export class FetchHttpClient {
   private async refreshAccessToken(): Promise<string> {
     const refreshToken = getRefreshToken();
     if (!refreshToken) {
+      clearSession();
       store.dispatch(logout());
       throw new Error("No refresh token available");
     }
@@ -112,17 +113,17 @@ export class FetchHttpClient {
       );
 
       if (response.status !== HTTP_STATUS.OK || !response.data?.isSuccess) {
-        clearTokens();
+        clearSession();
         store.dispatch(logout());
         throw new Error("Refresh token expired");
       }
 
       const { accessToken, refreshToken: newRefreshToken } = response.data.data;
       setTokens(accessToken, newRefreshToken);
-      store.dispatch(setToken(accessToken));
+      store.dispatch(updateTokens({ token: accessToken, refreshToken: newRefreshToken }));
       return accessToken;
     } catch (error) {
-      clearTokens();
+      clearSession();
       store.dispatch(logout());
       throw error;
     }

@@ -791,7 +791,7 @@ export default function EditProductPage() {
                 {product.images?.map((img) => (
                   <div
                     key={img.id}
-                    className="relative group rounded-xl overflow-hidden bg-gray-50 ring-1 ring-gray-150 flex flex-col items-center justify-center p-2"
+                    className="relative group rounded-xl overflow-hidden bg-gray-50 ring-1 ring-gray-100 flex flex-col items-center justify-center p-2"
                   >
                     <div className="aspect-square w-full overflow-hidden flex items-center justify-center rounded-lg">
                       <img

@@ -10,6 +10,7 @@ import { NotificationDropdown } from "@/features/notification";
 import { useAppSelector, useAppDispatch } from "@/app/store";
 import { logout, setAuthModal } from "@/features/auth/store/authSlice";
 import { logoutRequest } from "@/features/auth/api/auth.api";
+import { clearSession } from "@/utils";
 import Logo from "@/assets/image/fengdesk_logo_2.png";
 
 export default function Navbar() {
@@ -23,8 +24,7 @@ export default function Navbar() {
     }
   };
 
-  const user = useAppSelector((state) => state.auth.user);
-  const authModal = useAppSelector((state) => state.auth.authModal);
+  const { user, authModal, refreshToken } = useAppSelector((state) => state.auth);
   const dispatch = useAppDispatch();
   const { getCart, clearCart } = useCart();
 
@@ -38,15 +38,14 @@ export default function Navbar() {
 
   const handleLogout = async () => {
     try {
-      const refreshToken = localStorage.getItem("refreshToken");
       if (refreshToken) {
         await logoutRequest({ refreshToken });
       }
     } catch (error) {
       console.error("Logout error", error);
     } finally {
+      clearSession();
       dispatch(logout());
-      localStorage.removeItem("refreshToken");
       toast.success("Đăng xuất thành công");
     }
   };
@@ -149,7 +148,7 @@ export default function Navbar() {
                         onClick={() => navigate("/profile/workspace")}
                         className="flex w-full items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 rounded-md transition-colors text-left font-medium cursor-pointer"
                       >
-                        Không gian làm việc
+                        Không Gian Làm Việc
                       </button>
                       <button
                         onClick={() => navigate("/profile/orders")}
