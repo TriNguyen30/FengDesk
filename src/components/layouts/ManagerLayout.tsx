@@ -89,7 +89,7 @@ export default function ManagerLayout() {
         {/* Logo */}
         <div className="flex h-16 shrink-0 items-center justify-between border-b border-gray-200 px-4">
           <Link to="/manager/dashboard" className="flex items-center gap-2.5 overflow-hidden">
-            <img src={FengDesk} alt="FengDesk" className="h-9 w-9" />
+            <img src={FengDesk} alt="FengDesk" className="h-9 w-9 ml-1.5" />
             {!collapsed && (
               <span className="whitespace-nowrap">
                 <span className="block text-base font-bold leading-tight text-gray-900">

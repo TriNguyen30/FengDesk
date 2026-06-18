@@ -1,4 +1,4 @@
-import { Truck, Package, User, Leaf, Bell } from "lucide-react";
+import { Truck, Package, User, Leaf, Bell, LogOut } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -156,10 +156,12 @@ export default function Navbar() {
                       >
                         Đơn Mua
                       </button>
+
                       <button
                         onClick={handleLogout}
                         className="flex w-full items-center px-3 py-2 text-sm text-red-600 hover:bg-red-50 hover:text-red-700 rounded-md transition-colors text-left font-medium cursor-pointer"
                       >
+                        <LogOut size={16} className="mr-2" />
                         Đăng xuất
                       </button>
                     </div>
