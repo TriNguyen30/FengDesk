@@ -22,26 +22,19 @@ jobs:
         with:
           version: 9 # Hoặc phiên bản pnpm bạn đang dùng
 
-      # Bước 3: Cài đặt Node.js
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-          cache: "pnpm"
-
-      # Bước 4: Cài đặt các thư viện (dependencies)
+      # Bước 3: Cài đặt các thư viện (dependencies)
       - name: Install Dependencies
         run: pnpm install
 
-      # Bước 5: Kiểm tra lỗi logic/format (Linting)
+      # Bước 4: Kiểm tra lỗi logic/format (Linting)
       - name: Run Lint
         run: pnpm lint
 
-      # Bước 6: Kiểm tra lỗi TypeScript (Dựa trên script "tsc -b" trong package.json của bạn)
+      # Bước 5: Kiểm tra lỗi TypeScript (Dựa trên script "tsc -b" trong package.json của bạn)
       - name: Type Check
         run: pnpm tsc -b
 
-      # Bước 7: Build thử nghiệm dự án
+      # Bước 6: Build thử nghiệm dự án
       - name: Build Web Application
         run: pnpm build
         env:
