@@ -85,8 +85,8 @@ export default function OrderDetailPage() {
   }
 
   const order = currentOrder;
-  const statusMeta = getOrderStatusMeta(order.status);
-  const canCancel = !["Cancelled", "Delivered", "Shipping"].includes(order.status);
+  const statusMeta = getOrderStatusMeta(order.status, order.paymentMethod);
+  const canCancel = !["Cancelled", "Completed", "Expired"].includes(order.status);
 
   return (
     <div>
