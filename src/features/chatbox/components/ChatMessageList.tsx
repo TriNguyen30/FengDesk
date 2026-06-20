@@ -1,19 +1,21 @@
 import { useEffect, useRef } from "react";
-import type { ChatMessage } from "@/features/chatbox/types/chatbox";
-import ChatMessageBubble from "./ChatMessageBubble";
 import { MessageCircle } from "lucide-react";
+import type { AiActivity, ChatMessage } from "@/features/chatbox/types/chatbox";
+import ChatMessageBubble from "./ChatMessageBubble";
+import AiActivityIndicator from "./AiActivityIndicator";
 
 interface ChatMessageListProps {
   messages: ChatMessage[];
-  currentUserId?: string;
+  meId?: string;
+  aiActivity?: AiActivity | null;
 }
 
-export default function ChatMessageList({ messages, currentUserId }: ChatMessageListProps) {
+export default function ChatMessageList({ messages, meId, aiActivity }: ChatMessageListProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [messages, aiActivity]);
 
   if (messages.length === 0) {
     return (
@@ -22,10 +24,10 @@ export default function ChatMessageList({ messages, currentUserId }: ChatMessage
           <MessageCircle size={28} strokeWidth={1.5} />
         </div>
         <div>
-          <p className="text-sm font-semibold text-gray-800">Xin chào từ FengDesk!</p>
+          <p className="text-sm font-semibold text-gray-800">Bắt đầu trò chuyện</p>
           <p className="mt-1 text-xs leading-relaxed text-gray-500">
-            Hỏi về cây phong thủy, đơn hàng hoặc tư vấn không gian làm việc. Chúng tôi phản hồi ngay
-            lập tức.
+            Nhập tin nhắn để gửi. Gõ <span className="font-semibold text-primary">@AI</span> để nhờ
+            trợ lý phong thủy hỗ trợ ngay trong phòng.
           </p>
         </div>
       </div>
@@ -35,12 +37,9 @@ export default function ChatMessageList({ messages, currentUserId }: ChatMessage
   return (
     <div className="scrollbar-none flex flex-1 flex-col gap-3 overflow-y-auto px-3 py-4">
       {messages.map((message) => (
-        <ChatMessageBubble
-          key={message.id}
-          message={message}
-          isOwn={message.senderId === currentUserId}
-        />
+        <ChatMessageBubble key={message.id} message={message} isOwn={message.senderId === meId} />
       ))}
+      {aiActivity && <AiActivityIndicator activity={aiActivity} />}
       <div ref={bottomRef} />
     </div>
   );

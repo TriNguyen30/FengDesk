@@ -1,5 +1,5 @@
-import { Truck, Package, User, Leaf, Bell, LogOut } from "lucide-react";
-import { useState, useEffect } from "react";
+import { Truck, Package, User, LogOut, Sparkles } from "lucide-react";
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import SearchBar from "./Search";
@@ -111,6 +111,16 @@ export default function Navbar() {
 
             {/* Icon group — always visible */}
             <div className="flex shrink-0 items-center gap-1 sm:gap-3">
+              <button
+                type="button"
+                onClick={() => navigate("/ai")}
+                className="flex min-w-[44px] flex-col items-center gap-0.5 rounded-lg px-1 py-1 text-gray-700 transition-colors hover:text-primary cursor-pointer"
+                aria-label="Trợ lý AI"
+              >
+                <Sparkles size={22} strokeWidth={1.8} />
+                <span className="hidden text-[10px] font-medium sm:block sm:text-xs">Trợ lý AI</span>
+              </button>
+
               {user && <NotificationDropdown />}
 
               {user ? (

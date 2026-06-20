@@ -1,37 +1,56 @@
-import { useCallback } from "react";
 import { MessageCircle, X } from "lucide-react";
 import { useChatbox } from "@/features/chatbox/hooks/useChatbox";
-import { useAppSelector } from "@/app/store";
 import ChatPanel from "./ChatPanel";
 
 export default function ChatWidget() {
-  const user = useAppSelector((state) => state.auth.user);
   const {
+    user,
+    meId,
     isOpen,
-    unreadCount,
+    view,
+    chatboxes,
     messages,
+    activeChatboxId,
     connectionStatus,
+    unreadCount,
     isSending,
-    isRealtime,
+    aiActivity,
     open,
     close,
     toggle,
-    sendMessage,
+    openRoom,
+    backToList,
+    send,
+    sendImage,
+    startSupport,
+    newChat,
+    deleteRoom,
+    consentPulseRoomId,
+    clearConsentPulse,
   } = useChatbox();
-
-  const handleClose = useCallback(() => close(), [close]);
 
   return (
     <div className="fixed bottom-[max(1rem,env(safe-area-inset-bottom))] right-[max(1rem,env(safe-area-inset-right))] z-40 flex flex-col items-end gap-3">
-      {isOpen && (
+      {isOpen && user && (
         <ChatPanel
-          onClose={handleClose}
+          view={view}
+          chatboxes={chatboxes}
           messages={messages}
+          activeChatboxId={activeChatboxId}
           connectionStatus={connectionStatus}
           isSending={isSending}
-          isRealtime={isRealtime}
-          currentUserId={user?.id}
-          onSend={sendMessage}
+          aiActivity={aiActivity}
+          meId={meId}
+          onClose={close}
+          onOpenRoom={openRoom}
+          onBack={backToList}
+          onSend={send}
+          onSendImage={sendImage}
+          onStartSupport={startSupport}
+          onNewChat={newChat}
+          onDeleteRoom={deleteRoom}
+          consentPulseRoomId={consentPulseRoomId}
+          onClearConsentPulse={clearConsentPulse}
         />
       )}
 
@@ -39,7 +58,7 @@ export default function ChatWidget() {
         type="button"
         onClick={isOpen ? toggle : open}
         className="group relative flex h-14 w-14 items-center justify-center rounded-full bg-primary text-white shadow-lg shadow-primary/30 transition-all hover:scale-105 hover:bg-primary-dark active:scale-95 cursor-pointer"
-        aria-label={isOpen ? "Đóng chat" : "Mở chat hỗ trợ"}
+        aria-label={isOpen ? "Đóng chat" : "Mở tin nhắn"}
         aria-expanded={isOpen}
       >
         {isOpen ? <X size={24} strokeWidth={2} /> : <MessageCircle size={26} strokeWidth={1.8} />}
@@ -52,7 +71,7 @@ export default function ChatWidget() {
 
         {!isOpen && (
           <span className="pointer-events-none absolute -top-10 right-0 whitespace-nowrap rounded-lg bg-gray-900 px-2.5 py-1 text-xs font-medium text-white opacity-0 shadow-md transition-opacity group-hover:opacity-100">
-            Chat với FengDesk
+            Tin nhắn
           </span>
         )}
       </button>

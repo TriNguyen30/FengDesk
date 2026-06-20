@@ -1,27 +1,56 @@
-import { useEffect } from "react";
-import { Minus, Wifi, WifiOff, X } from "lucide-react";
-import type { ChatConnectionStatus, ChatMessage } from "@/features/chatbox/types/chatbox";
-import ChatInput from "./ChatInput";
-import ChatMessageList from "./ChatMessageList";
+import { useEffect, useMemo } from "react";
+import { ArrowLeft, Plus, Wifi, WifiOff, X } from "lucide-react";
+import type {
+  AiActivity,
+  Chatbox,
+  ChatConnectionStatus,
+  ChatMessage,
+} from "@/features/chatbox/types/chatbox";
+import { getChatboxDisplayName } from "@/features/chatbox/utils/chatUtils";
+import ChatConversation from "./ChatConversation";
+import ChatRoomList from "./ChatRoomList";
+import ConsentPanel from "./ConsentPanel";
 
 interface ChatPanelProps {
-  onClose: () => void;
+  view: "list" | "conversation";
+  chatboxes: Chatbox[];
   messages: ChatMessage[];
+  activeChatboxId: string | null;
   connectionStatus: ChatConnectionStatus;
   isSending: boolean;
-  isRealtime: boolean;
-  currentUserId?: string;
+  aiActivity: AiActivity | null;
+  meId?: string;
+  onClose: () => void;
+  onOpenRoom: (id: string) => void;
+  onBack: () => void;
   onSend: (content: string) => void;
+  onSendImage: (file: File) => void;
+  onStartSupport: () => void;
+  onNewChat: () => void;
+  onDeleteRoom: (chatboxId: string) => void;
+  consentPulseRoomId: string | null;
+  onClearConsentPulse: () => void;
 }
 
 export default function ChatPanel({
-  onClose,
+  view,
+  chatboxes,
   messages,
+  activeChatboxId,
   connectionStatus,
   isSending,
-  isRealtime,
-  currentUserId,
+  aiActivity,
+  meId,
+  onClose,
+  onOpenRoom,
+  onBack,
   onSend,
+  onSendImage,
+  onStartSupport,
+  onNewChat,
+  onDeleteRoom,
+  consentPulseRoomId,
+  onClearConsentPulse,
 }: ChatPanelProps) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -31,61 +60,104 @@ export default function ChatPanel({
     return () => document.removeEventListener("keydown", onKey);
   }, [onClose]);
 
+  const activeBox = useMemo(
+    () => chatboxes.find((c) => c.id === activeChatboxId),
+    [chatboxes, activeChatboxId],
+  );
+
   const statusLabel =
     connectionStatus === "connected"
-      ? isRealtime
-        ? "Đang kết nối realtime"
-        : "Đang hoạt động"
+      ? "Đang kết nối"
       : connectionStatus === "connecting"
         ? "Đang kết nối..."
         : connectionStatus === "error"
           ? "Mất kết nối"
-          : "Ngắt kết nối";
-
+          : "Ngoại tuyến";
   const StatusIcon = connectionStatus === "connected" ? Wifi : WifiOff;
+
+  const isConversation = view === "conversation" && !!activeChatboxId;
+  const title = isConversation && activeBox ? getChatboxDisplayName(activeBox, meId) : "Tin nhắn";
+  // Panel consent chỉ hiện ở phòng hỗ trợ (khách là chủ phòng).
+  const showConsent = isConversation && !!activeBox?.isSupport;
 
   return (
     <div
       role="dialog"
-      aria-label="Chat hỗ trợ FengDesk"
-      className="flex h-[min(32rem,calc(100dvh-6rem))] w-[min(calc(100vw-1.5rem),24rem)] flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl sm:h-[28rem] sm:w-96"
+      aria-label="Tin nhắn FengDesk"
+      className="flex h-[min(32rem,calc(100dvh-6rem))] w-[min(calc(100vw-1.5rem),24rem)] flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl sm:h-[30rem] sm:w-96"
     >
-      <header className="flex items-center justify-between border-b border-gray-100 bg-linear-to-r from-primary to-primary-dark px-4 py-3 text-white">
-        <div className="min-w-0">
-          <h2 className="text-sm font-bold">FengDesk Support</h2>
-          <div className="mt-0.5 flex items-center gap-1.5 text-[11px] text-white/85">
-            <StatusIcon size={12} />
-            <span>{statusLabel}</span>
+      <header className="flex items-center justify-between gap-2 border-b border-gray-100 bg-linear-to-r from-primary to-primary-dark px-3 py-3 text-white">
+        <div className="flex min-w-0 items-center gap-2">
+          {isConversation && (
+            <button
+              type="button"
+              onClick={onBack}
+              className="rounded-lg p-1.5 text-white/90 transition-colors hover:bg-white/15 cursor-pointer"
+              aria-label="Quay lại danh sách"
+            >
+              <ArrowLeft size={18} />
+            </button>
+          )}
+          <div className="min-w-0">
+            <h2 className="truncate text-sm font-bold">{title}</h2>
+            <div className="mt-0.5 flex items-center gap-1.5 text-[11px] text-white/85">
+              <StatusIcon size={12} />
+              <span>{statusLabel}</span>
+            </div>
           </div>
         </div>
         <div className="flex items-center gap-1">
+          {!isConversation && (
+            <button
+              type="button"
+              onClick={onNewChat}
+              className="rounded-lg p-1.5 text-white/90 transition-colors hover:bg-white/15 cursor-pointer"
+              aria-label="Trò chuyện mới"
+              title="Trò chuyện mới"
+            >
+              <Plus size={18} />
+            </button>
+          )}
           <button
             type="button"
             onClick={onClose}
             className="rounded-lg p-1.5 text-white/90 transition-colors hover:bg-white/15 cursor-pointer"
-            aria-label="Thu nhỏ"
-          >
-            <Minus size={18} />
-          </button>
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-lg p-1.5 text-white/90 transition-colors hover:bg-white/15 cursor-pointer"
-            aria-label="Đóng chat"
+            aria-label="Đóng"
           >
             <X size={18} />
           </button>
         </div>
       </header>
 
-      <ChatMessageList messages={messages} currentUserId={currentUserId} />
-
-      <ChatInput
-        onSend={onSend}
-        isSending={isSending}
-        disabled={!currentUserId}
-        placeholder={currentUserId ? "Nhập tin nhắn..." : "Đăng nhập để bắt đầu chat"}
-      />
+      {isConversation ? (
+        <>
+          {showConsent && activeChatboxId && (
+            <ConsentPanel
+              key={activeChatboxId}
+              chatboxId={activeChatboxId}
+              pulse={consentPulseRoomId === activeChatboxId}
+              onInteract={onClearConsentPulse}
+            />
+          )}
+          <ChatConversation
+            key={activeChatboxId}
+            messages={messages}
+            meId={meId}
+            aiActivity={aiActivity}
+            isSending={isSending}
+            onSend={onSend}
+            onSendImage={onSendImage}
+          />
+        </>
+      ) : (
+        <ChatRoomList
+          chatboxes={chatboxes}
+          meId={meId}
+          onOpenRoom={onOpenRoom}
+          onStartSupport={onStartSupport}
+          onDeleteRoom={onDeleteRoom}
+        />
+      )}
     </div>
   );
 }

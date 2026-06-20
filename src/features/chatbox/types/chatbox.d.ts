@@ -1,31 +1,65 @@
-export type ChatSenderRole = "customer" | "staff" | "bot";
+// Khớp với DTO của BE (FengDeskAI.Application.Features.Chat.DTOs).
+// Enum trả về dạng chuỗi (BE bật JsonStringEnumConverter).
+
+export type MessageSenderType = "User" | "AiBot" | "System";
+export type ParticipantType = "Customer" | "Staff" | "Manager" | "Admin" | "AiBot";
+export type ParticipantRole = "Owner" | "Member";
+
+export interface ChatParticipant {
+  userId: string | null;
+  participantType: ParticipantType;
+  role: ParticipantRole;
+  isMuted: boolean;
+  isHidden: boolean;
+}
 
 export interface ChatMessage {
   id: string;
-  roomId: string;
-  content: string;
-  senderId: string;
-  senderName: string;
-  senderRole: ChatSenderRole;
+  chatboxId: string;
+  senderId: string | null;
+  senderType: MessageSenderType;
+  senderName: string | null;
+  content: string | null;
   createdAt: string;
+  images: string[];
 }
 
-export interface SendMessageParams {
-  roomId: string;
-  content: string;
-  senderId: string;
-  senderName: string;
-  senderRole: ChatSenderRole;
-}
-
-export interface ChatRoom {
+export interface Chatbox {
   id: string;
-  participantId: string;
-  participantName: string;
-  lastMessageAt: string;
+  isGroup: boolean;
+  isSupport: boolean;
+  title: string | null;
+  createdByUserId: string;
+  productId: string | null;
+  createdAt: string;
+  updatedAt: string;
+  participants: ChatParticipant[];
+  lastMessage: ChatMessage | null;
+}
+
+/** Tin nhắn broadcast realtime từ hub ("messageReceived"). Cùng shape với ChatMessage. */
+export interface ChatMessageBroadcast {
+  id: string;
+  chatboxId: string;
+  senderId: string | null;
+  senderType: MessageSenderType;
+  senderName: string | null;
+  content: string | null;
+  createdAt: string;
+  images: string[];
+}
+
+export interface SendMessagePayload {
+  content?: string;
+  imageUrls?: string[];
 }
 
 export type ChatConnectionStatus = "connecting" | "connected" | "disconnected" | "error";
 
-export type MessageListener = (messages: ChatMessage[]) => void;
-export type Unsubscribe = () => void;
+/** Trạng thái AI realtime (mảng ① — phát từ hub "aiStatus"). Khai báo sẵn để dùng sau. */
+export type AiActivityPhase = "thinking" | "calling_tool" | "writing" | "done";
+export interface AiActivity {
+  chatboxId: string;
+  phase: AiActivityPhase;
+  toolName?: string | null;
+}
