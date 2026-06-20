@@ -168,13 +168,16 @@ export function useChatbox() {
   }, [dispatch, refreshChatboxes]);
 
   const send = useCallback(
-    async (content: string) => {
+    async (content: string, imageUrls: string[] = []) => {
       const trimmed = content.trim();
       const roomId = activeRef.current;
-      if (!trimmed || !roomId || isSending) return;
+      if ((!trimmed && imageUrls.length === 0) || !roomId || isSending) return;
       dispatch(setIsSending(true));
       try {
-        const res = await chatApi.sendMessage(roomId, { content: trimmed });
+        const res = await chatApi.sendMessage(roomId, {
+          content: trimmed || undefined,
+          imageUrls: imageUrls.length ? imageUrls : undefined,
+        });
         if (res.data.isSuccess) {
           // Thêm ngay từ response (id thật) — echo realtime sẽ dedupe theo id.
           dispatch(addMessage({ roomId, message: res.data.data }));
@@ -190,27 +193,15 @@ export function useChatbox() {
     [dispatch, isSending],
   );
 
-  const sendImage = useCallback(
-    async (file: File) => {
-      const roomId = activeRef.current;
-      if (!roomId) return;
-      dispatch(setIsSending(true));
-      try {
-        const up = await chatApi.uploadImage(roomId, file);
-        if (!up.data.isSuccess) {
-          toast.error(up.data.message || "Tải ảnh thất bại.");
-          return;
-        }
-        const res = await chatApi.sendMessage(roomId, { imageUrls: [up.data.data] });
-        if (res.data.isSuccess) dispatch(addMessage({ roomId, message: res.data.data }));
-      } catch {
-        toast.error("Không gửi được ảnh.");
-      } finally {
-        dispatch(setIsSending(false));
-      }
-    },
-    [dispatch],
-  );
+  // Upload 1 ảnh (kiểu Messenger): chỉ trả link, KHÔNG gửi tin ngay — composer gắn link vào imageUrls
+  // rồi gửi cùng nội dung. signal cho phép hủy khi quá chậm.
+  const uploadImage = useCallback(async (file: File, signal: AbortSignal): Promise<string> => {
+    const roomId = activeRef.current;
+    if (!roomId) throw new Error("no-room");
+    const up = await chatApi.uploadImage(roomId, file, signal);
+    if (!up.data.isSuccess) throw new Error(up.data.message || "upload-failed");
+    return up.data.data;
+  }, []);
 
   const startDirectChat = useCallback(
     async (otherUserId: string) => {
@@ -308,7 +299,7 @@ export function useChatbox() {
     openRoom,
     backToList,
     send,
-    sendImage,
+    uploadImage,
     startDirectChat,
     startSupport,
     newChat,

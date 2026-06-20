@@ -1,5 +1,7 @@
 import { useRef, type FormEvent, type KeyboardEvent } from "react";
 import { ImagePlus, Loader2, Send, Sparkles } from "lucide-react";
+import { useImageAttachments, type UploadFn } from "@/features/chatbox/hooks/useImageAttachments";
+import AttachmentPreviewRow from "./AttachmentPreviewRow";
 
 /** Phát hiện lệnh @AI trong nội dung đang gõ (khớp regex BE: word-boundary, không phân biệt hoa thường). */
 const AI_MENTION = /(^|\s)@ai\b/i;
@@ -7,8 +9,10 @@ const AI_MENTION = /(^|\s)@ai\b/i;
 interface ChatInputProps {
   value: string;
   onChange: (value: string) => void;
-  onSubmit: () => void;
-  onPickImage?: (file: File) => void;
+  /** Gửi tin: nội dung + link ảnh đã upload xong. */
+  onSubmit: (content: string, imageUrls: string[]) => void;
+  /** Upload 1 ảnh (trả link). Có → hiện nút đính kèm ảnh. */
+  onUpload?: UploadFn;
   disabled?: boolean;
   isSending?: boolean;
   placeholder?: string;
@@ -18,17 +22,24 @@ export default function ChatInput({
   value,
   onChange,
   onSubmit,
-  onPickImage,
+  onUpload,
   disabled = false,
   isSending = false,
   placeholder = "Nhập tin nhắn...",
 }: ChatInputProps) {
   const fileRef = useRef<HTMLInputElement>(null);
+  const att = useImageAttachments(onUpload ?? (async () => ""));
   const aiActive = AI_MENTION.test(value);
 
+  // Chỉ cho gửi khi có nội dung/ảnh, không đang gửi và KHÔNG còn ảnh đang upload dở.
+  const hasContent = value.trim().length > 0 || att.urls.length > 0;
+  const canSend = hasContent && !disabled && !isSending && !att.uploading;
+
   const submit = () => {
-    if (!value.trim() || disabled || isSending) return;
-    onSubmit();
+    if (!canSend) return;
+    onSubmit(value.trim(), att.urls);
+    onChange("");
+    att.clear();
   };
 
   const handleSubmit = (e: FormEvent) => {
@@ -51,12 +62,15 @@ export default function ChatInput({
           Đang gọi trợ lý AI
         </div>
       )}
+
+      <AttachmentPreviewRow items={att.items} onRemove={att.remove} />
+
       <div
         className={`flex items-end gap-2 rounded-2xl transition-all ${
           aiActive ? "bg-primary/5 p-2 ring-2 ring-primary/50" : ""
         }`}
       >
-        {onPickImage && (
+        {onUpload && (
           <>
             <input
               ref={fileRef}
@@ -65,7 +79,7 @@ export default function ChatInput({
               className="hidden"
               onChange={(e) => {
                 const file = e.target.files?.[0];
-                if (file) onPickImage(file);
+                if (file) att.add(file);
                 e.target.value = "";
               }}
             />
@@ -91,11 +105,16 @@ export default function ChatInput({
         />
         <button
           type="submit"
-          disabled={disabled || isSending || !value.trim()}
+          disabled={!canSend}
+          title={att.uploading ? "Đang tải ảnh, vui lòng đợi..." : undefined}
           className="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-xl bg-primary text-white transition-colors hover:bg-primary-dark disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
           aria-label="Gửi tin nhắn"
         >
-          {isSending ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
+          {isSending || att.uploading ? (
+            <Loader2 size={18} className="animate-spin" />
+          ) : (
+            <Send size={18} />
+          )}
         </button>
       </div>
       <p className="mt-1.5 text-[10px] text-gray-400">

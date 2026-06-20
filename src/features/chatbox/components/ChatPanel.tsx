@@ -7,6 +7,7 @@ import type {
   ChatMessage,
 } from "@/features/chatbox/types/chatbox";
 import { getChatboxDisplayName } from "@/features/chatbox/utils/chatUtils";
+import type { UploadFn } from "@/features/chatbox/hooks/useImageAttachments";
 import ChatConversation from "./ChatConversation";
 import ChatRoomList from "./ChatRoomList";
 import ConsentPanel from "./ConsentPanel";
@@ -23,8 +24,8 @@ interface ChatPanelProps {
   onClose: () => void;
   onOpenRoom: (id: string) => void;
   onBack: () => void;
-  onSend: (content: string) => void;
-  onSendImage: (file: File) => void;
+  onSend: (content: string, imageUrls: string[]) => void;
+  onUpload: UploadFn;
   onStartSupport: () => void;
   onNewChat: () => void;
   onDeleteRoom: (chatboxId: string) => void;
@@ -45,7 +46,7 @@ export default function ChatPanel({
   onOpenRoom,
   onBack,
   onSend,
-  onSendImage,
+  onUpload,
   onStartSupport,
   onNewChat,
   onDeleteRoom,
@@ -145,8 +146,9 @@ export default function ChatPanel({
             meId={meId}
             aiActivity={aiActivity}
             isSending={isSending}
+            isClosed={!!activeBox?.isClosed}
             onSend={onSend}
-            onSendImage={onSendImage}
+            onUpload={onUpload}
           />
         </>
       ) : (

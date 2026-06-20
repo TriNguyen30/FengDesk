@@ -80,16 +80,22 @@ export const chatApi = {
   addParticipant: (chatboxId: string, userId: string) =>
     fetchHttpClient.post<ApiResponse<null>>(`/chat/chatbox/${chatboxId}/participants`, { userId }),
 
-  /** Tải ảnh chat lên storage → trả link để gắn vào tin nhắn. */
-  uploadImage: (chatboxId: string, file: File) => {
+  /** Tải ảnh chat lên storage → trả link để gắn vào tin nhắn. signal để hủy upload (nút x khi quá chậm). */
+  uploadImage: (chatboxId: string, file: File, signal?: AbortSignal) => {
     const formData = new FormData();
     formData.append("file", file);
     return fetchHttpClient.post<ApiResponse<string>>(
       `/chat/chatbox/${chatboxId}/images`,
       formData,
-      { headers: { "Content-Type": "multipart/form-data" } },
+      { headers: { "Content-Type": "multipart/form-data" }, signal },
     );
   },
+
+  /** Lấy/tạo phòng riêng user ↔ AI (trang AI lớn) → có chatboxId để upload ảnh trước khi gửi tin đầu tiên. */
+  ensureAiChatbox: (productId?: string) =>
+    fetchHttpClient.post<ApiResponse<Chatbox>>(
+      `/chat/ai/chatbox${productId ? `?productId=${productId}` : ""}`,
+    ),
 
   /** Đánh dấu cả phòng đã đọc. */
   markRead: (chatboxId: string) =>

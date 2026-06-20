@@ -28,6 +28,8 @@ export interface Chatbox {
   id: string;
   isGroup: boolean;
   isSupport: boolean;
+  /** Phòng đã đóng (khách xóa nhưng còn tin nhắn) → hiện mờ, khoá gửi tin. */
+  isClosed: boolean;
   title: string | null;
   createdByUserId: string;
   productId: string | null;

@@ -21,7 +21,7 @@ export default function ChatWidget() {
     openRoom,
     backToList,
     send,
-    sendImage,
+    uploadImage,
     startSupport,
     newChat,
     deleteRoom,
@@ -45,7 +45,7 @@ export default function ChatWidget() {
           onOpenRoom={openRoom}
           onBack={backToList}
           onSend={send}
-          onSendImage={sendImage}
+          onUpload={uploadImage}
           onStartSupport={startSupport}
           onNewChat={newChat}
           onDeleteRoom={deleteRoom}

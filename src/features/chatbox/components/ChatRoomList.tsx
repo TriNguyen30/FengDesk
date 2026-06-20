@@ -47,7 +47,12 @@ export default function ChatRoomList({
   return (
     <div className="scrollbar-none flex flex-1 flex-col overflow-y-auto py-1">
       {chatboxes.map((box) => (
-        <div key={box.id} className="group flex items-center pr-2 transition-colors hover:bg-gray-50">
+        <div
+          key={box.id}
+          className={`group flex items-center pr-2 transition-colors hover:bg-gray-50 ${
+            box.isClosed ? "opacity-60" : ""
+          }`}
+        >
           <button
             type="button"
             onClick={() => onOpenRoom(box.id)}
@@ -58,8 +63,13 @@ export default function ChatRoomList({
             </span>
             <div className="min-w-0 flex-1">
               <div className="flex items-center justify-between gap-2">
-                <p className="truncate text-sm font-semibold text-gray-800">
-                  {getChatboxDisplayName(box, meId)}
+                <p className="flex min-w-0 items-center gap-1.5 truncate text-sm font-semibold text-gray-800">
+                  <span className="truncate">{getChatboxDisplayName(box, meId)}</span>
+                  {box.isClosed && (
+                    <span className="shrink-0 rounded-full bg-gray-200 px-1.5 py-0.5 text-[9px] font-medium text-gray-500">
+                      đã đóng
+                    </span>
+                  )}
                 </p>
                 {box.lastMessage && (
                   <span className="shrink-0 text-[10px] text-gray-400 tabular-nums">
@@ -70,15 +80,17 @@ export default function ChatRoomList({
               <p className="truncate text-xs text-gray-500">{getLastMessagePreview(box)}</p>
             </div>
           </button>
-          <button
-            type="button"
-            onClick={() => onDeleteRoom(box.id)}
-            className="ml-1 shrink-0 rounded-lg p-2 text-gray-300 transition-colors hover:bg-red-50 hover:text-red-500 cursor-pointer"
-            aria-label="Xóa hội thoại"
-            title="Xóa hội thoại"
-          >
-            <Trash2 size={15} />
-          </button>
+          {!box.isClosed && (
+            <button
+              type="button"
+              onClick={() => onDeleteRoom(box.id)}
+              className="ml-1 shrink-0 rounded-lg p-2 text-gray-300 transition-colors hover:bg-red-50 hover:text-red-500 cursor-pointer"
+              aria-label="Xóa hội thoại"
+              title="Xóa hội thoại"
+            >
+              <Trash2 size={15} />
+            </button>
+          )}
         </div>
       ))}
     </div>

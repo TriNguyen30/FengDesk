@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Bot, Send, Sparkles, User } from "lucide-react";
+import { Bot, ImagePlus, Loader2, Send, Sparkles, User } from "lucide-react";
 import { useAiChat } from "@/features/chatbox/hooks/useAiChat";
+import { useImageAttachments } from "@/features/chatbox/hooks/useImageAttachments";
 import AiActivityIndicator from "@/features/chatbox/components/AiActivityIndicator";
+import AttachmentPreviewRow from "@/features/chatbox/components/AttachmentPreviewRow";
 import Markdown from "@/features/chatbox/components/Markdown";
 
 const SUGGESTIONS = [
@@ -15,19 +17,24 @@ const SUGGESTIONS = [
 export default function AiChatPage() {
   const [params] = useSearchParams();
   const productId = params.get("productId") ?? undefined;
-  const { messages, sending, activity, send } = useAiChat(productId);
+  const { messages, sending, activity, send, uploadImage } = useAiChat(productId);
   const [draft, setDraft] = useState("");
+  const att = useImageAttachments(uploadImage);
+  const fileRef = useRef<HTMLInputElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, activity]);
 
+  // Chỉ cho gửi khi có nội dung/ảnh, không đang gửi và KHÔNG còn ảnh đang upload dở.
+  const canSend = (draft.trim().length > 0 || att.urls.length > 0) && !sending && !att.uploading;
+
   const submit = () => {
-    const t = draft.trim();
-    if (!t || sending) return;
-    send(t);
+    if (!canSend) return;
+    send(draft.trim(), att.urls);
     setDraft("");
+    att.clear();
   };
 
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
@@ -122,24 +129,52 @@ export default function AiChatPage() {
 
       {/* Composer */}
       <div className="border-t border-gray-100 bg-white/80 py-3 backdrop-blur">
-        <div className="flex items-end gap-2 rounded-2xl border border-gray-200 bg-white p-2 shadow-sm focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20">
-          <textarea
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            onKeyDown={handleKeyDown}
-            rows={1}
-            placeholder="Hỏi trợ lý phong thủy..."
-            className="max-h-32 min-h-[40px] flex-1 resize-none bg-transparent px-2 py-2 text-sm text-gray-800 outline-none placeholder:text-gray-400"
-          />
-          <button
-            type="button"
-            onClick={submit}
-            disabled={sending || !draft.trim()}
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-white transition-colors hover:bg-primary-dark disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
-            aria-label="Gửi"
-          >
-            <Send size={18} />
-          </button>
+        <div className="rounded-2xl border border-gray-200 bg-white p-2 shadow-sm focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20">
+          <AttachmentPreviewRow items={att.items} onRemove={att.remove} />
+          <div className="flex items-end gap-2">
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/png,image/jpeg,image/gif,image/bmp"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) att.add(file);
+                e.target.value = "";
+              }}
+            />
+            <button
+              type="button"
+              onClick={() => fileRef.current?.click()}
+              disabled={sending}
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-gray-50 text-gray-500 transition-colors hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
+              aria-label="Đính kèm ảnh"
+            >
+              <ImagePlus size={18} />
+            </button>
+            <textarea
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              onKeyDown={handleKeyDown}
+              rows={1}
+              placeholder="Hỏi trợ lý phong thủy..."
+              className="max-h-32 min-h-[40px] flex-1 resize-none bg-transparent px-2 py-2 text-sm text-gray-800 outline-none placeholder:text-gray-400"
+            />
+            <button
+              type="button"
+              onClick={submit}
+              disabled={!canSend}
+              title={att.uploading ? "Đang tải ảnh, vui lòng đợi..." : undefined}
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-white transition-colors hover:bg-primary-dark disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
+              aria-label="Gửi"
+            >
+              {sending || att.uploading ? (
+                <Loader2 size={18} className="animate-spin" />
+              ) : (
+                <Send size={18} />
+              )}
+            </button>
+          </div>
         </div>
         <p className="mt-1.5 text-center text-[10px] text-gray-400">
           Trợ lý có thể đưa thông tin chưa chính xác — hãy kiểm chứng khi cần.

@@ -91,5 +91,23 @@ export function useAiChat(productId?: string) {
     [sending, productId],
   );
 
-  return { messages, sending, activity, send };
+  // Upload 1 ảnh cho trang AI lớn: lượt đầu chưa có chatbox → ensure trước (endpoint upload cần chatboxId).
+  // Chỉ trả link; composer gắn vào imageUrls rồi gửi cùng nội dung. signal để hủy khi quá chậm.
+  const uploadImage = useCallback(
+    async (file: File, signal: AbortSignal): Promise<string> => {
+      let roomId = chatboxRef.current;
+      if (!roomId) {
+        const ensure = await chatApi.ensureAiChatbox(productId);
+        if (!ensure.data.isSuccess) throw new Error("ensure-failed");
+        roomId = ensure.data.data.id;
+        setChatboxId(roomId);
+      }
+      const up = await chatApi.uploadImage(roomId, file, signal);
+      if (!up.data.isSuccess) throw new Error(up.data.message || "upload-failed");
+      return up.data.data;
+    },
+    [productId],
+  );
+
+  return { messages, sending, activity, send, uploadImage };
 }
