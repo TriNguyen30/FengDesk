@@ -1,0 +1,114 @@
+import React from "react";
+import { Layers, Tag as TagIcon, Save, RefreshCw } from "lucide-react";
+import type { Category } from "@/features/category/types/category";
+import type { Tag } from "@/features/products/types/tag";
+
+interface ProductRelationsFormProps {
+  categories: Category[];
+  tags: Tag[];
+  selectedCategoryIds: string[];
+  setSelectedCategoryIds: React.Dispatch<React.SetStateAction<string[]>>;
+  selectedTagIds: string[];
+  setSelectedTagIds: React.Dispatch<React.SetStateAction<string[]>>;
+  onSubmit: () => void;
+  saving: boolean;
+}
+
+export function ProductRelationsForm({
+  categories,
+  tags,
+  selectedCategoryIds,
+  setSelectedCategoryIds,
+  selectedTagIds,
+  setSelectedTagIds,
+  onSubmit,
+  saving,
+}: ProductRelationsFormProps) {
+  return (
+    <div className="space-y-6">
+      <div className="grid gap-6 md:grid-cols-2">
+        {/* Categories */}
+        <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-100 space-y-4">
+          <div className="flex items-center gap-2 border-b border-gray-100 pb-3">
+            <Layers size={18} className="text-primary" />
+            <h3 className="text-base font-bold text-gray-950">Danh mục sản phẩm</h3>
+          </div>
+
+          {categories.length === 0 ? (
+            <p className="text-xs text-gray-400 italic">Đang tải danh mục...</p>
+          ) : (
+            <div className="max-h-72 overflow-y-auto space-y-2 pr-1">
+              {categories.map((cat) => (
+                <label
+                  key={cat.id}
+                  className="flex items-center gap-2.5 text-sm font-medium text-gray-700 cursor-pointer"
+                >
+                  <input
+                    type="checkbox"
+                    checked={selectedCategoryIds.includes(cat.id)}
+                    onChange={() => {
+                      setSelectedCategoryIds((prev) =>
+                        prev.includes(cat.id)
+                          ? prev.filter((id) => id !== cat.id)
+                          : [...prev, cat.id],
+                      );
+                    }}
+                    className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
+                  />
+                  {cat.name}
+                </label>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Tags */}
+        <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-100 space-y-4">
+          <div className="flex items-center gap-2 border-b border-gray-100 pb-3">
+            <TagIcon size={18} className="text-primary" />
+            <h3 className="text-base font-bold text-gray-950">Nhãn sản phẩm (Tag)</h3>
+          </div>
+
+          {tags.length === 0 ? (
+            <p className="text-xs text-gray-400 italic">Đang tải nhãn...</p>
+          ) : (
+            <div className="max-h-72 overflow-y-auto space-y-2 pr-1">
+              {tags.map((tag) => (
+                <label
+                  key={tag.id}
+                  className="flex items-center gap-2.5 text-sm font-medium text-gray-700 cursor-pointer"
+                >
+                  <input
+                    type="checkbox"
+                    checked={selectedTagIds.includes(tag.id)}
+                    onChange={() => {
+                      setSelectedTagIds((prev) =>
+                        prev.includes(tag.id)
+                          ? prev.filter((id) => id !== tag.id)
+                          : [...prev, tag.id],
+                      );
+                    }}
+                    className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
+                  />
+                  {tag.name}
+                </label>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="flex justify-end rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-100">
+        <button
+          type="button"
+          onClick={onSubmit}
+          disabled={saving}
+          className="flex items-center justify-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-white shadow-md hover:bg-primary-dark active:scale-95 disabled:opacity-50 cursor-pointer"
+        >
+          {saving ? <RefreshCw size={16} className="animate-spin" /> : <Save size={16} />}
+          Lưu danh mục & nhãn
+        </button>
+      </div>
+    </div>
+  );
+}

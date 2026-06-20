@@ -8,6 +8,8 @@ import DashboardPage from "@/features/manager/pages/DashboardPage";
 import ManageProductsPage from "@/features/manager/pages/ManageProductsPage";
 import CreateProductPage from "@/features/manager/pages/CreateProductPage";
 import EditProductPage from "@/features/manager/pages/EditProductPage";
+import ManageStoresPage from "@/features/manager/pages/ManageStoresPage";
+import ManageOrdersPage from "@/features/manager/pages/ManageOrdersPage";
 import CartPage from "@/features/cart/pages/CartPage";
 import ProtectedRoute from "./ProtectedRoute";
 
@@ -84,6 +86,8 @@ export default function AppRoutes() {
         <Route path="products" element={<ManageProductsPage />} />
         <Route path="products/new" element={<CreateProductPage />} />
         <Route path="products/:id/edit" element={<EditProductPage />} />
+        <Route path="stores" element={<ManageStoresPage />} />
+        <Route path="orders" element={<ManageOrdersPage />} />
       </Route>
     </Routes>
   );

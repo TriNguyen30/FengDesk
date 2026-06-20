@@ -13,6 +13,7 @@ import {
   Search,
   ChevronsLeft,
   ChevronsRight,
+  Store,
 } from "lucide-react";
 import { useAppSelector, useAppDispatch } from "@/app/store";
 import { logout } from "@/features/auth/store/authSlice";
@@ -22,6 +23,7 @@ import FengDesk from "@/assets/image/fengdesk_logo_2.png";
 const navigation = [
   { name: "Tổng quan", href: "/manager/dashboard", icon: LayoutDashboard },
   { name: "Sản phẩm", href: "/manager/products", icon: Package },
+  { name: "Cửa hàng", href: "/manager/stores", icon: Store },
   { name: "Đơn hàng", href: "/manager/orders", icon: ShoppingCart },
   { name: "Khách hàng", href: "/manager/customers", icon: Users },
   { name: "Cài đặt", href: "/manager/settings", icon: Settings },

@@ -26,6 +26,7 @@ import { useProductDetail } from "../hooks/useProducts";
 import { useCart } from "@/features/cart";
 import { getShopRequestById } from "@/features/shop/api/shop.api";
 import { Shop } from "@/features/shop/types/shop";
+import { ReviewSection } from "@/features/review";
 
 export default function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -504,6 +505,9 @@ export default function ProductDetailPage() {
           </div>
         </div>
       )}
+
+      {/* Reviews Section */}
+      <ReviewSection productId={product.id} />
 
       {/* Lightbox Modal */}
       <AnimatePresence>

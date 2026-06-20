@@ -33,7 +33,7 @@ export default function OrdersPage() {
       ) : (
         <div className="space-y-4">
           {orders.map((order) => {
-            const statusMeta = getOrderStatusMeta(order.status);
+            const statusMeta = getOrderStatusMeta(order.status, order.paymentMethod);
             return (
               <Link
                 key={order.id}
