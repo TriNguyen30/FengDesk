@@ -16,8 +16,6 @@ export default function OrderDetailPage() {
   const [cancelling, setCancelling] = useState(false);
   const [paying, setPaying] = useState(false);
 
-
-
   const handleCancel = async () => {
     if (!id) return;
     setCancelling(true);

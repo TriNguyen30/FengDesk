@@ -1,6 +1,10 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { notificationApi } from "../api/notificationApi";
-import type { NotificationItem, GetNotificationsParams, PaginatedData } from "../types/notification";
+import type {
+  NotificationItem,
+  GetNotificationsParams,
+  PaginatedData,
+} from "../types/notification";
 
 interface NotificationState {
   notifications: PaginatedData<NotificationItem> | null;
@@ -25,7 +29,7 @@ export const fetchNotifications = createAsyncThunk(
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || "Failed to fetch notifications");
     }
-  }
+  },
 );
 
 export const fetchUnreadCount = createAsyncThunk(
@@ -34,11 +38,11 @@ export const fetchUnreadCount = createAsyncThunk(
     try {
       const response = await notificationApi.getUnreadCount();
       const data = response.data.data as any;
-      return typeof data === "number" ? data : (data?.unreadCount || 0);
+      return typeof data === "number" ? data : data?.unreadCount || 0;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || "Failed to fetch unread count");
     }
-  }
+  },
 );
 
 export const markAsRead = createAsyncThunk(
@@ -50,7 +54,7 @@ export const markAsRead = createAsyncThunk(
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || "Failed to mark as read");
     }
-  }
+  },
 );
 
 export const markAllAsRead = createAsyncThunk(
@@ -62,7 +66,7 @@ export const markAllAsRead = createAsyncThunk(
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || "Failed to mark all as read");
     }
-  }
+  },
 );
 
 const notificationSlice = createSlice({

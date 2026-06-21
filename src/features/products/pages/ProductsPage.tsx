@@ -4,7 +4,7 @@ import { getCategoriesRequest } from "@/features/category/api/category.api";
 import type { Category } from "@/features/category/types/category";
 import ProductCard, { ProductCardSkeleton } from "@/features/products/components/ProductCard";
 import { useProductList } from "@/features/products/hooks/useProducts";
-import { Filter, SearchX } from "lucide-react";
+import { SearchX, List } from "lucide-react";
 
 export default function ProductsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -65,8 +65,8 @@ export default function ProductsPage() {
         <aside className="w-full shrink-0 md:w-64">
           <div className="sticky top-24 rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
             <h2 className="mb-4 flex items-center gap-2 font-medium text-gray-900">
-              <Filter className="h-4 w-4" />
-              Danh mục sản phẩm
+              <List className="h-4 w-4" />
+              Danh Mục
             </h2>
             <div className="flex flex-col gap-1.5">
               {loadingCategories ? (

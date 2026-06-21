@@ -17,8 +17,6 @@ const initialState: CartState = {
   status: "idle",
 };
 
-
-
 export const fetchCart = createAsyncThunk("cart/fetchCart", async () => {
   const response = await cartApi.getCart();
   return response.data;
