@@ -1,60 +1,69 @@
-import { useCallback } from "react";
+import { useEffect } from "react";
 import { useAppDispatch, useAppSelector } from "@/app/store";
 import {
   fetchNotifications,
   fetchUnreadCount,
-  markNotificationAsRead,
-  markAllNotificationsAsRead,
-  clearNotifications,
-  selectNotifications,
-  selectUnreadCount,
-  selectNotificationsStatus,
-  selectNotificationsPagination,
+  markAsRead,
+  markAllAsRead,
 } from "../store/notificationSlice";
 import type { GetNotificationsParams } from "../types/notification";
 
-export function useNotifications() {
+export function useNotificationsList(params?: GetNotificationsParams & { enabled?: boolean }) {
   const dispatch = useAppDispatch();
-  const notifications = useAppSelector(selectNotifications);
-  const unreadCount = useAppSelector(selectUnreadCount);
-  const status = useAppSelector(selectNotificationsStatus);
-  const pagination = useAppSelector(selectNotificationsPagination);
+  const { notifications, status } = useAppSelector((state) => state.notification);
 
-  const getNotifications = useCallback(
-    (params?: GetNotificationsParams) => {
-      return dispatch(fetchNotifications(params));
+  const { enabled = true, ...queryParams } = params || {};
+
+  // Simple stringify to detect changes in queryParams for the dependency array
+  const queryParamsString = JSON.stringify(queryParams);
+
+  useEffect(() => {
+    if (enabled) {
+      dispatch(fetchNotifications(queryParams));
+    }
+  }, [dispatch, enabled, queryParamsString]);
+
+  return {
+    notifications: notifications ? notifications.items : [],
+    pagination: {
+      page: notifications ? notifications.page : 1,
+      pageSize: notifications ? notifications.pageSize : 10,
+      totalCount: notifications ? notifications.totalCount : 0,
+      totalPages: notifications ? notifications.totalPages : 0,
     },
-    [dispatch],
-  );
+    status,
+  };
+}
 
-  const getUnreadCount = useCallback(() => {
-    return dispatch(fetchUnreadCount());
-  }, [dispatch]);
+export function useUnreadCount() {
+  const dispatch = useAppDispatch();
+  const { unreadCount } = useAppSelector((state) => state.notification);
 
-  const markAsRead = useCallback(
-    (id: string) => {
-      return dispatch(markNotificationAsRead(id));
-    },
-    [dispatch],
-  );
-
-  const markAllAsRead = useCallback(() => {
-    return dispatch(markAllNotificationsAsRead());
-  }, [dispatch]);
-
-  const resetNotifications = useCallback(() => {
-    return dispatch(clearNotifications());
+  useEffect(() => {
+    dispatch(fetchUnreadCount());
+    const interval = setInterval(() => {
+      dispatch(fetchUnreadCount());
+    }, 60000); // Auto refresh every minute
+    return () => clearInterval(interval);
   }, [dispatch]);
 
   return {
-    notifications,
     unreadCount,
-    status,
-    pagination,
-    getNotifications,
-    getUnreadCount,
-    markAsRead,
-    markAllAsRead,
-    resetNotifications,
+  };
+}
+
+export function useMarkNotificationAsRead() {
+  const dispatch = useAppDispatch();
+
+  return {
+    mutateAsync: (id: string) => dispatch(markAsRead(id)).unwrap(),
+  };
+}
+
+export function useMarkAllNotificationsAsRead() {
+  const dispatch = useAppDispatch();
+
+  return {
+    mutateAsync: () => dispatch(markAllAsRead()).unwrap(),
   };
 }

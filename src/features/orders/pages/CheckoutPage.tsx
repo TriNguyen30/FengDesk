@@ -2,9 +2,9 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { ChevronLeft, Loader2, MapPin, ShoppingBag, CreditCard } from "lucide-react";
 import { toast } from "sonner";
-import { useAppDispatch } from "@/app/store";
+
 import { useCart } from "@/features/cart";
-import { createOrder } from "@/features/orders/store/orderSlice";
+import { useCreateOrder } from "@/features/orders";
 import { getAddresses } from "@/features/users/api/address.api";
 import type { Address } from "@/features/users/types/address";
 import type { PaymentMethod } from "@/features/orders/types/orders";
@@ -19,7 +19,7 @@ interface CheckoutLocationState {
 export default function CheckoutPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const dispatch = useAppDispatch();
+  const createOrderMutation = useCreateOrder();
   const { items } = useCart();
 
   const selectedItemIds = (location.state as CheckoutLocationState)?.selectedItemIds ?? [];
@@ -83,26 +83,24 @@ export default function CheckoutPage() {
 
     setSubmitting(true);
     try {
-      const result = await dispatch(
-        createOrder({
-          shippingAddressId: selectedAddressId,
-          note: note.trim(),
-          paymentMethod,
-          items: checkoutItems.map((item) => ({
-            productItemId: item.productItemId,
-            quantity: item.quantity,
-          })),
-        }),
-      ).unwrap();
+      const result = await createOrderMutation.mutateAsync({
+        shippingAddressId: selectedAddressId,
+        note: note.trim(),
+        paymentMethod,
+        items: checkoutItems.map((item) => ({
+          productItemId: item.productItemId,
+          quantity: item.quantity,
+        })),
+      });
 
-      if (result.isSuccess && result.data) {
+      if (result.data.isSuccess && result.data.data) {
         toast.success("Đặt hàng thành công");
 
         if (paymentMethod === "PayOS") {
           try {
-            const paymentRes = await paymentApi.createPayment(result.data.id);
+            const paymentRes = await paymentApi.createPayment(result.data.data.id);
             if (paymentRes.data.isSuccess && paymentRes.data.data.checkoutUrl) {
-              localStorage.setItem("pending_payment_order_id", result.data.id);
+              localStorage.setItem("pending_payment_order_id", result.data.data.id);
               window.location.href = paymentRes.data.data.checkoutUrl;
               return;
             } else {
@@ -112,15 +110,15 @@ export default function CheckoutPage() {
             toast.error("Lỗi khi kết nối cổng thanh toán PayOS");
           }
           // Fallback if payment generation failed
-          navigate(`/profile/orders/${result.data.id}`, { replace: true });
+          navigate(`/profile/orders/${result.data.data.id}`, { replace: true });
           return;
         }
 
-        navigate(`/profile/orders/${result.data.id}`, { replace: true });
+        navigate(`/profile/orders/${result.data.data.id}`, { replace: true });
         return;
       }
 
-      toast.error(result.message || "Không thể tạo đơn hàng");
+      toast.error(result.data.message || "Không thể tạo đơn hàng");
     } catch {
       toast.error("Không thể tạo đơn hàng");
     } finally {
