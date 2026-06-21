@@ -28,12 +28,15 @@ import { useCart } from "@/features/cart";
 import { getShopRequestById } from "@/features/shop/api/shop.api";
 import { Shop } from "@/features/shop/types/shop";
 import { ReviewSection } from "@/features/review";
+import { useAppDispatch } from "@/app/store";
+import { openChatbox } from "@/features/chatbox/store/chatboxSlice";
 
 export default function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { addItem } = useCart();
   const { product, loading, failed } = useProductDetail(id);
+  const dispatch = useAppDispatch();
 
   const [selectedItem, setSelectedItem] = useState<ProductItem | null>(null);
   const [activeImage, setActiveImage] = useState<string>("");
@@ -337,7 +340,15 @@ export default function ProductDetailPage() {
                 {product.name}
               </h1>
               <p className="mt-1.5 text-sm text-gray-400">
-                Cửa hàng: <span className="font-medium text-gray-600">{product.storeName}</span>
+                Cửa hàng:{" "}
+                <button
+                  onClick={() =>
+                    product.gardenStoreId && navigate(`/stores/${product.gardenStoreId}`)
+                  }
+                  className="font-medium text-primary hover:underline cursor-pointer focus:outline-none bg-transparent border-0 p-0"
+                >
+                  {product.storeName}
+                </button>
               </p>
             </div>
 
@@ -460,13 +471,27 @@ export default function ProductDetailPage() {
               <Store className="h-8 w-8" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-gray-900 leading-tight">{shop.name}</h2>
+              <h2
+                onClick={() => navigate(`/stores/${shop.id}`)}
+                className="text-lg font-bold text-gray-900 leading-tight hover:text-primary transition-colors cursor-pointer"
+              >
+                {shop.name}
+              </h2>
               <div className="mt-3 flex gap-2">
-                <button className="flex items-center gap-1.5 rounded-lg border border-primary px-3 py-1.5 text-xs font-semibold text-primary hover:bg-primary/5 transition-colors cursor-pointer">
+                <button
+                  onClick={() => {
+                    dispatch(openChatbox());
+                    toast.success(`Đã kết nối với hỗ trợ viên của ${shop.name}`);
+                  }}
+                  className="flex items-center gap-1.5 rounded-lg border border-primary px-3 py-1.5 text-xs font-semibold text-primary hover:bg-primary/5 transition-colors cursor-pointer"
+                >
                   <MessageSquare className="h-3.5 w-3.5" />
                   Chat ngay
                 </button>
-                <button className="flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer">
+                <button
+                  onClick={() => navigate(`/stores/${shop.id}`)}
+                  className="flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
+                >
                   <Store className="h-3.5 w-3.5" />
                   Xem Shop
                 </button>
@@ -494,7 +519,11 @@ export default function ProductDetailPage() {
                 <MapPin className="h-4 w-4" /> Địa chỉ
               </span>
               <span className="font-medium text-gray-800 line-clamp-2">
-                {shop.address?.streetAddress || "Đang cập nhật"}
+                {typeof shop.address === "object" && shop.address
+                  ? (shop.address as any).streetAddress || "Đang cập nhật"
+                  : typeof shop.address === "string"
+                    ? shop.address
+                    : "Đang cập nhật"}
               </span>
             </div>
           </div>

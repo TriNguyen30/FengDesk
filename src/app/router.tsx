@@ -4,6 +4,7 @@ import ManagerLayout from "@/components/layouts/ManagerLayout";
 import HomePage from "@/features/home/pages/Home";
 import ProductsPage from "@/features/products/pages/ProductsPage";
 import ProductDetailPage from "@/features/products/pages/ProductDetailPage";
+import ShopDetailPage from "@/features/shop/pages/ShopDetailPage";
 import DashboardPage from "@/features/manager/pages/DashboardPage";
 import ManageProductsPage from "@/features/manager/pages/ManageProductsPage";
 import CreateProductPage from "@/features/manager/pages/CreateProductPage";
@@ -30,6 +31,7 @@ export default function AppRoutes() {
         <Route path="/" element={<HomePage />} />
         <Route path="/products" element={<ProductsPage />} />
         <Route path="/products/:id" element={<ProductDetailPage />} />
+        <Route path="/stores/:id" element={<ShopDetailPage />} />
         <Route path="/cart" element={<CartPage />} />
         <Route
           path="/checkout"

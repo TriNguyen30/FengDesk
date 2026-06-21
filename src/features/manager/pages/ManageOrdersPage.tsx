@@ -1,5 +1,19 @@
 import { useState, useEffect, useCallback } from "react";
-import { ShoppingBag, Loader2, Search, Eye, X, Check, ExternalLink, Calendar, MapPin, Phone, User, DollarSign, Tag } from "lucide-react";
+import {
+  ShoppingBag,
+  Loader2,
+  Search,
+  Eye,
+  X,
+  Check,
+  ExternalLink,
+  Calendar,
+  MapPin,
+  Phone,
+  User,
+  DollarSign,
+  Tag,
+} from "lucide-react";
 import { toast } from "sonner";
 import { getAllShopRequest } from "@/features/shop/api/shop.api";
 import type { Shop } from "@/features/shop/types/shop";
@@ -11,8 +25,14 @@ import { ordersApi } from "@/features/orders";
 const DELIVERY_STATUS_MAP: Record<string, { label: string; className: string }> = {
   Pending: { label: "Chờ lấy hàng", className: "bg-amber-50 text-amber-700 border-amber-200" },
   PickedUp: { label: "Đã lấy hàng", className: "bg-blue-50 text-blue-700 border-blue-200" },
-  InTransit: { label: "Đang giao hàng", className: "bg-indigo-50 text-indigo-700 border-indigo-200" },
-  Delivered: { label: "Đã giao hàng", className: "bg-emerald-50 text-emerald-700 border-emerald-200" },
+  InTransit: {
+    label: "Đang giao hàng",
+    className: "bg-indigo-50 text-indigo-700 border-indigo-200",
+  },
+  Delivered: {
+    label: "Đã giao hàng",
+    className: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  },
   Cancelled: { label: "Đã hủy", className: "bg-red-50 text-red-700 border-red-200" },
 };
 
@@ -26,12 +46,7 @@ const TABS = [
 ];
 
 export default function ManageOrdersPage() {
-  const {
-    deliveries,
-    deliveriesStatus,
-    getStoreDeliveries,
-    changeDeliveryStatus,
-  } = useOrders();
+  const { deliveries, deliveriesStatus, getStoreDeliveries, changeDeliveryStatus } = useOrders();
 
   const [stores, setStores] = useState<Shop[]>([]);
   const [selectedStoreId, setSelectedStoreId] = useState<string>("");
@@ -112,7 +127,9 @@ export default function ManageOrdersPage() {
     // 2. Filter by Search (Order Code, Customer Name, Recipient Phone)
     if (searchTerm.trim() !== "") {
       const search = searchTerm.toLowerCase();
-      const codeMatch = delivery.orderCode?.toLowerCase().includes(search) || delivery.orderId.toLowerCase().includes(search);
+      const codeMatch =
+        delivery.orderCode?.toLowerCase().includes(search) ||
+        delivery.orderId.toLowerCase().includes(search);
       const nameMatch = delivery.customerName?.toLowerCase().includes(search);
       const phoneMatch = delivery.recipientPhone?.includes(search);
       return codeMatch || nameMatch || phoneMatch;
@@ -126,7 +143,9 @@ export default function ManageOrdersPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-gray-900">Quản lý Đơn hàng</h1>
-          <p className="text-gray-500 mt-1 text-sm">Xem và quản lý các đơn vận chuyển của cửa hàng.</p>
+          <p className="text-gray-500 mt-1 text-sm">
+            Xem và quản lý các đơn vận chuyển của cửa hàng.
+          </p>
         </div>
 
         {stores.length > 0 && (
@@ -169,11 +188,16 @@ export default function ManageOrdersPage() {
                   }`}
                 >
                   {tab.label}
-                  {activeTab !== tab.value && deliveries.filter(d => tab.value === "All" || d.status === tab.value).length > 0 && (
-                    <span className="ml-1.5 rounded-full bg-gray-200/60 px-1.5 py-0.2 text-[10px] text-gray-600 font-medium">
-                      {deliveries.filter(d => tab.value === "All" || d.status === tab.value).length}
-                    </span>
-                  )}
+                  {activeTab !== tab.value &&
+                    deliveries.filter((d) => tab.value === "All" || d.status === tab.value).length >
+                      0 && (
+                      <span className="ml-1.5 rounded-full bg-gray-200/60 px-1.5 py-0.2 text-[10px] text-gray-600 font-medium">
+                        {
+                          deliveries.filter((d) => tab.value === "All" || d.status === tab.value)
+                            .length
+                        }
+                      </span>
+                    )}
                 </button>
               ))}
             </div>
@@ -209,7 +233,9 @@ export default function ManageOrdersPage() {
             <div className="flex flex-col items-center justify-center py-20 text-center">
               <ShoppingBag className="mb-4 h-12 w-12 text-gray-300" />
               <h3 className="text-base font-semibold text-gray-900">Không tìm thấy đơn hàng nào</h3>
-              <p className="text-sm text-gray-500 mt-1">Vui lòng kiểm tra lại bộ lọc hoặc điều kiện tìm kiếm.</p>
+              <p className="text-sm text-gray-500 mt-1">
+                Vui lòng kiểm tra lại bộ lọc hoặc điều kiện tìm kiếm.
+              </p>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -238,14 +264,20 @@ export default function ManageOrdersPage() {
                       <tr key={delivery.id} className="hover:bg-gray-50/30 transition-colors">
                         {/* Order Code */}
                         <td className="p-4 font-mono font-bold text-gray-900">
-                          {delivery.orderCode ? `#${delivery.orderCode}` : `#${delivery.orderId.substring(0, 8)}`}
+                          {delivery.orderCode
+                            ? `#${delivery.orderCode}`
+                            : `#${delivery.orderId.substring(0, 8)}`}
                         </td>
 
                         {/* Customer details */}
                         <td className="p-4">
-                          <p className="font-semibold text-gray-900">{delivery.customerName || "Khách hàng"}</p>
+                          <p className="font-semibold text-gray-900">
+                            {delivery.customerName || "Khách hàng"}
+                          </p>
                           {delivery.recipientPhone && (
-                            <p className="text-xs text-gray-400 font-medium mt-0.5">{delivery.recipientPhone}</p>
+                            <p className="text-xs text-gray-400 font-medium mt-0.5">
+                              {delivery.recipientPhone}
+                            </p>
                           )}
                         </td>
 
@@ -313,7 +345,9 @@ export default function ManageOrdersPage() {
             {/* Modal Header */}
             <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4 bg-gray-50/50">
               <div>
-                <span className="text-xs font-bold text-primary uppercase tracking-wide">Chi tiết đơn hàng</span>
+                <span className="text-xs font-bold text-primary uppercase tracking-wide">
+                  Chi tiết đơn hàng
+                </span>
                 <h3 className="text-lg font-bold text-gray-900 mt-0.5">
                   Đơn hàng {selectedOrder.orderCode ? `#${selectedOrder.orderCode}` : ""}
                 </h3>
@@ -335,7 +369,9 @@ export default function ManageOrdersPage() {
                   <Calendar className="h-4 w-4 text-gray-400 shrink-0 mt-0.5" />
                   <div>
                     <p className="text-xs text-gray-400 font-medium">Thời gian đặt</p>
-                    <p className="font-semibold text-gray-800 mt-0.5">{formatOrderDate(selectedOrder.createdAt)}</p>
+                    <p className="font-semibold text-gray-800 mt-0.5">
+                      {formatOrderDate(selectedOrder.createdAt)}
+                    </p>
                   </div>
                 </div>
 
@@ -345,7 +381,9 @@ export default function ManageOrdersPage() {
                   <div>
                     <p className="text-xs text-gray-400 font-medium">Phương thức thanh toán</p>
                     <p className="font-semibold text-gray-800 mt-0.5">
-                      {selectedOrder.paymentMethod === "COD" ? "Thanh toán khi nhận hàng (COD)" : selectedOrder.paymentMethod}
+                      {selectedOrder.paymentMethod === "COD"
+                        ? "Thanh toán khi nhận hàng (COD)"
+                        : selectedOrder.paymentMethod}
                     </p>
                   </div>
                 </div>
@@ -359,16 +397,16 @@ export default function ManageOrdersPage() {
                       {selectedOrder.status === "Pending" && selectedOrder.paymentMethod === "COD"
                         ? "Chờ xác nhận"
                         : selectedOrder.status === "Paid"
-                        ? "Đã thanh toán"
-                        : selectedOrder.status === "Processing"
-                        ? "Đang xử lý"
-                        : selectedOrder.status === "Completed"
-                        ? "Đã hoàn thành"
-                        : selectedOrder.status === "Cancelled"
-                        ? "Đã hủy"
-                        : selectedOrder.status === "Expired"
-                        ? "Đã hết hạn"
-                        : selectedOrder.status}
+                          ? "Đã thanh toán"
+                          : selectedOrder.status === "Processing"
+                            ? "Đang xử lý"
+                            : selectedOrder.status === "Completed"
+                              ? "Đã hoàn thành"
+                              : selectedOrder.status === "Cancelled"
+                                ? "Đã hủy"
+                                : selectedOrder.status === "Expired"
+                                  ? "Đã hết hạn"
+                                  : selectedOrder.status}
                     </p>
                   </div>
                 </div>
@@ -383,20 +421,32 @@ export default function ManageOrdersPage() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-2 gap-x-4 text-xs">
                     <p className="text-gray-500 flex items-center gap-1.5">
                       <User size={13} />
-                      Người nhận: <span className="font-semibold text-gray-800">{selectedOrder.shippingAddress.recipientName}</span>
+                      Người nhận:{" "}
+                      <span className="font-semibold text-gray-800">
+                        {selectedOrder.shippingAddress.recipientName}
+                      </span>
                     </p>
                     <p className="text-gray-500 flex items-center gap-1.5">
                       <Phone size={13} />
-                      Số điện thoại: <span className="font-semibold text-gray-800">{selectedOrder.shippingAddress.recipientPhone}</span>
+                      Số điện thoại:{" "}
+                      <span className="font-semibold text-gray-800">
+                        {selectedOrder.shippingAddress.recipientPhone}
+                      </span>
                     </p>
                     <p className="text-gray-500 flex items-start gap-1.5 sm:col-span-2">
                       <MapPin size={13} className="shrink-0 mt-0.5" />
                       Địa chỉ:{" "}
                       <span className="font-medium text-gray-800 leading-relaxed">
                         {selectedOrder.shippingAddress.streetAddress}
-                        {selectedOrder.shippingAddress.wardName ? `, ${selectedOrder.shippingAddress.wardName}` : ""}
-                        {selectedOrder.shippingAddress.districtName ? `, ${selectedOrder.shippingAddress.districtName}` : ""}
-                        {selectedOrder.shippingAddress.provinceName ? `, ${selectedOrder.shippingAddress.provinceName}` : ""}
+                        {selectedOrder.shippingAddress.wardName
+                          ? `, ${selectedOrder.shippingAddress.wardName}`
+                          : ""}
+                        {selectedOrder.shippingAddress.districtName
+                          ? `, ${selectedOrder.shippingAddress.districtName}`
+                          : ""}
+                        {selectedOrder.shippingAddress.provinceName
+                          ? `, ${selectedOrder.shippingAddress.provinceName}`
+                          : ""}
                       </span>
                     </p>
                   </div>
@@ -441,7 +491,9 @@ export default function ManageOrdersPage() {
                           <div>
                             <p className="font-semibold text-gray-800">{item.productName}</p>
                             {item.variantName && (
-                              <p className="text-[10px] text-gray-400 font-medium mt-0.5">Phân loại: {item.variantName}</p>
+                              <p className="text-[10px] text-gray-400 font-medium mt-0.5">
+                                Phân loại: {item.variantName}
+                              </p>
                             )}
                           </div>
                         </td>
