@@ -28,6 +28,30 @@ export function useOrdersList(params?: GetOrdersParams) {
   };
 }
 
+export function useAllOrdersList(params?: GetOrdersParams) {
+  const query = useQuery({
+    queryKey: ["all-orders", params],
+    queryFn: async () => {
+      const response = await ordersApi.getAllOrders(params);
+      return response.data;
+    },
+  });
+
+  const data = query.data;
+
+  return {
+    orders: data?.isSuccess && data.data ? data.data.items : [],
+    pagination: {
+      page: data?.isSuccess && data.data ? data.data.page : 1,
+      pageSize: data?.isSuccess && data.data ? data.data.pageSize : 20,
+      totalCount: data?.isSuccess && data.data ? data.data.totalCount : 0,
+      totalPages: data?.isSuccess && data.data ? data.data.totalPages : 0,
+    },
+    listStatus: query.isLoading ? "loading" : query.isError ? "failed" : "idle",
+    query,
+  };
+}
+
 export function useOrderDetail(id?: string) {
   const query = useQuery({
     queryKey: ["order", id],
@@ -51,7 +75,7 @@ export function useOrderDetail(id?: string) {
 export function useCreateOrder() {
   const dispatch = useAppDispatch();
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: (payload: CreateOrders) => ordersApi.createOrder(payload),
     onSuccess: (res) => {
@@ -65,7 +89,7 @@ export function useCreateOrder() {
 
 export function useCancelOrder() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: (id: string) => ordersApi.cancelOrder(id),
     onSuccess: (res, id) => {
@@ -104,7 +128,7 @@ export function useStoreDeliveries(storeId: string, params?: GetOrdersParams) {
 
 export function useUpdateDeliveryStatus() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: ({ deliveryId, data }: { deliveryId: string; data: UpdateDeliveryStatusParams }) =>
       ordersApi.updateDeliveryStatus(deliveryId, data),

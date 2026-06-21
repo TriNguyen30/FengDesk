@@ -33,7 +33,8 @@ export default function PaymentSuccessPage() {
       setOrderId(cachedOrderId);
     } else if (queryOrderCode) {
       setSearchingOrder(true);
-      ordersApi.getOrders({ pageSize: 50 })
+      ordersApi
+        .getOrders({ pageSize: 50 })
         .then((res) => {
           if (res.data.isSuccess && res.data.data && res.data.data.items) {
             const found = res.data.data.items.find(

@@ -21,6 +21,10 @@ export const ordersApi = {
     return fetchHttpClient.get<GetOrdersResponse>("/orders", params);
   },
 
+  getAllOrders: (params?: GetOrdersParams) => {
+    return fetchHttpClient.get<GetOrdersResponse>("/orders/all", params);
+  },
+
   getOrderById: (id: string) => {
     return fetchHttpClient.get<GetOrderDetailResponse>(`/orders/${id}`);
   },

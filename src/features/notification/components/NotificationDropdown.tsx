@@ -206,7 +206,7 @@ export default function NotificationDropdown() {
               </div>
 
               {/* List */}
-              <div className="scrollbar-none max-h-[26rem] overflow-y-auto divide-y divide-gray-100">
+              <div className="custom-scrollbar max-h-[26rem] overflow-y-auto divide-y divide-gray-100">
                 {status === "loading" && notifications.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-12 text-gray-400">
                     <div className="size-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />

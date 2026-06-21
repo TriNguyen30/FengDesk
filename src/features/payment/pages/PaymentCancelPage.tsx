@@ -11,7 +11,8 @@ export default function PaymentCancelPage() {
   const [searchParams] = useSearchParams();
   const queryOrderCode = searchParams.get("orderCode");
 
-  const { paymentStatus, status, getPaymentStatus, createPayment, cancelPayment, simulatePaid } = usePayment();
+  const { paymentStatus, status, getPaymentStatus, createPayment, cancelPayment, simulatePaid } =
+    usePayment();
   const cancelOrderMutation = useCancelOrder();
 
   const [orderId, setOrderId] = useState<string | null>(null);
@@ -29,7 +30,8 @@ export default function PaymentCancelPage() {
       setOrderId(cachedOrderId);
     } else if (queryOrderCode) {
       setSearchingOrder(true);
-      ordersApi.getOrders({ pageSize: 50 })
+      ordersApi
+        .getOrders({ pageSize: 50 })
         .then((res) => {
           if (res.data.isSuccess && res.data.data && res.data.data.items) {
             const found = res.data.data.items.find(

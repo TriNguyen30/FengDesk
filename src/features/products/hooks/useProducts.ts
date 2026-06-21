@@ -1,6 +1,16 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { productApi } from "../api/product.api";
-import type { GetProductsParams, CreateProductRequest, UpdateProductRequest, CreateProductItemRequest, UpdateProductItemRequest, AddProductImageRequest, SetProductCategoriesRequest, SetProductTagsRequest, UpdateProductFengShuiRequest } from "../types/product";
+import type {
+  GetProductsParams,
+  CreateProductRequest,
+  UpdateProductRequest,
+  CreateProductItemRequest,
+  UpdateProductItemRequest,
+  AddProductImageRequest,
+  SetProductCategoriesRequest,
+  SetProductTagsRequest,
+  UpdateProductFengShuiRequest,
+} from "../types/product";
 
 export function useProductList(params: GetProductsParams = {}) {
   const query = useQuery({
@@ -98,8 +108,15 @@ export function useCreateProductItem() {
 export function useUpdateProductItem() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, itemId, data }: { id: string; itemId: string; data: UpdateProductItemRequest }) =>
-      productApi.updateProductItem(id, itemId, data),
+    mutationFn: ({
+      id,
+      itemId,
+      data,
+    }: {
+      id: string;
+      itemId: string;
+      data: UpdateProductItemRequest;
+    }) => productApi.updateProductItem(id, itemId, data),
     onSuccess: (res, { id }) => {
       queryClient.invalidateQueries({ queryKey: ["product", id] });
     },
