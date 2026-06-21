@@ -6,7 +6,7 @@ import { Minus, Plus, ShoppingCart, Trash2, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useAppSelector } from "@/app/store";
-import { selectProductPrimaryImage } from "@/features/products/store/productSlice";
+import { useProductPrimaryImage } from "@/features/products";
 import type { UpdateCartItemParams } from "@/features/cart/types/cart";
 
 function formatVnd(n: number): string {
@@ -21,7 +21,7 @@ interface CartDropdownItemProps {
 }
 
 function CartDropdownItem({ item, onNavigate, onQuantityChange, onRemove }: CartDropdownItemProps) {
-  const imageUrl = useAppSelector(selectProductPrimaryImage(item.productId));
+  const { imageUrl } = useProductPrimaryImage(item.productId);
 
   return (
     <li className="flex gap-3 px-3 py-3 hover:bg-gray-50/80">

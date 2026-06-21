@@ -1,15 +1,11 @@
 import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { ChevronRight, Loader2, Package } from "lucide-react";
-import { useOrders } from "../hooks/useOrders";
+import { useOrdersList } from "../hooks/useOrders";
 import { formatOrderDate, formatVnd, getOrderStatusMeta } from "../utils/orderUtils";
 
 export default function OrdersPage() {
-  const { orders, listStatus, pagination, getOrders } = useOrders();
-
-  useEffect(() => {
-    getOrders({ page: 1, pageSize: 20 });
-  }, [getOrders]);
+  const { orders, listStatus, pagination } = useOrdersList({ page: 1, pageSize: 20 });
 
   return (
     <div>

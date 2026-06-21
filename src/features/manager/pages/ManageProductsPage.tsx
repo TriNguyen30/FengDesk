@@ -14,7 +14,7 @@ import {
   AlertCircle,
   Package,
 } from "lucide-react";
-import { productApi } from "@/features/products/api/product.api";
+import { useProductList, useDeleteProduct } from "@/features/products";
 import { getAllShopRequest } from "@/features/shop/api/shop.api";
 import { getCategoriesRequest } from "@/features/category/api/category.api";
 import { getTags } from "@/features/products/api/tag.api";
@@ -30,10 +30,6 @@ function formatVnd(n: number): string {
 }
 
 export default function ManageProductsPage() {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [totalCount, setTotalCount] = useState(0);
-  const [totalPages, setTotalPages] = useState(1);
   const [page, setPage] = useState(1);
   const [pageSize] = useState(10);
 
@@ -78,37 +74,17 @@ export default function ManageProductsPage() {
     fetchFilters();
   }, []);
 
-  // Fetch products
-  const fetchProductsList = useCallback(async () => {
-    setLoading(true);
-    try {
-      const response = await productApi.getProducts({
-        page,
-        pageSize,
-        search: search.trim() || undefined,
-        storeId: selectedStoreId || undefined,
-        categoryId: selectedCategoryId || undefined,
-        tagId: selectedTagId || undefined,
-      });
+  const { products, loading, totalCount, query } = useProductList({
+    page,
+    pageSize,
+    search: search.trim() || undefined,
+    storeId: selectedStoreId || undefined,
+    categoryId: selectedCategoryId || undefined,
+    tagId: selectedTagId || undefined,
+  });
 
-      if (response.data.isSuccess && response.data.data) {
-        setProducts(response.data.data.items);
-        setTotalCount(response.data.data.totalCount);
-        setTotalPages(response.data.data.totalPages);
-      } else {
-        toast.error("Không thể tải danh sách sản phẩm");
-      }
-    } catch (err) {
-      console.error(err);
-      toast.error("Đã xảy ra lỗi khi tải danh sách sản phẩm");
-    } finally {
-      setLoading(false);
-    }
-  }, [page, pageSize, search, selectedStoreId, selectedCategoryId, selectedTagId]);
-
-  useEffect(() => {
-    fetchProductsList();
-  }, [fetchProductsList]);
+  const totalPages = query.data?.isSuccess && query.data.data ? query.data.data.totalPages : 1;
+  const deleteProductMutation = useDeleteProduct();
 
   // Reset filters
   const handleResetFilters = () => {
@@ -119,18 +95,12 @@ export default function ManageProductsPage() {
     setPage(1);
   };
 
-  // Handle Delete
   const handleDeleteConfirm = async () => {
     if (!deleteId) return;
     setDeleting(true);
     try {
-      const res = await productApi.deleteProduct(deleteId);
-      if (res.data.isSuccess) {
-        toast.success(`Đã xóa sản phẩm ${deleteName}`);
-        fetchProductsList();
-      } else {
-        toast.error(res.data.message || "Không thể xóa sản phẩm");
-      }
+      await deleteProductMutation.mutateAsync(deleteId);
+      toast.success(`Đã xóa sản phẩm ${deleteName}`);
     } catch (err) {
       console.error(err);
       toast.error("Đã xảy ra lỗi khi xóa sản phẩm");

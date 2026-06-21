@@ -2,37 +2,26 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Bell, Check, ShoppingBag, XCircle, Package, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
-import { useNotifications } from "../hooks/useNotifications";
+import {
+  useNotificationsList,
+  useUnreadCount,
+  useMarkNotificationAsRead,
+  useMarkAllNotificationsAsRead,
+} from "../hooks/useNotifications";
 import type { NotificationItem } from "../types/notification";
 import { formatRelativeTime } from "@/utils/date";
 
 export default function NotificationDropdown() {
-  const {
-    notifications,
-    unreadCount,
-    status,
-    getNotifications,
-    getUnreadCount,
-    markAsRead,
-    markAllAsRead,
-  } = useNotifications();
-
   const [open, setOpen] = useState(false);
   const [closing, setClosing] = useState(false);
   const navigate = useNavigate();
   const rootRef = useRef<HTMLDivElement>(null);
   const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Fetch unread count on mount and poll every 30 seconds
-  useEffect(() => {
-    getUnreadCount();
-
-    const interval = setInterval(() => {
-      getUnreadCount();
-    }, 30000);
-
-    return () => clearInterval(interval);
-  }, [getUnreadCount]);
+  const { unreadCount } = useUnreadCount();
+  const { notifications, status } = useNotificationsList({ page: 1, pageSize: 20, enabled: open });
+  const markAsReadMutation = useMarkNotificationAsRead();
+  const markAllAsReadMutation = useMarkAllNotificationsAsRead();
 
   const close = useCallback(() => {
     setClosing(true);
@@ -49,8 +38,7 @@ export default function NotificationDropdown() {
     }
     setClosing(false);
     setOpen(true);
-    getNotifications({ page: 1, pageSize: 20 });
-  }, [getNotifications]);
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -77,7 +65,7 @@ export default function NotificationDropdown() {
 
   const handleNotificationClick = async (item: NotificationItem) => {
     if (!item.isRead) {
-      await markAsRead(item.id);
+      await markAsReadMutation.mutateAsync(item.id);
     }
     close();
 
@@ -89,7 +77,7 @@ export default function NotificationDropdown() {
 
   const handleMarkAllRead = async () => {
     try {
-      await markAllAsRead();
+      await markAllAsReadMutation.mutateAsync();
       toast.success("Đã đánh dấu tất cả thông báo là đã đọc");
     } catch (error) {
       toast.error("Không thể cập nhật trạng thái thông báo");

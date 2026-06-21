@@ -17,7 +17,7 @@ import {
 import { toast } from "sonner";
 import { getAllShopRequest } from "@/features/shop/api/shop.api";
 import type { Shop } from "@/features/shop/types/shop";
-import { useOrders } from "@/features/orders";
+import { useStoreDeliveries, useUpdateDeliveryStatus } from "@/features/orders";
 import type { Delivery, OrderDetail } from "@/features/orders";
 import { formatOrderDate, formatVnd } from "@/features/orders/utils/orderUtils";
 import { ordersApi } from "@/features/orders";
@@ -46,7 +46,6 @@ const TABS = [
 ];
 
 export default function ManageOrdersPage() {
-  const { deliveries, deliveriesStatus, getStoreDeliveries, changeDeliveryStatus } = useOrders();
 
   const [stores, setStores] = useState<Shop[]>([]);
   const [selectedStoreId, setSelectedStoreId] = useState<string>("");
@@ -57,6 +56,9 @@ export default function ManageOrdersPage() {
   const [selectedOrder, setSelectedOrder] = useState<OrderDetail | null>(null);
   const [loadingDetailId, setLoadingDetailId] = useState<string | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+
+  const { deliveries, deliveriesStatus } = useStoreDeliveries(selectedStoreId, { page: 1, pageSize: 100 });
+  const updateDeliveryStatusMutation = useUpdateDeliveryStatus();
 
   // Fetch all stores managed by manager
   useEffect(() => {
@@ -77,21 +79,11 @@ export default function ManageOrdersPage() {
       });
   }, []);
 
-  // Fetch store deliveries when selected store changes
-  const fetchDeliveries = useCallback(() => {
-    if (selectedStoreId) {
-      getStoreDeliveries(selectedStoreId, { page: 1, pageSize: 100 });
-    }
-  }, [selectedStoreId, getStoreDeliveries]);
 
-  useEffect(() => {
-    fetchDeliveries();
-  }, [fetchDeliveries]);
 
-  // Handle updating delivery status
   const handleStatusChange = async (deliveryId: string, newStatus: string) => {
     try {
-      await changeDeliveryStatus(deliveryId, { status: newStatus }, selectedStoreId);
+      await updateDeliveryStatusMutation.mutateAsync({ deliveryId, data: { status: newStatus } });
       toast.success("Cập nhật trạng thái đơn hàng thành công");
     } catch (err) {
       console.error(err);

@@ -41,7 +41,7 @@ export function ShopHeader({
             <div className="mt-5 flex gap-3">
               <button
                 onClick={onChatClick}
-                className="flex h-11 w-[140px] items-center justify-center gap-2 rounded-lg bg-emerald-600 text-xs font-semibold text-white transition hover:bg-emerald-700 active:scale-95"
+                className="flex h-8 w-[140px] items-center justify-center gap-2 rounded-lg bg-emerald-600 text-xs font-semibold text-white transition hover:bg-emerald-700 active:scale-95 cursor-pointer"
               >
                 <MessageSquare size={15} />
                 <span className="whitespace-nowrap">Chat ngay</span>
@@ -49,7 +49,7 @@ export function ShopHeader({
 
               <button
                 onClick={onFollowClick}
-                className="flex h-11 w-[140px] items-center justify-center gap-2 rounded-lg border border-emerald-600 bg-white text-xs font-semibold text-emerald-600 transition hover:bg-emerald-50 active:scale-95"
+                className="flex h-8 w-[140px] items-center justify-center gap-2 rounded-lg border border-emerald-600 bg-white text-xs font-semibold text-emerald-600 transition hover:bg-emerald-50 active:scale-95 cursor-pointer"
               >
                 <Heart size={15} />
                 <span className="whitespace-nowrap">Theo dõi</span>
