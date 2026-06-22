@@ -1,84 +1,139 @@
-import { useCallback } from "react";
-import { useAppDispatch, useAppSelector } from "@/app/store";
-import {
-  cancelOrder,
-  createOrder,
-  fetchOrderById,
-  fetchOrders,
-  fetchStoreDeliveries,
-  updateDeliveryStatus,
-  clearCurrentOrder,
-  resetCreateStatus,
-  selectCreateOrderStatus,
-  selectCurrentOrder,
-  selectDeliveries,
-  selectDeliveriesStatus,
-  selectOrderDetailStatus,
-  selectOrders,
-  selectOrdersListStatus,
-  selectOrdersPagination,
-  selectUpdateDeliveryStatus,
-} from "../store/orderSlice";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { ordersApi } from "../api/orders.api";
 import type { CreateOrders, GetOrdersParams, UpdateDeliveryStatusParams } from "../types/orders";
+import { useAppDispatch } from "@/app/store";
+import { fetchCart } from "@/features/cart/store/cartSlice";
 
-export function useOrders() {
-  const dispatch = useAppDispatch();
-  const orders = useAppSelector(selectOrders);
-  const listStatus = useAppSelector(selectOrdersListStatus);
-  const pagination = useAppSelector(selectOrdersPagination);
-  const currentOrder = useAppSelector(selectCurrentOrder);
-  const detailStatus = useAppSelector(selectOrderDetailStatus);
-  const createStatus = useAppSelector(selectCreateOrderStatus);
-  const deliveries = useAppSelector(selectDeliveries);
-  const deliveriesStatus = useAppSelector(selectDeliveriesStatus);
-  const updateDeliveryStatusState = useAppSelector(selectUpdateDeliveryStatus);
+export function useOrdersList(params?: GetOrdersParams) {
+  const query = useQuery({
+    queryKey: ["orders", params],
+    queryFn: async () => {
+      const response = await ordersApi.getOrders(params);
+      return response.data;
+    },
+  });
 
-  const getOrders = useCallback(
-    (params?: GetOrdersParams) => dispatch(fetchOrders(params)),
-    [dispatch],
-  );
-
-  const getOrderById = useCallback((id: string) => dispatch(fetchOrderById(id)), [dispatch]);
-
-  const placeOrder = useCallback(
-    (payload: CreateOrders) => dispatch(createOrder(payload)),
-    [dispatch],
-  );
-
-  const cancelOrderById = useCallback((id: string) => dispatch(cancelOrder(id)), [dispatch]);
-
-  const getStoreDeliveries = useCallback(
-    (storeId: string, params?: GetOrdersParams) =>
-      dispatch(fetchStoreDeliveries({ storeId, params })),
-    [dispatch],
-  );
-
-  const changeDeliveryStatus = useCallback(
-    (deliveryId: string, data: UpdateDeliveryStatusParams, storeId?: string) =>
-      dispatch(updateDeliveryStatus({ deliveryId, data, storeId })),
-    [dispatch],
-  );
-
-  const clearOrder = useCallback(() => dispatch(clearCurrentOrder()), [dispatch]);
-  const resetCreate = useCallback(() => dispatch(resetCreateStatus()), [dispatch]);
+  const data = query.data;
 
   return {
-    orders,
-    listStatus,
-    pagination,
-    currentOrder,
-    detailStatus,
-    createStatus,
-    deliveries,
-    deliveriesStatus,
-    updateDeliveryStatusState,
-    getOrders,
-    getOrderById,
-    placeOrder,
-    cancelOrderById,
-    getStoreDeliveries,
-    changeDeliveryStatus,
-    clearOrder,
-    resetCreate,
+    orders: data?.isSuccess && data.data ? data.data.items : [],
+    pagination: {
+      page: data?.isSuccess && data.data ? data.data.page : 1,
+      pageSize: data?.isSuccess && data.data ? data.data.pageSize : 20,
+      totalCount: data?.isSuccess && data.data ? data.data.totalCount : 0,
+      totalPages: data?.isSuccess && data.data ? data.data.totalPages : 0,
+    },
+    listStatus: query.isLoading ? "loading" : query.isError ? "failed" : "idle",
+    query,
   };
+}
+
+export function useAllOrdersList(params?: GetOrdersParams) {
+  const query = useQuery({
+    queryKey: ["all-orders", params],
+    queryFn: async () => {
+      const response = await ordersApi.getAllOrders(params);
+      return response.data;
+    },
+  });
+
+  const data = query.data;
+
+  return {
+    orders: data?.isSuccess && data.data ? data.data.items : [],
+    pagination: {
+      page: data?.isSuccess && data.data ? data.data.page : 1,
+      pageSize: data?.isSuccess && data.data ? data.data.pageSize : 20,
+      totalCount: data?.isSuccess && data.data ? data.data.totalCount : 0,
+      totalPages: data?.isSuccess && data.data ? data.data.totalPages : 0,
+    },
+    listStatus: query.isLoading ? "loading" : query.isError ? "failed" : "idle",
+    query,
+  };
+}
+
+export function useOrderDetail(id?: string) {
+  const query = useQuery({
+    queryKey: ["order", id],
+    queryFn: async () => {
+      if (!id) throw new Error("No ID provided");
+      const response = await ordersApi.getOrderById(id);
+      return response.data;
+    },
+    enabled: !!id,
+  });
+
+  const data = query.data;
+
+  return {
+    currentOrder: data?.isSuccess ? data.data : null,
+    detailStatus: query.isLoading ? "loading" : query.isError ? "failed" : "idle",
+    query,
+  };
+}
+
+export function useCreateOrder() {
+  const dispatch = useAppDispatch();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (payload: CreateOrders) => ordersApi.createOrder(payload),
+    onSuccess: (res) => {
+      if (res.data.isSuccess) {
+        queryClient.invalidateQueries({ queryKey: ["orders"] });
+        dispatch(fetchCart());
+      }
+    },
+  });
+}
+
+export function useCancelOrder() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => ordersApi.cancelOrder(id),
+    onSuccess: (res, id) => {
+      if (res.data.isSuccess) {
+        queryClient.invalidateQueries({ queryKey: ["order", id] });
+        queryClient.invalidateQueries({ queryKey: ["orders"] });
+      }
+    },
+  });
+}
+
+export function useStoreDeliveries(storeId: string, params?: GetOrdersParams) {
+  const query = useQuery({
+    queryKey: ["deliveries", storeId, params],
+    queryFn: async () => {
+      const response = await ordersApi.getStoreDeliveries(storeId, params);
+      return response.data;
+    },
+    enabled: !!storeId,
+  });
+
+  const data = query.data;
+
+  return {
+    deliveries: data?.isSuccess && data.data ? data.data.items : [],
+    pagination: {
+      page: data?.isSuccess && data.data ? data.data.page : 1,
+      pageSize: data?.isSuccess && data.data ? data.data.pageSize : 20,
+      totalCount: data?.isSuccess && data.data ? data.data.totalCount : 0,
+      totalPages: data?.isSuccess && data.data ? data.data.totalPages : 0,
+    },
+    deliveriesStatus: query.isLoading ? "loading" : query.isError ? "failed" : "idle",
+    query,
+  };
+}
+
+export function useUpdateDeliveryStatus() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ deliveryId, data }: { deliveryId: string; data: UpdateDeliveryStatusParams }) =>
+      ordersApi.updateDeliveryStatus(deliveryId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["deliveries"] });
+    },
+  });
 }

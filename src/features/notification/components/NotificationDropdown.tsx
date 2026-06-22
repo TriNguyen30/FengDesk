@@ -2,37 +2,26 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Bell, Check, ShoppingBag, XCircle, Package, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
-import { useNotifications } from "../hooks/useNotifications";
+import {
+  useNotificationsList,
+  useUnreadCount,
+  useMarkNotificationAsRead,
+  useMarkAllNotificationsAsRead,
+} from "../hooks/useNotifications";
 import type { NotificationItem } from "../types/notification";
 import { formatRelativeTime } from "@/utils/date";
 
 export default function NotificationDropdown() {
-  const {
-    notifications,
-    unreadCount,
-    status,
-    getNotifications,
-    getUnreadCount,
-    markAsRead,
-    markAllAsRead,
-  } = useNotifications();
-
   const [open, setOpen] = useState(false);
   const [closing, setClosing] = useState(false);
   const navigate = useNavigate();
   const rootRef = useRef<HTMLDivElement>(null);
   const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Fetch unread count on mount and poll every 30 seconds
-  useEffect(() => {
-    getUnreadCount();
-
-    const interval = setInterval(() => {
-      getUnreadCount();
-    }, 30000);
-
-    return () => clearInterval(interval);
-  }, [getUnreadCount]);
+  const { unreadCount } = useUnreadCount();
+  const { notifications, status } = useNotificationsList({ page: 1, pageSize: 20, enabled: open });
+  const markAsReadMutation = useMarkNotificationAsRead();
+  const markAllAsReadMutation = useMarkAllNotificationsAsRead();
 
   const close = useCallback(() => {
     setClosing(true);
@@ -49,8 +38,7 @@ export default function NotificationDropdown() {
     }
     setClosing(false);
     setOpen(true);
-    getNotifications({ page: 1, pageSize: 20 });
-  }, [getNotifications]);
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -77,7 +65,7 @@ export default function NotificationDropdown() {
 
   const handleNotificationClick = async (item: NotificationItem) => {
     if (!item.isRead) {
-      await markAsRead(item.id);
+      await markAsReadMutation.mutateAsync(item.id);
     }
     close();
 
@@ -89,7 +77,7 @@ export default function NotificationDropdown() {
 
   const handleMarkAllRead = async () => {
     try {
-      await markAllAsRead();
+      await markAllAsReadMutation.mutateAsync();
       toast.success("Đã đánh dấu tất cả thông báo là đã đọc");
     } catch (error) {
       toast.error("Không thể cập nhật trạng thái thông báo");
@@ -176,7 +164,10 @@ export default function NotificationDropdown() {
       <div ref={rootRef} className="relative group" onMouseEnter={open_} onMouseLeave={close}>
         <button
           type="button"
-          onClick={() => (open ? close() : open_())}
+          onClick={() => {
+            close();
+            navigate("/profile/notifications");
+          }}
           className="flex min-w-[44px] flex-col items-center gap-0.5 rounded-lg px-1 py-1 text-gray-700 transition-colors hover:text-primary cursor-pointer relative"
           aria-haspopup="true"
           aria-expanded={open}
@@ -198,9 +189,8 @@ export default function NotificationDropdown() {
             <div
               role="dialog"
               aria-label="Thông báo của bạn"
-              className={`w-[min(calc(100vw-1.5rem),24rem)] overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xl sm:w-96 ${
-                closing ? "notification-dropdown-exit" : "notification-dropdown-enter"
-              }`}
+              className={`w-[min(calc(100vw-1.5rem),24rem)] overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xl sm:w-96 ${closing ? "notification-dropdown-exit" : "notification-dropdown-enter"
+                }`}
             >
               {/* Header */}
               <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3 bg-gray-50/50">
@@ -218,7 +208,7 @@ export default function NotificationDropdown() {
               </div>
 
               {/* List */}
-              <div className="scrollbar-none max-h-[26rem] overflow-y-auto divide-y divide-gray-100">
+              <div className="custom-scrollbar max-h-[26rem] overflow-y-auto divide-y divide-gray-100">
                 {status === "loading" && notifications.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-12 text-gray-400">
                     <div className="size-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
@@ -240,17 +230,15 @@ export default function NotificationDropdown() {
                       key={item.id}
                       type="button"
                       onClick={() => handleNotificationClick(item)}
-                      className={`flex w-full gap-3 px-4 py-3.5 text-left transition-colors cursor-pointer outline-none hover:bg-gray-50/80 ${
-                        !item.isRead ? "bg-primary/[0.02] hover:bg-primary/[0.04]" : ""
-                      }`}
+                      className={`flex w-full gap-3 px-4 py-3.5 text-left transition-colors cursor-pointer outline-none hover:bg-gray-50/80 ${!item.isRead ? "bg-primary/[0.02] hover:bg-primary/[0.04]" : ""
+                        }`}
                     >
                       {getNotificationIcon(item.type)}
                       <div className="min-w-0 flex-1">
                         <div className="flex items-start justify-between gap-2">
                           <p
-                            className={`text-xs sm:text-sm leading-tight text-gray-900 ${
-                              !item.isRead ? "font-semibold" : "font-medium"
-                            }`}
+                            className={`text-xs sm:text-sm leading-tight text-gray-900 ${!item.isRead ? "font-semibold" : "font-medium"
+                              }`}
                           >
                             {item.title}
                           </p>

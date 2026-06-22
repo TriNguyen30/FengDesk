@@ -62,6 +62,25 @@
   }
 }
 
+@utility custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #ddd8d0 transparent;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    background-color: #ddd8d0;
+    border-radius: 9999px;
+  }
+  &::-webkit-scrollbar-thumb:hover {
+    background-color: #b8b1a7;
+  }
+}
+
 /* =========================
    Base Styles
 ========================= */

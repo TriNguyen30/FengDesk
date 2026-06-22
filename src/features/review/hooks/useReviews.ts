@@ -43,69 +43,78 @@ export function useReviews(productId: string | undefined) {
     fetchReviews();
   }, [fetchReviews]);
 
-  const createReview = useCallback(async (content: string, rating: number) => {
-    if (!productId) return false;
-    setSubmitting(true);
-    try {
-      const response = await createReviewRequest({ productId, content, rating });
-      if (response.isSuccess) {
-        toast.success("Đánh giá sản phẩm thành công");
-        await fetchReviews();
-        return true;
-      } else {
-        toast.error(response.message || "Không thể gửi đánh giá");
+  const createReview = useCallback(
+    async (content: string, rating: number) => {
+      if (!productId) return false;
+      setSubmitting(true);
+      try {
+        const response = await createReviewRequest({ productId, content, rating });
+        if (response.isSuccess) {
+          toast.success("Đánh giá sản phẩm thành công");
+          await fetchReviews();
+          return true;
+        } else {
+          toast.error(response.message || "Không thể gửi đánh giá");
+          return false;
+        }
+      } catch (err) {
+        console.error(err);
+        toast.error("Có lỗi xảy ra khi gửi đánh giá");
         return false;
+      } finally {
+        setSubmitting(false);
       }
-    } catch (err) {
-      console.error(err);
-      toast.error("Có lỗi xảy ra khi gửi đánh giá");
-      return false;
-    } finally {
-      setSubmitting(false);
-    }
-  }, [productId, fetchReviews]);
+    },
+    [productId, fetchReviews],
+  );
 
-  const updateReview = useCallback(async (reviewId: string, content: string, rating: number) => {
-    setSubmitting(true);
-    try {
-      const response = await updateReviewRequest(reviewId, { content, rating });
-      if (response.isSuccess) {
-        toast.success("Cập nhật đánh giá thành công");
-        await fetchReviews();
-        return true;
-      } else {
-        toast.error(response.message || "Không thể cập nhật đánh giá");
+  const updateReview = useCallback(
+    async (reviewId: string, content: string, rating: number) => {
+      setSubmitting(true);
+      try {
+        const response = await updateReviewRequest(reviewId, { content, rating });
+        if (response.isSuccess) {
+          toast.success("Cập nhật đánh giá thành công");
+          await fetchReviews();
+          return true;
+        } else {
+          toast.error(response.message || "Không thể cập nhật đánh giá");
+          return false;
+        }
+      } catch (err) {
+        console.error(err);
+        toast.error("Có lỗi xảy ra khi cập nhật đánh giá");
         return false;
+      } finally {
+        setSubmitting(false);
       }
-    } catch (err) {
-      console.error(err);
-      toast.error("Có lỗi xảy ra khi cập nhật đánh giá");
-      return false;
-    } finally {
-      setSubmitting(false);
-    }
-  }, [fetchReviews]);
+    },
+    [fetchReviews],
+  );
 
-  const deleteReview = useCallback(async (reviewId: string) => {
-    setSubmitting(true);
-    try {
-      const response = await deleteReviewRequest(reviewId);
-      if (response.isSuccess) {
-        toast.success("Đã xóa đánh giá");
-        await fetchReviews();
-        return true;
-      } else {
-        toast.error(response.message || "Không thể xóa đánh giá");
+  const deleteReview = useCallback(
+    async (reviewId: string) => {
+      setSubmitting(true);
+      try {
+        const response = await deleteReviewRequest(reviewId);
+        if (response.isSuccess) {
+          toast.success("Đã xóa đánh giá");
+          await fetchReviews();
+          return true;
+        } else {
+          toast.error(response.message || "Không thể xóa đánh giá");
+          return false;
+        }
+      } catch (err) {
+        console.error(err);
+        toast.error("Có lỗi xảy ra khi xóa đánh giá");
         return false;
+      } finally {
+        setSubmitting(false);
       }
-    } catch (err) {
-      console.error(err);
-      toast.error("Có lỗi xảy ra khi xóa đánh giá");
-      return false;
-    } finally {
-      setSubmitting(false);
-    }
-  }, [fetchReviews]);
+    },
+    [fetchReviews],
+  );
 
   return {
     reviews,

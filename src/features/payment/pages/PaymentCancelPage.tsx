@@ -4,7 +4,7 @@ import { RefreshCw, ChevronRight, ShoppingBag, FileText, Loader2, Ban } from "lu
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { usePayment } from "../hooks/usePayment";
-import { useOrders } from "@/features/orders/hooks/useOrders";
+import { ordersApi, useOrderDetail, useCancelOrder } from "@/features/orders";
 
 export default function PaymentCancelPage() {
   const navigate = useNavigate();
@@ -13,7 +13,7 @@ export default function PaymentCancelPage() {
 
   const { paymentStatus, status, getPaymentStatus, createPayment, cancelPayment, simulatePaid } =
     usePayment();
-  const { currentOrder, getOrderById, getOrders, cancelOrderById } = useOrders();
+  const cancelOrderMutation = useCancelOrder();
 
   const [orderId, setOrderId] = useState<string | null>(null);
   const [searchingOrder, setSearchingOrder] = useState(false);
@@ -21,6 +21,7 @@ export default function PaymentCancelPage() {
   const [cancelling, setCancelling] = useState(false);
   const [simulating, setSimulating] = useState(false);
   const hasLoadedRef = useRef(false);
+  const { currentOrder } = useOrderDetail(orderId || undefined);
 
   // 1. Resolve orderId from localStorage or queryOrderCode
   useEffect(() => {
@@ -29,8 +30,8 @@ export default function PaymentCancelPage() {
       setOrderId(cachedOrderId);
     } else if (queryOrderCode) {
       setSearchingOrder(true);
-      getOrders({ pageSize: 50 })
-        .unwrap()
+      ordersApi
+        .getOrders({ pageSize: 50 })
         .then((res) => {
           if (res.data.isSuccess && res.data.data && res.data.data.items) {
             const found = res.data.data.items.find(
@@ -52,16 +53,15 @@ export default function PaymentCancelPage() {
     } else {
       toast.error("Thiếu thông tin đơn hàng thanh toán");
     }
-  }, [queryOrderCode, getOrders]);
+  }, [queryOrderCode]);
 
   // 2. Fetch order details & payment status once orderId is resolved
   useEffect(() => {
     if (orderId && !hasLoadedRef.current) {
       hasLoadedRef.current = true;
-      getOrderById(orderId);
       getPaymentStatus(orderId);
     }
-  }, [orderId, getOrderById, getPaymentStatus]);
+  }, [orderId, getPaymentStatus]);
 
   // Retry Payment: recreate PayOS payment link and redirect
   const handleRetryPayment = async () => {
@@ -91,15 +91,10 @@ export default function PaymentCancelPage() {
       // Cancel payment in payments controller
       await cancelPayment(orderId, { reason: "Người dùng hủy tại trang thanh toán" }).unwrap();
       // Cancel order in orders store
-      const result = await cancelOrderById(orderId).unwrap();
-      if (result.data.isSuccess) {
-        toast.success("Đã hủy đơn hàng thành công");
-        getOrderById(orderId);
-        getPaymentStatus(orderId);
-        localStorage.removeItem("pending_payment_order_id");
-      } else {
-        toast.error(result.data.message || "Không thể hủy đơn hàng");
-      }
+      await cancelOrderMutation.mutateAsync(orderId);
+      toast.success("Đã hủy đơn hàng thành công");
+      getPaymentStatus(orderId);
+      localStorage.removeItem("pending_payment_order_id");
     } catch {
       toast.error("Lỗi khi thực hiện hủy đơn hàng");
     } finally {
@@ -115,7 +110,6 @@ export default function PaymentCancelPage() {
       const result = await simulatePaid(orderId).unwrap();
       if (result.data.isSuccess) {
         toast.success("Giả lập thanh toán thành công!");
-        getOrderById(orderId);
         getPaymentStatus(orderId);
         localStorage.removeItem("pending_payment_order_id");
         navigate("/payment/success?orderCode=" + (currentOrder?.orderCode || queryOrderCode));

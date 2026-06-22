@@ -4,6 +4,7 @@ import ManagerLayout from "@/components/layouts/ManagerLayout";
 import HomePage from "@/features/home/pages/Home";
 import ProductsPage from "@/features/products/pages/ProductsPage";
 import ProductDetailPage from "@/features/products/pages/ProductDetailPage";
+import ShopDetailPage from "@/features/shop/pages/ShopDetailPage";
 import DashboardPage from "@/features/manager/pages/DashboardPage";
 import ManageProductsPage from "@/features/manager/pages/ManageProductsPage";
 import CreateProductPage from "@/features/manager/pages/CreateProductPage";
@@ -23,6 +24,7 @@ import CheckoutPage from "@/features/orders/pages/CheckoutPage";
 import OrdersPage from "@/features/orders/pages/OrdersPage";
 import OrderDetailPage from "@/features/orders/pages/OrderDetailPage";
 import { PaymentSuccessPage, PaymentCancelPage } from "@/features/payment";
+import NotificationPage from "@/features/notification/pages/NotificationPage";
 
 export default function AppRoutes() {
   return (
@@ -31,6 +33,7 @@ export default function AppRoutes() {
         <Route path="/" element={<HomePage />} />
         <Route path="/products" element={<ProductsPage />} />
         <Route path="/products/:id" element={<ProductDetailPage />} />
+        <Route path="/stores/:id" element={<ShopDetailPage />} />
         <Route path="/cart" element={<CartPage />} />
         <Route
           path="/checkout"
@@ -72,6 +75,7 @@ export default function AppRoutes() {
           <Route path="workspace" element={<ProfileWorkspace />} />
           <Route path="orders" element={<OrdersPage />} />
           <Route path="orders/:id" element={<OrderDetailPage />} />
+          <Route path="notifications" element={<NotificationPage />} />
         </Route>
       </Route>
       <Route

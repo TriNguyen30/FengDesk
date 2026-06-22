@@ -12,14 +12,8 @@ interface ReviewSectionProps {
 export default function ReviewSection({ productId }: ReviewSectionProps) {
   const dispatch = useAppDispatch();
   const currentUser = useAppSelector((state) => state.auth.user);
-  const {
-    reviews,
-    loading,
-    submitting,
-    createReview,
-    updateReview,
-    deleteReview,
-  } = useReviews(productId);
+  const { reviews, loading, submitting, createReview, updateReview, deleteReview } =
+    useReviews(productId);
 
   // Form states for creating review
   const [newContent, setNewContent] = useState("");
@@ -120,9 +114,7 @@ export default function ReviewSection({ productId }: ReviewSectionProps) {
     return (
       <div className="flex items-center gap-1">
         {[1, 2, 3, 4, 5].map((star) => {
-          const isFilled = interactive
-            ? star <= (hoverVal ?? rating)
-            : star <= rating;
+          const isFilled = interactive ? star <= (hoverVal ?? rating) : star <= rating;
           return (
             <Star
               key={star}
@@ -172,9 +164,7 @@ export default function ReviewSection({ productId }: ReviewSectionProps) {
             {averageRating}
             <span className="text-lg text-gray-500 font-medium">/5</span>
           </div>
-          <div className="mt-2">
-            {renderStars(averageRating, "h-5 w-5")}
-          </div>
+          <div className="mt-2">{renderStars(averageRating, "h-5 w-5")}</div>
           <p className="mt-1 text-xs text-gray-400">{totalReviews} lượt đánh giá</p>
         </div>
 
@@ -203,21 +193,17 @@ export default function ReviewSection({ productId }: ReviewSectionProps) {
       {/* ── Review Form Section ───────────────────────────────────────────── */}
       <div className="mb-8">
         {currentUser ? (
-          <form onSubmit={handleCreateSubmit} className="bg-gray-50/30 border border-gray-100 rounded-xl p-4 sm:p-5">
+          <form
+            onSubmit={handleCreateSubmit}
+            className="bg-gray-50/30 border border-gray-100 rounded-xl p-4 sm:p-5"
+          >
             <h3 className="text-sm font-semibold text-gray-800 mb-3">Viết đánh giá của bạn</h3>
 
             {/* Stars selection */}
             <div className="flex flex-wrap items-center gap-3 mb-4">
               <span className="text-xs text-gray-500 font-medium">Đánh giá của bạn:</span>
               <div className="flex items-center gap-2">
-                {renderStars(
-                  newRating,
-                  "h-7 w-7",
-                  true,
-                  setNewRating,
-                  hoverRating,
-                  setHoverRating,
-                )}
+                {renderStars(newRating, "h-7 w-7", true, setNewRating, hoverRating, setHoverRating)}
                 {(hoverRating !== null || newRating > 0) && (
                   <span className="text-xs font-semibold text-amber-600 bg-amber-50 px-2.5 py-0.5 rounded-full">
                     {getRatingLabel(hoverRating ?? newRating)}
@@ -259,7 +245,9 @@ export default function ReviewSection({ productId }: ReviewSectionProps) {
           </form>
         ) : (
           <div className="border border-dashed border-gray-200 rounded-xl p-6 text-center bg-gray-50/20">
-            <p className="text-sm text-gray-500 mb-3">Bạn đã mua sản phẩm này? Đăng nhập để chia sẻ cảm nghĩ của bạn.</p>
+            <p className="text-sm text-gray-500 mb-3">
+              Bạn đã mua sản phẩm này? Đăng nhập để chia sẻ cảm nghĩ của bạn.
+            </p>
             <button
               type="button"
               onClick={() => dispatch(setAuthModal("login"))}
@@ -327,9 +315,7 @@ export default function ReviewSection({ productId }: ReviewSectionProps) {
                       </div>
 
                       {/* Stars */}
-                      <div className="mb-2">
-                        {renderStars(review.rating, "h-4 w-4")}
-                      </div>
+                      <div className="mb-2">{renderStars(review.rating, "h-4 w-4")}</div>
 
                       {/* Review Comment */}
                       <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-line">
@@ -357,7 +343,9 @@ export default function ReviewSection({ productId }: ReviewSectionProps) {
                       {/* Confirm Delete */}
                       {isOwnReview && isDeleting && (
                         <div className="mt-3 flex items-center gap-3 text-xs bg-red-50/50 p-2.5 rounded-lg border border-red-100 max-w-sm">
-                          <span className="font-medium text-red-700">Xác nhận xóa đánh giá này?</span>
+                          <span className="font-medium text-red-700">
+                            Xác nhận xóa đánh giá này?
+                          </span>
                           <button
                             onClick={() => handleDelete(review.id)}
                             disabled={submitting}
@@ -387,7 +375,9 @@ export default function ReviewSection({ productId }: ReviewSectionProps) {
 
                     <div className="flex-1 bg-primary/5 border border-primary/10 rounded-xl p-4">
                       <div className="flex items-center justify-between mb-3">
-                        <span className="text-xs font-semibold text-primary">Chỉnh sửa đánh giá của bạn</span>
+                        <span className="text-xs font-semibold text-primary">
+                          Chỉnh sửa đánh giá của bạn
+                        </span>
                         <button
                           onClick={() => setEditingId(null)}
                           className="text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
@@ -426,9 +416,7 @@ export default function ReviewSection({ productId }: ReviewSectionProps) {
 
                       {/* Edit Error message */}
                       {editError && (
-                        <p className="mt-1.5 text-xs font-semibold text-red-500">
-                          {editError}
-                        </p>
+                        <p className="mt-1.5 text-xs font-semibold text-red-500">{editError}</p>
                       )}
 
                       {/* Save/Cancel Actions */}

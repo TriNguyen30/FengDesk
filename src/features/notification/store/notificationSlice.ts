@@ -1,164 +1,119 @@
-import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import type { RootState } from "@/app/store";
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { notificationApi } from "../api/notificationApi";
-import type { GetNotificationsParams, NotificationItem } from "../types/notification";
-
-type LoadingStatus = "idle" | "loading" | "failed";
+import type {
+  NotificationItem,
+  GetNotificationsParams,
+  PaginatedData,
+} from "../types/notification";
 
 interface NotificationState {
-  notifications: NotificationItem[];
+  notifications: PaginatedData<NotificationItem> | null;
   unreadCount: number;
-  page: number;
-  pageSize: number;
-  totalCount: number;
-  totalPages: number;
-  status: LoadingStatus;
-  unreadCountStatus: LoadingStatus;
-  markStatus: LoadingStatus;
+  status: "idle" | "loading" | "succeeded" | "failed";
+  error: string | null;
 }
 
 const initialState: NotificationState = {
-  notifications: [],
+  notifications: null,
   unreadCount: 0,
-  page: 1,
-  pageSize: 20,
-  totalCount: 0,
-  totalPages: 0,
   status: "idle",
-  unreadCountStatus: "idle",
-  markStatus: "idle",
+  error: null,
 };
 
 export const fetchNotifications = createAsyncThunk(
   "notification/fetchNotifications",
-  async (params: GetNotificationsParams = {}) => {
-    const response = await notificationApi.getNotifications(params);
-    return response.data;
+  async (params: GetNotificationsParams | undefined, { rejectWithValue }) => {
+    try {
+      const response = await notificationApi.getNotifications(params);
+      return response.data.data;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || "Failed to fetch notifications");
+    }
   },
 );
 
-export const fetchUnreadCount = createAsyncThunk("notification/fetchUnreadCount", async () => {
-  const response = await notificationApi.getUnreadCount();
-  return response.data;
-});
-
-export const markNotificationAsRead = createAsyncThunk(
-  "notification/markNotificationAsRead",
-  async (id: string) => {
-    const response = await notificationApi.markAsRead(id);
-    return { id, data: response.data };
+export const fetchUnreadCount = createAsyncThunk(
+  "notification/fetchUnreadCount",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await notificationApi.getUnreadCount();
+      const data = response.data.data as any;
+      return typeof data === "number" ? data : data?.unreadCount || 0;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || "Failed to fetch unread count");
+    }
   },
 );
 
-export const markAllNotificationsAsRead = createAsyncThunk(
-  "notification/markAllNotificationsAsRead",
-  async () => {
-    const response = await notificationApi.markAllAsRead();
-    return response.data;
+export const markAsRead = createAsyncThunk(
+  "notification/markAsRead",
+  async (id: string, { rejectWithValue }) => {
+    try {
+      const response = await notificationApi.markAsRead(id);
+      return response.data.data;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || "Failed to mark as read");
+    }
+  },
+);
+
+export const markAllAsRead = createAsyncThunk(
+  "notification/markAllAsRead",
+  async (_, { rejectWithValue }) => {
+    try {
+      await notificationApi.markAllAsRead();
+      return true;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || "Failed to mark all as read");
+    }
   },
 );
 
 const notificationSlice = createSlice({
   name: "notification",
   initialState,
-  reducers: {
-    clearNotifications(state) {
-      state.notifications = [];
-      state.unreadCount = 0;
-      state.page = 1;
-      state.totalCount = 0;
-      state.totalPages = 0;
-      state.status = "idle";
-      state.unreadCountStatus = "idle";
-      state.markStatus = "idle";
-    },
-  },
+  reducers: {},
   extraReducers: (builder) => {
     builder
-      // Fetch Notifications List
+      // fetchNotifications
       .addCase(fetchNotifications.pending, (state) => {
         state.status = "loading";
       })
       .addCase(fetchNotifications.fulfilled, (state, action) => {
-        state.status = "idle";
-        if (action.payload.isSuccess && action.payload.data) {
-          const paginated = action.payload.data;
-          state.notifications = paginated.items;
-          state.page = paginated.page;
-          state.pageSize = paginated.pageSize;
-          state.totalCount = paginated.totalCount;
-          state.totalPages = paginated.totalPages;
-        }
+        state.status = "succeeded";
+        state.notifications = action.payload;
       })
-      .addCase(fetchNotifications.rejected, (state) => {
+      .addCase(fetchNotifications.rejected, (state, action) => {
         state.status = "failed";
+        state.error = action.payload as string;
       })
-
-      // Fetch Unread Count
-      .addCase(fetchUnreadCount.pending, (state) => {
-        state.unreadCountStatus = "loading";
-      })
+      // fetchUnreadCount
       .addCase(fetchUnreadCount.fulfilled, (state, action) => {
-        state.unreadCountStatus = "idle";
-        if (action.payload.isSuccess && typeof action.payload.data === "number") {
-          state.unreadCount = action.payload.data;
-        }
+        state.unreadCount = action.payload;
       })
-      .addCase(fetchUnreadCount.rejected, (state) => {
-        state.unreadCountStatus = "failed";
-      })
-
-      // Mark Notification as Read
-      .addCase(markNotificationAsRead.pending, (state) => {
-        state.markStatus = "loading";
-      })
-      .addCase(markNotificationAsRead.fulfilled, (state, action) => {
-        state.markStatus = "idle";
-        const { id, data } = action.payload;
-        if (data.isSuccess) {
-          const item = state.notifications.find((n) => n.id === id);
+      // markAsRead
+      .addCase(markAsRead.fulfilled, (state, action) => {
+        if (state.notifications) {
+          const item = state.notifications.items.find((i) => i.id === action.payload.id);
           if (item && !item.isRead) {
             item.isRead = true;
-            item.readAt = new Date().toISOString();
             state.unreadCount = Math.max(0, state.unreadCount - 1);
           }
+        } else {
+          // If notifications are not fetched but we just marked as read, decrease count
+          state.unreadCount = Math.max(0, state.unreadCount - 1);
         }
       })
-      .addCase(markNotificationAsRead.rejected, (state) => {
-        state.markStatus = "failed";
-      })
-
-      // Mark All as Read
-      .addCase(markAllNotificationsAsRead.pending, (state) => {
-        state.markStatus = "loading";
-      })
-      .addCase(markAllNotificationsAsRead.fulfilled, (state, action) => {
-        state.markStatus = "idle";
-        if (action.payload.isSuccess) {
-          state.notifications.forEach((item) => {
-            if (!item.isRead) {
-              item.isRead = true;
-              item.readAt = new Date().toISOString();
-            }
+      // markAllAsRead
+      .addCase(markAllAsRead.fulfilled, (state) => {
+        if (state.notifications) {
+          state.notifications.items.forEach((item) => {
+            item.isRead = true;
           });
-          state.unreadCount = 0;
         }
-      })
-      .addCase(markAllNotificationsAsRead.rejected, (state) => {
-        state.markStatus = "failed";
+        state.unreadCount = 0;
       });
   },
 });
 
-export const { clearNotifications } = notificationSlice.actions;
 export default notificationSlice.reducer;
-
-export const selectNotifications = (state: RootState) => state.notification.notifications;
-export const selectUnreadCount = (state: RootState) => state.notification.unreadCount;
-export const selectNotificationsStatus = (state: RootState) => state.notification.status;
-export const selectNotificationsPagination = (state: RootState) => ({
-  page: state.notification.page,
-  pageSize: state.notification.pageSize,
-  totalCount: state.notification.totalCount,
-  totalPages: state.notification.totalPages,
-});

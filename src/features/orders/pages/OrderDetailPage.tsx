@@ -3,39 +3,26 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { ChevronLeft, Loader2, MapPin, Package } from "lucide-react";
 import { toast } from "sonner";
 import Modal from "@/components/ui/Modal";
-import { useAppDispatch } from "@/app/store";
-import { cancelOrder } from "../store/orderSlice";
-import { useOrders } from "../hooks/useOrders";
+import { useOrderDetail, useCancelOrder } from "../hooks/useOrders";
 import { formatOrderDate, formatVnd, getOrderStatusMeta } from "../utils/orderUtils";
 import { paymentApi } from "@/features/payment";
 
 export default function OrderDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const dispatch = useAppDispatch();
-  const { currentOrder, detailStatus, getOrderById, clearOrder } = useOrders();
+  const { currentOrder, detailStatus } = useOrderDetail(id);
+  const cancelOrderMutation = useCancelOrder();
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const [paying, setPaying] = useState(false);
-
-  useEffect(() => {
-    if (id) getOrderById(id);
-    return () => {
-      clearOrder();
-    };
-  }, [id, getOrderById, clearOrder]);
 
   const handleCancel = async () => {
     if (!id) return;
     setCancelling(true);
     try {
-      const result = await dispatch(cancelOrder(id)).unwrap();
-      if (result.data.isSuccess) {
-        toast.success("Đã hủy đơn hàng");
-        setIsCancelModalOpen(false);
-      } else {
-        toast.error(result.data.message || "Không thể hủy đơn hàng");
-      }
+      await cancelOrderMutation.mutateAsync(id);
+      toast.success("Đã hủy đơn hàng");
+      setIsCancelModalOpen(false);
     } catch {
       toast.error("Không thể hủy đơn hàng");
     } finally {

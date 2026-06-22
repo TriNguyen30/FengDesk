@@ -12,19 +12,19 @@ import {
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { usePayment } from "../hooks/usePayment";
-import { useOrders } from "@/features/orders/hooks/useOrders";
+import { ordersApi, useOrderDetail } from "@/features/orders";
 
 export default function PaymentSuccessPage() {
   const [searchParams] = useSearchParams();
   const queryOrderCode = searchParams.get("orderCode");
 
   const { paymentStatus, status, getPaymentStatus, simulatePaid } = usePayment();
-  const { currentOrder, getOrderById, getOrders } = useOrders();
 
   const [orderId, setOrderId] = useState<string | null>(null);
   const [searchingOrder, setSearchingOrder] = useState(false);
   const [simulating, setSimulating] = useState(false);
   const hasLoadedRef = useRef(false);
+  const { currentOrder } = useOrderDetail(orderId || undefined);
 
   // 1. Resolve orderId from localStorage or queryOrderCode
   useEffect(() => {
@@ -33,8 +33,8 @@ export default function PaymentSuccessPage() {
       setOrderId(cachedOrderId);
     } else if (queryOrderCode) {
       setSearchingOrder(true);
-      getOrders({ pageSize: 50 })
-        .unwrap()
+      ordersApi
+        .getOrders({ pageSize: 50 })
         .then((res) => {
           if (res.data.isSuccess && res.data.data && res.data.data.items) {
             const found = res.data.data.items.find(
@@ -56,18 +56,17 @@ export default function PaymentSuccessPage() {
     } else {
       toast.error("Thiếu thông tin đơn hàng thanh toán");
     }
-  }, [queryOrderCode, getOrders]);
+  }, [queryOrderCode]);
 
   // 2. Fetch order details & payment status once orderId is resolved
   useEffect(() => {
     if (orderId && !hasLoadedRef.current) {
       hasLoadedRef.current = true;
-      getOrderById(orderId);
       getPaymentStatus(orderId);
       // Clean cached payment ID since it has succeeded
       localStorage.removeItem("pending_payment_order_id");
     }
-  }, [orderId, getOrderById, getPaymentStatus]);
+  }, [orderId, getPaymentStatus]);
 
   // Developer simulation helper
   const handleSimulatePaid = async () => {
@@ -77,8 +76,7 @@ export default function PaymentSuccessPage() {
       const result = await simulatePaid(orderId).unwrap();
       if (result.data.isSuccess) {
         toast.success("Giả lập thanh toán thành công!");
-        // Reload order state
-        getOrderById(orderId);
+        // Reload payment state
         getPaymentStatus(orderId);
       } else {
         toast.error(result.data.message || "Giả lập thất bại");
