@@ -164,7 +164,10 @@ export default function NotificationDropdown() {
       <div ref={rootRef} className="relative group" onMouseEnter={open_} onMouseLeave={close}>
         <button
           type="button"
-          onClick={() => (open ? close() : open_())}
+          onClick={() => {
+            close();
+            navigate("/profile/notifications");
+          }}
           className="flex min-w-[44px] flex-col items-center gap-0.5 rounded-lg px-1 py-1 text-gray-700 transition-colors hover:text-primary cursor-pointer relative"
           aria-haspopup="true"
           aria-expanded={open}
@@ -186,9 +189,8 @@ export default function NotificationDropdown() {
             <div
               role="dialog"
               aria-label="Thông báo của bạn"
-              className={`w-[min(calc(100vw-1.5rem),24rem)] overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xl sm:w-96 ${
-                closing ? "notification-dropdown-exit" : "notification-dropdown-enter"
-              }`}
+              className={`w-[min(calc(100vw-1.5rem),24rem)] overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xl sm:w-96 ${closing ? "notification-dropdown-exit" : "notification-dropdown-enter"
+                }`}
             >
               {/* Header */}
               <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3 bg-gray-50/50">
@@ -228,17 +230,15 @@ export default function NotificationDropdown() {
                       key={item.id}
                       type="button"
                       onClick={() => handleNotificationClick(item)}
-                      className={`flex w-full gap-3 px-4 py-3.5 text-left transition-colors cursor-pointer outline-none hover:bg-gray-50/80 ${
-                        !item.isRead ? "bg-primary/[0.02] hover:bg-primary/[0.04]" : ""
-                      }`}
+                      className={`flex w-full gap-3 px-4 py-3.5 text-left transition-colors cursor-pointer outline-none hover:bg-gray-50/80 ${!item.isRead ? "bg-primary/[0.02] hover:bg-primary/[0.04]" : ""
+                        }`}
                     >
                       {getNotificationIcon(item.type)}
                       <div className="min-w-0 flex-1">
                         <div className="flex items-start justify-between gap-2">
                           <p
-                            className={`text-xs sm:text-sm leading-tight text-gray-900 ${
-                              !item.isRead ? "font-semibold" : "font-medium"
-                            }`}
+                            className={`text-xs sm:text-sm leading-tight text-gray-900 ${!item.isRead ? "font-semibold" : "font-medium"
+                              }`}
                           >
                             {item.title}
                           </p>
