@@ -1,7 +1,14 @@
 export { useChatbox } from "./hooks/useChatbox";
 export { chatApi } from "./api/chat.api";
-export { chatService } from "./lib/chatService";
-export type { ChatMessage, ChatSenderRole, ChatConnectionStatus } from "./types/chatbox";
+export { chatHub } from "./lib/chatHub";
+export type {
+  Chatbox,
+  ChatMessage,
+  ChatParticipant,
+  ChatConnectionStatus,
+  MessageSenderType,
+  AiActivity,
+} from "./types/chatbox";
 export {
   openChatbox,
   closeChatbox,
@@ -9,8 +16,9 @@ export {
   selectChatbox,
   selectChatboxIsOpen,
   selectChatboxUnreadCount,
-  selectChatboxMessages,
-  selectChatboxConnectionStatus,
+  selectChatboxes,
+  selectActiveMessages,
+  selectConnectionStatus,
 } from "./store/chatboxSlice";
 export { default as chatboxReducer } from "./store/chatboxSlice";
 export { default as ChatWidget } from "./components/ChatWidget";

@@ -1,21 +1,55 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
-import type { ChatConnectionStatus, ChatMessage } from "@/features/chatbox/types/chatbox";
+import type {
+  AiActivity,
+  Chatbox,
+  ChatConnectionStatus,
+  ChatMessage,
+} from "@/features/chatbox/types/chatbox";
+
+type ChatView = "list" | "conversation";
 
 interface ChatboxState {
   isOpen: boolean;
-  unreadCount: number;
-  messages: ChatMessage[];
+  view: ChatView;
+  activeChatboxId: string | null;
+  chatboxes: Chatbox[];
+  /** Tin nhắn theo phòng (cũ → mới). */
+  messagesByRoom: Record<string, ChatMessage[]>;
   connectionStatus: ChatConnectionStatus;
   isSending: boolean;
+  /** Trạng thái AI realtime trong phòng đang mở (mảng ①). */
+  aiActivity: AiActivity | null;
 }
 
 const initialState: ChatboxState = {
   isOpen: false,
-  unreadCount: 0,
-  messages: [],
+  view: "list",
+  activeChatboxId: null,
+  chatboxes: [],
+  messagesByRoom: {},
   connectionStatus: "disconnected",
   isSending: false,
+  aiActivity: null,
 };
+
+function upsert(list: ChatMessage[], msg: ChatMessage): ChatMessage[] {
+  const idx = list.findIndex((m) => m.id === msg.id);
+  if (idx >= 0) {
+    const next = list.slice();
+    next[idx] = msg;
+    return next;
+  }
+  return [...list, msg].sort(
+    (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+  );
+}
+
+/** Loại trùng theo id (giữ bản cuối cùng). Tránh duplicate React key khi nguồn dữ liệu lỡ trả lặp. */
+function dedupeById<T extends { id: string }>(list: T[]): T[] {
+  const byId = new Map<string, T>();
+  for (const item of list) byId.set(item.id, item);
+  return [...byId.values()];
+}
 
 const chatboxSlice = createSlice({
   name: "chatbox",
@@ -23,25 +57,49 @@ const chatboxSlice = createSlice({
   reducers: {
     openChatbox(state) {
       state.isOpen = true;
-      state.unreadCount = 0;
     },
     closeChatbox(state) {
       state.isOpen = false;
     },
     toggleChatbox(state) {
       state.isOpen = !state.isOpen;
-      if (state.isOpen) {
-        state.unreadCount = 0;
-      }
     },
-    setMessages(state, action: PayloadAction<ChatMessage[]>) {
-      const wasOpen = state.isOpen;
-      const prevCount = state.messages.length;
-      state.messages = action.payload;
-
-      if (!wasOpen && action.payload.length > prevCount) {
-        state.unreadCount += action.payload.length - prevCount;
-      }
+    setView(state, action: PayloadAction<ChatView>) {
+      state.view = action.payload;
+    },
+    setActiveChatbox(state, action: PayloadAction<string | null>) {
+      state.activeChatboxId = action.payload;
+      state.aiActivity = null;
+    },
+    setChatboxes(state, action: PayloadAction<Chatbox[]>) {
+      // Dedupe theo id: BE có thể trả phòng lặp (vd query include nhiều collection) → tránh trùng key ở ChatRoomList.
+      state.chatboxes = dedupeById(action.payload);
+    },
+    upsertChatbox(state, action: PayloadAction<Chatbox>) {
+      const idx = state.chatboxes.findIndex((c) => c.id === action.payload.id);
+      if (idx >= 0) state.chatboxes[idx] = action.payload;
+      else state.chatboxes.unshift(action.payload);
+    },
+    setMessages(state, action: PayloadAction<{ roomId: string; messages: ChatMessage[] }>) {
+      // Dedupe theo id TRƯỚC khi sort: addMessage đã chống trùng (upsert), set* cũng phải chống trùng
+      // để không bao giờ render 2 message cùng key (nguyên nhân lỗi "two children with the same key").
+      const sorted = dedupeById(action.payload.messages).sort(
+        (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+      );
+      state.messagesByRoom[action.payload.roomId] = sorted;
+    },
+    addMessage(state, action: PayloadAction<{ roomId: string; message: ChatMessage }>) {
+      const { roomId, message } = action.payload;
+      state.messagesByRoom[roomId] = upsert(state.messagesByRoom[roomId] ?? [], message);
+    },
+    // Unread theo TỪNG phòng (server tính authoritative qua LastReadAt; realtime bump tạm thời).
+    bumpChatboxUnread(state, action: PayloadAction<string>) {
+      const box = state.chatboxes.find((c) => c.id === action.payload);
+      if (box) box.unreadCount = (box.unreadCount ?? 0) + 1;
+    },
+    clearChatboxUnread(state, action: PayloadAction<string>) {
+      const box = state.chatboxes.find((c) => c.id === action.payload);
+      if (box) box.unreadCount = 0;
     },
     setConnectionStatus(state, action: PayloadAction<ChatConnectionStatus>) {
       state.connectionStatus = action.payload;
@@ -49,11 +107,11 @@ const chatboxSlice = createSlice({
     setIsSending(state, action: PayloadAction<boolean>) {
       state.isSending = action.payload;
     },
-    resetChatbox(state) {
-      state.messages = [];
-      state.unreadCount = 0;
-      state.connectionStatus = "disconnected";
-      state.isSending = false;
+    setAiActivity(state, action: PayloadAction<AiActivity | null>) {
+      state.aiActivity = action.payload;
+    },
+    resetChatbox() {
+      return initialState;
     },
   },
 });
@@ -62,19 +120,33 @@ export const {
   openChatbox,
   closeChatbox,
   toggleChatbox,
+  setView,
+  setActiveChatbox,
+  setChatboxes,
+  upsertChatbox,
   setMessages,
+  addMessage,
+  bumpChatboxUnread,
+  clearChatboxUnread,
   setConnectionStatus,
   setIsSending,
+  setAiActivity,
   resetChatbox,
 } = chatboxSlice.actions;
 
-export const selectChatbox = (state: { chatbox: ChatboxState }) => state.chatbox;
-export const selectChatboxIsOpen = (state: { chatbox: ChatboxState }) => state.chatbox.isOpen;
-export const selectChatboxUnreadCount = (state: { chatbox: ChatboxState }) =>
-  state.chatbox.unreadCount;
-export const selectChatboxMessages = (state: { chatbox: ChatboxState }) => state.chatbox.messages;
-export const selectChatboxConnectionStatus = (state: { chatbox: ChatboxState }) =>
-  state.chatbox.connectionStatus;
-export const selectChatboxIsSending = (state: { chatbox: ChatboxState }) => state.chatbox.isSending;
+type RootLike = { chatbox: ChatboxState };
+export const selectChatbox = (s: RootLike) => s.chatbox;
+export const selectChatboxIsOpen = (s: RootLike) => s.chatbox.isOpen;
+export const selectChatboxView = (s: RootLike) => s.chatbox.view;
+export const selectActiveChatboxId = (s: RootLike) => s.chatbox.activeChatboxId;
+export const selectChatboxes = (s: RootLike) => s.chatbox.chatboxes;
+export const selectConnectionStatus = (s: RootLike) => s.chatbox.connectionStatus;
+// Tổng unread = cộng dồn unread của các phòng trong danh sách (server-driven theo LastReadAt).
+export const selectChatboxUnreadCount = (s: RootLike) =>
+  s.chatbox.chatboxes.reduce((sum, c) => sum + (c.unreadCount ?? 0), 0);
+export const selectIsSending = (s: RootLike) => s.chatbox.isSending;
+export const selectAiActivity = (s: RootLike) => s.chatbox.aiActivity;
+export const selectActiveMessages = (s: RootLike) =>
+  s.chatbox.activeChatboxId ? (s.chatbox.messagesByRoom[s.chatbox.activeChatboxId] ?? []) : [];
 
 export default chatboxSlice.reducer;

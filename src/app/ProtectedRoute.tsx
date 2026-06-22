@@ -7,6 +7,8 @@ type ProtectedRouteProps = {
   requireCustomer?: boolean;
   requireStaff?: boolean;
   requireManager?: boolean;
+  /** Staff trở lên: Staff, Manager, Admin (khu điều hành / hỗ trợ khách hàng). */
+  requireStaffOrAbove?: boolean;
 };
 
 export default function ProtectedRoute({
@@ -15,6 +17,7 @@ export default function ProtectedRoute({
   requireCustomer = false,
   requireStaff = false,
   requireManager = false,
+  requireStaffOrAbove = false,
 }: ProtectedRouteProps) {
   const { token, user } = useAppSelector((state) => state.auth);
 
@@ -22,20 +25,28 @@ export default function ProtectedRoute({
     return <Navigate to="/" replace />;
   }
 
-  if (requireAdmin && user.role !== "Admin") {
-    return <Navigate to="/admin" replace />;
-  }
+  // user.role có thể là chuỗi nhiều role (UserRole [Flags] ToString → "Customer, Staff").
+  const roles = (user.role ?? "").split(",").map((r) => r.trim());
+  const has = (role: string) => roles.includes(role);
 
-  if (requireCustomer && user.role !== "Customer") {
+  if (requireAdmin && !has("Admin")) {
     return <Navigate to="/" replace />;
   }
 
-  if (requireStaff && user.role !== "Staff") {
+  if (requireCustomer && !has("Customer")) {
+    return <Navigate to="/" replace />;
+  }
+
+  if (requireStaff && !has("Staff")) {
     return <Navigate to="/manager" replace />;
   }
 
-  if (requireManager && user.role !== "Manager") {
+  if (requireManager && !has("Manager") && !has("Admin")) {
     return <Navigate to="/manager" replace />;
+  }
+
+  if (requireStaffOrAbove && !(has("Staff") || has("Manager") || has("Admin"))) {
+    return <Navigate to="/" replace />;
   }
 
   return children;

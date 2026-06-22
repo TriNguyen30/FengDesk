@@ -11,6 +11,7 @@ import CreateProductPage from "@/features/manager/pages/CreateProductPage";
 import EditProductPage from "@/features/manager/pages/EditProductPage";
 import ManageStoresPage from "@/features/manager/pages/ManageStoresPage";
 import ManageOrdersPage from "@/features/manager/pages/ManageOrdersPage";
+import StaffSupportPage from "@/features/chatbox/pages/StaffSupportPage";
 import CartPage from "@/features/cart/pages/CartPage";
 import ProtectedRoute from "./ProtectedRoute";
 
@@ -80,7 +81,7 @@ export default function AppRoutes() {
       <Route
         path="/manager"
         element={
-          <ProtectedRoute requireManager>
+          <ProtectedRoute requireStaffOrAbove>
             <ManagerLayout />
           </ProtectedRoute>
         }
@@ -92,6 +93,7 @@ export default function AppRoutes() {
         <Route path="products/:id/edit" element={<EditProductPage />} />
         <Route path="stores" element={<ManageStoresPage />} />
         <Route path="orders" element={<ManageOrdersPage />} />
+        <Route path="customers" element={<StaffSupportPage />} />
       </Route>
     </Routes>
   );
