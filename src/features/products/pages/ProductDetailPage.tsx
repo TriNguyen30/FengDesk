@@ -19,7 +19,7 @@ import {
   Maximize2,
   X,
 } from "lucide-react";
-import { AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { toast } from "sonner";
 import { ProductItem } from "../types/product";
 import { useProductDetail, useProductList } from "../hooks/useProducts";
@@ -195,6 +195,21 @@ export default function ProductDetailPage() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isLightboxOpen, handleNextImage, handlePrevImage]);
 
+  // Auto swipe main image every 5 seconds
+  useEffect(() => {
+    if (!product || product.images.length <= 1 || isLightboxOpen || isHovering) return;
+
+    const intervalId = setInterval(() => {
+      setActiveImage((currentImage) => {
+        const currentIndex = product.images.findIndex((img) => img.url === currentImage);
+        const nextIndex = currentIndex === -1 ? 0 : (currentIndex + 1) % product.images.length;
+        return product.images[nextIndex].url;
+      });
+    }, 5000);
+
+    return () => clearInterval(intervalId);
+  }, [product, isLightboxOpen, isHovering]);
+
   const error = failed ? "Không thể tải thông tin sản phẩm" : null;
 
   // ── Loading skeleton ──────────────────────────────────────────────────────
@@ -273,7 +288,11 @@ export default function ProductDetailPage() {
             >
               {activeImage ? (
                 <>
-                  <img
+                  <motion.img
+                    key={activeImage}
+                    initial={{ opacity: 0, x: 15 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.4, ease: "easeOut" }}
                     src={activeImage}
                     alt={product.name}
                     style={
