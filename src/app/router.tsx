@@ -23,6 +23,7 @@ import CheckoutPage from "@/features/orders/pages/CheckoutPage";
 import OrdersPage from "@/features/orders/pages/OrdersPage";
 import OrderDetailPage from "@/features/orders/pages/OrderDetailPage";
 import { PaymentSuccessPage, PaymentCancelPage } from "@/features/payment";
+import NotificationPage from "@/features/notification/pages/NotificationPage";
 
 export default function AppRoutes() {
   return (
@@ -73,6 +74,7 @@ export default function AppRoutes() {
           <Route path="workspace" element={<ProfileWorkspace />} />
           <Route path="orders" element={<OrdersPage />} />
           <Route path="orders/:id" element={<OrderDetailPage />} />
+          <Route path="notifications" element={<NotificationPage />} />
         </Route>
       </Route>
       <Route
