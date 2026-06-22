@@ -61,6 +61,11 @@ export default function ChatWidget() {
         aria-label={isOpen ? "Đóng chat" : "Mở tin nhắn"}
         aria-expanded={isOpen}
       >
+        {/* Pulse vòng tròn khi có tin chưa đọc — cùng kiểu nháy của panel consent khi nhân viên join phòng. */}
+        {!isOpen && unreadCount > 0 && (
+          <span className="pointer-events-none absolute inset-0 rounded-full ring-2 ring-primary/60 animate-ping" />
+        )}
+
         {isOpen ? <X size={24} strokeWidth={2} /> : <MessageCircle size={26} strokeWidth={1.8} />}
 
         {!isOpen && unreadCount > 0 && (

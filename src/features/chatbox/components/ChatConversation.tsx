@@ -13,6 +13,8 @@ interface ChatConversationProps {
   isClosed?: boolean;
   onSend: (content: string, imageUrls: string[]) => void;
   onUpload: UploadFn;
+  /** Báo @AI đang bật lên panel để sáng viền khung chat. */
+  onAiActiveChange?: (active: boolean) => void;
 }
 
 /**
@@ -27,11 +29,20 @@ export default function ChatConversation({
   isClosed = false,
   onSend,
   onUpload,
+  onAiActiveChange,
 }: ChatConversationProps) {
   const [draft, setDraft] = useState("");
 
+  // Toggle @AI: chưa có → thêm tiền tố "@AI "; đang bật (bắt đầu bằng @AI) → gỡ ra để TẮT.
   const askAi = () =>
-    setDraft((prev) => (prev.trimStart().toLowerCase().startsWith("@ai") ? prev : `@AI ${prev}`));
+    setDraft((prev) => {
+      const trimmed = prev.replace(/^\s+/, "");
+      return /^@ai\b/i.test(trimmed)
+        ? trimmed.replace(/^@ai\b[ \t]*/i, "")
+        : `@AI ${prev}`;
+    });
+
+  const aiOn = /^\s*@ai\b/i.test(draft);
 
   return (
     <>
@@ -49,10 +60,16 @@ export default function ChatConversation({
             <button
               type="button"
               onClick={askAi}
-              className="flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-medium text-primary transition-colors hover:bg-primary/20 cursor-pointer"
+              aria-pressed={aiOn}
+              title={aiOn ? "Bấm lần nữa để tắt @AI" : "Thêm @AI để hỏi trợ lý"}
+              className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium transition-colors cursor-pointer ${
+                aiOn
+                  ? "bg-primary text-white hover:bg-primary-dark"
+                  : "bg-primary/10 text-primary hover:bg-primary/20"
+              }`}
             >
               <Bot size={13} />
-              Hỏi trợ lý AI
+              {aiOn ? "Đang hỏi AI" : "Hỏi trợ lý AI"}
             </button>
           </div>
 
@@ -61,6 +78,7 @@ export default function ChatConversation({
             onChange={setDraft}
             onSubmit={onSend}
             onUpload={onUpload}
+            onAiActiveChange={onAiActiveChange}
             isSending={isSending}
             placeholder="@AI để hỏi trợ lý..."
           />

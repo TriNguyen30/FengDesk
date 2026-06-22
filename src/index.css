@@ -140,3 +140,12 @@ body {
 .fd-md blockquote { border-left: 2px solid #e5e7eb; padding-left: 0.5rem; color: #6b7280; }
 .fd-md table { width: 100%; border-collapse: collapse; margin: 0.25rem 0; }
 .fd-md th, .fd-md td { border: 1px solid #e5e7eb; padding: 0.25rem 0.4rem; text-align: left; }
+
+/* =========================
+   Badge "Đang gọi trợ lý AI" — hiệu ứng đẩy lên khi kích hoạt @AI
+========================= */
+@keyframes ai-badge-up {
+  from { opacity: 0; transform: translateY(8px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.ai-badge-up { animation: ai-badge-up 0.2s ease-out; }

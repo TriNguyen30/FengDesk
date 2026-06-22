@@ -37,6 +37,8 @@ export interface Chatbox {
   updatedAt: string;
   participants: ChatParticipant[];
   lastMessage: ChatMessage | null;
+  /** Số tin chưa đọc của người gọi (server tính theo LastReadAt). */
+  unreadCount: number;
 }
 
 /** Tin nhắn broadcast realtime từ hub ("messageReceived"). Cùng shape với ChatMessage. */

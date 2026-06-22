@@ -6,9 +6,9 @@ import { chatApi } from "@/features/chatbox/api/chat.api";
 import { chatHub } from "@/features/chatbox/lib/chatHub";
 import {
   addMessage,
-  clearUnread,
+  bumpChatboxUnread,
+  clearChatboxUnread,
   closeChatbox,
-  incrementUnread,
   openChatbox,
   selectActiveChatboxId,
   selectActiveMessages,
@@ -60,25 +60,48 @@ export function useChatbox() {
     isOpenRef.current = isOpen;
   }, [isOpen]);
 
+  // Set id các phòng thuộc widget nhỏ (isGroup=true). Dùng trong onMessage để KHÔNG đếm unread
+  // cho phòng AI riêng (isGroup=false) — phòng đó thuộc khung chat lớn.
+  const widgetRoomIdsRef = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    widgetRoomIdsRef.current = new Set(chatboxes.map((c) => c.id));
+  }, [chatboxes]);
+
   const refreshChatboxes = useCallback(async () => {
     const res = await chatApi.getMyChatboxes();
     if (res.data.isSuccess) {
-      dispatch(setChatboxes(res.data.data.items));
-      return res.data.data.items;
+      // Widget nhỏ CHỈ hiện phòng nhóm/hỗ trợ (người ↔ người) đang HOẠT ĐỘNG. Loại:
+      //  - phòng AI riêng (isGroup=false) → thuộc khung chat lớn (drawer);
+      //  - phòng đã đóng (isClosed) → chỉ hiển thị bên staff, KHÔNG hiện cho customer.
+      const widgetRooms = res.data.data.items.filter((c) => c.isGroup && !c.isClosed);
+      dispatch(setChatboxes(widgetRooms));
+      return widgetRooms;
     }
     return [];
   }, [dispatch]);
 
-  // Kết nối hub khi mở widget (mỗi lần mở thử lại → tự phục hồi nếu lần trước lỗi). Best-effort.
+  // Kết nối hub NGAY KHI đã đăng nhập (KHÔNG gate theo isOpen) → vẫn nhận tin realtime + tăng unread
+  // + nháy bóng chat kể cả khi widget đang đóng. Handler dùng isOpenRef/activeRef nên luôn đọc trạng thái mới.
   useEffect(() => {
-    if (!meId || !isOpen) return;
+    if (!meId) return;
     let cancelled = false;
 
     const onMessage = (m: ChatMessageBroadcast) => {
+      // Chỉ xử lý tin của phòng thuộc widget nhỏ. Tin phòng AI riêng (khung lớn) bị bỏ qua
+      // → không cộng unread / không nháy bóng chat nhầm khi đang chat ở khung lớn.
+      if (!widgetRoomIdsRef.current.has(m.chatboxId)) return;
       dispatch(addMessage({ roomId: m.chatboxId, message: m }));
       const focused = isOpenRef.current && activeRef.current === m.chatboxId;
       const fromMe = !!m.senderId && m.senderId === meId;
-      if (!focused && !fromMe) dispatch(incrementUnread(1));
+      if (focused) {
+        // Đang xem phòng → đẩy LastReadAt theo tin mới (reload không nháy lại) + giữ unread = 0.
+        if (!fromMe) {
+          void chatApi.markRead(m.chatboxId).catch(() => {});
+          dispatch(clearChatboxUnread(m.chatboxId));
+        }
+      } else if (!fromMe) {
+        dispatch(bumpChatboxUnread(m.chatboxId));
+      }
     };
     const onAiStatus = (a: AiActivity) => {
       if (activeRef.current === a.chatboxId) {
@@ -120,7 +143,16 @@ export function useChatbox() {
       chatHub.off("aiStatus", onAiStatus as (...a: unknown[]) => void);
       chatHub.off("userJoined", onUserJoined as (...a: unknown[]) => void);
     };
-  }, [meId, isOpen, dispatch, refreshChatboxes]);
+  }, [meId, dispatch, refreshChatboxes]);
+
+  // Đang XEM một cuộc trò chuyện (widget mở + view=conversation) → đánh dấu đã đọc.
+  // Chạy cho MỌI đường vào phòng, kể cả khi bấm pulse nhảy thẳng vào phòng cũ (không qua openRoom).
+  useEffect(() => {
+    if (!isOpen || view !== "conversation" || !activeChatboxId) return;
+    void chatApi.markRead(activeChatboxId).catch(() => {});
+    void chatHub.markChatboxRead(activeChatboxId).catch(() => {});
+    dispatch(clearChatboxUnread(activeChatboxId));
+  }, [isOpen, view, activeChatboxId, dispatch]);
 
   const open = useCallback(() => {
     if (!user) {
@@ -150,9 +182,7 @@ export function useChatbox() {
         if (res.data.isSuccess) {
           dispatch(setMessages({ roomId: chatboxId, messages: res.data.data.items }));
         }
-        await chatApi.markRead(chatboxId);
-        void chatHub.markChatboxRead(chatboxId).catch(() => {});
-        dispatch(clearUnread());
+        // Đánh dấu đã đọc do effect "đang xem phòng" xử lý (chạy cho MỌI đường vào, kể cả mở thẳng).
       } catch {
         toast.error("Không tải được cuộc trò chuyện.");
       }

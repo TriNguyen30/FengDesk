@@ -1,5 +1,6 @@
-import { Headphones, MessageCircle, Trash2, Users } from "lucide-react";
+import { Headphones, MessageCircle, Users } from "lucide-react";
 import type { Chatbox } from "@/features/chatbox/types/chatbox";
+import ConfirmDeleteButton from "./ConfirmDeleteButton";
 import {
   formatMessageTime,
   getChatboxDisplayName,
@@ -81,15 +82,11 @@ export default function ChatRoomList({
             </div>
           </button>
           {!box.isClosed && (
-            <button
-              type="button"
-              onClick={() => onDeleteRoom(box.id)}
-              className="ml-1 shrink-0 rounded-lg p-2 text-gray-300 transition-colors hover:bg-red-50 hover:text-red-500 cursor-pointer"
-              aria-label="Xóa hội thoại"
-              title="Xóa hội thoại"
-            >
-              <Trash2 size={15} />
-            </button>
+            <ConfirmDeleteButton
+              onConfirm={() => onDeleteRoom(box.id)}
+              label="Xóa hội thoại"
+              className="ml-1"
+            />
           )}
         </div>
       ))}

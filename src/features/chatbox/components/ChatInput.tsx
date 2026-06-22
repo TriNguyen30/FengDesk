@@ -1,4 +1,4 @@
-import { useRef, type FormEvent, type KeyboardEvent } from "react";
+import { useEffect, useRef, type FormEvent, type KeyboardEvent } from "react";
 import { ImagePlus, Loader2, Send, Sparkles } from "lucide-react";
 import { useImageAttachments, type UploadFn } from "@/features/chatbox/hooks/useImageAttachments";
 import AttachmentPreviewRow from "./AttachmentPreviewRow";
@@ -13,6 +13,8 @@ interface ChatInputProps {
   onSubmit: (content: string, imageUrls: string[]) => void;
   /** Upload 1 ảnh (trả link). Có → hiện nút đính kèm ảnh. */
   onUpload?: UploadFn;
+  /** Báo trạng thái @AI đang bật lên trên → khung chat (panel) tự sáng viền, không cần bọc hộp riêng. */
+  onAiActiveChange?: (active: boolean) => void;
   disabled?: boolean;
   isSending?: boolean;
   placeholder?: string;
@@ -23,6 +25,7 @@ export default function ChatInput({
   onChange,
   onSubmit,
   onUpload,
+  onAiActiveChange,
   disabled = false,
   isSending = false,
   placeholder = "Nhập tin nhắn...",
@@ -30,6 +33,13 @@ export default function ChatInput({
   const fileRef = useRef<HTMLInputElement>(null);
   const att = useImageAttachments(onUpload ?? (async () => ""));
   const aiActive = AI_MENTION.test(value);
+
+  // Đẩy trạng thái @AI lên panel để sáng viền KHUNG CHAT, thay vì bọc thêm 1 hộp viền quanh ô nhập.
+  // Cleanup khi unmount (rời phòng) → tắt glow để panel không kẹt sáng.
+  useEffect(() => {
+    onAiActiveChange?.(aiActive);
+    return () => onAiActiveChange?.(false);
+  }, [aiActive, onAiActiveChange]);
 
   // Chỉ cho gửi khi có nội dung/ảnh, không đang gửi và KHÔNG còn ảnh đang upload dở.
   const hasContent = value.trim().length > 0 || att.urls.length > 0;
@@ -56,20 +66,17 @@ export default function ChatInput({
 
   return (
     <form onSubmit={handleSubmit} className="relative border-t border-gray-100 bg-white px-3 py-3">
-      {aiActive && (
-        <div className="pointer-events-none absolute -top-2 left-3 z-10 flex items-center gap-1 rounded-full border border-primary/40 bg-primary/15 px-2 py-0.5 text-[10px] font-semibold text-primary shadow-sm backdrop-blur">
-          <Sparkles size={11} />
-          Đang gọi trợ lý AI
-        </div>
-      )}
-
       <AttachmentPreviewRow items={att.items} onRemove={att.remove} />
 
-      <div
-        className={`flex items-end gap-2 rounded-2xl transition-all ${
-          aiActive ? "bg-primary/5 p-2 ring-2 ring-primary/50" : ""
-        }`}
-      >
+      {/* Không bọc hộp viền quanh ô nhập nữa — viền sáng được chuyển lên KHUNG CHAT (panel) qua onAiActiveChange. */}
+      <div className="relative flex items-end gap-2">
+        {aiActive && (
+          // Badge nằm NGANG mép trên ô nhập (đầu ô chat), căn giữa.
+          <div className="ai-badge-up pointer-events-none absolute -top-2.5 left-1/2 z-10 flex -translate-x-1/2 items-center gap-1 rounded-full border border-primary/40 bg-primary/15 px-2 py-0.5 text-[10px] font-semibold text-primary shadow-sm backdrop-blur">
+            <Sparkles size={11} />
+            Đang gọi trợ lý AI
+          </div>
+        )}
         {onUpload && (
           <>
             <input

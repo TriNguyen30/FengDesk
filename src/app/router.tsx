@@ -11,7 +11,6 @@ import EditProductPage from "@/features/manager/pages/EditProductPage";
 import ManageStoresPage from "@/features/manager/pages/ManageStoresPage";
 import ManageOrdersPage from "@/features/manager/pages/ManageOrdersPage";
 import StaffSupportPage from "@/features/chatbox/pages/StaffSupportPage";
-import AiChatPage from "@/features/chatbox/pages/AiChatPage";
 import CartPage from "@/features/cart/pages/CartPage";
 import ProtectedRoute from "./ProtectedRoute";
 
@@ -33,14 +32,6 @@ export default function AppRoutes() {
         <Route path="/products" element={<ProductsPage />} />
         <Route path="/products/:id" element={<ProductDetailPage />} />
         <Route path="/cart" element={<CartPage />} />
-        <Route
-          path="/ai"
-          element={
-            <ProtectedRoute>
-              <AiChatPage />
-            </ProtectedRoute>
-          }
-        />
         <Route
           path="/checkout"
           element={

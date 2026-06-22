@@ -148,8 +148,12 @@ export default function StaffSupportPage() {
         </div>
       </div>
 
-      {/* Cột phải: hội thoại */}
-      <div className="flex flex-1 flex-col overflow-hidden rounded-xl border border-gray-200 bg-white">
+      {/* Cột phải: hội thoại — viền sáng xanh khi đang soạn @AI (đồng bộ với widget). */}
+      <div
+        className={`flex flex-1 flex-col overflow-hidden rounded-xl border bg-white transition-all ${
+          /(^|\s)@ai\b/i.test(draft) ? "border-primary ring-2 ring-primary/40" : "border-gray-200"
+        }`}
+      >
         {active ? (
           <>
             <div className="border-b border-gray-100 px-4 py-3">

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { chatApi, type AiChatTurn } from "@/features/chatbox/api/chat.api";
 import { chatHub } from "@/features/chatbox/lib/chatHub";
-import type { AiActivity } from "@/features/chatbox/types/chatbox";
+import type { AiActivity, ChatMessage } from "@/features/chatbox/types/chatbox";
 
 export interface AiMessage {
   id: string;
@@ -20,6 +20,18 @@ function mapHistory(history: AiChatTurn[]): AiMessage[] {
   }));
 }
 
+/** Map tin từ REST (ChatMessage, mới→cũ) → AiMessage hiển thị (cũ→mới). */
+function mapMessages(items: ChatMessage[]): AiMessage[] {
+  return [...items]
+    .reverse()
+    .map((m) => ({
+      id: m.id,
+      role: m.senderType === "AiBot" ? "ai" : m.senderType === "System" ? "system" : "user",
+      content: m.content ?? "",
+      images: m.images ?? [],
+    }));
+}
+
 /** Hội thoại với trợ lý AI (trang lớn). Đồng bộ qua REST; aiStatus realtime qua SignalR. */
 export function useAiChat(productId?: string) {
   const [messages, setMessages] = useState<AiMessage[]>([]);
@@ -31,6 +43,44 @@ export function useAiChat(productId?: string) {
   useEffect(() => {
     chatboxRef.current = chatboxId;
   }, [chatboxId]);
+
+  // Đảm bảo chỉ nạp lịch sử 1 lần (lần mở đầu). clearConversation reset cờ này.
+  const loadedRef = useRef(false);
+
+  // Nạp lại hội thoại AI đã lưu (gọi khi mở khung lớn) → hội thoại "ở lại" khung lớn sau reload,
+  // thay vì nhảy xuống widget nhỏ.
+  const loadHistory = useCallback(async () => {
+    if (loadedRef.current) return;
+    loadedRef.current = true;
+    try {
+      const ensure = await chatApi.ensureAiChatbox(productId);
+      if (!ensure.data.isSuccess) {
+        loadedRef.current = false;
+        return;
+      }
+      const id = ensure.data.data.id;
+      setChatboxId(id);
+      const res = await chatApi.getMessages(id);
+      if (res.data.isSuccess) setMessages(mapMessages(res.data.data.items));
+    } catch {
+      loadedRef.current = false;
+    }
+  }, [productId]);
+
+  // Clear hội thoại (soft delete ở BE) rồi reset khung → lượt gửi sau tạo phòng AI mới.
+  const clearConversation = useCallback(async () => {
+    const id = chatboxRef.current;
+    if (id) {
+      try {
+        await chatApi.deleteChatbox(id);
+      } catch {
+        /* best-effort: vẫn reset UI dù xóa lỗi */
+      }
+    }
+    setChatboxId(null);
+    setMessages([]);
+    loadedRef.current = false;
+  }, []);
 
   // Lắng nghe trạng thái AI realtime (best-effort).
   useEffect(() => {
@@ -109,5 +159,5 @@ export function useAiChat(productId?: string) {
     [productId],
   );
 
-  return { messages, sending, activity, send, uploadImage };
+  return { messages, sending, activity, send, uploadImage, loadHistory, clearConversation };
 }

@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, Plus, Wifi, WifiOff, X } from "lucide-react";
 import type {
   AiActivity,
@@ -53,6 +53,9 @@ export default function ChatPanel({
   consentPulseRoomId,
   onClearConsentPulse,
 }: ChatPanelProps) {
+  // @AI đang được gõ trong ô nhập → sáng viền KHUNG CHAT (thay cho hộp viền quanh ô nhập).
+  const [composerAiActive, setComposerAiActive] = useState(false);
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -85,7 +88,9 @@ export default function ChatPanel({
     <div
       role="dialog"
       aria-label="Tin nhắn FengDesk"
-      className="flex h-[min(32rem,calc(100dvh-6rem))] w-[min(calc(100vw-1.5rem),24rem)] flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl sm:h-[30rem] sm:w-96"
+      className={`flex h-[min(32rem,calc(100dvh-6rem))] w-[min(calc(100vw-1.5rem),24rem)] flex-col overflow-hidden rounded-2xl border bg-white shadow-2xl transition-all sm:h-[30rem] sm:w-96 ${
+        composerAiActive ? "border-primary ring-2 ring-primary/40" : "border-gray-200"
+      }`}
     >
       <header className="flex items-center justify-between gap-2 border-b border-gray-100 bg-linear-to-r from-primary to-primary-dark px-3 py-3 text-white">
         <div className="flex min-w-0 items-center gap-2">
@@ -134,14 +139,14 @@ export default function ChatPanel({
         <>
           {showConsent && activeChatboxId && (
             <ConsentPanel
-              key={activeChatboxId}
+              key={`consent-${activeChatboxId}`}
               chatboxId={activeChatboxId}
               pulse={consentPulseRoomId === activeChatboxId}
               onInteract={onClearConsentPulse}
             />
           )}
           <ChatConversation
-            key={activeChatboxId}
+            key={`conv-${activeChatboxId}`}
             messages={messages}
             meId={meId}
             aiActivity={aiActivity}
@@ -149,6 +154,7 @@ export default function ChatPanel({
             isClosed={!!activeBox?.isClosed}
             onSend={onSend}
             onUpload={onUpload}
+            onAiActiveChange={setComposerAiActive}
           />
         </>
       ) : (

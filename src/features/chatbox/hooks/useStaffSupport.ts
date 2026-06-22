@@ -17,6 +17,13 @@ function upsert(list: ChatMessage[], msg: ChatMessage): ChatMessage[] {
   );
 }
 
+/** Loại trùng theo id (giữ bản cuối) — tránh duplicate React key khi list lỡ chứa message lặp. */
+function dedupeById(list: ChatMessage[]): ChatMessage[] {
+  const byId = new Map<string, ChatMessage>();
+  for (const m of list) byId.set(m.id, m);
+  return [...byId.values()];
+}
+
 /**
  * Bảng điều khiển hỗ trợ cho staff: hàng đợi phòng đang mở + phòng đang hỗ trợ, nhận hỗ trợ,
  * và trò chuyện realtime. State cục bộ (không dùng chatbox slice của widget customer).
@@ -81,7 +88,7 @@ export function useStaffSupport() {
     void chatHub.joinChatbox(chatboxId).catch(() => {});
     try {
       const res = await chatApi.getMessages(chatboxId);
-      if (res.data.isSuccess) setMessages([...res.data.data.items].reverse());
+      if (res.data.isSuccess) setMessages(dedupeById([...res.data.data.items].reverse()));
       await chatApi.markRead(chatboxId);
       void chatHub.markChatboxRead(chatboxId).catch(() => {});
     } catch {
