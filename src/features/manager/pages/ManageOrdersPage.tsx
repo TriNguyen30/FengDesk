@@ -17,33 +17,38 @@ import {
 import { toast } from "sonner";
 import { getAllShopRequest } from "@/features/shop/api/shop.api";
 import type { Shop } from "@/features/shop/types/shop";
-import { useAllOrdersList } from "@/features/orders";
+import { useOrdersList } from "@/features/orders";
 import { useUpdateDeliveryStatus } from "@/features/users/hooks/useShipping";
 import type { Order, OrderDetail } from "@/features/orders";
 import { formatOrderDate, formatVnd } from "@/features/orders/utils/orderUtils";
 import { ordersApi } from "@/features/orders";
+import { STATUS_MAP } from "@/features/orders/utils/orderUtils";
 
 const DELIVERY_STATUS_MAP: Record<string, { label: string; className: string }> = {
-  Pending: { label: "Chờ lấy hàng", className: "bg-amber-50 text-amber-700 border-amber-200" },
-  PickedUp: { label: "Đã lấy hàng", className: "bg-blue-50 text-blue-700 border-blue-200" },
-  InTransit: {
-    label: "Đang giao hàng",
+  Pending: { label: "Đang xử lý", className: "bg-amber-50 text-amber-700 border-amber-200" },
+  Confirmed: {
+    label: "Đã xác nhận",
     className: "bg-indigo-50 text-indigo-700 border-indigo-200",
   },
+  Preparing: { label: "Đang chuẩn bị", className: "bg-blue-50 text-blue-700 border-blue-200" },
+  Shipped: { label: "Đang giao hàng", className: "bg-blue-50 text-blue-700 border-blue-200" },
   Delivered: {
     label: "Đã giao hàng",
     className: "bg-emerald-50 text-emerald-700 border-emerald-200",
   },
   Cancelled: { label: "Đã hủy", className: "bg-red-50 text-red-700 border-red-200" },
+  Returned: { label: "Đã trả hàng", className: "bg-red-50 text-red-700 border-red-200" },
 };
 
 const TABS = [
   { value: "All", label: "Tất cả" },
-  { value: "Pending", label: "Chờ lấy hàng" },
-  { value: "PickedUp", label: "Đã lấy hàng" },
-  { value: "InTransit", label: "Đang giao hàng" },
+  { value: "Pending", label: "Đang xử lý" },
+  { value: "Confirmed", label: "Đã xác nhận" },
+  { value: "Preparing", label: "Đang chuẩn bị" },
+  { value: "Shipped", label: "Đang giao hàng" },
   { value: "Delivered", label: "Đã giao hàng" },
   { value: "Cancelled", label: "Đã hủy" },
+  { value: "Returned", label: "Đã trả hàng" },
 ];
 
 export default function ManageOrdersPage() {
@@ -55,7 +60,7 @@ export default function ManageOrdersPage() {
   const [loadingDetailId, setLoadingDetailId] = useState<string | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
-  const { orders, listStatus } = useAllOrdersList({ page: 1, pageSize: 100 });
+  const { orders, listStatus } = useOrdersList({ page: 1, pageSize: 100 });
   const updateDeliveryStatusMutation = useUpdateDeliveryStatus();
   const handleStatusChange = async (deliveryId: string, newStatus: string) => {
     try {
@@ -71,12 +76,12 @@ export default function ManageOrdersPage() {
   const handleViewDetail = async (orderId: string) => {
     setLoadingDetailId(orderId);
     try {
-      const response = await ordersApi.getOrderById(orderId);
-      if (response.isSuccess && response.data) {
-        setSelectedOrder(response.data);
+      const { data } = await ordersApi.getOrderById(orderId);
+      if (data.isSuccess && data.data) {
+        setSelectedOrder(data.data);
         setIsDetailModalOpen(true);
       } else {
-        toast.error(response.message || "Không thể tải chi tiết đơn hàng");
+        toast.error(data.message || "Không thể tải chi tiết đơn hàng");
       }
     } catch (err) {
       console.error(err);
@@ -120,16 +125,15 @@ export default function ManageOrdersPage() {
               <button
                 key={tab.value}
                 onClick={() => setActiveTab(tab.value)}
-                className={`rounded-lg px-3.5 py-1.5 text-xs font-semibold transition-all cursor-pointer ${
-                  activeTab === tab.value
+                className={`rounded-lg px-3.5 py-1.5 text-xs font-semibold transition-all cursor-pointer ${activeTab === tab.value
                     ? "bg-primary text-white shadow-sm"
                     : "text-gray-500 hover:bg-gray-100 hover:text-gray-900"
-                }`}
+                  }`}
               >
                 {tab.label}
                 {activeTab !== tab.value &&
                   orders.filter((d) => tab.value === "All" || d.status === tab.value).length >
-                    0 && (
+                  0 && (
                     <span className="ml-1.5 rounded-full bg-gray-200/60 px-1.5 py-0.2 text-[10px] text-gray-600 font-medium">
                       {orders.filter((d) => tab.value === "All" || d.status === tab.value).length}
                     </span>
@@ -182,13 +186,13 @@ export default function ManageOrdersPage() {
                   <th className="p-4 w-32">Ngày đặt</th>
                   <th className="p-4 w-32">Phương thức</th>
                   <th className="p-4 w-32">Tổng tiền</th>
-                  <th className="p-4 w-44">Trạng thái đơn hàng</th>
+                  <th className="p-4 w-44">Trạng thái thanh toán</th>
                   <th className="p-4 w-24 text-center">Thao tác</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {filteredOrders.map((order) => {
-                  const statusMeta = DELIVERY_STATUS_MAP[order.status] || {
+                  const statusMeta = STATUS_MAP[order.status] || {
                     label: order.status,
                     className: "bg-gray-100 text-gray-700 border-gray-200",
                   };
@@ -217,19 +221,13 @@ export default function ManageOrdersPage() {
                         {formatVnd(order.totalAmount || 0)}
                       </td>
 
-                      {/* Interactive Status Selector */}
-                      <td className="p-4">
-                        <select
-                          value={order.status}
-                          onChange={(e) => handleStatusChange(order.id, e.target.value)}
-                          className={`rounded-lg border px-2.5 py-1 text-xs font-semibold focus:outline-none transition-all cursor-pointer ${statusMeta.className}`}
+                      {/* Payment Status */}
+                      <td className="p-4 whitespace-nowrap">
+                        <span
+                          className={`rounded-lg border px-2.5 py-1 text-xs font-semibold ${statusMeta.className}`}
                         >
-                          <option value="Pending">Chờ lấy hàng</option>
-                          <option value="PickedUp">Đã lấy hàng</option>
-                          <option value="InTransit">Đang giao hàng</option>
-                          <option value="Delivered">Đã giao hàng</option>
-                          <option value="Cancelled">Đã hủy</option>
-                        </select>
+                          {statusMeta.label}
+                        </span>
                       </td>
 
                       {/* View Actions */}
