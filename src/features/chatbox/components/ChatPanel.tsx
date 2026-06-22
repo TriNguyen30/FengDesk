@@ -88,7 +88,7 @@ export default function ChatPanel({
     <div
       role="dialog"
       aria-label="Tin nhắn FengDesk"
-      className={`flex h-[min(32rem,calc(100dvh-6rem))] w-[min(calc(100vw-1.5rem),24rem)] flex-col overflow-hidden rounded-2xl border bg-white shadow-2xl transition-all sm:h-[30rem] sm:w-96 ${
+      className={`flex h-[min(36rem,calc(100dvh-8rem))] w-[min(calc(100vw-1.5rem),24rem)] flex-col overflow-hidden rounded-t-2xl border-x border-t bg-white shadow-2xl transition-all sm:h-[min(38rem,calc(100dvh-8rem))] sm:w-96 ${
         composerAiActive ? "border-primary ring-2 ring-primary/40" : "border-gray-200"
       }`}
     >
