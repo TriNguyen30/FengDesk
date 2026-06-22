@@ -37,11 +37,3 @@ export const PAYMENT_METHODS = [
   { value: "PayOS", label: "Thanh toán PayOS (QR / chuyển khoản)" },
   { value: "COD", label: "Thanh toán khi nhận hàng (COD)" },
 ] as const;
-
-export const DELIVERY_STATUSES = [
-  "Pending",
-  "PickedUp",
-  "InTransit",
-  "Delivered",
-  "Cancelled",
-] as const;
