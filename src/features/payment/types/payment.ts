@@ -29,4 +29,3 @@ export interface PaymentStatusResponse {
 export type CreatePaymentApiResponse = ApiResponse<CreatePaymentResponse>;
 export type PaymentStatusApiResponse = ApiResponse<PaymentStatusResponse>;
 export type CancelPaymentApiResponse = ApiResponse<any>;
-export type SimulatePaidApiResponse = ApiResponse<any>;
