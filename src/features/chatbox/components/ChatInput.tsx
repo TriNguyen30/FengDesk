@@ -125,7 +125,8 @@ export default function ChatInput({
         </button>
       </div>
       <p className="mt-1.5 text-[10px] text-gray-400">
-        Enter để gửi · Shift+Enter xuống dòng · gõ <span className="text-primary">@AI</span> để hỏi trợ lý
+        Enter để gửi · Shift+Enter xuống dòng · gõ <span className="text-primary">@AI</span> để hỏi
+        trợ lý
       </p>
     </form>
   );

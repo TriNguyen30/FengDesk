@@ -29,10 +29,7 @@ import {
   toggleChatbox,
   upsertChatbox,
 } from "@/features/chatbox/store/chatboxSlice";
-import type {
-  AiActivity,
-  ChatMessageBroadcast,
-} from "@/features/chatbox/types/chatbox";
+import type { AiActivity, ChatMessageBroadcast } from "@/features/chatbox/types/chatbox";
 
 export function useChatbox() {
   const dispatch = useAppDispatch();

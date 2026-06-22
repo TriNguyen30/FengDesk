@@ -28,7 +28,10 @@ export default function AiActivityIndicator({ activity }: AiActivityIndicatorPro
     if (phase === "writing") {
       return { icon: <PenLine size={13} />, label: "Đang soạn câu trả lời…" };
     }
-    return { icon: <Loader2 size={13} className="animate-spin" />, label: "Trợ lý AI đang suy nghĩ…" };
+    return {
+      icon: <Loader2 size={13} className="animate-spin" />,
+      label: "Trợ lý AI đang suy nghĩ…",
+    };
   })();
 
   return (

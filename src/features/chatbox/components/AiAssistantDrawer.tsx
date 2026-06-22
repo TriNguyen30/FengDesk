@@ -42,7 +42,6 @@ export default function AiAssistantDrawer({ open, onClose, productId }: AiAssist
     if (open) bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, activity, open]);
 
-
   // ESC để đóng + khóa cuộn nền khi mở.
   useEffect(() => {
     if (!open) return;
@@ -149,10 +148,15 @@ export default function AiAssistantDrawer({ open, onClose, productId }: AiAssist
             <div className="flex flex-col gap-4">
               {messages.map((m) =>
                 m.role === "system" ? null : (
-                  <div key={m.id} className={`flex gap-2.5 ${m.role === "user" ? "flex-row-reverse" : ""}`}>
+                  <div
+                    key={m.id}
+                    className={`flex gap-2.5 ${m.role === "user" ? "flex-row-reverse" : ""}`}
+                  >
                     <span
                       className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${
-                        m.role === "user" ? "bg-gray-200 text-gray-600" : "bg-primary/15 text-primary"
+                        m.role === "user"
+                          ? "bg-gray-200 text-gray-600"
+                          : "bg-primary/15 text-primary"
                       }`}
                     >
                       {m.role === "user" ? <User size={16} /> : <Bot size={16} />}

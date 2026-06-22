@@ -1,3 +1,5 @@
+import type { Delivery } from "@/features/users/types/shipping";
+
 export interface ApiResponse<T> {
   data: T;
   isSuccess: boolean;
@@ -77,23 +79,3 @@ export type GetOrdersResponse = PaginatedResponse<Order>;
 export type GetOrderDetailResponse = ApiResponse<OrderDetail>;
 export type CreateOrderResponse = ApiResponse<OrderDetail>;
 
-export interface Delivery {
-  id: string;
-  orderId: string;
-  orderCode?: string;
-  status: string;
-  customerName?: string;
-  recipientPhone?: string;
-  shippingAddress?: string;
-  totalAmount?: number;
-  createdAt: string;
-  updatedAt?: string;
-}
-
-export type GetDeliveriesResponse = PaginatedResponse<Delivery>;
-
-export interface UpdateDeliveryStatusParams {
-  status: string;
-}
-
-export type UpdateDeliveryStatusResponse = ApiResponse<Delivery>;

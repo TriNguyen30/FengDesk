@@ -130,7 +130,9 @@ export default function Navbar() {
                 aria-label="Trợ lý AI"
               >
                 <Sparkles size={22} strokeWidth={1.8} />
-                <span className="hidden text-[10px] font-medium sm:block sm:text-xs">Trợ lý AI</span>
+                <span className="hidden text-[10px] font-medium sm:block sm:text-xs">
+                  Trợ lý AI
+                </span>
               </button>
 
               {user && <NotificationDropdown />}

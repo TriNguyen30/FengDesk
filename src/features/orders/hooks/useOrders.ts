@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { ordersApi } from "../api/orders.api";
-import type { CreateOrders, GetOrdersParams, UpdateDeliveryStatusParams } from "../types/orders";
+import type { CreateOrders, GetOrdersParams } from "../types/orders";
 import { useAppDispatch } from "@/app/store";
 import { fetchCart } from "@/features/cart/store/cartSlice";
 
@@ -101,39 +101,4 @@ export function useCancelOrder() {
   });
 }
 
-export function useStoreDeliveries(storeId: string, params?: GetOrdersParams) {
-  const query = useQuery({
-    queryKey: ["deliveries", storeId, params],
-    queryFn: async () => {
-      const response = await ordersApi.getStoreDeliveries(storeId, params);
-      return response.data;
-    },
-    enabled: !!storeId,
-  });
 
-  const data = query.data;
-
-  return {
-    deliveries: data?.isSuccess && data.data ? data.data.items : [],
-    pagination: {
-      page: data?.isSuccess && data.data ? data.data.page : 1,
-      pageSize: data?.isSuccess && data.data ? data.data.pageSize : 20,
-      totalCount: data?.isSuccess && data.data ? data.data.totalCount : 0,
-      totalPages: data?.isSuccess && data.data ? data.data.totalPages : 0,
-    },
-    deliveriesStatus: query.isLoading ? "loading" : query.isError ? "failed" : "idle",
-    query,
-  };
-}
-
-export function useUpdateDeliveryStatus() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: ({ deliveryId, data }: { deliveryId: string; data: UpdateDeliveryStatusParams }) =>
-      ordersApi.updateDeliveryStatus(deliveryId, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["deliveries"] });
-    },
-  });
-}

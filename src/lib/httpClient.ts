@@ -42,7 +42,7 @@ export class FetchHttpClient {
         return response;
       },
       async (error) => {
-        console.log("API Error:", error.response?.status, error.config?.url, error.response?.data);
+        console.log("API Error:", error.message, error.response?.status, error.config?.url, error.response?.data, error);
 
         const originalRequest = error.config;
 
@@ -177,6 +177,7 @@ export class FetchHttpClient {
   }
 }
 
+console.log("Environment VITE_API_BASE_URL:", import.meta.env.VITE_API_BASE_URL);
 const fetchHttpClient = new FetchHttpClient(import.meta.env.VITE_API_BASE_URL || "");
 
 export default fetchHttpClient;

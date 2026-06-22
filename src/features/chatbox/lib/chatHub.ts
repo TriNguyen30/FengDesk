@@ -13,7 +13,13 @@ function resolveHubUrl(): string {
   return `${base}/hubs/chat`;
 }
 
-type HubEvent = "messageReceived" | "chatboxRead" | "userJoined" | "userLeft" | "aiStatus" | "error";
+type HubEvent =
+  | "messageReceived"
+  | "chatboxRead"
+  | "userJoined"
+  | "userLeft"
+  | "aiStatus"
+  | "error";
 
 /**
  * Quản lý 1 kết nối SignalR dùng chung cho toàn app (singleton).
@@ -55,11 +61,9 @@ class ChatHubClient {
     if (this.starting) return this.starting;
 
     if (this.connection.state === HubConnectionState.Disconnected) {
-      this.starting = this.connection
-        .start()
-        .finally(() => {
-          this.starting = null;
-        });
+      this.starting = this.connection.start().finally(() => {
+        this.starting = null;
+      });
       return this.starting;
     }
   }

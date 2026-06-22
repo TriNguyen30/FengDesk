@@ -108,9 +108,7 @@ export default function OrderDetailPage() {
                     <Package className="h-6 w-6 text-gray-300" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="font-medium text-gray-900">
-                      {item.productName}
-                    </p>
+                    <p className="font-medium text-gray-900">{item.productName}</p>
                     <p className="mt-1 text-sm text-gray-500">
                       {formatVnd(item.unitPrice)} x {item.quantity}
                     </p>
@@ -130,9 +128,12 @@ export default function OrderDetailPage() {
                 Địa chỉ giao hàng
               </h2>
               <p className="font-medium text-gray-900">
-                {(order as any).shippingAddress?.recipientName} · {(order as any).shippingAddress?.recipientPhone}
+                {(order as any).shippingAddress?.recipientName} ·{" "}
+                {(order as any).shippingAddress?.recipientPhone}
               </p>
-              <p className="mt-1 text-sm text-gray-600">{(order as any).shippingAddress?.streetAddress}</p>
+              <p className="mt-1 text-sm text-gray-600">
+                {(order as any).shippingAddress?.streetAddress}
+              </p>
               {(order as any).shippingAddress && (order as any).shippingAddress.wardName && (
                 <p className="mt-1 text-sm text-gray-500">
                   {[
@@ -174,9 +175,7 @@ export default function OrderDetailPage() {
                 <span className="text-primary">{formatVnd(order.totalAmount)}</span>
               </div>
             </div>
-            <p className="mt-3 text-xs text-gray-500">
-              Phương thức: {order.paymentMethod}
-            </p>
+            <p className="mt-3 text-xs text-gray-500">Phương thức: {order.paymentMethod}</p>
           </section>
 
           {order.paymentMethod === "PayOS" && order.status === "Pending" && (

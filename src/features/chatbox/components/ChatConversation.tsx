@@ -37,9 +37,7 @@ export default function ChatConversation({
   const askAi = () =>
     setDraft((prev) => {
       const trimmed = prev.replace(/^\s+/, "");
-      return /^@ai\b/i.test(trimmed)
-        ? trimmed.replace(/^@ai\b[ \t]*/i, "")
-        : `@AI ${prev}`;
+      return /^@ai\b/i.test(trimmed) ? trimmed.replace(/^@ai\b[ \t]*/i, "") : `@AI ${prev}`;
     });
 
   const aiOn = /^\s*@ai\b/i.test(draft);

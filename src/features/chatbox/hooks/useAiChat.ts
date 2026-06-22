@@ -22,14 +22,12 @@ function mapHistory(history: AiChatTurn[]): AiMessage[] {
 
 /** Map tin từ REST (ChatMessage, mới→cũ) → AiMessage hiển thị (cũ→mới). */
 function mapMessages(items: ChatMessage[]): AiMessage[] {
-  return [...items]
-    .reverse()
-    .map((m) => ({
-      id: m.id,
-      role: m.senderType === "AiBot" ? "ai" : m.senderType === "System" ? "system" : "user",
-      content: m.content ?? "",
-      images: m.images ?? [],
-    }));
+  return [...items].reverse().map((m) => ({
+    id: m.id,
+    role: m.senderType === "AiBot" ? "ai" : m.senderType === "System" ? "system" : "user",
+    content: m.content ?? "",
+    images: m.images ?? [],
+  }));
 }
 
 /** Hội thoại với trợ lý AI (trang lớn). Đồng bộ qua REST; aiStatus realtime qua SignalR. */

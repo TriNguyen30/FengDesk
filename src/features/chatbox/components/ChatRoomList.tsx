@@ -30,8 +30,8 @@ export default function ChatRoomList({
         </div>
         <p className="text-sm font-semibold text-gray-800">Chưa có cuộc trò chuyện</p>
         <p className="text-xs leading-relaxed text-gray-500">
-          Bắt đầu trò chuyện với đội ngũ hỗ trợ FengDesk — nhân viên sẽ vào hỗ trợ bạn ngay khi
-          có thể.
+          Bắt đầu trò chuyện với đội ngũ hỗ trợ FengDesk — nhân viên sẽ vào hỗ trợ bạn ngay khi có
+          thể.
         </p>
         <button
           type="button"

@@ -51,9 +51,7 @@ export default function OrdersPage() {
                 </div>
 
                 <div className="mt-3 flex items-center justify-between border-t border-gray-100 pt-3">
-                  <span className="text-sm text-gray-600">
-                    {order.paymentMethod}
-                  </span>
+                  <span className="text-sm text-gray-600">{order.paymentMethod}</span>
                   <div className="flex items-center gap-1 text-sm font-bold text-primary">
                     {formatVnd(order.totalAmount)}
                     <ChevronRight className="h-4 w-4" />

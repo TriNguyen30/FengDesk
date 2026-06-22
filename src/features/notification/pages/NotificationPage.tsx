@@ -86,7 +86,8 @@ export default function NotificationPage() {
         <div>
           <h1 className="text-xl font-bold text-gray-900">Thông báo của bạn</h1>
           <p className="mt-1 text-sm text-gray-500">
-            Bạn có <span className="font-semibold text-primary">{unreadCount}</span> thông báo chưa đọc
+            Bạn có <span className="font-semibold text-primary">{unreadCount}</span> thông báo chưa
+            đọc
           </p>
         </div>
         {unreadCount > 0 && (
@@ -145,9 +146,7 @@ export default function NotificationPage() {
                       {formatRelativeTime(item.createdAt)}
                     </span>
                   </div>
-                  <p className="mt-1.5 text-sm text-gray-600 leading-relaxed">
-                    {item.message}
-                  </p>
+                  <p className="mt-1.5 text-sm text-gray-600 leading-relaxed">{item.message}</p>
                 </div>
                 {!item.isRead && (
                   <div className="self-center ml-2">
@@ -171,16 +170,14 @@ export default function NotificationPage() {
           >
             <ChevronLeft size={18} />
           </button>
-          
+
           <div className="flex items-center gap-1">
             {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map((pageNum) => (
               <button
                 key={pageNum}
                 onClick={() => setPage(pageNum)}
                 className={`flex h-9 min-w-[36px] items-center justify-center rounded-lg px-2 text-sm font-semibold transition-colors ${
-                  page === pageNum
-                    ? "bg-primary text-white"
-                    : "text-gray-600 hover:bg-gray-100"
+                  page === pageNum ? "bg-primary text-white" : "text-gray-600 hover:bg-gray-100"
                 }`}
               >
                 {pageNum}

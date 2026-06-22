@@ -17,7 +17,8 @@ import {
 import { toast } from "sonner";
 import { getAllShopRequest } from "@/features/shop/api/shop.api";
 import type { Shop } from "@/features/shop/types/shop";
-import { useAllOrdersList, useUpdateDeliveryStatus } from "@/features/orders";
+import { useAllOrdersList } from "@/features/orders";
+import { useUpdateDeliveryStatus } from "@/features/users/hooks/useShipping";
 import type { Order, OrderDetail } from "@/features/orders";
 import { formatOrderDate, formatVnd } from "@/features/orders/utils/orderUtils";
 import { ordersApi } from "@/features/orders";

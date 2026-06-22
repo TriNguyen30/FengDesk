@@ -6,7 +6,11 @@ import { chatApi, type ChatConsent } from "@/features/chatbox/api/chat.api";
 /** Danh sách scope — thêm mục mới chỉ cần thêm 1 dòng (key phải khớp ChatConsent + DTO BE). */
 const SCOPES: { key: keyof ChatConsent; label: string; hint: string }[] = [
   { key: "shareProfile", label: "Hồ sơ cá nhân", hint: "Tên, ngày sinh, mệnh phong thủy" },
-  { key: "shareWorkspaces", label: "Không gian làm việc", hint: "Phong cách, mục đích, hành/hướng" },
+  {
+    key: "shareWorkspaces",
+    label: "Không gian làm việc",
+    hint: "Phong cách, mục đích, hành/hướng",
+  },
   { key: "shareOrders", label: "Lịch sử mua hàng", hint: "Các đơn hàng gần đây" },
 ];
 
@@ -91,8 +95,8 @@ export default function ConsentPanel({ chatboxId, pulse, onInteract }: ConsentPa
       {open && (
         <div className="mt-1.5 space-y-1.5 px-1">
           <p className="text-[10px] leading-relaxed text-gray-400">
-            Nhân viên hỗ trợ có thể nhờ trợ lý AI xem các mục bạn cho phép dưới đây để tư vấn tốt hơn.
-            Bạn có thể tắt bất cứ lúc nào.
+            Nhân viên hỗ trợ có thể nhờ trợ lý AI xem các mục bạn cho phép dưới đây để tư vấn tốt
+            hơn. Bạn có thể tắt bất cứ lúc nào.
           </p>
           {SCOPES.map((s) => (
             <label
