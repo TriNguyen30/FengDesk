@@ -39,7 +39,7 @@ export default function OrdersPage() {
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <p className="text-sm font-semibold text-gray-900">
-                      {order.orderCode ? `Đơn #${order.orderCode}` : `Đơn hàng`}
+                      Đơn #{order.id.slice(0, 8).toUpperCase()}
                     </p>
                     <p className="mt-1 text-xs text-gray-500">{formatOrderDate(order.createdAt)}</p>
                   </div>
@@ -52,7 +52,7 @@ export default function OrdersPage() {
 
                 <div className="mt-3 flex items-center justify-between border-t border-gray-100 pt-3">
                   <span className="text-sm text-gray-600">
-                    {order.itemCount ?? 0} sản phẩm · {order.paymentMethod}
+                    {order.paymentMethod}
                   </span>
                   <div className="flex items-center gap-1 text-sm font-bold text-primary">
                     {formatVnd(order.totalAmount)}

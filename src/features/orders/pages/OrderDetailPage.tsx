@@ -88,7 +88,7 @@ export default function OrderDetailPage() {
       <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">
-            {order.orderCode ? `Đơn #${order.orderCode}` : "Chi tiết đơn hàng"}
+            Đơn #{order.id.slice(0, 8).toUpperCase()}
           </h1>
           <p className="mt-1 text-sm text-gray-500">Đặt lúc {formatOrderDate(order.createdAt)}</p>
         </div>
@@ -105,20 +105,11 @@ export default function OrderDetailPage() {
               {(order.items ?? []).map((item) => (
                 <li key={item.id} className="flex gap-4 py-4 first:pt-0 last:pb-0">
                   <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-gray-50 ring-1 ring-gray-100">
-                    {item.imageUrl ? (
-                      <img
-                        src={item.imageUrl}
-                        alt={item.productName}
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
-                      <Package className="h-6 w-6 text-gray-300" />
-                    )}
+                    <Package className="h-6 w-6 text-gray-300" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="font-medium text-gray-900">
                       {item.productName}
-                      {item.variantName ? ` (${item.variantName})` : ""}
                     </p>
                     <p className="mt-1 text-sm text-gray-500">
                       {formatVnd(item.unitPrice)} x {item.quantity}
@@ -132,22 +123,22 @@ export default function OrderDetailPage() {
             </ul>
           </section>
 
-          {order.shippingAddress && (
+          {(order as any).shippingAddress && (
             <section className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
               <h2 className="mb-3 flex items-center gap-2 text-lg font-bold text-gray-900">
                 <MapPin className="h-5 w-5 text-primary" />
                 Địa chỉ giao hàng
               </h2>
               <p className="font-medium text-gray-900">
-                {order.shippingAddress.recipientName} · {order.shippingAddress.recipientPhone}
+                {(order as any).shippingAddress?.recipientName} · {(order as any).shippingAddress?.recipientPhone}
               </p>
-              <p className="mt-1 text-sm text-gray-600">{order.shippingAddress.streetAddress}</p>
-              {(order.shippingAddress.wardName || order.shippingAddress.provinceName) && (
+              <p className="mt-1 text-sm text-gray-600">{(order as any).shippingAddress?.streetAddress}</p>
+              {(order as any).shippingAddress && (order as any).shippingAddress.wardName && (
                 <p className="mt-1 text-sm text-gray-500">
                   {[
-                    order.shippingAddress.wardName,
-                    order.shippingAddress.districtName,
-                    order.shippingAddress.provinceName,
+                    (order as any).shippingAddress.wardName,
+                    (order as any).shippingAddress.districtName,
+                    (order as any).shippingAddress.provinceName,
                   ]
                     .filter(Boolean)
                     .join(", ")}
@@ -175,7 +166,7 @@ export default function OrderDetailPage() {
               <div className="flex justify-between text-gray-600">
                 <span>Phí vận chuyển</span>
                 <span>
-                  {order.shippingFee != null ? formatVnd(order.shippingFee) : "Chưa tính"}
+                  {order.totalShippingFee != null ? formatVnd(order.totalShippingFee) : "Chưa tính"}
                 </span>
               </div>
               <div className="flex justify-between border-t border-gray-100 pt-3 text-base font-bold text-gray-900">
@@ -185,7 +176,6 @@ export default function OrderDetailPage() {
             </div>
             <p className="mt-3 text-xs text-gray-500">
               Phương thức: {order.paymentMethod}
-              {order.paymentStatus ? ` · ${order.paymentStatus}` : ""}
             </p>
           </section>
 
