@@ -18,7 +18,7 @@ export default function AppProviders({ children }: AppProvidersProps) {
         <BrowserRouter>
           <SearchProvider>{children}</SearchProvider>
         </BrowserRouter>
-        <ReactQueryDevtools initialIsOpen={false} />
+        {/* <ReactQueryDevtools initialIsOpen={false} /> */}
       </QueryClientProvider>
     </Provider>
   );
