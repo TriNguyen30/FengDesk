@@ -1,3 +1,5 @@
+import type { Delivery } from "@/features/users/types/shipping";
+
 export interface ApiResponse<T> {
   data: T;
   isSuccess: boolean;
@@ -33,43 +35,38 @@ export interface OrdersItem {
 export interface OrderLineItem {
   id: string;
   productItemId: string;
-  productId?: string;
+  deliveryId: string | null;
   productName: string;
-  variantName?: string;
-  quantity: number;
   unitPrice: number;
+  quantity: number;
   lineTotal: number;
-  imageUrl?: string;
 }
 
-export interface OrderShippingAddress {
-  recipientName: string;
-  recipientPhone: string;
-  streetAddress: string;
-  wardName?: string;
-  districtName?: string;
-  provinceName?: string;
+export interface StatusLog {
+  fromStatus: string | null;
+  toStatus: string;
+  note: string;
+  changedAt: string;
 }
 
 export interface Order {
   id: string;
-  orderCode?: string;
+  customerId: string;
   status: string;
   paymentMethod: string;
-  paymentStatus?: string;
-  note?: string;
   subtotal: number;
-  shippingFee?: number;
+  totalShippingFee: number;
   totalAmount: number;
-  itemCount?: number;
+  deliveryCount?: number;
   createdAt: string;
-  updatedAt?: string;
 }
 
 export interface OrderDetail extends Order {
+  shippingAddressId: string;
+  note: string;
   items: OrderLineItem[];
-  shippingAddress?: OrderShippingAddress;
-  paymentUrl?: string;
+  deliveries: Delivery[];
+  statusLogs: StatusLog[];
 }
 
 export interface GetOrdersParams {
@@ -82,23 +79,3 @@ export type GetOrdersResponse = PaginatedResponse<Order>;
 export type GetOrderDetailResponse = ApiResponse<OrderDetail>;
 export type CreateOrderResponse = ApiResponse<OrderDetail>;
 
-export interface Delivery {
-  id: string;
-  orderId: string;
-  orderCode?: string;
-  status: string;
-  customerName?: string;
-  recipientPhone?: string;
-  shippingAddress?: string;
-  totalAmount?: number;
-  createdAt: string;
-  updatedAt?: string;
-}
-
-export type GetDeliveriesResponse = PaginatedResponse<Delivery>;
-
-export interface UpdateDeliveryStatusParams {
-  status: string;
-}
-
-export type UpdateDeliveryStatusResponse = ApiResponse<Delivery>;

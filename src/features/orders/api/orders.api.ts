@@ -2,12 +2,9 @@ import fetchHttpClient from "@/lib/httpClient";
 import type {
   CreateOrders,
   CreateOrderResponse,
-  GetDeliveriesResponse,
   GetOrderDetailResponse,
   GetOrdersParams,
   GetOrdersResponse,
-  UpdateDeliveryStatusParams,
-  UpdateDeliveryStatusResponse,
   ApiResponse,
   OrderDetail,
 } from "../types/orders";
@@ -33,17 +30,4 @@ export const ordersApi = {
     return fetchHttpClient.post<ApiResponse<OrderDetail>>(`/orders/${id}/cancel`);
   },
 
-  getStoreDeliveries: (storeId: string, params?: GetOrdersParams) => {
-    return fetchHttpClient.get<GetDeliveriesResponse>(
-      `/orders/stores/${storeId}/deliveries`,
-      params,
-    );
-  },
-
-  updateDeliveryStatus: (deliveryId: string, data: UpdateDeliveryStatusParams) => {
-    return fetchHttpClient.patch<UpdateDeliveryStatusResponse>(
-      `/orders/deliveries/${deliveryId}/status`,
-      data,
-    );
-  },
 };

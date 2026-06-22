@@ -1,8 +1,9 @@
-import { Truck, Package, User, Leaf, Bell, LogOut } from "lucide-react";
-import { useState, useEffect } from "react";
+import { Truck, Package, User, LogOut, Sparkles } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import SearchBar from "./Search";
+import AiAssistantDrawer from "@/features/chatbox/components/AiAssistantDrawer";
 import PopUpLogin from "@/features/auth/components/PopUpLogin";
 import PopUpSignUp from "@/features/auth/components/PopUpSignUp";
 import { CartDropDown, useCart } from "@/features/cart";
@@ -27,6 +28,17 @@ export default function Navbar() {
   const { user, authModal, refreshToken } = useAppSelector((state) => state.auth);
   const dispatch = useAppDispatch();
   const { getCart, clearCart } = useCart();
+
+  // Trợ lý AI giờ là KHUNG CHAT trượt bên hông (thay cho trang /ai full-screen).
+  const [aiOpen, setAiOpen] = useState(false);
+  const openAiAssistant = () => {
+    if (!user) {
+      dispatch(setAuthModal("login"));
+      toast.info("Vui lòng đăng nhập để dùng trợ lý AI");
+      return;
+    }
+    setAiOpen(true);
+  };
 
   useEffect(() => {
     if (user) {
@@ -111,6 +123,18 @@ export default function Navbar() {
 
             {/* Icon group — always visible */}
             <div className="flex shrink-0 items-center gap-1 sm:gap-3">
+              <button
+                type="button"
+                onClick={openAiAssistant}
+                className="flex min-w-[44px] flex-col items-center gap-0.5 rounded-lg px-1 py-1 text-gray-700 transition-colors hover:text-primary cursor-pointer"
+                aria-label="Trợ lý AI"
+              >
+                <Sparkles size={22} strokeWidth={1.8} />
+                <span className="hidden text-[10px] font-medium sm:block sm:text-xs">
+                  Trợ lý AI
+                </span>
+              </button>
+
               {user && <NotificationDropdown />}
 
               {user ? (
@@ -204,6 +228,8 @@ export default function Navbar() {
         onClose={() => dispatch(setAuthModal(null))}
         onSwitchToLogin={() => dispatch(setAuthModal("login"))}
       />
+
+      <AiAssistantDrawer open={aiOpen} onClose={() => setAiOpen(false)} />
     </header>
   );
 }
