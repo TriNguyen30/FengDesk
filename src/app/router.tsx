@@ -44,7 +44,7 @@ export default function AppRoutes() {
           }
         />
         <Route
-          path="/payment/success"
+          path="/success"
           element={
             <ProtectedRoute>
               <PaymentSuccessPage />
@@ -52,7 +52,7 @@ export default function AppRoutes() {
           }
         />
         <Route
-          path="/payment/cancel"
+          path="/cancel"
           element={
             <ProtectedRoute>
               <PaymentCancelPage />
