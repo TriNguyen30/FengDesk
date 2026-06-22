@@ -24,7 +24,7 @@ export const shippingApi = {
 
   getDeliveryProgress: (deliveryId: string) => {
     return fetchHttpClient.get<GetDeliveryProgressResponse>(
-      `/shipping/deliveries/${deliveryId}/progress`
+      `/shipping/deliveries/${deliveryId}/progress`,
     );
   },
 };

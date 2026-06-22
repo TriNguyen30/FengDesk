@@ -78,4 +78,3 @@ export interface GetOrdersParams {
 export type GetOrdersResponse = PaginatedResponse<Order>;
 export type GetOrderDetailResponse = ApiResponse<OrderDetail>;
 export type CreateOrderResponse = ApiResponse<OrderDetail>;
-

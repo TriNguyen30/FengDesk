@@ -42,7 +42,14 @@ export class FetchHttpClient {
         return response;
       },
       async (error) => {
-        console.log("API Error:", error.message, error.response?.status, error.config?.url, error.response?.data, error);
+        console.log(
+          "API Error:",
+          error.message,
+          error.response?.status,
+          error.config?.url,
+          error.response?.data,
+          error,
+        );
 
         const originalRequest = error.config;
 

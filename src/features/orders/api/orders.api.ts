@@ -29,5 +29,4 @@ export const ordersApi = {
   cancelOrder: (id: string) => {
     return fetchHttpClient.post<ApiResponse<OrderDetail>>(`/orders/${id}/cancel`);
   },
-
 };
