@@ -1,43 +1,59 @@
 name: FengDesk AI Web CI
 
-# Kích hoạt workflow khi có push hoặc pull request vào nhánh main
 on:
   push:
-    branches: [main]
+    branches:
+      - main
   pull_request:
-    branches: [main]
+    branches:
+      - main
 
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
 
     steps:
-      # Bước 1: Lấy code từ GitHub về máy ảo
-      - name: Checkout Code
+      # Checkout source
+      - name: Checkout source
         uses: actions/checkout@v4
 
-      # Bước 2: Cài đặt pnpm (Vì dự án của bạn dùng pnpm)
-      - name: Install pnpm
-        uses: pnpm/action-setup@v3
+      # Setup Node
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          version: 9 # Hoặc phiên bản pnpm bạn đang dùng
+          node-version: 22
+          cache: pnpm
 
-      # Bước 3: Cài đặt các thư viện (dependencies)
-      - name: Install Dependencies
-        run: pnpm install
+      # Setup pnpm
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
 
-      # Bước 4: Kiểm tra lỗi logic/format (Linting)
-      - name: Run Lint
+      # Install dependencies
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Generate .env.production
+      - name: Create production env
+        run: |
+          echo "VITE_API_BASE_URL=${{ secrets.VITE_API_BASE_URL }}" >> .env.production
+          echo "VITE_ENV=${{ secrets.VITE_ENV }}" >> .env.production
+          echo "VITE_FIREBASE_API_KEY=${{ secrets.VITE_FIREBASE_API_KEY }}" >> .env.production
+          echo "VITE_FIREBASE_AUTH_DOMAIN=${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}" >> .env.production
+          echo "VITE_FIREBASE_PROJECT_ID=${{ secrets.VITE_FIREBASE_PROJECT_ID }}" >> .env.production
+          echo "VITE_FIREBASE_STORAGE_BUCKET=${{ secrets.VITE_FIREBASE_STORAGE_BUCKET }}" >> .env.production
+          echo "VITE_FIREBASE_MESSAGING_SENDER_ID=${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}" >> .env.production
+          echo "VITE_FIREBASE_APP_ID=${{ secrets.VITE_FIREBASE_APP_ID }}" >> .env.production
+
+      # Lint
+      - name: Run ESLint
         run: pnpm lint
 
-      # Bước 5: Kiểm tra lỗi TypeScript (Dựa trên script "tsc -b" trong package.json của bạn)
-      - name: Type Check
+      # TypeScript
+      - name: Run Type Check
         run: pnpm tsc -b
 
-      # Bước 6: Build thử nghiệm dự án
-      - name: Build Web Application
+      # Build
+      - name: Build project
         run: pnpm build
-        env:
-          # Nếu bạn có các biến môi trường Firebase, hãy khai báo ở đây để tránh lỗi build
-          VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
-          VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}
