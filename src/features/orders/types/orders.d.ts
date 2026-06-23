@@ -78,3 +78,10 @@ export interface GetOrdersParams {
 export type GetOrdersResponse = PaginatedResponse<Order>;
 export type GetOrderDetailResponse = ApiResponse<OrderDetail>;
 export type CreateOrderResponse = ApiResponse<OrderDetail>;
+
+export interface UpdateDeliveryStatusRequest {
+  status: string;
+  trackingCode?: string | null;
+  shippingProvider?: string | null;
+  note?: string | null;
+}
