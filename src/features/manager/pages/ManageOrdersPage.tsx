@@ -21,6 +21,8 @@ import type { Order, OrderDetail } from "@/features/orders";
 import { formatOrderDate, formatVnd } from "@/features/orders/utils/orderUtils";
 import { ordersApi } from "@/features/orders";
 import { STATUS_MAP } from "@/features/orders/utils/orderUtils";
+import { useQueryClient } from "@tanstack/react-query";
+
 
 const DELIVERY_STATUS_MAP: Record<string, { label: string; className: string }> = {
   Pending: { label: "Đang chờ", className: "bg-amber-50 text-amber-700 border-amber-200" },
@@ -59,19 +61,21 @@ export default function ManageOrdersPage() {
 
   const { orders, listStatus } = useOrdersList({ page: 1, pageSize: 100 });
   const updateDeliveryStatusMutation = useUpdateOrderDeliveryStatus();
+  const queryClient = useQueryClient();
   const handleStatusChange = async (deliveryId: string, newStatus: string) => {
     try {
       await updateDeliveryStatusMutation.mutateAsync({ deliveryId, data: { status: newStatus } });
       toast.success("Cập nhật trạng thái giao hàng thành công");
       
-      // Update local state to reflect change immediately in modal
-      setSelectedOrder(prev => {
-        if (!prev) return prev;
-        const newDeliveries = prev.deliveries.map(d => 
-          d.id === deliveryId ? { ...d, status: newStatus } : d
-        );
-        return { ...prev, deliveries: newDeliveries };
-      });
+      // Invalidate cả list lẫn detail
+      await queryClient.invalidateQueries({ queryKey: ["orders"] });
+      await queryClient.invalidateQueries({ queryKey: ["order", selectedOrder?.id] });
+
+      // Refetch lại detail để cập nhật modal
+      if (selectedOrder) {
+        const { data } = await ordersApi.getOrderById(selectedOrder.id);
+        if (data.isSuccess && data.data) setSelectedOrder(data.data);
+      }
     } catch (err) {
       console.error(err);
       toast.error("Không thể cập nhật trạng thái đơn hàng");
