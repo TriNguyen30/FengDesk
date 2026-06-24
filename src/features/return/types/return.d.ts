@@ -103,6 +103,15 @@ export interface CreateReturnRequest {
   bankName?: string | null;
 }
 
+// ── Approve / Reject request types (POST /returns/{id}/approve, /reject) ────
+export interface ApproveReturnRequest {
+  note?: string | null;
+}
+
+export interface RejectReturnRequest {
+  reason?: string | null;
+}
+
 // ── Response types ───────────────────────────────────────────────────────────
 export interface CreateReturnResponse {
   data: ReturnDetail;
@@ -113,6 +122,22 @@ export interface CreateReturnResponse {
 }
 
 export interface CancelReturnResponse {
+  data: ReturnDetail;
+  isSuccess: boolean;
+  statusCode: number;
+  message: string | null;
+  errors: any;
+}
+
+export interface ApproveReturnResponse {
+  data: ReturnDetail;
+  isSuccess: boolean;
+  statusCode: number;
+  message: string | null;
+  errors: any;
+}
+
+export interface RejectReturnResponse {
   data: ReturnDetail;
   isSuccess: boolean;
   statusCode: number;
