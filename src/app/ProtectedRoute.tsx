@@ -9,6 +9,8 @@ type ProtectedRouteProps = {
   requireManager?: boolean;
   /** Staff trở lên: Staff, Manager, Admin (khu điều hành / hỗ trợ khách hàng). */
   requireStaffOrAbove?: boolean;
+
+  requireAllRole?: boolean;
 };
 
 export default function ProtectedRoute({
@@ -18,6 +20,7 @@ export default function ProtectedRoute({
   requireStaff = false,
   requireManager = false,
   requireStaffOrAbove = false,
+  requireAllRole = false,
 }: ProtectedRouteProps) {
   const { token, user } = useAppSelector((state) => state.auth);
 
@@ -46,6 +49,10 @@ export default function ProtectedRoute({
   }
 
   if (requireStaffOrAbove && !(has("Staff") || has("Manager") || has("Admin"))) {
+    return <Navigate to="/" replace />;
+  }
+
+  if (requireAllRole && !(has("Customer") || has("Manager") || has("Staff") || has("Admin"))) {
     return <Navigate to="/" replace />;
   }
 

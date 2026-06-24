@@ -16,13 +16,12 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { getAllShopRequest } from "@/features/shop/api/shop.api";
-import { useOrdersList, useUpdateOrderDeliveryStatus } from "@/features/orders";
+import { useAllOrdersList, useUpdateOrderDeliveryStatus } from "@/features/orders";
 import type { Order, OrderDetail } from "@/features/orders";
 import { formatOrderDate, formatVnd } from "@/features/orders/utils/orderUtils";
 import { ordersApi } from "@/features/orders";
 import { STATUS_MAP } from "@/features/orders/utils/orderUtils";
 import { useQueryClient } from "@tanstack/react-query";
-
 
 const DELIVERY_STATUS_MAP: Record<string, { label: string; className: string }> = {
   Pending: { label: "Đang chờ", className: "bg-amber-50 text-amber-700 border-amber-200" },
@@ -59,7 +58,7 @@ export default function ManageOrdersPage() {
   const [loadingDetailId, setLoadingDetailId] = useState<string | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
-  const { orders, listStatus } = useOrdersList({ page: 1, pageSize: 100 });
+  const { orders, listStatus } = useAllOrdersList({ page: 1, pageSize: 100 });
   const updateDeliveryStatusMutation = useUpdateOrderDeliveryStatus();
   const queryClient = useQueryClient();
   const handleStatusChange = async (deliveryId: string, newStatus: string) => {
