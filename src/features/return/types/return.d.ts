@@ -1,3 +1,4 @@
+// ── List item (từ GET /returns/all) ─────────────────────────────────────────
 export interface ReturnItem {
   id: string;
   orderId: string;
@@ -10,6 +11,51 @@ export interface ReturnItem {
   createdAt: string;
 }
 
+// ── Detail item (từ POST /returns, POST /returns/{id}/cancel) ────────────────
+export interface ReturnDetailItem {
+  id: string;
+  orderItemId: string;
+  productName: string;
+  quantity: number;
+  unitPrice: number;
+  lineTotal: number;
+  exchangeProductItemId: string | null;
+}
+
+export interface ReturnStatusLog {
+  fromStatus: string | null;
+  toStatus: string;
+  note: string;
+  changedAt: string;
+}
+
+export interface ReturnDetail {
+  id: string;
+  orderId: string;
+  deliveryId: string;
+  customerId: string;
+  type: "Refund" | "Exchange";
+  status: string;
+  reason: string;
+  reasonDetail: string | null;
+  refundAmount: number;
+  refundMethod: string | null;
+  bankAccountName: string | null;
+  bankAccountNumber: string | null;
+  bankName: string | null;
+  returnTrackingCode: string | null;
+  approvedAt: string | null;
+  rejectedReason: string | null;
+  receivedAt: string | null;
+  replacementDeliveryId: string | null;
+  createdAt: string;
+  items: ReturnDetailItem[];
+  imageUrls: string[];
+  statusLogs: ReturnStatusLog[];
+  refund: any | null;
+}
+
+// ── Query / Request types ────────────────────────────────────────────────────
 export interface ReturnListResponse {
   data: {
     items: ReturnItem[];
@@ -57,8 +103,17 @@ export interface CreateReturnRequest {
   bankName?: string | null;
 }
 
+// ── Response types ───────────────────────────────────────────────────────────
 export interface CreateReturnResponse {
-  data: ReturnItem;
+  data: ReturnDetail;
+  isSuccess: boolean;
+  statusCode: number;
+  message: string | null;
+  errors: any;
+}
+
+export interface CancelReturnResponse {
+  data: ReturnDetail;
   isSuccess: boolean;
   statusCode: number;
   message: string | null;

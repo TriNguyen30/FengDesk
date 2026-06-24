@@ -71,7 +71,7 @@ export default function ManageOrderReturnPage() {
                 {returns.map((item) => (
                   <tr key={item.id} className="hover:bg-gray-50/30 transition-colors">
                     <td className="p-4 font-mono font-medium text-gray-900">
-                      #{item.orderId.substring(0, 8)}
+                      #{item.deliveryId.substring(0, 8)}
                     </td>
                     <td className="p-4">
                       <span className="font-semibold text-gray-800">{item.type}</span>

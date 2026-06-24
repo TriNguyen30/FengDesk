@@ -287,11 +287,15 @@ export default function OrderDetailPage() {
                 {deliveries.map((delivery) => {
                   const statusInfo = DELIVERY_STATUS_LABEL[delivery.status] ?? { label: delivery.status, color: "text-gray-600" };
                   const isDelivered = delivery.status === "Delivered";
+                  // returnRequest is embedded in delivery by backend (nullable)
+                  const returnRequest: { id: string; status: string } | null = delivery.returnRequest ?? null;
+                  const hasPendingReturn = returnRequest && returnRequest.status === "Requested";
                   return (
                     <div
                       key={delivery.id}
-                      className={`rounded-lg border p-4 flex items-center justify-between gap-3 ${isDelivered ? "border-emerald-100 bg-emerald-50/30" : "border-gray-100 bg-gray-50/40"
-                        }`}
+                      className={`rounded-lg border p-4 flex items-center justify-between gap-3 ${
+                        isDelivered ? "border-emerald-100 bg-emerald-50/30" : "border-gray-100 bg-gray-50/40"
+                      }`}
                     >
                       <div className="min-w-0 flex-1 space-y-1">
                         {delivery.storeName && (
@@ -306,20 +310,29 @@ export default function OrderDetailPage() {
                         {delivery.orderCode && (
                           <p className="text-xs text-gray-400 font-mono">#{delivery.orderCode}</p>
                         )}
+                        {/* Show pending return badge */}
+                        {hasPendingReturn && (
+                          <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-600 bg-amber-50 border border-amber-200 rounded-md px-2 py-0.5">
+                            <span className="h-1.5 w-1.5 rounded-full bg-amber-400 inline-block" />
+                            Đang chờ xử lý trả hàng
+                          </span>
+                        )}
                       </div>
-                      {/* Per-delivery return button if there are multiple delivered */}
-                      {isDelivered && deliveries.filter((d) => d.status === "Delivered").length > 1 && (
-                        <button
-                          onClick={() => {
-                            const items = getDeliveryItems(delivery.id);
-                            openReturnModal(delivery.id, items);
-                          }}
-                          className="shrink-0 flex items-center gap-1.5 rounded-lg border border-orange-200 bg-orange-50 px-3 py-1.5 text-xs font-semibold text-orange-600 hover:bg-orange-100 transition-colors cursor-pointer"
-                        >
-                          <RotateCcw className="h-3.5 w-3.5" />
-                          Trả
-                        </button>
-                      )}
+                      <div className="flex items-center gap-2 shrink-0">
+                        {/* Per-delivery return button if multiple delivered deliveries */}
+                        {isDelivered && !hasPendingReturn && deliveries.filter((d) => d.status === "Delivered").length > 1 && (
+                          <button
+                            onClick={() => {
+                              const items = getDeliveryItems(delivery.id);
+                              openReturnModal(delivery.id, items);
+                            }}
+                            className="flex items-center gap-1.5 rounded-lg border border-orange-200 bg-orange-50 px-3 py-1.5 text-xs font-semibold text-orange-600 hover:bg-orange-100 transition-colors cursor-pointer"
+                          >
+                            <RotateCcw className="h-3.5 w-3.5" />
+                            Trả
+                          </button>
+                        )}
+                      </div>
                     </div>
                   );
                 })}
@@ -413,7 +426,7 @@ export default function OrderDetailPage() {
         </aside>
       </div>
 
-      {/* Cancel Modal */}
+      {/* Cancel Order Modal */}
       <Modal open={isCancelModalOpen} title="Hủy đơn hàng" onClose={() => setIsCancelModalOpen(false)}>
         <div className="space-y-4">
           <p className="text-sm text-gray-600">Bạn có chắc chắn muốn hủy đơn hàng này?</p>

@@ -26,6 +26,7 @@ import OrdersPage from "@/features/orders/pages/OrdersPage";
 import OrderDetailPage from "@/features/orders/pages/OrderDetailPage";
 import { PaymentSuccessPage, PaymentCancelPage } from "@/features/payment";
 import NotificationPage from "@/features/notification/pages/NotificationPage";
+import ProfileReturnOrder from "@/features/users/pages/ProfileReturnOrder";
 
 export default function AppRoutes() {
   return (
@@ -76,6 +77,7 @@ export default function AppRoutes() {
           <Route path="workspace" element={<ProfileWorkspace />} />
           <Route path="orders" element={<OrdersPage />} />
           <Route path="orders/:id" element={<OrderDetailPage />} />
+          <Route path="returns" element={<ProfileReturnOrder />} />
           <Route path="notifications" element={<NotificationPage />} />
         </Route>
       </Route>
