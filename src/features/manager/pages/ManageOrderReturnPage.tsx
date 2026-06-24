@@ -1,18 +1,22 @@
 import { useState, useEffect } from "react";
 import { Loader2, PackageX } from "lucide-react";
 import { toast } from "sonner";
-import { returnApi, ReturnItem } from "@/features/return/api/return.api";
+import { returnApi } from "@/features/return/api/return.api";
+import type { ReturnItem } from "@/features/return/types/return.d.ts";
 import { formatVnd, formatOrderDate } from "@/features/orders/utils/orderUtils";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function ManageOrderReturnPage() {
   const [returns, setReturns] = useState<ReturnItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     const fetchReturns = async () => {
       try {
         setIsLoading(true);
         const response = await returnApi.getAllReturns({ Page: 1, PageSize: 50 });
+        await queryClient.invalidateQueries({ queryKey: ["returns"] });
         if (response.data?.isSuccess) {
           setReturns(response.data.data.items);
         } else {
