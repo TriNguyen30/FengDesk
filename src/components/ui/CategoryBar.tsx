@@ -19,8 +19,8 @@ const navLinkClass = ({ isActive }: { isActive: boolean }) =>
     "sm:rounded-none sm:bg-transparent sm:px-0 sm:py-0 sm:pb-1 sm:hover:bg-transparent",
     "sm:after:absolute sm:after:left-0 sm:after:-bottom-1 sm:after:h-0.5 sm:after:bg-primary sm:after:transition-all sm:after:duration-300",
     isActive
-      ? "bg-primary text-primary sm:bg-transparent sm:after:w-full"
-      : "text-gray-700 sm:after:w-0 sm:hover:after:w-full",
+      ? "bg-primary text-white sm:bg-transparent sm:text-primary sm:after:w-full"
+      : "text-gray-700 sm:after:w-0 sm:hover:after:w-full"
   ].join(" ");
 
 export default function CategoryBar() {
