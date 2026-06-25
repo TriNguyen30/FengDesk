@@ -20,13 +20,14 @@ export interface Shop {
 }
 
 export interface CreateShopDto {
-  ownerUserId: string;
   name: string;
-  description: string;
+  description?: string;
   hotline: string;
-  openingHours: string;
-  isActive: boolean;
-  address: string;
+  openingHours?: string;
+  // Self-service: owner = người đang đăng nhập. Các field dưới BE đã bỏ qua (giữ optional cho tương thích cũ).
+  ownerUserId?: string;
+  isActive?: boolean;
+  address?: string;
 }
 
 export interface UpdateShopDto {
