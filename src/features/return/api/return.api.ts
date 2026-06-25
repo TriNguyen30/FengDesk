@@ -1,16 +1,15 @@
 import fetchHttpClient from "@/lib/httpClient";
-import type { 
-    ReturnQueryParams, 
-    ReturnListResponse, 
-    CreateReturnRequest, 
-    CreateReturnResponse, 
-    CancelReturnResponse,
-    ApproveReturnRequest,
-    ApproveReturnResponse,
-    RejectReturnRequest,
-    RejectReturnResponse, 
- } 
-from "@/features/return/types/return.d.ts";
+import type {
+  ReturnQueryParams,
+  ReturnListResponse,
+  CreateReturnRequest,
+  CreateReturnResponse,
+  CancelReturnResponse,
+  ApproveReturnRequest,
+  ApproveReturnResponse,
+  RejectReturnRequest,
+  RejectReturnResponse,
+} from "@/features/return/types/return.d.ts";
 
 export const returnApi = {
   getAllReturns: async (params?: ReturnQueryParams) => {
@@ -30,13 +29,13 @@ export const returnApi = {
   },
 
   approveReturn: async (returnId: string, payload?: ApproveReturnRequest) => {
-  return fetchHttpClient.post<ApproveReturnResponse>(`/returns/${returnId}/approve`, payload ?? {});
-},
+    return fetchHttpClient.post<ApproveReturnResponse>(
+      `/returns/${returnId}/approve`,
+      payload ?? {},
+    );
+  },
 
-rejectReturn: async (returnId: string, payload?: RejectReturnRequest) => {
-  return fetchHttpClient.post<RejectReturnResponse>(`/returns/${returnId}/reject`, payload ?? {});
-},
-
-
+  rejectReturn: async (returnId: string, payload?: RejectReturnRequest) => {
+    return fetchHttpClient.post<RejectReturnResponse>(`/returns/${returnId}/reject`, payload ?? {});
+  },
 };
-

@@ -55,9 +55,7 @@ export default function MyShopsPage() {
           </span>
           <div>
             <h1 className="text-xl font-bold tracking-tight text-gray-900">Cửa hàng của tôi</h1>
-            <p className="text-sm text-gray-500">
-              Bạn đang quản lý {shops.length} cửa hàng.
-            </p>
+            <p className="text-sm text-gray-500">Bạn đang quản lý {shops.length} cửa hàng.</p>
           </div>
         </div>
         <button
@@ -80,9 +78,7 @@ export default function MyShopsPage() {
               <h2 className="font-bold text-gray-900 line-clamp-1">{shop.name}</h2>
               <span
                 className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${
-                  shop.isActive
-                    ? "bg-green-50 text-green-600"
-                    : "bg-gray-100 text-gray-500"
+                  shop.isActive ? "bg-green-50 text-green-600" : "bg-gray-100 text-gray-500"
                 }`}
               >
                 {shop.isActive ? "Đang hoạt động" : "Tạm dừng"}

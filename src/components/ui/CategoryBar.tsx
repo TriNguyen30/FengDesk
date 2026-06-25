@@ -20,7 +20,7 @@ const navLinkClass = ({ isActive }: { isActive: boolean }) =>
     "sm:after:absolute sm:after:left-0 sm:after:-bottom-1 sm:after:h-0.5 sm:after:bg-primary sm:after:transition-all sm:after:duration-300",
     isActive
       ? "bg-primary text-white sm:bg-transparent sm:text-primary sm:after:w-full"
-      : "text-gray-700 sm:after:w-0 sm:hover:after:w-full"
+      : "text-gray-700 sm:after:w-0 sm:hover:after:w-full",
   ].join(" ");
 
 export default function CategoryBar() {

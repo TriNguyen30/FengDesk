@@ -105,8 +105,13 @@ export function useUpdateOrderDeliveryStatus() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ deliveryId, data }: { deliveryId: string; data: import("../types/orders").UpdateDeliveryStatusRequest }) =>
-      ordersApi.updateDeliveryStatus(deliveryId, data),
+    mutationFn: ({
+      deliveryId,
+      data,
+    }: {
+      deliveryId: string;
+      data: import("../types/orders").UpdateDeliveryStatusRequest;
+    }) => ordersApi.updateDeliveryStatus(deliveryId, data),
     onSuccess: (res, { deliveryId }) => {
       // Invalidate relevant queries.
       queryClient.invalidateQueries({ queryKey: ["orders"] });

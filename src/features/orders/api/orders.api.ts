@@ -31,6 +31,9 @@ export const ordersApi = {
     return fetchHttpClient.post<ApiResponse<OrderDetail>>(`/orders/${id}/cancel`);
   },
   updateDeliveryStatus: (deliveryId: string, payload: UpdateDeliveryStatusRequest) => {
-    return fetchHttpClient.patch<ApiResponse<any>>(`/orders/deliveries/${deliveryId}/status`, payload);
+    return fetchHttpClient.patch<ApiResponse<any>>(
+      `/orders/deliveries/${deliveryId}/status`,
+      payload,
+    );
   },
 };

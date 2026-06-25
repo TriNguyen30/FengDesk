@@ -24,7 +24,11 @@ export default function OrdersPage() {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const [activeTab, setActiveTab] = useState("");
-  const [reviewModal, setReviewModal] = useState<{ open: boolean; orderId: string | null; items: any[] }>({ open: false, orderId: null, items: [] });
+  const [reviewModal, setReviewModal] = useState<{
+    open: boolean;
+    orderId: string | null;
+    items: any[];
+  }>({ open: false, orderId: null, items: [] });
   const [rating, setRating] = useState(5);
   const [reviewContent, setReviewContent] = useState("");
   const [selectedProductId, setSelectedProductId] = useState<string>("");
@@ -36,9 +40,7 @@ export default function OrdersPage() {
     status: activeTab || undefined,
   });
 
-  const filteredOrders = activeTab
-    ? orders.filter(order => order.status === activeTab)
-    : orders;
+  const filteredOrders = activeTab ? orders.filter((order) => order.status === activeTab) : orders;
 
   return (
     <div>
@@ -46,7 +48,10 @@ export default function OrdersPage() {
         <h1 className="text-2xl font-bold text-gray-900">Đơn hàng của tôi</h1>
         {listStatus !== "loading" && (
           <p className="mt-1 text-sm text-gray-500 font-medium">
-            <strong className="text-gray-900">{activeTab ? filteredOrders.length : pagination.totalCount || 0}</strong> đơn hàng
+            <strong className="text-gray-900">
+              {activeTab ? filteredOrders.length : pagination.totalCount || 0}
+            </strong>{" "}
+            đơn hàng
           </p>
         )}
       </div>
@@ -63,13 +68,12 @@ export default function OrdersPage() {
               <button
                 key={tab.value}
                 onClick={() => setActiveTab(tab.value)}
-                className={`relative flex-1 whitespace-nowrap px-5 py-4 text-center text-sm font-medium transition-colors cursor-pointer ${isActive ? "text-primary" : "text-gray-500 hover:text-gray-700"
-                  }`}
+                className={`relative flex-1 whitespace-nowrap px-5 py-4 text-center text-sm font-medium transition-colors cursor-pointer ${
+                  isActive ? "text-primary" : "text-gray-500 hover:text-gray-700"
+                }`}
               >
                 {tab.label}
-                {isActive && (
-                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
-                )}
+                {isActive && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />}
               </button>
             );
           })}
@@ -83,7 +87,9 @@ export default function OrdersPage() {
       ) : filteredOrders.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-200 py-16 text-center bg-white">
           <Package className="mb-3 h-12 w-12 text-gray-300" />
-          <p className="text-gray-600">Bạn chưa có đơn hàng nào {activeTab && "ở trạng thái này"}</p>
+          <p className="text-gray-600">
+            Bạn chưa có đơn hàng nào {activeTab && "ở trạng thái này"}
+          </p>
           {!activeTab && (
             <Link
               to="/products"
@@ -109,18 +115,24 @@ export default function OrdersPage() {
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-bold text-gray-900">FengShuiGarden</span>
                     <div className="hidden gap-1 sm:flex ml-2">
-                      <button 
-                        onClick={(e) => { e.preventDefault(); dispatch(openChatbox({ isSupport: true })); }}
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          dispatch(openChatbox({ isSupport: true }));
+                        }}
                         className="flex items-center gap-1 rounded border border-primary/20 bg-primary/5 px-2 py-1 text-xs font-medium text-primary hover:bg-primary/10 transition-colors cursor-pointer"
                       >
                         <MessageCircle className="h-3 w-3" /> Chat
                       </button>
-                      <button 
-                        onClick={(e) => { 
-                          e.preventDefault(); 
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
                           const orderItems = (order as any).items || [];
                           const deliveries = (order as any).deliveries || [];
-                          const storeId = orderItems[0]?.gardenStoreId || orderItems[0]?.storeId || deliveries[0]?.storeId;
+                          const storeId =
+                            orderItems[0]?.gardenStoreId ||
+                            orderItems[0]?.storeId ||
+                            deliveries[0]?.storeId;
                           if (storeId) {
                             navigate(`/stores/${storeId}`);
                           } else {
@@ -143,7 +155,9 @@ export default function OrdersPage() {
                     {order.status === "Completed" && (
                       <span className="hidden text-gray-300 sm:block">|</span>
                     )}
-                    <span className={`font-bold uppercase ${statusMeta.className.split(' ').find((c: string) => c.startsWith('text-')) || 'text-primary'}`}>
+                    <span
+                      className={`font-bold uppercase ${statusMeta.className.split(" ").find((c: string) => c.startsWith("text-")) || "text-primary"}`}
+                    >
                       {statusMeta.label}
                     </span>
                   </div>
@@ -156,19 +170,26 @@ export default function OrdersPage() {
                 >
                   {items.length > 0 ? (
                     items.map((item: any, idx: number) => (
-                      <div key={item.id || idx} className="flex items-start gap-4 py-3 border-b border-gray-50 last:border-0 last:pb-0 first:pt-0">
+                      <div
+                        key={item.id || idx}
+                        className="flex items-start gap-4 py-3 border-b border-gray-50 last:border-0 last:pb-0 first:pt-0"
+                      >
                         <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded border border-gray-100 bg-gray-50">
                           <Package className="h-8 w-8 text-gray-300" />
                         </div>
                         <div className="flex flex-1 flex-col min-w-0">
                           <p className="text-sm text-gray-900 line-clamp-2">{item.productName}</p>
                           {item.variantName && (
-                            <p className="mt-1 text-xs text-gray-500">Phân loại hàng: {item.variantName}</p>
+                            <p className="mt-1 text-xs text-gray-500">
+                              Phân loại hàng: {item.variantName}
+                            </p>
                           )}
                           <p className="mt-1 text-sm font-medium text-gray-900">x{item.quantity}</p>
                         </div>
                         <div className="flex items-center justify-end gap-2 ml-4">
-                          <span className="text-sm font-medium text-primary">{formatVnd(item.unitPrice)}</span>
+                          <span className="text-sm font-medium text-primary">
+                            {formatVnd(item.unitPrice)}
+                          </span>
                         </div>
                       </div>
                     ))
@@ -182,7 +203,9 @@ export default function OrdersPage() {
                         <p className="text-sm font-bold text-gray-900">
                           Đơn hàng #{order.id.slice(0, 8).toUpperCase()}
                         </p>
-                        <p className="mt-1 text-xs text-gray-500">{formatOrderDate(order.createdAt)}</p>
+                        <p className="mt-1 text-xs text-gray-500">
+                          {formatOrderDate(order.createdAt)}
+                        </p>
                       </div>
                     </div>
                   )}
@@ -192,27 +215,30 @@ export default function OrdersPage() {
                 <div className="flex flex-col items-end gap-4 border-t border-gray-50 bg-gray-50/30 px-4 py-4 sm:px-6">
                   <div className="flex items-center gap-2">
                     <span className="text-sm text-gray-600">Thành tiền:</span>
-                    <span className="text-xl font-bold text-primary">{formatVnd(order.totalAmount)}</span>
+                    <span className="text-xl font-bold text-primary">
+                      {formatVnd(order.totalAmount)}
+                    </span>
                   </div>
 
                   <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-3 w-full sm:w-auto">
                     {order.status === "Completed" && (
-                      <button 
+                      <button
                         onClick={async (e) => {
                           e.preventDefault();
                           let items = (order as any).items || [];
                           if (items.length === 0) {
-                             try {
-                               const res = await ordersApi.getOrderById(order.id);
-                               if (res.data?.data?.items) {
-                                  items = res.data.data.items;
-                               }
-                             } catch (err) {
-                               console.error(err);
-                             }
+                            try {
+                              const res = await ordersApi.getOrderById(order.id);
+                              if (res.data?.data?.items) {
+                                items = res.data.data.items;
+                              }
+                            } catch (err) {
+                              console.error(err);
+                            }
                           }
                           setReviewModal({ open: true, orderId: order.id, items });
-                          if (items.length > 0) setSelectedProductId(items[0].productItemId || items[0].productId);
+                          if (items.length > 0)
+                            setSelectedProductId(items[0].productItemId || items[0].productId);
                           setRating(5);
                           setReviewContent("");
                         }}
@@ -221,8 +247,11 @@ export default function OrdersPage() {
                         Đánh Giá
                       </button>
                     )}
-                    <button 
-                      onClick={(e) => { e.preventDefault(); dispatch(openChatbox({ isSupport: true })); }}
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        dispatch(openChatbox({ isSupport: true }));
+                      }}
                       className="flex-1 sm:flex-none rounded border border-gray-200 bg-white px-6 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 cursor-pointer"
                     >
                       Liên Hệ Người Bán
@@ -248,14 +277,20 @@ export default function OrdersPage() {
       )}
 
       {/* Review Modal */}
-      <Modal open={reviewModal.open} title="Đánh giá sản phẩm" onClose={() => setReviewModal({ ...reviewModal, open: false })}>
+      <Modal
+        open={reviewModal.open}
+        title="Đánh giá sản phẩm"
+        onClose={() => setReviewModal({ ...reviewModal, open: false })}
+      >
         <div className="flex flex-col gap-4">
           {reviewModal.items.length > 0 ? (
             <>
               {reviewModal.items.length > 1 && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Chọn sản phẩm</label>
-                  <select 
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Chọn sản phẩm
+                  </label>
+                  <select
                     className="w-full rounded border border-gray-300 p-2 text-sm"
                     value={selectedProductId}
                     onChange={(e) => setSelectedProductId(e.target.value)}
@@ -268,9 +303,11 @@ export default function OrdersPage() {
                   </select>
                 </div>
               )}
-              
+
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Đánh giá của bạn</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Đánh giá của bạn
+                </label>
                 <div className="flex items-center gap-1">
                   {[1, 2, 3, 4, 5].map((star) => (
                     <Star
@@ -283,7 +320,9 @@ export default function OrdersPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Nội dung đánh giá</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Nội dung đánh giá
+                </label>
                 <textarea
                   className="w-full rounded border border-gray-300 p-3 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                   rows={4}
@@ -315,7 +354,11 @@ export default function OrdersPage() {
                     }
                     try {
                       setSubmittingReview(true);
-                      await createReviewRequest({ productId: selectedProductId, content: reviewContent, rating });
+                      await createReviewRequest({
+                        productId: selectedProductId,
+                        content: reviewContent,
+                        rating,
+                      });
                       toast.success("Đánh giá sản phẩm thành công!");
                       setReviewModal({ ...reviewModal, open: false });
                     } catch (error: any) {

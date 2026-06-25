@@ -99,8 +99,12 @@ export default function ManageProductsPage() {
     if (!deleteId) return;
     setDeleting(true);
     try {
-      await deleteProductMutation.mutateAsync(deleteId);
-      toast.success(`Đã xóa sản phẩm ${deleteName}`);
+      const res = await deleteProductMutation.mutateAsync(deleteId);
+      if (res.data.isSuccess) {
+        toast.success(`Đã xóa sản phẩm ${deleteName}`);
+      } else {
+        toast.error(res.data.message || "Đã xảy ra lỗi khi xóa sản phẩm");
+      }
     } catch (err) {
       console.error(err);
       toast.error("Đã xảy ra lỗi khi xóa sản phẩm");

@@ -26,7 +26,10 @@ export default function ManageOrderReturnPage() {
   const queryClient = useQueryClient();
 
   // Approve modal
-  const [approveModal, setApproveModal] = useState<ApproveModalState>({ open: false, returnId: null });
+  const [approveModal, setApproveModal] = useState<ApproveModalState>({
+    open: false,
+    returnId: null,
+  });
   const [approveNote, setApproveNote] = useState("");
   const [approving, setApproving] = useState(false);
 
@@ -69,7 +72,9 @@ export default function ManageOrderReturnPage() {
     if (!approveModal.returnId) return;
     setApproving(true);
     try {
-      const res = await returnApi.approveReturn(approveModal.returnId, { note: approveNote || null });
+      const res = await returnApi.approveReturn(approveModal.returnId, {
+        note: approveNote || null,
+      });
       if (res.data.isSuccess) {
         toast.success("Đã duyệt yêu cầu trả hàng");
         closeApproveModal();
@@ -120,7 +125,9 @@ export default function ManageOrderReturnPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-gray-900">Yêu cầu trả hàng</h1>
-          <p className="text-gray-500 mt-1 text-sm">Xem và quản lý các yêu cầu trả hàng / hoàn tiền.</p>
+          <p className="text-gray-500 mt-1 text-sm">
+            Xem và quản lý các yêu cầu trả hàng / hoàn tiền.
+          </p>
         </div>
       </div>
 
@@ -163,19 +170,25 @@ export default function ManageOrderReturnPage() {
                       </td>
                       <td className="p-4 text-gray-600">{item.reason}</td>
                       <td className="p-4">
-                        <span className={`inline-block rounded-md border px-2 py-0.5 text-xs font-semibold ${
-                          item.status === 'Completed' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
-                          item.status === 'Approved' ? 'bg-blue-50 text-blue-700 border-blue-200' :
-                          item.status === 'Rejected' ? 'bg-red-50 text-red-600 border-red-200' :
-                          item.status === 'Cancelled' ? 'bg-gray-100 text-gray-500 border-gray-200' :
-                          'bg-amber-50 text-amber-700 border-amber-200'
-                        }`}>
+                        <span
+                          className={`inline-block rounded-md border px-2 py-0.5 text-xs font-semibold ${
+                            item.status === "Completed"
+                              ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                              : item.status === "Approved"
+                                ? "bg-blue-50 text-blue-700 border-blue-200"
+                                : item.status === "Rejected"
+                                  ? "bg-red-50 text-red-600 border-red-200"
+                                  : item.status === "Cancelled"
+                                    ? "bg-gray-100 text-gray-500 border-gray-200"
+                                    : "bg-amber-50 text-amber-700 border-amber-200"
+                          }`}
+                        >
                           {item.status}
                         </span>
                       </td>
                       <td className="p-4 text-center">{item.itemCount}</td>
                       <td className="p-4 font-bold text-gray-900">
-                        {item.refundAmount > 0 ? formatVnd(item.refundAmount) : '-'}
+                        {item.refundAmount > 0 ? formatVnd(item.refundAmount) : "-"}
                       </td>
                       <td className="p-4 text-xs text-gray-500">
                         {formatOrderDate(item.createdAt)}
@@ -227,7 +240,9 @@ export default function ManageOrderReturnPage() {
               </div>
             </div>
             <div className="px-6 py-4">
-              <label className="block text-xs font-semibold text-gray-600 mb-1.5">Ghi chú (tuỳ chọn)</label>
+              <label className="block text-xs font-semibold text-gray-600 mb-1.5">
+                Ghi chú (tuỳ chọn)
+              </label>
               <textarea
                 value={approveNote}
                 onChange={(e) => setApproveNote(e.target.value)}
