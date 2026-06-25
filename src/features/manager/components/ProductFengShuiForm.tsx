@@ -1,27 +1,178 @@
 import React from "react";
 import { Sparkles, Save, RefreshCw } from "lucide-react";
+import type { LookupItem } from "@/features/products/types/taxonomy";
 
-interface ProductFengShuiFormProps {
-  fsElement: string;
-  setFsElement: (val: string) => void;
-  fsCompatibility: string;
-  setFsCompatibility: (val: string) => void;
-  fsDescription: string;
-  setFsDescription: (val: string) => void;
+export const FS_ELEMENTS = [
+  { code: "Kim", label: "Kim (Kim loại)" },
+  { code: "Moc", label: "Mộc (Cây cối)" },
+  { code: "Thuy", label: "Thủy (Nước)" },
+  { code: "Hoa", label: "Hỏa (Lửa)" },
+  { code: "Tho", label: "Thổ (Đất)" },
+];
+
+export const FS_SIZE_CLASSES = [
+  { code: "Small", label: "Nhỏ" },
+  { code: "Medium", label: "Vừa" },
+  { code: "Large", label: "Lớn" },
+];
+
+export interface FengShuiValues {
+  primaryElement: string;
+  secondaryElements: string[];
+  sizeClass: string;
+  vibes: string[];
+  styles: string[];
+}
+
+interface ProductFengShuiFieldsProps {
+  value: FengShuiValues;
+  onChange: (next: FengShuiValues) => void;
+  vibeOptions: LookupItem[];
+  styleOptions: LookupItem[];
+}
+
+function toggle(list: string[], code: string): string[] {
+  return list.includes(code) ? list.filter((c) => c !== code) : [...list, code];
+}
+
+/** Các trường thuộc tính phong thủy — dùng chung cho Create (nhúng) & Edit (kèm submit). */
+export function ProductFengShuiFields({
+  value,
+  onChange,
+  vibeOptions,
+  styleOptions,
+}: ProductFengShuiFieldsProps) {
+  const set = (patch: Partial<FengShuiValues>) => onChange({ ...value, ...patch });
+
+  return (
+    <div className="space-y-5">
+      {/* Hành chính */}
+      <div className="space-y-1.5 max-w-sm">
+        <label className="text-sm font-semibold text-gray-700">Hành chính (mệnh) *</label>
+        <select
+          value={value.primaryElement}
+          onChange={(e) =>
+            set({
+              primaryElement: e.target.value,
+              secondaryElements: value.secondaryElements.filter((c) => c !== e.target.value),
+            })
+          }
+          className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-700 focus:border-primary focus:outline-none"
+        >
+          {FS_ELEMENTS.map((el) => (
+            <option key={el.code} value={el.code}>
+              {el.label}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Hành phụ */}
+      <div className="space-y-2">
+        <label className="text-sm font-semibold text-gray-700">Hành phụ (tùy chọn)</label>
+        <div className="flex flex-wrap gap-2">
+          {FS_ELEMENTS.filter((el) => el.code !== value.primaryElement).map((el) => {
+            const active = value.secondaryElements.includes(el.code);
+            return (
+              <button
+                key={el.code}
+                type="button"
+                onClick={() => set({ secondaryElements: toggle(value.secondaryElements, el.code) })}
+                className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition-all cursor-pointer ${
+                  active
+                    ? "border-primary bg-primary/5 text-primary"
+                    : "border-gray-200 text-gray-600 hover:border-primary/40"
+                }`}
+              >
+                {el.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Kích thước */}
+      <div className="space-y-1.5 max-w-sm">
+        <label className="text-sm font-semibold text-gray-700">Phân loại kích thước</label>
+        <select
+          value={value.sizeClass}
+          onChange={(e) => set({ sizeClass: e.target.value })}
+          className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-700 focus:border-primary focus:outline-none"
+        >
+          {FS_SIZE_CLASSES.map((s) => (
+            <option key={s.code} value={s.code}>
+              {s.label}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Vibe */}
+      <div className="space-y-2">
+        <label className="text-sm font-semibold text-gray-700">Cảm hứng không gian (vibe)</label>
+        {vibeOptions.length === 0 ? (
+          <p className="text-xs text-gray-400 italic">Đang tải vibe...</p>
+        ) : (
+          <div className="flex flex-wrap gap-2">
+            {vibeOptions.map((v) => {
+              const active = value.vibes.includes(v.code);
+              return (
+                <button
+                  key={v.code}
+                  type="button"
+                  onClick={() => set({ vibes: toggle(value.vibes, v.code) })}
+                  className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition-all cursor-pointer ${
+                    active
+                      ? "border-primary bg-primary/5 text-primary"
+                      : "border-gray-200 text-gray-600 hover:border-primary/40"
+                  }`}
+                >
+                  {v.name}
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Style */}
+      <div className="space-y-2">
+        <label className="text-sm font-semibold text-gray-700">Phong cách (style)</label>
+        {styleOptions.length === 0 ? (
+          <p className="text-xs text-gray-400 italic">Đang tải style...</p>
+        ) : (
+          <div className="flex flex-wrap gap-2">
+            {styleOptions.map((s) => {
+              const active = value.styles.includes(s.code);
+              return (
+                <button
+                  key={s.code}
+                  type="button"
+                  onClick={() => set({ styles: toggle(value.styles, s.code) })}
+                  className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition-all cursor-pointer ${
+                    active
+                      ? "border-primary bg-primary/5 text-primary"
+                      : "border-gray-200 text-gray-600 hover:border-primary/40"
+                  }`}
+                >
+                  {s.name}
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+interface ProductFengShuiFormProps extends ProductFengShuiFieldsProps {
   onSubmit: (e: React.FormEvent) => void;
   saving: boolean;
 }
 
-export function ProductFengShuiForm({
-  fsElement,
-  setFsElement,
-  fsCompatibility,
-  setFsCompatibility,
-  fsDescription,
-  setFsDescription,
-  onSubmit,
-  saving,
-}: ProductFengShuiFormProps) {
+/** Tab phong thủy ở trang Edit — fields + nút lưu (gọi PUT /products/{id}/feng-shui). */
+export function ProductFengShuiForm({ onSubmit, saving, ...fields }: ProductFengShuiFormProps) {
   return (
     <form
       onSubmit={onSubmit}
@@ -29,47 +180,10 @@ export function ProductFengShuiForm({
     >
       <div className="flex items-center gap-2 border-b border-gray-100 pb-3">
         <Sparkles size={18} className="text-primary" />
-        <h2 className="text-base font-bold text-gray-950">Thuộc tính ngũ hành phong thủy</h2>
+        <h2 className="text-base font-bold text-gray-950">Thuộc tính phong thủy</h2>
       </div>
 
-      <div className="space-y-4">
-        <div className="space-y-1.5 max-w-sm">
-          <label className="text-sm font-semibold text-gray-700">Mệnh / Hành phong thủy *</label>
-          <select
-            value={fsElement}
-            onChange={(e) => setFsElement(e.target.value)}
-            className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-700 focus:border-primary focus:outline-none"
-          >
-            <option value="Kim">Kim (Kim loại)</option>
-            <option value="Mộc">Mộc (Cây cối)</option>
-            <option value="Thủy">Thủy (Nước)</option>
-            <option value="Hỏa">Hỏa (Lửa)</option>
-            <option value="Thổ">Thổ (Đất)</option>
-          </select>
-        </div>
-
-        <div className="space-y-1.5">
-          <label className="text-sm font-semibold text-gray-700">Khả năng tương thích</label>
-          <textarea
-            rows={3}
-            placeholder="Ví dụ: Tương sinh với mệnh Thủy, tương khắc mệnh Hỏa..."
-            value={fsCompatibility}
-            onChange={(e) => setFsCompatibility(e.target.value)}
-            className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-700 focus:border-primary focus:outline-none"
-          />
-        </div>
-
-        <div className="space-y-1.5">
-          <label className="text-sm font-semibold text-gray-700">Mô tả phong thủy</label>
-          <textarea
-            rows={4}
-            placeholder="Ý nghĩa phong thủy, hướng tốt nhất đặt cây..."
-            value={fsDescription}
-            onChange={(e) => setFsDescription(e.target.value)}
-            className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-700 focus:border-primary focus:outline-none"
-          />
-        </div>
-      </div>
+      <ProductFengShuiFields {...fields} />
 
       <div className="flex justify-end pt-3">
         <button

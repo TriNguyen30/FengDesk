@@ -6,7 +6,6 @@ import {
   Trash2,
   RefreshCw,
   Image,
-  Tag as TagIcon,
   Layers,
   Sparkles,
   Info,
@@ -16,10 +15,11 @@ import {
 import { productApi } from "@/features/products/api/product.api";
 import { getAllShopRequest } from "@/features/shop/api/shop.api";
 import { getCategoriesRequest } from "@/features/category/api/category.api";
-import { getTags } from "@/features/products/api/tag.api";
+import { getVibes, getStyles } from "@/features/products/api/taxonomy.api";
 import type { Shop } from "@/features/shop/types/shop";
 import type { Category } from "@/features/category/types/category";
-import type { Tag } from "@/features/products/types/tag";
+import type { LookupItem } from "@/features/products/types/taxonomy";
+import { ProductFengShuiFields, type FengShuiValues } from "@/features/manager/components";
 import { toast } from "sonner";
 import { uploadFile } from "@/services/upload.service";
 
@@ -30,7 +30,8 @@ export default function CreateProductPage() {
   // Lists for dropdowns/checkboxes
   const [shops, setShops] = useState<Shop[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [tags, setTags] = useState<Tag[]>([]);
+  const [vibeOptions, setVibeOptions] = useState<LookupItem[]>([]);
+  const [styleOptions, setStyleOptions] = useState<LookupItem[]>([]);
 
   // Form states
   const [gardenStoreId, setGardenStoreId] = useState("");
@@ -44,9 +45,8 @@ export default function CreateProductPage() {
   const [itemStock, setItemStock] = useState<number>(10);
   const [itemSku, setItemSku] = useState("");
 
-  // Categories & Tags selection
+  // Categories selection
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
-  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
 
   // Images state
   interface ImageItem {
@@ -60,19 +60,24 @@ export default function CreateProductPage() {
   const [manualUrl, setManualUrl] = useState("");
   const [showManualUrlInput, setShowManualUrlInput] = useState(false);
 
-  // Feng Shui state
-  const [fengShuiElement, setFengShuiElement] = useState("Kim");
-  const [fengShuiCompatibility, setFengShuiCompatibility] = useState("");
-  const [fengShuiDescription, setFengShuiDescription] = useState("");
+  // Feng Shui state (gửi luôn trong payload tạo sản phẩm)
+  const [fengShui, setFengShui] = useState<FengShuiValues>({
+    primaryElement: "Kim",
+    secondaryElements: [],
+    sizeClass: "Medium",
+    vibes: [],
+    styles: [],
+  });
 
   // Fetch filter options
   useEffect(() => {
     const fetchOptions = async () => {
       try {
-        const [shopsRes, categoriesRes, tagsRes] = await Promise.all([
+        const [shopsRes, categoriesRes, vibesRes, stylesRes] = await Promise.all([
           getAllShopRequest(),
           getCategoriesRequest(),
-          getTags(),
+          getVibes(),
+          getStyles(),
         ]);
         if (shopsRes.isSuccess && shopsRes.data) {
           setShops(shopsRes.data);
@@ -83,9 +88,8 @@ export default function CreateProductPage() {
         if (categoriesRes.isSuccess && categoriesRes.data) {
           setCategories(categoriesRes.data.filter((c) => c.isActive));
         }
-        if (tagsRes.isSuccess && tagsRes.data) {
-          setTags(tagsRes.data);
-        }
+        if (vibesRes.isSuccess && vibesRes.data) setVibeOptions(vibesRes.data);
+        if (stylesRes.isSuccess && stylesRes.data) setStyleOptions(stylesRes.data);
       } catch (err) {
         console.error("Failed to load options", err);
       }
@@ -175,13 +179,6 @@ export default function CreateProductPage() {
     );
   };
 
-  // Tag selection handler
-  const handleTagToggle = (id: string) => {
-    setSelectedTagIds((prev) =>
-      prev.includes(id) ? prev.filter((tId) => tId !== id) : [...prev, id],
-    );
-  };
-
   // Submit Handler
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -229,29 +226,18 @@ export default function CreateProductPage() {
         ],
         images: validImages,
         categoryIds: selectedCategoryIds,
-        tagIds: selectedTagIds,
         isActive,
+        // Phong thủy gửi luôn khi tạo → sản phẩm thành ứng viên gợi ý ngay
+        primaryElement: fengShui.primaryElement,
+        secondaryElements: fengShui.secondaryElements,
+        sizeClass: fengShui.sizeClass,
+        vibes: fengShui.vibes,
+        styles: fengShui.styles,
       };
 
       const productRes = await productApi.createProduct(payload);
 
       if (productRes.data.isSuccess && productRes.data.data) {
-        const newProductId = productRes.data.data.id;
-
-        // Save Feng Shui information if provided
-        if (fengShuiElement || fengShuiCompatibility || fengShuiDescription) {
-          try {
-            await productApi.updateProductFengShui(newProductId, {
-              element: fengShuiElement,
-              compatibility: fengShuiCompatibility.trim(),
-              description: fengShuiDescription.trim(),
-            });
-          } catch (fsErr) {
-            console.error("Failed to save Feng Shui attributes", fsErr);
-            toast.warning("Sản phẩm đã tạo nhưng không thể lưu thuộc tính phong thủy");
-          }
-        }
-
         toast.success("Đã tạo sản phẩm mới thành công");
         navigate("/manager/products");
       } else {
@@ -549,49 +535,14 @@ export default function CreateProductPage() {
           <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-100 space-y-5">
             <div className="flex items-center gap-2 border-b border-gray-100 pb-3">
               <Sparkles size={18} className="text-primary" />
-              <h2 className="text-base font-bold text-gray-950">Ngũ hành phong thủy</h2>
+              <h2 className="text-base font-bold text-gray-950">Thuộc tính phong thủy</h2>
             </div>
-
-            <div className="space-y-4">
-              <div className="space-y-1.5">
-                <label className="text-sm font-semibold text-gray-700">
-                  Mệnh / Hành phong thủy *
-                </label>
-                <select
-                  value={fengShuiElement}
-                  onChange={(e) => setFengShuiElement(e.target.value)}
-                  className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-700 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/30"
-                >
-                  <option value="Kim">Kim (Kim loại)</option>
-                  <option value="Mộc">Mộc (Cây cối)</option>
-                  <option value="Thủy">Thủy (Nước)</option>
-                  <option value="Hỏa">Hỏa (Lửa)</option>
-                  <option value="Thổ">Thổ (Đất)</option>
-                </select>
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-sm font-semibold text-gray-700">Mức độ tương thích</label>
-                <textarea
-                  rows={2}
-                  placeholder="Ví dụ: Tương sinh với mệnh Thủy, tương khắc mệnh Hỏa..."
-                  value={fengShuiCompatibility}
-                  onChange={(e) => setFengShuiCompatibility(e.target.value)}
-                  className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-700 placeholder:text-gray-400 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/30"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-sm font-semibold text-gray-700">Mô tả phong thủy</label>
-                <textarea
-                  rows={3}
-                  placeholder="Ý nghĩa phong thủy, hướng đặt cây tốt nhất..."
-                  value={fengShuiDescription}
-                  onChange={(e) => setFengShuiDescription(e.target.value)}
-                  className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-700 placeholder:text-gray-400 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/30"
-                />
-              </div>
-            </div>
+            <ProductFengShuiFields
+              value={fengShui}
+              onChange={setFengShui}
+              vibeOptions={vibeOptions}
+              styleOptions={styleOptions}
+            />
           </div>
 
           {/* Card 5: Categories */}
@@ -617,35 +568,6 @@ export default function CreateProductPage() {
                       className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
                     />
                     {cat.name}
-                  </label>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Card 6: Tags */}
-          <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-100 space-y-4">
-            <div className="flex items-center gap-2 border-b border-gray-100 pb-3">
-              <TagIcon size={18} className="text-primary" />
-              <h2 className="text-base font-bold text-gray-950">Nhãn sản phẩm (Tag)</h2>
-            </div>
-
-            {tags.length === 0 ? (
-              <p className="text-xs text-gray-400 italic">Đang tải nhãn...</p>
-            ) : (
-              <div className="max-h-56 overflow-y-auto space-y-2 pr-1">
-                {tags.map((tag) => (
-                  <label
-                    key={tag.id}
-                    className="flex items-center gap-2.5 text-sm font-medium text-gray-700 cursor-pointer"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={selectedTagIds.includes(tag.id)}
-                      onChange={() => handleTagToggle(tag.id)}
-                      className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
-                    />
-                    {tag.name}
                   </label>
                 ))}
               </div>

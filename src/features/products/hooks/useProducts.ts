@@ -8,7 +8,6 @@ import type {
   UpdateProductItemRequest,
   AddProductImageRequest,
   SetProductCategoriesRequest,
-  SetProductTagsRequest,
   UpdateProductFengShuiRequest,
 } from "../types/product";
 
@@ -77,7 +76,7 @@ export function useUpdateProduct() {
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: UpdateProductRequest }) =>
       productApi.updateProduct(id, data),
-    onSuccess: (res, { id }) => {
+    onSuccess: (_res, { id }) => {
       queryClient.invalidateQueries({ queryKey: ["product", id] });
       queryClient.invalidateQueries({ queryKey: ["products"] });
     },
@@ -99,7 +98,7 @@ export function useCreateProductItem() {
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: CreateProductItemRequest }) =>
       productApi.createProductItem(id, data),
-    onSuccess: (res, { id }) => {
+    onSuccess: (_res, { id }) => {
       queryClient.invalidateQueries({ queryKey: ["product", id] });
     },
   });
@@ -117,7 +116,7 @@ export function useUpdateProductItem() {
       itemId: string;
       data: UpdateProductItemRequest;
     }) => productApi.updateProductItem(id, itemId, data),
-    onSuccess: (res, { id }) => {
+    onSuccess: (_res, { id }) => {
       queryClient.invalidateQueries({ queryKey: ["product", id] });
     },
   });
@@ -128,7 +127,7 @@ export function useDeleteProductItem() {
   return useMutation({
     mutationFn: ({ id, itemId }: { id: string; itemId: string }) =>
       productApi.deleteProductItem(id, itemId),
-    onSuccess: (res, { id }) => {
+    onSuccess: (_res, { id }) => {
       queryClient.invalidateQueries({ queryKey: ["product", id] });
     },
   });
@@ -139,7 +138,7 @@ export function useAddProductImage() {
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: AddProductImageRequest | FormData }) =>
       productApi.addProductImage(id, data),
-    onSuccess: (res, { id }) => {
+    onSuccess: (_res, { id }) => {
       queryClient.invalidateQueries({ queryKey: ["product", id] });
     },
   });
@@ -150,7 +149,7 @@ export function useDeleteProductImage() {
   return useMutation({
     mutationFn: ({ id, imageId }: { id: string; imageId: string }) =>
       productApi.deleteProductImage(id, imageId),
-    onSuccess: (res, { id }) => {
+    onSuccess: (_res, { id }) => {
       queryClient.invalidateQueries({ queryKey: ["product", id] });
     },
   });
@@ -161,18 +160,7 @@ export function useUpdateProductCategories() {
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: SetProductCategoriesRequest }) =>
       productApi.updateProductCategories(id, data),
-    onSuccess: (res, { id }) => {
-      queryClient.invalidateQueries({ queryKey: ["product", id] });
-    },
-  });
-}
-
-export function useUpdateProductTags() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: SetProductTagsRequest }) =>
-      productApi.updateProductTags(id, data),
-    onSuccess: (res, { id }) => {
+    onSuccess: (_res, { id }) => {
       queryClient.invalidateQueries({ queryKey: ["product", id] });
     },
   });
@@ -183,7 +171,7 @@ export function useUpdateProductFengShui() {
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: UpdateProductFengShuiRequest }) =>
       productApi.updateProductFengShui(id, data),
-    onSuccess: (res, { id }) => {
+    onSuccess: (_res, { id }) => {
       queryClient.invalidateQueries({ queryKey: ["product", id] });
     },
   });
