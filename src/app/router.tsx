@@ -14,6 +14,7 @@ import ManageOrdersPage from "@/features/manager/pages/ManageOrdersPage";
 import StaffSupportPage from "@/features/chatbox/pages/StaffSupportPage";
 import CartPage from "@/features/cart/pages/CartPage";
 import ProtectedRoute from "./ProtectedRoute";
+import ManageOrderReturnPage from "@/features/manager/pages/ManageOrderReturnPage";
 
 // Profile Pages
 import ProfileLayout from "@/features/users/pages/ProfileLayout";
@@ -93,6 +94,7 @@ export default function AppRoutes() {
         <Route path="products/:id/edit" element={<EditProductPage />} />
         <Route path="stores" element={<ManageStoresPage />} />
         <Route path="orders" element={<ManageOrdersPage />} />
+        <Route path="order-returns" element={<ManageOrderReturnPage />} />
         <Route path="customers" element={<StaffSupportPage />} />
       </Route>
     </Routes>
