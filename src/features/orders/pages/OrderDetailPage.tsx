@@ -1,6 +1,10 @@
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { ChevronLeft, Loader2, MapPin, Package, RotateCcw, X, CheckSquare, ClipboardList, CreditCard, CheckCircle } from "lucide-react";
+import {
+  ChevronLeft, Loader2, MapPin, Package, RotateCcw, X,
+  CheckSquare, ClipboardList, CreditCard, CheckCircle,
+  Truck, Store, MessageCircle, ShoppingCart, FileText, StickyNote,
+} from "lucide-react";
 import { toast } from "sonner";
 import Modal from "@/components/ui/Modal";
 import { useOrderDetail, useCancelOrder } from "../hooks/useOrders";
@@ -24,17 +28,16 @@ const REASON_OPTIONS: { value: ReturnReason; label: string }[] = [
   { value: "Other", label: "Lý do khác" },
 ];
 
-const DELIVERY_STATUS_LABEL: Record<string, { label: string; color: string }> = {
-  Pending: { label: "Đang chờ", color: "text-amber-600" },
-  Confirmed: { label: "Đã xác nhận", color: "text-indigo-600" },
-  Preparing: { label: "Đang chuẩn bị", color: "text-blue-600" },
-  Shipped: { label: "Đang giao hàng", color: "text-blue-600" },
-  Delivered: { label: "Đã giao hàng", color: "text-emerald-600" },
-  Cancelled: { label: "Đã hủy", color: "text-red-500" },
-  Returned: { label: "Đã trả hàng", color: "text-red-500" },
+const DELIVERY_STATUS_LABEL: Record<string, { label: string; pillClass: string }> = {
+  Pending: { label: "Đang chờ", pillClass: "bg-amber-50 text-amber-700 border border-amber-200" },
+  Confirmed: { label: "Đã xác nhận", pillClass: "bg-indigo-50 text-indigo-700 border border-indigo-200" },
+  Preparing: { label: "Đang chuẩn bị", pillClass: "bg-blue-50 text-blue-700 border border-blue-200" },
+  Shipped: { label: "Đang giao hàng", pillClass: "bg-blue-50 text-blue-700 border border-blue-200" },
+  Delivered: { label: "Đã giao hàng", pillClass: "bg-emerald-50 text-emerald-700 border border-emerald-200" },
+  Cancelled: { label: "Đã hủy", pillClass: "bg-red-50 text-red-600 border border-red-200" },
+  Returned: { label: "Đã trả hàng", pillClass: "bg-red-50 text-red-600 border border-red-200" },
 };
 
-// State for selected items per order line item
 interface SelectedItem {
   orderItemId: string;
   quantity: number;
@@ -44,7 +47,6 @@ interface SelectedItem {
 interface ReturnModalState {
   open: boolean;
   deliveryId: string | null;
-  /** Items belonging to this delivery */
   items: OrderLineItem[];
 }
 
@@ -57,7 +59,6 @@ export default function OrderDetailPage() {
   const [cancelling, setCancelling] = useState(false);
   const [paying, setPaying] = useState(false);
 
-  // Return modal state
   const [returnModal, setReturnModal] = useState<ReturnModalState>({ open: false, deliveryId: null, items: [] });
   const [returnType, setReturnType] = useState<ReturnType>("Refund");
   const [returnReason, setReturnReason] = useState<ReturnReason>("Defective");
@@ -82,7 +83,6 @@ export default function OrderDetailPage() {
 
   const closeReturnModal = () => setReturnModal({ open: false, deliveryId: null, items: [] });
 
-  // Toggle all items selection
   const handleToggleAll = () => {
     if (Object.keys(selectedItems).length === returnModal.items.length) {
       setSelectedItems({});
@@ -208,301 +208,375 @@ export default function OrderDetailPage() {
   const statusMeta = getOrderStatusMeta(order.status, order.paymentMethod);
   const canCancel = !["Cancelled", "Completed", "Expired"].includes(order.status);
   const deliveries: any[] = (order as any).deliveries ?? [];
-
-  // Check if any delivery is Delivered → show return section
   const hasDeliveredDelivery = deliveries.some((d) => d.status === "Delivered");
 
-  // Items belonging to a given deliveryId (matched via item.deliveryId)
   const getDeliveryItems = (deliveryId: string): OrderLineItem[] =>
     (order.items ?? []).filter((item) => item.deliveryId === deliveryId);
 
   const allSelected = returnModal.items.length > 0 && Object.keys(selectedItems).length === returnModal.items.length;
-  const someSelected = Object.keys(selectedItems).length > 0 && !allSelected;
 
   const getSteps = () => {
     if (order.status === "Cancelled") {
       return [
-        { label: "Đơn hàng đã đặt", date: order.createdAt, completed: true, icon: <ClipboardList className="h-5 w-5" /> },
-        { label: "Đã hủy", date: order.statusLogs?.find(l => l.toStatus === "Cancelled")?.changedAt, completed: true, isError: true, icon: <X className="h-5 w-5" /> }
+        { label: "Đơn đã đặt", date: order.createdAt, completed: true, isError: false, icon: <ClipboardList className="h-4 w-4" /> },
+        { label: "Đã hủy", date: order.statusLogs?.find((l: any) => l.toStatus === "Cancelled")?.changedAt, completed: true, isError: true, icon: <X className="h-4 w-4" /> },
       ];
     }
-    
     if (order.status === "Expired") {
       return [
-        { label: "Đơn hàng đã đặt", date: order.createdAt, completed: true, icon: <ClipboardList className="h-5 w-5" /> },
-        { label: "Đã hết hạn", date: order.statusLogs?.find(l => l.toStatus === "Expired")?.changedAt, completed: true, isError: true, icon: <X className="h-5 w-5" /> }
+        { label: "Đơn đã đặt", date: order.createdAt, completed: true, isError: false, icon: <ClipboardList className="h-4 w-4" /> },
+        { label: "Đã hết hạn", date: order.statusLogs?.find((l: any) => l.toStatus === "Expired")?.changedAt, completed: true, isError: true, icon: <X className="h-4 w-4" /> },
       ];
     }
 
-    const steps = [
-      { id: "Pending", label: "Đơn hàng đã đặt", icon: <ClipboardList className="h-5 w-5" /> },
+    const steps: { id: string; label: string; icon: React.ReactNode }[] = [
+      { id: "Pending", label: "Đơn đã đặt", icon: <ClipboardList className="h-4 w-4" /> },
     ];
-
     if (order.paymentMethod === "PayOS") {
-      steps.push({ id: "Paid", label: "Đã thanh toán", icon: <CreditCard className="h-5 w-5" /> });
+      steps.push({ id: "Paid", label: "Đã thanh toán", icon: <CreditCard className="h-4 w-4" /> });
     }
+    steps.push({ id: "Processing", label: "Đang xử lý", icon: <Package className="h-4 w-4" /> });
+    steps.push({ id: "Completed", label: "Hoàn thành", icon: <CheckCircle className="h-4 w-4" /> });
 
-    steps.push({ id: "Processing", label: "Đang xử lý", icon: <Package className="h-5 w-5" /> });
-    steps.push({ id: "Completed", label: "Đã hoàn thành", icon: <CheckCircle className="h-5 w-5" /> });
-
-    let currentIdx = steps.findIndex(s => s.id === order.status);
+    let currentIdx = steps.findIndex((s) => s.id === order.status);
     if (order.status === "Completed") currentIdx = steps.length - 1;
 
     return steps.map((s, idx) => {
       let date = null;
       if (s.id === "Pending") date = order.createdAt;
       else {
-        const log = order.statusLogs?.find(l => l.toStatus === s.id);
+        const log = order.statusLogs?.find((l: any) => l.toStatus === s.id);
         if (log) date = log.changedAt;
       }
-      
-      const isCompleted = currentIdx >= idx || order.status === "Completed";
-      
-      return {
-        ...s,
-        date,
-        completed: isCompleted,
-        isError: false,
-      };
+      return { ...s, date, completed: currentIdx >= idx || order.status === "Completed", isError: false };
     });
   };
 
   const steps = getSteps();
 
+  // Determine active step index (first incomplete, or last if all done)
+  const activeIdx = steps.findIndex((s, i) => s.completed && (!steps[i + 1]?.completed));
+
   return (
     <div>
+      {/* Back nav */}
       <button
         onClick={() => navigate("/profile/orders")}
         className="mb-4 flex items-center gap-1.5 text-sm font-medium text-gray-500 hover:text-primary cursor-pointer"
       >
         <ChevronLeft className="h-4 w-4" />
-        Quay lại danh sách
+        Quay lại đơn hàng
       </button>
 
-      <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">
-            Đơn #{order.id.slice(0, 8).toUpperCase()}
-          </h1>
-          <p className="mt-1 text-sm text-gray-500">Đặt lúc {formatOrderDate(order.createdAt)}</p>
-        </div>
-        <span className={`rounded-full px-3 py-1 text-sm font-semibold ${statusMeta.className}`}>
-          {statusMeta.label}
-        </span>
-      </div>
+      <div className="flex flex-col gap-3">
 
-      {/* Stepper */}
-      <div className="mb-6 rounded-xl border border-gray-100 bg-white p-6 shadow-sm overflow-x-auto">
-        <div className="relative flex justify-between min-w-[500px]">
-          {/* Progress Line Background */}
-          <div className="absolute top-5 left-8 right-8 h-1 bg-gray-100 rounded"></div>
-          
-          {/* Progress Line Active */}
-          <div 
-             className="absolute top-5 left-8 h-1 bg-primary rounded transition-all duration-500"
-             style={{ width: `calc(${(Math.max(0, steps.filter(s => s.completed).length - 1) / Math.max(1, steps.length - 1)) * 100}% - 4rem)` }}
-          ></div>
-
-          {steps.map((step, idx) => (
-            <div key={idx} className="relative z-10 flex flex-col items-center gap-3 w-1/4">
-              <div className={`flex h-11 w-11 items-center justify-center rounded-full border-[3px] border-white shadow-sm ${step.isError ? 'bg-red-500 text-white' : step.completed ? 'bg-primary text-white' : 'bg-gray-100 text-gray-400'}`}>
-                {step.icon}
-              </div>
-              <div className="text-center">
-                <p className={`text-sm font-bold ${step.isError ? 'text-red-600' : step.completed ? 'text-gray-900' : 'text-gray-400'}`}>{step.label}</p>
-                {step.date && <p className="text-xs text-gray-500 mt-1">{formatOrderDate(step.date)}</p>}
+        {/* ── Status banner + Stepper ── */}
+        <div className="rounded-xl bg-white border border-gray-100 overflow-hidden">
+          {/* Banner */}
+          <div className={`flex items-center justify-between px-5 py-4 border-b-2 ${order.status === "Cancelled" || order.status === "Expired"
+              ? "bg-red-50 border-red-400"
+              : order.status === "Completed"
+                ? "bg-emerald-50 border-emerald-500"
+                : "bg-violet-50 border-primary"
+            }`}>
+            <div className="flex items-center gap-3">
+              {order.status === "Cancelled" || order.status === "Expired" ? (
+                <X className="h-6 w-6 text-red-500 shrink-0" />
+              ) : order.status === "Completed" ? (
+                <CheckCircle className="h-6 w-6 text-emerald-600 shrink-0" />
+              ) : (
+                <Truck className="h-6 w-6 text-primary shrink-0" />
+              )}
+              <div>
+                <p className={`font-semibold text-base leading-tight ${order.status === "Cancelled" || order.status === "Expired"
+                    ? "text-red-700"
+                    : order.status === "Completed"
+                      ? "text-emerald-700"
+                      : "text-violet-800"
+                  }`}>
+                  {statusMeta.label}
+                </p>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  Đặt lúc {formatOrderDate(order.createdAt)}
+                </p>
               </div>
             </div>
-          ))}
-        </div>
-      </div>
+            <span className="text-xs font-mono text-gray-400">
+              #{order.id.slice(0, 8).toUpperCase()}
+            </span>
+          </div>
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
-        <div className="space-y-6">
-          {/* Products */}
-          <section className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
-            <h2 className="mb-4 text-lg font-bold text-gray-900">Sản phẩm</h2>
-            <ul className="divide-y divide-gray-100">
-              {(order.items ?? []).map((item) => (
-                <li key={item.id} className="flex gap-4 py-4 first:pt-0 last:pb-0">
-                  <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-gray-50 ring-1 ring-gray-100">
-                    <Package className="h-6 w-6 text-gray-300" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="font-medium text-gray-900">{item.productName}</p>
-                    <p className="mt-1 text-sm text-gray-500">
-                      {formatVnd(item.unitPrice)} x {item.quantity}
-                    </p>
-                  </div>
-                  <p className="shrink-0 font-semibold text-gray-900">
-                    {formatVnd(item.lineTotal)}
-                  </p>
-                </li>
-              ))}
-            </ul>
-          </section>
+          {/* Stepper */}
+          <div className="px-5 pt-5 pb-4 overflow-x-auto">
+            <div className="flex items-start min-w-[400px]">
+              {steps.map((step, idx) => {
+                const isLast = idx === steps.length - 1;
+                const isActive = idx === activeIdx;
+                const lineRight = !isLast && steps[idx + 1]?.completed;
 
-          {/* Deliveries */}
-          {deliveries.length > 0 && (
-            <section className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
-              {/* Header row: title + return button (if any delivery is Delivered) */}
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-bold text-gray-900">Đơn giao hàng</h2>
-                {hasDeliveredDelivery && (
-                  <button
-                    onClick={() => setDeliveryPickerOpen(true)}
-                    className="flex items-center gap-1.5 rounded-lg border border-orange-200 bg-orange-50 px-3 py-1.5 text-xs font-semibold text-orange-600 hover:bg-orange-100 transition-colors cursor-pointer"
-                  >
-                    <RotateCcw className="h-3.5 w-3.5" />
-                    Yêu cầu trả hàng
-                  </button>
-                )}
-              </div>
-
-              <div className="space-y-3">
-                {deliveries.map((delivery) => {
-                  const statusInfo = DELIVERY_STATUS_LABEL[delivery.status] ?? { label: delivery.status, color: "text-gray-600" };
-                  const isDelivered = delivery.status === "Delivered";
-                  // returnRequest is embedded in delivery by backend (nullable)
-                  const returnRequest: { id: string; status: string } | null = delivery.returnRequest ?? null;
-                  const hasPendingReturn = returnRequest && returnRequest.status === "Requested";
-                  return (
-                    <div
-                      key={delivery.id}
-                      className={`rounded-lg border p-4 flex items-center justify-between gap-3 ${
-                        isDelivered ? "border-emerald-100 bg-emerald-50/30" : "border-gray-100 bg-gray-50/40"
-                      }`}
-                    >
-                      <div className="min-w-0 flex-1 space-y-1">
-                        {delivery.storeName && (
-                          <p className="text-sm font-semibold text-gray-800">{delivery.storeName}</p>
-                        )}
-                        <p className="text-xs text-gray-500">
-                          Trạng thái:{" "}
-                          <span className={`font-semibold ${statusInfo.color}`}>
-                            {statusInfo.label}
-                          </span>
-                        </p>
-                        {delivery.orderCode && (
-                          <p className="text-xs text-gray-400 font-mono">#{delivery.orderCode}</p>
-                        )}
-                        {/* Show pending return badge */}
-                        {hasPendingReturn && (
-                          <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-600 bg-amber-50 border border-amber-200 rounded-md px-2 py-0.5">
-                            <span className="h-1.5 w-1.5 rounded-full bg-amber-400 inline-block" />
-                            Đang chờ xử lý trả hàng
-                          </span>
-                        )}
+                return (
+                  <div key={idx} className="flex-1 flex flex-col items-center gap-2">
+                    <div className="w-full flex items-center">
+                      {/* left line */}
+                      <div className={`flex-1 h-0.5 ${idx === 0 ? "invisible" : step.isError ? "bg-red-400" : step.completed ? "bg-primary" : "bg-gray-100"}`} />
+                      {/* dot */}
+                      <div className={[
+                        "w-9 h-9 rounded-full flex items-center justify-center shrink-0 z-10 transition-all",
+                        step.isError
+                          ? "bg-red-500 text-white"
+                          : isActive
+                            ? "bg-white border-2 border-primary text-primary shadow-[0_0_0_4px_#ede9fe]"
+                            : step.completed
+                              ? "bg-primary text-white"
+                              : "bg-gray-100 text-gray-400 border border-gray-200",
+                      ].join(" ")}>
+                        {step.icon}
                       </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        {/* Per-delivery return button if multiple delivered deliveries */}
-                        {isDelivered && !hasPendingReturn && deliveries.filter((d) => d.status === "Delivered").length > 1 && (
-                          <button
-                            onClick={() => {
-                              const items = getDeliveryItems(delivery.id);
-                              openReturnModal(delivery.id, items);
-                            }}
-                            className="flex items-center gap-1.5 rounded-lg border border-orange-200 bg-orange-50 px-3 py-1.5 text-xs font-semibold text-orange-600 hover:bg-orange-100 transition-colors cursor-pointer"
-                          >
-                            <RotateCcw className="h-3.5 w-3.5" />
-                            Trả
-                          </button>
-                        )}
-                      </div>
+                      {/* right line */}
+                      <div className={`flex-1 h-0.5 ${isLast ? "invisible" : step.isError ? "bg-red-400" : lineRight ? "bg-primary" : "bg-gray-100"}`} />
                     </div>
-                  );
-                })}
-              </div>
-            </section>
-          )}
+                    <div className="text-center px-1">
+                      <p className={`text-xs font-semibold leading-tight ${step.isError ? "text-red-600" : step.completed || isActive ? "text-gray-900" : "text-gray-400"
+                        }`}>
+                        {step.label}
+                      </p>
+                      {step.date && (
+                        <p className="text-[11px] text-gray-400 mt-0.5">{formatOrderDate(step.date)}</p>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
 
-          {/* Shipping Address */}
-          {(order as any).shippingAddress && (
-            <section className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
-              <h2 className="mb-3 flex items-center gap-2 text-lg font-bold text-gray-900">
-                <MapPin className="h-5 w-5 text-primary" />
-                Địa chỉ giao hàng
-              </h2>
-              <p className="font-medium text-gray-900">
-                {(order as any).shippingAddress?.recipientName} ·{" "}
-                {(order as any).shippingAddress?.recipientPhone}
-              </p>
-              <p className="mt-1 text-sm text-gray-600">
+        {/* ── Products ── */}
+        <div className="rounded-xl bg-white border border-gray-100 overflow-hidden">
+          {/* Store header */}
+          <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+            <div className="flex items-center gap-2 text-sm font-semibold text-gray-800">
+              <Store className="h-4 w-4 text-primary" />
+              Sản phẩm
+            </div>
+          </div>
+
+          {/* Product rows */}
+          <ul className="divide-y divide-gray-100">
+            {(order.items ?? []).map((item) => (
+              <li key={item.id} className="flex gap-3 px-4 py-3.5 items-start">
+                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-gray-50 border border-gray-100">
+                  <Package className="h-5 w-5 text-gray-300" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-900 leading-snug">{item.productName}</p>
+                  {(item as any).variantName && (
+                    <span className="mt-1 inline-block text-xs text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">
+                      {(item as any).variantName}
+                    </span>
+                  )}
+                  <p className="mt-1 text-xs text-gray-400">x{item.quantity}</p>
+                </div>
+                <div className="text-right shrink-0">
+                  <p className="text-sm font-semibold text-gray-900">{formatVnd(item.lineTotal)}</p>
+                  <p className="text-xs text-gray-400 mt-0.5">{formatVnd(item.unitPrice)} / cái</p>
+                </div>
+              </li>
+            ))}
+          </ul>
+
+          {/* Price breakdown */}
+          <div className="border-t border-dashed border-gray-200 mt-1 mx-4" />
+          <div className="px-4 py-1.5 space-y-1 mt-1">
+            <div className="flex justify-between text-sm text-gray-500">
+              <span>Tạm tính</span>
+              <span>{formatVnd(order.subtotal)}</span>
+            </div>
+            <div className="flex justify-between text-sm text-gray-500">
+              <span>Phí vận chuyển</span>
+              <span>{order.totalShippingFee != null ? formatVnd(order.totalShippingFee) : "Chưa tính"}</span>
+            </div>
+          </div>
+          <div className="flex justify-between items-center px-4 py-3 border-t border-dashed border-gray-200 mt-1">
+            <span className="text-sm font-semibold text-gray-800">Thành tiền</span>
+            <span className="text-lg font-bold text-primary">{formatVnd(order.totalAmount)}</span>
+          </div>
+
+          {/* Payment method row */}
+          <div className="flex items-center gap-2 px-4 py-3 border-t border-gray-100 text-sm text-gray-500">
+            <CreditCard className="h-4 w-4 text-primary shrink-0" />
+            <span>Thanh toán qua</span>
+            <span className="font-semibold text-gray-800">{order.paymentMethod}</span>
+            {order.status !== "Pending" && order.paymentMethod === "PayOS" && (
+              <span className="ml-auto text-xs font-medium bg-violet-50 text-violet-700 border border-violet-200 px-2.5 py-0.5 rounded-full">
+                Đã thanh toán
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* ── Deliveries ── */}
+        {deliveries.length > 0 && (
+          <div className="rounded-xl bg-white border border-gray-100 overflow-hidden">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+              <div className="flex items-center gap-2 text-sm font-semibold text-gray-800">
+                <Truck className="h-4 w-4 text-primary" />
+                Đơn giao hàng
+              </div>
+              {hasDeliveredDelivery && (
+                <button
+                  onClick={() => setDeliveryPickerOpen(true)}
+                  className="flex items-center gap-1.5 text-xs font-semibold text-orange-600 bg-orange-50 border border-orange-200 px-3 py-1.5 rounded-lg hover:bg-orange-100 transition-colors cursor-pointer"
+                >
+                  <RotateCcw className="h-3.5 w-3.5" />
+                  Yêu cầu trả hàng
+                </button>
+              )}
+            </div>
+
+            <div className="divide-y divide-gray-100">
+              {deliveries.map((delivery) => {
+                const statusInfo = DELIVERY_STATUS_LABEL[delivery.status] ?? { label: delivery.status, pillClass: "bg-gray-100 text-gray-600" };
+                const isDelivered = delivery.status === "Delivered";
+                const returnRequest: { id: string; status: string } | null = delivery.returnRequest ?? null;
+                const hasPendingReturn = returnRequest && returnRequest.status === "Requested";
+                const multiDelivered = deliveries.filter((d) => d.status === "Delivered").length > 1;
+
+                return (
+                  <div key={delivery.id} className="flex items-center gap-3 px-4 py-3.5">
+                    <div className="w-9 h-9 rounded-full bg-violet-50 flex items-center justify-center shrink-0">
+                      <Store className="h-4 w-4 text-primary" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      {delivery.storeName && (
+                        <p className="text-sm font-semibold text-gray-800">{delivery.storeName}</p>
+                      )}
+                      {delivery.orderCode && (
+                        <p className="text-xs font-mono text-gray-400 mt-0.5">#{delivery.orderCode}</p>
+                      )}
+                      {hasPendingReturn && (
+                        <span className="mt-1.5 inline-flex items-center gap-1 text-xs font-medium text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded">
+                          <span className="h-1.5 w-1.5 rounded-full bg-amber-400 inline-block" />
+                          Đang chờ xử lý trả hàng
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      {isDelivered && !hasPendingReturn && multiDelivered && (
+                        <button
+                          onClick={() => openReturnModal(delivery.id, getDeliveryItems(delivery.id))}
+                          className="flex items-center gap-1 text-xs font-semibold text-orange-600 bg-orange-50 border border-orange-200 px-2.5 py-1 rounded-lg hover:bg-orange-100 transition-colors cursor-pointer"
+                        >
+                          <RotateCcw className="h-3 w-3" />
+                          Trả
+                        </button>
+                      )}
+                      <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${statusInfo.pillClass}`}>
+                        {statusInfo.label}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* ── Shipping address ── */}
+        {(order as any).shippingAddress && (
+          <div className="rounded-xl bg-white border border-gray-100 overflow-hidden">
+            <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-100 text-sm font-semibold text-gray-800">
+              <MapPin className="h-4 w-4 text-primary" />
+              Địa chỉ nhận hàng
+            </div>
+            <div className="px-4 py-3.5">
+              <div className="flex items-center gap-2 mb-1.5">
+                <p className="text-sm font-semibold text-gray-900">
+                  {(order as any).shippingAddress?.recipientName}
+                </p>
+                <span className="text-gray-300">|</span>
+                <p className="text-sm text-gray-500">
+                  {(order as any).shippingAddress?.recipientPhone}
+                </p>
+              </div>
+              <p className="text-sm text-gray-600 leading-relaxed">
+                <span className="inline-block text-xs text-primary border border-primary px-1.5 py-0.5 rounded mr-1.5 align-middle">
+                  Nhà riêng
+                </span>
                 {(order as any).shippingAddress?.streetAddress}
-              </p>
-              {(order as any).shippingAddress?.wardName && (
-                <p className="mt-1 text-sm text-gray-500">
-                  {[
+                {(order as any).shippingAddress?.wardName && (
+                  <>, {[
                     (order as any).shippingAddress.wardName,
                     (order as any).shippingAddress.districtName,
                     (order as any).shippingAddress.provinceName,
-                  ]
-                    .filter(Boolean)
-                    .join(", ")}
-                </p>
-              )}
-            </section>
-          )}
+                  ].filter(Boolean).join(", ")}</>
+                )}
+              </p>
+            </div>
+          </div>
+        )}
 
-          {order.note && (
-            <section className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
-              <h2 className="mb-2 text-sm font-semibold text-gray-700">Ghi chú</h2>
-              <p className="text-sm text-gray-600">{order.note}</p>
-            </section>
-          )}
-        </div>
-
-        <aside className="h-fit space-y-4">
-          <section className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
-            <h2 className="mb-4 text-lg font-bold text-gray-900">Thanh toán</h2>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between text-gray-600">
-                <span>Tạm tính</span>
-                <span>{formatVnd(order.subtotal)}</span>
-              </div>
-              <div className="flex justify-between text-gray-600">
-                <span>Phí vận chuyển</span>
-                <span>
-                  {order.totalShippingFee != null ? formatVnd(order.totalShippingFee) : "Chưa tính"}
-                </span>
-              </div>
-              <div className="flex justify-between border-t border-gray-100 pt-3 text-base font-bold text-gray-900">
-                <span>Tổng cộng</span>
-                <span className="text-primary">{formatVnd(order.totalAmount)}</span>
+        {/* ── Note ── */}
+        {order.note && (
+          <div className="rounded-xl bg-white border border-gray-100 overflow-hidden">
+            <div className="flex gap-3 px-4 py-3.5 items-start">
+              <StickyNote className="h-4 w-4 text-gray-400 mt-0.5 shrink-0" />
+              <div>
+                <p className="text-xs font-semibold text-gray-400 mb-1">Ghi chú</p>
+                <p className="text-sm text-gray-600">{order.note}</p>
               </div>
             </div>
-            <p className="mt-3 text-xs text-gray-500">Phương thức: {order.paymentMethod}</p>
-          </section>
+          </div>
+        )}
 
-          {order.paymentMethod === "PayOS" && order.status === "Pending" && (
-            <button
-              onClick={handlePayNow}
-              disabled={paying}
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-bold text-white hover:bg-primary-dark disabled:opacity-60 cursor-pointer"
-            >
-              {paying ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Đang xử lý...
-                </>
-              ) : (
-                "Thanh toán ngay"
-              )}
-            </button>
-          )}
+        {/* ── Action bar ── */}
+        <div className="rounded-xl bg-white border border-gray-100 overflow-hidden">
+          <div className="flex gap-2 px-4 py-3">
+            {/* Pay now — only for unpaid PayOS */}
+            {order.paymentMethod === "PayOS" && order.status === "Pending" && (
+              <button
+                onClick={handlePayNow}
+                disabled={paying}
+                className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-primary text-white text-sm font-semibold py-2.5 hover:bg-primary/90 disabled:opacity-60 cursor-pointer transition-colors"
+              >
+                {paying ? <Loader2 className="h-4 w-4 animate-spin" /> : <CreditCard className="h-4 w-4" />}
+                {paying ? "Đang xử lý..." : "Thanh toán ngay"}
+              </button>
+            )}
 
-          {canCancel && (
-            <button
-              onClick={() => setIsCancelModalOpen(true)}
-              className="w-full rounded-xl border border-red-200 px-4 py-3 text-sm font-semibold text-red-600 hover:bg-red-50 cursor-pointer"
-            >
-              Hủy đơn hàng
+            {/* Return — shown when there's a delivered delivery and payment is done */}
+            {hasDeliveredDelivery && order.status !== "Pending" && (
+              <button
+                onClick={() => setDeliveryPickerOpen(true)}
+                className="flex-1 flex items-center justify-center gap-2 rounded-lg border border-orange-300 text-orange-600 bg-orange-50 text-sm font-semibold py-2.5 hover:bg-orange-100 cursor-pointer transition-colors"
+              >
+                <RotateCcw className="h-4 w-4" />
+                Trả hàng
+              </button>
+            )}
+
+            {/* Buy again */}
+            <button className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-primary text-white text-sm font-semibold py-2.5 hover:bg-primary/90 cursor-pointer transition-colors">
+              <ShoppingCart className="h-4 w-4" />
+              Mua lại
             </button>
-          )}
-        </aside>
+
+            {/* Cancel */}
+            {canCancel && (
+              <button
+                onClick={() => setIsCancelModalOpen(true)}
+                className="flex items-center justify-center gap-1.5 rounded-lg border border-gray-200 text-gray-500 text-sm font-medium px-3 py-2.5 hover:bg-gray-50 cursor-pointer transition-colors"
+              >
+                <X className="h-4 w-4" />
+                Hủy
+              </button>
+            )}
+          </div>
+        </div>
+
       </div>
 
-      {/* Cancel Order Modal */}
+      {/* ── Cancel Modal ── */}
       <Modal open={isCancelModalOpen} title="Hủy đơn hàng" onClose={() => setIsCancelModalOpen(false)}>
         <div className="space-y-4">
           <p className="text-sm text-gray-600">Bạn có chắc chắn muốn hủy đơn hàng này?</p>
@@ -528,8 +602,6 @@ export default function OrderDetailPage() {
       {deliveryPickerOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
           <div className="relative w-full max-w-sm bg-white rounded-2xl shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-
-            {/* Header */}
             <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4 bg-orange-50/60">
               <h3 className="text-base font-bold text-gray-900">Chọn đơn giao hàng</h3>
               <button
@@ -539,8 +611,6 @@ export default function OrderDetailPage() {
                 <X size={18} />
               </button>
             </div>
-
-            {/* List — chỉ deliveries có status Delivered */}
             <div className="px-4 py-4 space-y-2 max-h-[60vh] overflow-y-auto">
               {deliveries
                 .filter((d) => d.status === "Delivered")
@@ -550,8 +620,7 @@ export default function OrderDetailPage() {
                     type="button"
                     onClick={() => {
                       setDeliveryPickerOpen(false);
-                      const items = getDeliveryItems(delivery.id);
-                      openReturnModal(delivery.id, items);
+                      openReturnModal(delivery.id, getDeliveryItems(delivery.id));
                     }}
                     className="w-full text-left rounded-xl border border-gray-100 bg-gray-50 hover:border-orange-200 hover:bg-orange-50/50 px-4 py-3 transition-colors cursor-pointer"
                   >
@@ -568,8 +637,6 @@ export default function OrderDetailPage() {
                   </button>
                 ))}
             </div>
-
-            {/* Footer */}
             <div className="border-t border-gray-100 px-6 py-3 bg-gray-50/50">
               <button
                 onClick={() => setDeliveryPickerOpen(false)}
@@ -582,12 +649,10 @@ export default function OrderDetailPage() {
         </div>
       )}
 
-      {/* ── Return Request Modal ──────────────────────────────────── */}
+      {/* ── Return Request Modal ── */}
       {returnModal.open && returnModal.deliveryId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
           <div className="relative w-full max-w-lg bg-white rounded-2xl shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-
-            {/* Header */}
             <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4 bg-orange-50/60">
               <div>
                 <span className="text-xs font-bold text-orange-500 uppercase tracking-wide">
@@ -603,9 +668,7 @@ export default function OrderDetailPage() {
               </button>
             </div>
 
-            {/* Body */}
             <div className="px-6 py-5 space-y-5 max-h-[75vh] overflow-y-auto">
-
               {/* Item selection */}
               <div>
                 <div className="flex items-center justify-between mb-2">
@@ -635,21 +698,17 @@ export default function OrderDetailPage() {
                       return (
                         <div
                           key={item.id}
-                          className={`flex items-center gap-3 p-3 transition-colors ${isChecked ? "bg-orange-50/50" : "bg-white hover:bg-gray-50/50"
-                            }`}
+                          className={`flex items-center gap-3 p-3 transition-colors ${isChecked ? "bg-orange-50/50" : "bg-white hover:bg-gray-50/50"}`}
                         >
-                          {/* Checkbox */}
                           <input
                             type="checkbox"
                             checked={isChecked}
                             onChange={() => handleToggleItem(item)}
                             className="h-4 w-4 rounded accent-orange-500 cursor-pointer shrink-0"
                           />
-                          {/* Product icon */}
                           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gray-100">
                             <Package className="h-5 w-5 text-gray-400" />
                           </div>
-                          {/* Info */}
                           <div className="min-w-0 flex-1">
                             <p className="text-sm font-medium text-gray-900 truncate">{item.productName}</p>
                             {(item as any).variantName && (
@@ -657,33 +716,21 @@ export default function OrderDetailPage() {
                             )}
                             <p className="text-xs text-gray-500 mt-0.5">{formatVnd(item.unitPrice)}</p>
                           </div>
-                          {/* Quantity selector */}
                           {isChecked ? (
                             <div className="flex items-center gap-1 shrink-0">
                               <button
                                 type="button"
-                                onClick={() =>
-                                  handleQuantityChange(item.id, Math.max(1, (selectedItems[item.id]?.quantity ?? 1) - 1))
-                                }
+                                onClick={() => handleQuantityChange(item.id, Math.max(1, (selectedItems[item.id]?.quantity ?? 1) - 1))}
                                 className="h-6 w-6 rounded-md border border-gray-200 text-gray-500 hover:bg-gray-100 flex items-center justify-center text-sm font-bold cursor-pointer"
-                              >
-                                −
-                              </button>
+                              >−</button>
                               <span className="w-6 text-center text-sm font-semibold text-gray-800">
                                 {selectedItems[item.id]?.quantity ?? 1}
                               </span>
                               <button
                                 type="button"
-                                onClick={() =>
-                                  handleQuantityChange(
-                                    item.id,
-                                    Math.min(item.quantity, (selectedItems[item.id]?.quantity ?? 1) + 1)
-                                  )
-                                }
+                                onClick={() => handleQuantityChange(item.id, Math.min(item.quantity, (selectedItems[item.id]?.quantity ?? 1) + 1))}
                                 className="h-6 w-6 rounded-md border border-gray-200 text-gray-500 hover:bg-gray-100 flex items-center justify-center text-sm font-bold cursor-pointer"
-                              >
-                                +
-                              </button>
+                              >+</button>
                               <span className="text-xs text-gray-400 ml-0.5">/ {item.quantity}</span>
                             </div>
                           ) : (
@@ -696,7 +743,7 @@ export default function OrderDetailPage() {
                 )}
               </div>
 
-              {/* Return Type */}
+              {/* Return type */}
               <div>
                 <label className="block text-xs font-semibold text-gray-600 mb-1.5">
                   Hình thức <span className="text-red-500">*</span>
@@ -708,8 +755,8 @@ export default function OrderDetailPage() {
                       type="button"
                       onClick={() => setReturnType(opt.value)}
                       className={`rounded-lg border px-3 py-2.5 text-sm font-semibold transition-all cursor-pointer ${returnType === opt.value
-                        ? "border-orange-400 bg-orange-50 text-orange-600"
-                        : "border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50"
+                          ? "border-orange-400 bg-orange-50 text-orange-600"
+                          : "border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50"
                         }`}
                     >
                       {opt.label}
@@ -734,7 +781,7 @@ export default function OrderDetailPage() {
                 </select>
               </div>
 
-              {/* Reason Detail */}
+              {/* Reason detail */}
               <div>
                 <label className="block text-xs font-semibold text-gray-600 mb-1.5">Mô tả thêm</label>
                 <textarea
@@ -746,7 +793,7 @@ export default function OrderDetailPage() {
                 />
               </div>
 
-              {/* Bank Info (only for Refund) */}
+              {/* Bank info */}
               {returnType === "Refund" && (
                 <div className="rounded-xl border border-blue-100 bg-blue-50/40 p-4 space-y-3">
                   <p className="text-xs font-bold text-blue-700 uppercase tracking-wide">
@@ -786,7 +833,6 @@ export default function OrderDetailPage() {
               )}
             </div>
 
-            {/* Footer */}
             <div className="flex gap-3 border-t border-gray-100 px-6 py-4 bg-gray-50/50">
               <button
                 type="button"
@@ -802,10 +848,7 @@ export default function OrderDetailPage() {
                 className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-orange-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-orange-600 disabled:opacity-60 transition-colors cursor-pointer"
               >
                 {submittingReturn ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Đang gửi...
-                  </>
+                  <><Loader2 className="h-4 w-4 animate-spin" />Đang gửi...</>
                 ) : (
                   "Gửi yêu cầu"
                 )}
