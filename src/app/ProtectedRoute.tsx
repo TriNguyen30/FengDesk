@@ -9,6 +9,8 @@ type ProtectedRouteProps = {
   requireManager?: boolean;
   /** Staff trở lên: Staff, Manager, Admin (khu điều hành / hỗ trợ khách hàng). */
   requireStaffOrAbove?: boolean;
+  /** Người bán: có flag GardenOwner (khu kênh người bán). */
+  requireGardenOwner?: boolean;
 };
 
 export default function ProtectedRoute({
@@ -18,6 +20,7 @@ export default function ProtectedRoute({
   requireStaff = false,
   requireManager = false,
   requireStaffOrAbove = false,
+  requireGardenOwner = false,
 }: ProtectedRouteProps) {
   const { token, user } = useAppSelector((state) => state.auth);
 
@@ -47,6 +50,10 @@ export default function ProtectedRoute({
 
   if (requireStaffOrAbove && !(has("Staff") || has("Manager") || has("Admin"))) {
     return <Navigate to="/" replace />;
+  }
+
+  if (requireGardenOwner && !has("GardenOwner")) {
+    return <Navigate to="/become-seller" replace />;
   }
 
   return children;
