@@ -21,6 +21,12 @@ export async function getShopRequestById(id: string) {
   return data;
 }
 
+/** Các cửa hàng mà user hiện tại đồng sở hữu (kênh người bán). */
+export async function getMyShopsRequest() {
+  const { data } = await fetchHttpClient.get<ApiResponse<Shop[]>>(`/stores/mine`);
+  return data;
+}
+
 export async function createShopRequest(payload: CreateShopDto) {
   const { data } = await fetchHttpClient.post<ApiResponse<Shop>>(`/stores`, payload);
   return data;

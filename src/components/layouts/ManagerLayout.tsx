@@ -14,6 +14,7 @@ import {
   ChevronsLeft,
   ChevronsRight,
   Store,
+  TicketX
 } from "lucide-react";
 import { useAppSelector, useAppDispatch } from "@/app/store";
 import { logout } from "@/features/auth/store/authSlice";
@@ -25,6 +26,7 @@ const navigation = [
   { name: "Sản phẩm", href: "/manager/products", icon: Package },
   { name: "Cửa hàng", href: "/manager/stores", icon: Store },
   { name: "Đơn hàng", href: "/manager/orders", icon: ShoppingCart },
+  { name: "Trả hàng", href: "/manager/order-returns", icon: TicketX },
   { name: "Khách hàng", href: "/manager/customers", icon: Users },
   { name: "Cài đặt", href: "/manager/settings", icon: Settings },
 ];

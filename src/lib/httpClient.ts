@@ -184,6 +184,7 @@ export class FetchHttpClient {
   }
 }
 
+console.log("Environment VITE_API_BASE_URL:", import.meta.env.VITE_API_BASE_URL);
 const fetchHttpClient = new FetchHttpClient(import.meta.env.VITE_API_BASE_URL || "");
 
 export default fetchHttpClient;

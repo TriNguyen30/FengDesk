@@ -8,6 +8,7 @@ export default function ProfileLayout() {
     { name: "Địa chỉ", path: "/profile/addresses", icon: MapPin },
     { name: "Không gian làm việc", path: "/profile/workspace", icon: HousePlus },
     { name: "Đơn hàng của tôi", path: "/profile/orders", icon: Package },
+    { name: "Yêu cầu trả hàng", path: "/profile/returns", icon: Package },
     { name: "Thông báo", path: "/profile/notifications", icon: Bell },
   ];
 

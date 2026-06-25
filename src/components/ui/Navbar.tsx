@@ -1,4 +1,4 @@
-import { Truck, Package, User, LogOut, Sparkles } from "lucide-react";
+import { Truck, Package, User, LogOut, Sparkles, Store } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -179,6 +179,15 @@ export default function Navbar() {
                         className="flex w-full items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 rounded-md transition-colors text-left font-medium cursor-pointer"
                       >
                         Đơn Mua
+                      </button>
+                      <button
+                        onClick={() => navigate("/seller")}
+                        className="flex w-full items-center px-3 py-2 text-sm text-primary hover:bg-primary/5 rounded-md transition-colors text-left font-medium cursor-pointer"
+                      >
+                        <Store size={16} className="mr-2" />
+                        {(user.role ?? "").split(",").some((r) => r.trim() === "GardenOwner")
+                          ? "Kênh người bán"
+                          : "Trở thành người bán"}
                       </button>
 
                       <button
