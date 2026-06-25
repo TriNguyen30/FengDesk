@@ -1,39 +1,42 @@
 import fetchHttpClient from "@/lib/httpClient";
-
-export interface ReturnItem {
-  id: string;
-  orderId: string;
-  deliveryId: string;
-  type: string;
-  status: string;
-  reason: string;
-  refundAmount: number;
-  itemCount: number;
-  createdAt: string;
-}
-
-export interface ReturnListResponse {
-  data: {
-    items: ReturnItem[];
-    page: number;
-    pageSize: number;
-    totalCount: number;
-    totalPages: number;
-  };
-  isSuccess: boolean;
-  statusCode: number;
-  message: string | null;
-  errors: any;
-}
-
-export interface ReturnQueryParams {
-  Page?: number;
-  PageSize?: number;
-  Skip?: number;
-}
+import type { 
+    ReturnQueryParams, 
+    ReturnListResponse, 
+    CreateReturnRequest, 
+    CreateReturnResponse, 
+    CancelReturnResponse,
+    ApproveReturnRequest,
+    ApproveReturnResponse,
+    RejectReturnRequest,
+    RejectReturnResponse, 
+ } 
+from "@/features/return/types/return.d.ts";
 
 export const returnApi = {
   getAllReturns: async (params?: ReturnQueryParams) => {
     return fetchHttpClient.get<ReturnListResponse>("/returns/all", params);
   },
+
+  getMyReturns: async (params?: ReturnQueryParams) => {
+    return fetchHttpClient.get<ReturnListResponse>("/returns/mine", params);
+  },
+
+  createReturn: async (payload: CreateReturnRequest) => {
+    return fetchHttpClient.post<CreateReturnResponse>("/returns", payload);
+  },
+
+  cancelReturn: async (returnId: string) => {
+    return fetchHttpClient.post<CancelReturnResponse>(`/returns/${returnId}/cancel`, {});
+  },
+
+  approveReturn: async (returnId: string, payload?: ApproveReturnRequest) => {
+  return fetchHttpClient.post<ApproveReturnResponse>(`/returns/${returnId}/approve`, payload ?? {});
+},
+
+rejectReturn: async (returnId: string, payload?: RejectReturnRequest) => {
+  return fetchHttpClient.post<RejectReturnResponse>(`/returns/${returnId}/reject`, payload ?? {});
+},
+
+
 };
+
