@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { ChevronLeft, Loader2, MapPin, Package, RotateCcw, X, CheckSquare } from "lucide-react";
+import { ChevronLeft, Loader2, MapPin, Package, RotateCcw, X, CheckSquare, ClipboardList, CreditCard, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 import Modal from "@/components/ui/Modal";
 import { useOrderDetail, useCancelOrder } from "../hooks/useOrders";
@@ -219,6 +219,56 @@ export default function OrderDetailPage() {
   const allSelected = returnModal.items.length > 0 && Object.keys(selectedItems).length === returnModal.items.length;
   const someSelected = Object.keys(selectedItems).length > 0 && !allSelected;
 
+  const getSteps = () => {
+    if (order.status === "Cancelled") {
+      return [
+        { label: "Đơn hàng đã đặt", date: order.createdAt, completed: true, icon: <ClipboardList className="h-5 w-5" /> },
+        { label: "Đã hủy", date: order.statusLogs?.find(l => l.toStatus === "Cancelled")?.changedAt, completed: true, isError: true, icon: <X className="h-5 w-5" /> }
+      ];
+    }
+    
+    if (order.status === "Expired") {
+      return [
+        { label: "Đơn hàng đã đặt", date: order.createdAt, completed: true, icon: <ClipboardList className="h-5 w-5" /> },
+        { label: "Đã hết hạn", date: order.statusLogs?.find(l => l.toStatus === "Expired")?.changedAt, completed: true, isError: true, icon: <X className="h-5 w-5" /> }
+      ];
+    }
+
+    const steps = [
+      { id: "Pending", label: "Đơn hàng đã đặt", icon: <ClipboardList className="h-5 w-5" /> },
+    ];
+
+    if (order.paymentMethod === "PayOS") {
+      steps.push({ id: "Paid", label: "Đã thanh toán", icon: <CreditCard className="h-5 w-5" /> });
+    }
+
+    steps.push({ id: "Processing", label: "Đang xử lý", icon: <Package className="h-5 w-5" /> });
+    steps.push({ id: "Completed", label: "Đã hoàn thành", icon: <CheckCircle className="h-5 w-5" /> });
+
+    let currentIdx = steps.findIndex(s => s.id === order.status);
+    if (order.status === "Completed") currentIdx = steps.length - 1;
+
+    return steps.map((s, idx) => {
+      let date = null;
+      if (s.id === "Pending") date = order.createdAt;
+      else {
+        const log = order.statusLogs?.find(l => l.toStatus === s.id);
+        if (log) date = log.changedAt;
+      }
+      
+      const isCompleted = currentIdx >= idx || order.status === "Completed";
+      
+      return {
+        ...s,
+        date,
+        completed: isCompleted,
+        isError: false,
+      };
+    });
+  };
+
+  const steps = getSteps();
+
   return (
     <div>
       <button
@@ -239,6 +289,32 @@ export default function OrderDetailPage() {
         <span className={`rounded-full px-3 py-1 text-sm font-semibold ${statusMeta.className}`}>
           {statusMeta.label}
         </span>
+      </div>
+
+      {/* Stepper */}
+      <div className="mb-6 rounded-xl border border-gray-100 bg-white p-6 shadow-sm overflow-x-auto">
+        <div className="relative flex justify-between min-w-[500px]">
+          {/* Progress Line Background */}
+          <div className="absolute top-5 left-8 right-8 h-1 bg-gray-100 rounded"></div>
+          
+          {/* Progress Line Active */}
+          <div 
+             className="absolute top-5 left-8 h-1 bg-primary rounded transition-all duration-500"
+             style={{ width: `calc(${(Math.max(0, steps.filter(s => s.completed).length - 1) / Math.max(1, steps.length - 1)) * 100}% - 4rem)` }}
+          ></div>
+
+          {steps.map((step, idx) => (
+            <div key={idx} className="relative z-10 flex flex-col items-center gap-3 w-1/4">
+              <div className={`flex h-11 w-11 items-center justify-center rounded-full border-[3px] border-white shadow-sm ${step.isError ? 'bg-red-500 text-white' : step.completed ? 'bg-primary text-white' : 'bg-gray-100 text-gray-400'}`}>
+                {step.icon}
+              </div>
+              <div className="text-center">
+                <p className={`text-sm font-bold ${step.isError ? 'text-red-600' : step.completed ? 'text-gray-900' : 'text-gray-400'}`}>{step.label}</p>
+                {step.date && <p className="text-xs text-gray-500 mt-1">{formatOrderDate(step.date)}</p>}
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
