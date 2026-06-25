@@ -15,12 +15,21 @@ const RETURN_TYPE_LABEL: Record<string, string> = {
 };
 
 const RETURN_STATUS_META: Record<string, { label: string; className: string }> = {
-  Requested:    { label: "Đã gửi yêu cầu",      className: "bg-amber-50 text-amber-600 border border-amber-200" },
-  Approved:   { label: "Đã duyệt",        className: "bg-indigo-50 text-indigo-600 border border-indigo-200" },
-  Rejected:   { label: "Bị từ chối",      className: "bg-red-50 text-red-500 border border-red-200" },
-  Processing: { label: "Đang xử lý",      className: "bg-blue-50 text-blue-600 border border-blue-200" },
-  Completed:  { label: "Hoàn tất",        className: "bg-emerald-50 text-emerald-600 border border-emerald-200" },
-  Cancelled:  { label: "Đã hủy",          className: "bg-gray-100 text-gray-500 border border-gray-200" },
+  Requested: {
+    label: "Đã gửi yêu cầu",
+    className: "bg-amber-50 text-amber-600 border border-amber-200",
+  },
+  Approved: {
+    label: "Đã duyệt",
+    className: "bg-indigo-50 text-indigo-600 border border-indigo-200",
+  },
+  Rejected: { label: "Bị từ chối", className: "bg-red-50 text-red-500 border border-red-200" },
+  Processing: { label: "Đang xử lý", className: "bg-blue-50 text-blue-600 border border-blue-200" },
+  Completed: {
+    label: "Hoàn tất",
+    className: "bg-emerald-50 text-emerald-600 border border-emerald-200",
+  },
+  Cancelled: { label: "Đã hủy", className: "bg-gray-100 text-gray-500 border border-gray-200" },
 };
 
 const CANCELLABLE_STATUSES = ["Requested"];
@@ -99,7 +108,9 @@ export default function ProfileReturnOrder() {
           <PackageX className="h-8 w-8 text-orange-300" />
         </div>
         <p className="text-base font-semibold text-gray-700">Chưa có yêu cầu trả hàng nào</p>
-        <p className="mt-1 text-sm text-gray-400">Các yêu cầu trả hàng / hoàn tiền sẽ hiện ở đây.</p>
+        <p className="mt-1 text-sm text-gray-400">
+          Các yêu cầu trả hàng / hoàn tiền sẽ hiện ở đây.
+        </p>
         <Link
           to="/profile/orders"
           className="mt-5 inline-flex items-center gap-1.5 rounded-lg bg-orange-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-orange-600 transition-colors"
@@ -126,11 +137,10 @@ export default function ProfileReturnOrder() {
       ) : (
         <div className="space-y-3">
           {returns.map((item) => {
-            const statusMeta =
-              RETURN_STATUS_META[item.status] ?? {
-                label: item.status,
-                className: "bg-gray-100 text-gray-500 border border-gray-200",
-              };
+            const statusMeta = RETURN_STATUS_META[item.status] ?? {
+              label: item.status,
+              className: "bg-gray-100 text-gray-500 border border-gray-200",
+            };
             const canCancel = CANCELLABLE_STATUSES.includes(item.status);
 
             return (

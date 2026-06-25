@@ -1,9 +1,22 @@
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import {
-  ChevronLeft, Loader2, MapPin, Package, RotateCcw, X,
-  CheckSquare, ClipboardList, CreditCard, CheckCircle,
-  Truck, Store, MessageCircle, ShoppingCart, FileText, StickyNote,
+  ChevronLeft,
+  Loader2,
+  MapPin,
+  Package,
+  RotateCcw,
+  X,
+  CheckSquare,
+  ClipboardList,
+  CreditCard,
+  CheckCircle,
+  Truck,
+  Store,
+  MessageCircle,
+  ShoppingCart,
+  FileText,
+  StickyNote,
 } from "lucide-react";
 import { toast } from "sonner";
 import Modal from "@/components/ui/Modal";
@@ -11,8 +24,14 @@ import { useOrderDetail, useCancelOrder } from "../hooks/useOrders";
 import { formatOrderDate, formatVnd, getOrderStatusMeta } from "../utils/orderUtils";
 import { paymentApi } from "@/features/payment";
 import { returnApi } from "@/features/return/api/return.api";
-import type { ReturnType, ReturnReason, CreateReturnRequest, CreateReturnItemRequest } from "@/features/return/types/return.d.ts";
+import type {
+  ReturnType,
+  ReturnReason,
+  CreateReturnRequest,
+  CreateReturnItemRequest,
+} from "@/features/return/types/return.d.ts";
 import type { OrderLineItem } from "@/features/orders/types/orders";
+import { useAddressDetail } from "@/features/users/hooks/useAddress";
 
 const RETURN_TYPE_OPTIONS: { value: ReturnType; label: string }[] = [
   { value: "Refund", label: "Hoàn tiền" },
@@ -30,10 +49,22 @@ const REASON_OPTIONS: { value: ReturnReason; label: string }[] = [
 
 const DELIVERY_STATUS_LABEL: Record<string, { label: string; pillClass: string }> = {
   Pending: { label: "Đang chờ", pillClass: "bg-amber-50 text-amber-700 border border-amber-200" },
-  Confirmed: { label: "Đã xác nhận", pillClass: "bg-indigo-50 text-indigo-700 border border-indigo-200" },
-  Preparing: { label: "Đang chuẩn bị", pillClass: "bg-blue-50 text-blue-700 border border-blue-200" },
-  Shipped: { label: "Đang giao hàng", pillClass: "bg-blue-50 text-blue-700 border border-blue-200" },
-  Delivered: { label: "Đã giao hàng", pillClass: "bg-emerald-50 text-emerald-700 border border-emerald-200" },
+  Confirmed: {
+    label: "Đã xác nhận",
+    pillClass: "bg-indigo-50 text-indigo-700 border border-indigo-200",
+  },
+  Preparing: {
+    label: "Đang chuẩn bị",
+    pillClass: "bg-blue-50 text-blue-700 border border-blue-200",
+  },
+  Shipped: {
+    label: "Đang giao hàng",
+    pillClass: "bg-blue-50 text-blue-700 border border-blue-200",
+  },
+  Delivered: {
+    label: "Đã giao hàng",
+    pillClass: "bg-emerald-50 text-emerald-700 border border-emerald-200",
+  },
   Cancelled: { label: "Đã hủy", pillClass: "bg-red-50 text-red-600 border border-red-200" },
   Returned: { label: "Đã trả hàng", pillClass: "bg-red-50 text-red-600 border border-red-200" },
 };
@@ -54,12 +85,17 @@ export default function OrderDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { currentOrder, detailStatus } = useOrderDetail(id);
+  const { address: shippingAddress } = useAddressDetail(currentOrder?.shippingAddressId);
   const cancelOrderMutation = useCancelOrder();
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const [paying, setPaying] = useState(false);
 
-  const [returnModal, setReturnModal] = useState<ReturnModalState>({ open: false, deliveryId: null, items: [] });
+  const [returnModal, setReturnModal] = useState<ReturnModalState>({
+    open: false,
+    deliveryId: null,
+    items: [],
+  });
   const [returnType, setReturnType] = useState<ReturnType>("Refund");
   const [returnReason, setReturnReason] = useState<ReturnReason>("Defective");
   const [reasonDetail, setReasonDetail] = useState("");
@@ -89,7 +125,11 @@ export default function OrderDetailPage() {
     } else {
       const all: Record<string, SelectedItem> = {};
       returnModal.items.forEach((item) => {
-        all[item.id] = { orderItemId: item.id, quantity: item.quantity, maxQuantity: item.quantity };
+        all[item.id] = {
+          orderItemId: item.id,
+          quantity: item.quantity,
+          maxQuantity: item.quantity,
+        };
       });
       setSelectedItems(all);
     }
@@ -102,7 +142,10 @@ export default function OrderDetailPage() {
         delete next[item.id];
         return next;
       }
-      return { ...prev, [item.id]: { orderItemId: item.id, quantity: item.quantity, maxQuantity: item.quantity } };
+      return {
+        ...prev,
+        [item.id]: { orderItemId: item.id, quantity: item.quantity, maxQuantity: item.quantity },
+      };
     });
   };
 
@@ -197,7 +240,10 @@ export default function OrderDetailPage() {
       <div className="flex flex-col items-center justify-center py-16 text-center">
         <Package className="mb-3 h-12 w-12 text-gray-300" />
         <p className="text-gray-600">Không tìm thấy đơn hàng</p>
-        <Link to="/profile/orders" className="mt-4 text-sm font-medium text-primary hover:underline">
+        <Link
+          to="/profile/orders"
+          className="mt-4 text-sm font-medium text-primary hover:underline"
+        >
           Quay lại danh sách
         </Link>
       </div>
@@ -213,19 +259,44 @@ export default function OrderDetailPage() {
   const getDeliveryItems = (deliveryId: string): OrderLineItem[] =>
     (order.items ?? []).filter((item) => item.deliveryId === deliveryId);
 
-  const allSelected = returnModal.items.length > 0 && Object.keys(selectedItems).length === returnModal.items.length;
+  const allSelected =
+    returnModal.items.length > 0 && Object.keys(selectedItems).length === returnModal.items.length;
 
   const getSteps = () => {
     if (order.status === "Cancelled") {
       return [
-        { label: "Đơn đã đặt", date: order.createdAt, completed: true, isError: false, icon: <ClipboardList className="h-4 w-4" /> },
-        { label: "Đã hủy", date: order.statusLogs?.find((l: any) => l.toStatus === "Cancelled")?.changedAt, completed: true, isError: true, icon: <X className="h-4 w-4" /> },
+        {
+          label: "Đơn đã đặt",
+          date: order.createdAt,
+          completed: true,
+          isError: false,
+          icon: <ClipboardList className="h-4 w-4" />,
+        },
+        {
+          label: "Đã hủy",
+          date: order.statusLogs?.find((l: any) => l.toStatus === "Cancelled")?.changedAt,
+          completed: true,
+          isError: true,
+          icon: <X className="h-4 w-4" />,
+        },
       ];
     }
     if (order.status === "Expired") {
       return [
-        { label: "Đơn đã đặt", date: order.createdAt, completed: true, isError: false, icon: <ClipboardList className="h-4 w-4" /> },
-        { label: "Đã hết hạn", date: order.statusLogs?.find((l: any) => l.toStatus === "Expired")?.changedAt, completed: true, isError: true, icon: <X className="h-4 w-4" /> },
+        {
+          label: "Đơn đã đặt",
+          date: order.createdAt,
+          completed: true,
+          isError: false,
+          icon: <ClipboardList className="h-4 w-4" />,
+        },
+        {
+          label: "Đã hết hạn",
+          date: order.statusLogs?.find((l: any) => l.toStatus === "Expired")?.changedAt,
+          completed: true,
+          isError: true,
+          icon: <X className="h-4 w-4" />,
+        },
       ];
     }
 
@@ -248,14 +319,19 @@ export default function OrderDetailPage() {
         const log = order.statusLogs?.find((l: any) => l.toStatus === s.id);
         if (log) date = log.changedAt;
       }
-      return { ...s, date, completed: currentIdx >= idx || order.status === "Completed", isError: false };
+      return {
+        ...s,
+        date,
+        completed: currentIdx >= idx || order.status === "Completed",
+        isError: false,
+      };
     });
   };
 
   const steps = getSteps();
 
   // Determine active step index (first incomplete, or last if all done)
-  const activeIdx = steps.findIndex((s, i) => s.completed && (!steps[i + 1]?.completed));
+  const activeIdx = steps.findIndex((s, i) => s.completed && !steps[i + 1]?.completed);
 
   return (
     <div>
@@ -269,16 +345,18 @@ export default function OrderDetailPage() {
       </button>
 
       <div className="flex flex-col gap-3">
-
         {/* ── Status banner + Stepper ── */}
         <div className="rounded-xl bg-white border border-gray-100 overflow-hidden">
           {/* Banner */}
-          <div className={`flex items-center justify-between px-5 py-4 border-b-2 ${order.status === "Cancelled" || order.status === "Expired"
-              ? "bg-red-50 border-red-400"
-              : order.status === "Completed"
-                ? "bg-emerald-50 border-emerald-500"
-                : "bg-violet-50 border-primary"
-            }`}>
+          <div
+            className={`flex items-center justify-between px-5 py-4 border-b-2 ${
+              order.status === "Cancelled" || order.status === "Expired"
+                ? "bg-red-50 border-red-400"
+                : order.status === "Completed"
+                  ? "bg-emerald-50 border-emerald-500"
+                  : "bg-violet-50 border-primary"
+            }`}
+          >
             <div className="flex items-center gap-3">
               {order.status === "Cancelled" || order.status === "Expired" ? (
                 <X className="h-6 w-6 text-red-500 shrink-0" />
@@ -288,12 +366,15 @@ export default function OrderDetailPage() {
                 <Truck className="h-6 w-6 text-primary shrink-0" />
               )}
               <div>
-                <p className={`font-semibold text-base leading-tight ${order.status === "Cancelled" || order.status === "Expired"
-                    ? "text-red-700"
-                    : order.status === "Completed"
-                      ? "text-emerald-700"
-                      : "text-violet-800"
-                  }`}>
+                <p
+                  className={`font-semibold text-base leading-tight ${
+                    order.status === "Cancelled" || order.status === "Expired"
+                      ? "text-red-700"
+                      : order.status === "Completed"
+                        ? "text-emerald-700"
+                        : "text-violet-800"
+                  }`}
+                >
                   {statusMeta.label}
                 </p>
                 <p className="text-xs text-gray-500 mt-0.5">
@@ -318,30 +399,45 @@ export default function OrderDetailPage() {
                   <div key={idx} className="flex-1 flex flex-col items-center gap-2">
                     <div className="w-full flex items-center">
                       {/* left line */}
-                      <div className={`flex-1 h-0.5 ${idx === 0 ? "invisible" : step.isError ? "bg-red-400" : step.completed ? "bg-primary" : "bg-gray-100"}`} />
+                      <div
+                        className={`flex-1 h-0.5 ${idx === 0 ? "invisible" : step.isError ? "bg-red-400" : step.completed ? "bg-primary" : "bg-gray-100"}`}
+                      />
                       {/* dot */}
-                      <div className={[
-                        "w-9 h-9 rounded-full flex items-center justify-center shrink-0 z-10 transition-all",
-                        step.isError
-                          ? "bg-red-500 text-white"
-                          : isActive
-                            ? "bg-white border-2 border-primary text-primary shadow-[0_0_0_4px_#ede9fe]"
-                            : step.completed
-                              ? "bg-primary text-white"
-                              : "bg-gray-100 text-gray-400 border border-gray-200",
-                      ].join(" ")}>
+                      <div
+                        className={[
+                          "w-9 h-9 rounded-full flex items-center justify-center shrink-0 z-10 transition-all",
+                          step.isError
+                            ? "bg-red-500 text-white"
+                            : isActive
+                              ? "bg-white border-2 border-primary text-primary shadow-[0_0_0_4px_#ede9fe]"
+                              : step.completed
+                                ? "bg-primary text-white"
+                                : "bg-gray-100 text-gray-400 border border-gray-200",
+                        ].join(" ")}
+                      >
                         {step.icon}
                       </div>
                       {/* right line */}
-                      <div className={`flex-1 h-0.5 ${isLast ? "invisible" : step.isError ? "bg-red-400" : lineRight ? "bg-primary" : "bg-gray-100"}`} />
+                      <div
+                        className={`flex-1 h-0.5 ${isLast ? "invisible" : step.isError ? "bg-red-400" : lineRight ? "bg-primary" : "bg-gray-100"}`}
+                      />
                     </div>
                     <div className="text-center px-1">
-                      <p className={`text-xs font-semibold leading-tight ${step.isError ? "text-red-600" : step.completed || isActive ? "text-gray-900" : "text-gray-400"
-                        }`}>
+                      <p
+                        className={`text-xs font-semibold leading-tight ${
+                          step.isError
+                            ? "text-red-600"
+                            : step.completed || isActive
+                              ? "text-gray-900"
+                              : "text-gray-400"
+                        }`}
+                      >
                         {step.label}
                       </p>
                       {step.date && (
-                        <p className="text-[11px] text-gray-400 mt-0.5">{formatOrderDate(step.date)}</p>
+                        <p className="text-[11px] text-gray-400 mt-0.5">
+                          {formatOrderDate(step.date)}
+                        </p>
                       )}
                     </div>
                   </div>
@@ -369,7 +465,9 @@ export default function OrderDetailPage() {
                   <Package className="h-5 w-5 text-gray-300" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900 leading-snug">{item.productName}</p>
+                  <p className="text-sm font-medium text-gray-900 leading-snug">
+                    {item.productName}
+                  </p>
                   {(item as any).variantName && (
                     <span className="mt-1 inline-block text-xs text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">
                       {(item as any).variantName}
@@ -394,7 +492,9 @@ export default function OrderDetailPage() {
             </div>
             <div className="flex justify-between text-sm text-gray-500">
               <span>Phí vận chuyển</span>
-              <span>{order.totalShippingFee != null ? formatVnd(order.totalShippingFee) : "Chưa tính"}</span>
+              <span>
+                {order.totalShippingFee != null ? formatVnd(order.totalShippingFee) : "Chưa tính"}
+              </span>
             </div>
           </div>
           <div className="flex justify-between items-center px-4 py-3 border-t border-dashed border-gray-200 mt-1">
@@ -436,11 +536,16 @@ export default function OrderDetailPage() {
 
             <div className="divide-y divide-gray-100">
               {deliveries.map((delivery) => {
-                const statusInfo = DELIVERY_STATUS_LABEL[delivery.status] ?? { label: delivery.status, pillClass: "bg-gray-100 text-gray-600" };
+                const statusInfo = DELIVERY_STATUS_LABEL[delivery.status] ?? {
+                  label: delivery.status,
+                  pillClass: "bg-gray-100 text-gray-600",
+                };
                 const isDelivered = delivery.status === "Delivered";
-                const returnRequest: { id: string; status: string } | null = delivery.returnRequest ?? null;
+                const returnRequest: { id: string; status: string } | null =
+                  delivery.returnRequest ?? null;
                 const hasPendingReturn = returnRequest && returnRequest.status === "Requested";
-                const multiDelivered = deliveries.filter((d) => d.status === "Delivered").length > 1;
+                const multiDelivered =
+                  deliveries.filter((d) => d.status === "Delivered").length > 1;
 
                 return (
                   <div key={delivery.id} className="flex items-center gap-3 px-4 py-3.5">
@@ -452,7 +557,9 @@ export default function OrderDetailPage() {
                         <p className="text-sm font-semibold text-gray-800">{delivery.storeName}</p>
                       )}
                       {delivery.orderCode && (
-                        <p className="text-xs font-mono text-gray-400 mt-0.5">#{delivery.orderCode}</p>
+                        <p className="text-xs font-mono text-gray-400 mt-0.5">
+                          #{delivery.orderCode}
+                        </p>
                       )}
                       {hasPendingReturn && (
                         <span className="mt-1.5 inline-flex items-center gap-1 text-xs font-medium text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded">
@@ -464,14 +571,18 @@ export default function OrderDetailPage() {
                     <div className="flex items-center gap-2 shrink-0">
                       {isDelivered && !hasPendingReturn && multiDelivered && (
                         <button
-                          onClick={() => openReturnModal(delivery.id, getDeliveryItems(delivery.id))}
+                          onClick={() =>
+                            openReturnModal(delivery.id, getDeliveryItems(delivery.id))
+                          }
                           className="flex items-center gap-1 text-xs font-semibold text-orange-600 bg-orange-50 border border-orange-200 px-2.5 py-1 rounded-lg hover:bg-orange-100 transition-colors cursor-pointer"
                         >
                           <RotateCcw className="h-3 w-3" />
                           Trả
                         </button>
                       )}
-                      <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${statusInfo.pillClass}`}>
+                      <span
+                        className={`text-xs font-semibold px-2.5 py-1 rounded-full ${statusInfo.pillClass}`}
+                      >
                         {statusInfo.label}
                       </span>
                     </div>
@@ -483,7 +594,7 @@ export default function OrderDetailPage() {
         )}
 
         {/* ── Shipping address ── */}
-        {(order as any).shippingAddress && (
+        {shippingAddress && (
           <div className="rounded-xl bg-white border border-gray-100 overflow-hidden">
             <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-100 text-sm font-semibold text-gray-800">
               <MapPin className="h-4 w-4 text-primary" />
@@ -492,25 +603,18 @@ export default function OrderDetailPage() {
             <div className="px-4 py-3.5">
               <div className="flex items-center gap-2 mb-1.5">
                 <p className="text-sm font-semibold text-gray-900">
-                  {(order as any).shippingAddress?.recipientName}
+                  {shippingAddress.recipientName}
                 </p>
                 <span className="text-gray-300">|</span>
-                <p className="text-sm text-gray-500">
-                  {(order as any).shippingAddress?.recipientPhone}
-                </p>
+                <p className="text-sm text-gray-500">{shippingAddress.recipientPhone}</p>
               </div>
               <p className="text-sm text-gray-600 leading-relaxed">
-                <span className="inline-block text-xs text-primary border border-primary px-1.5 py-0.5 rounded mr-1.5 align-middle">
-                  Nhà riêng
-                </span>
-                {(order as any).shippingAddress?.streetAddress}
-                {(order as any).shippingAddress?.wardName && (
-                  <>, {[
-                    (order as any).shippingAddress.wardName,
-                    (order as any).shippingAddress.districtName,
-                    (order as any).shippingAddress.provinceName,
-                  ].filter(Boolean).join(", ")}</>
+                {shippingAddress.label && (
+                  <span className="inline-block text-xs text-primary border border-primary px-1.5 py-0.5 rounded mr-1.5 align-middle">
+                    {shippingAddress.label}
+                  </span>
                 )}
+                {shippingAddress.streetAddress}
               </p>
             </div>
           </div>
@@ -539,7 +643,11 @@ export default function OrderDetailPage() {
                 disabled={paying}
                 className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-primary text-white text-sm font-semibold py-2.5 hover:bg-primary/90 disabled:opacity-60 cursor-pointer transition-colors"
               >
-                {paying ? <Loader2 className="h-4 w-4 animate-spin" /> : <CreditCard className="h-4 w-4" />}
+                {paying ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <CreditCard className="h-4 w-4" />
+                )}
                 {paying ? "Đang xử lý..." : "Thanh toán ngay"}
               </button>
             )}
@@ -573,11 +681,14 @@ export default function OrderDetailPage() {
             )}
           </div>
         </div>
-
       </div>
 
       {/* ── Cancel Modal ── */}
-      <Modal open={isCancelModalOpen} title="Hủy đơn hàng" onClose={() => setIsCancelModalOpen(false)}>
+      <Modal
+        open={isCancelModalOpen}
+        title="Hủy đơn hàng"
+        onClose={() => setIsCancelModalOpen(false)}
+      >
         <div className="space-y-4">
           <p className="text-sm text-gray-600">Bạn có chắc chắn muốn hủy đơn hàng này?</p>
           <div className="flex gap-3">
@@ -628,7 +739,9 @@ export default function OrderDetailPage() {
                       <p className="text-sm font-semibold text-gray-800">{delivery.storeName}</p>
                     )}
                     {delivery.orderCode && (
-                      <p className="text-xs text-gray-400 font-mono mt-0.5">#{delivery.orderCode}</p>
+                      <p className="text-xs text-gray-400 font-mono mt-0.5">
+                        #{delivery.orderCode}
+                      </p>
                     )}
                     <span className="mt-1.5 inline-flex items-center gap-1 text-xs font-semibold text-emerald-600">
                       <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 inline-block" />
@@ -710,28 +823,51 @@ export default function OrderDetailPage() {
                             <Package className="h-5 w-5 text-gray-400" />
                           </div>
                           <div className="min-w-0 flex-1">
-                            <p className="text-sm font-medium text-gray-900 truncate">{item.productName}</p>
+                            <p className="text-sm font-medium text-gray-900 truncate">
+                              {item.productName}
+                            </p>
                             {(item as any).variantName && (
                               <p className="text-xs text-gray-400">{(item as any).variantName}</p>
                             )}
-                            <p className="text-xs text-gray-500 mt-0.5">{formatVnd(item.unitPrice)}</p>
+                            <p className="text-xs text-gray-500 mt-0.5">
+                              {formatVnd(item.unitPrice)}
+                            </p>
                           </div>
                           {isChecked ? (
                             <div className="flex items-center gap-1 shrink-0">
                               <button
                                 type="button"
-                                onClick={() => handleQuantityChange(item.id, Math.max(1, (selectedItems[item.id]?.quantity ?? 1) - 1))}
+                                onClick={() =>
+                                  handleQuantityChange(
+                                    item.id,
+                                    Math.max(1, (selectedItems[item.id]?.quantity ?? 1) - 1),
+                                  )
+                                }
                                 className="h-6 w-6 rounded-md border border-gray-200 text-gray-500 hover:bg-gray-100 flex items-center justify-center text-sm font-bold cursor-pointer"
-                              >−</button>
+                              >
+                                −
+                              </button>
                               <span className="w-6 text-center text-sm font-semibold text-gray-800">
                                 {selectedItems[item.id]?.quantity ?? 1}
                               </span>
                               <button
                                 type="button"
-                                onClick={() => handleQuantityChange(item.id, Math.min(item.quantity, (selectedItems[item.id]?.quantity ?? 1) + 1))}
+                                onClick={() =>
+                                  handleQuantityChange(
+                                    item.id,
+                                    Math.min(
+                                      item.quantity,
+                                      (selectedItems[item.id]?.quantity ?? 1) + 1,
+                                    ),
+                                  )
+                                }
                                 className="h-6 w-6 rounded-md border border-gray-200 text-gray-500 hover:bg-gray-100 flex items-center justify-center text-sm font-bold cursor-pointer"
-                              >+</button>
-                              <span className="text-xs text-gray-400 ml-0.5">/ {item.quantity}</span>
+                              >
+                                +
+                              </button>
+                              <span className="text-xs text-gray-400 ml-0.5">
+                                / {item.quantity}
+                              </span>
                             </div>
                           ) : (
                             <span className="text-xs text-gray-400 shrink-0">x{item.quantity}</span>
@@ -754,10 +890,11 @@ export default function OrderDetailPage() {
                       key={opt.value}
                       type="button"
                       onClick={() => setReturnType(opt.value)}
-                      className={`rounded-lg border px-3 py-2.5 text-sm font-semibold transition-all cursor-pointer ${returnType === opt.value
+                      className={`rounded-lg border px-3 py-2.5 text-sm font-semibold transition-all cursor-pointer ${
+                        returnType === opt.value
                           ? "border-orange-400 bg-orange-50 text-orange-600"
                           : "border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50"
-                        }`}
+                      }`}
                     >
                       {opt.label}
                     </button>
@@ -776,14 +913,18 @@ export default function OrderDetailPage() {
                   className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-700 focus:border-orange-400 focus:outline-none focus:ring-1 focus:ring-orange-200 transition-all"
                 >
                   {REASON_OPTIONS.map((opt) => (
-                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
                   ))}
                 </select>
               </div>
 
               {/* Reason detail */}
               <div>
-                <label className="block text-xs font-semibold text-gray-600 mb-1.5">Mô tả thêm</label>
+                <label className="block text-xs font-semibold text-gray-600 mb-1.5">
+                  Mô tả thêm
+                </label>
                 <textarea
                   value={reasonDetail}
                   onChange={(e) => setReasonDetail(e.target.value)}
@@ -848,7 +989,10 @@ export default function OrderDetailPage() {
                 className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-orange-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-orange-600 disabled:opacity-60 transition-colors cursor-pointer"
               >
                 {submittingReturn ? (
-                  <><Loader2 className="h-4 w-4 animate-spin" />Đang gửi...</>
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Đang gửi...
+                  </>
                 ) : (
                   "Gửi yêu cầu"
                 )}

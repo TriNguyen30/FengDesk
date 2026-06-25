@@ -14,7 +14,7 @@ import {
   ChevronsLeft,
   ChevronsRight,
   Store,
-  TicketX
+  TicketX,
 } from "lucide-react";
 import { useAppSelector, useAppDispatch } from "@/app/store";
 import { logout } from "@/features/auth/store/authSlice";

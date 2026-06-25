@@ -7,7 +7,7 @@ import { Product } from "../types/product";
 
 function formatPrice(price: number): string {
   return price.toLocaleString("vi-VN") + "đ";
-} 
+}
 
 // ─── ProductCard ─────────────────────────────────────────────────────────────
 
