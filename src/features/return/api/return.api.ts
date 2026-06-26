@@ -2,6 +2,7 @@ import fetchHttpClient from "@/lib/httpClient";
 import type {
   ReturnQueryParams,
   ReturnListResponse,
+  ReturnDetailResponse,
   CreateReturnRequest,
   CreateReturnResponse,
   CancelReturnResponse,
@@ -20,6 +21,10 @@ export const returnApi = {
     return fetchHttpClient.get<ReturnListResponse>("/returns/mine", params);
   },
 
+  getReturnById: async (returnId: string) => {
+    return fetchHttpClient.get<ReturnDetailResponse>(`/returns/${returnId}`);
+  },
+
   createReturn: async (payload: CreateReturnRequest) => {
     return fetchHttpClient.post<CreateReturnResponse>("/returns", payload);
   },
@@ -29,10 +34,7 @@ export const returnApi = {
   },
 
   approveReturn: async (returnId: string, payload?: ApproveReturnRequest) => {
-    return fetchHttpClient.post<ApproveReturnResponse>(
-      `/returns/${returnId}/approve`,
-      payload ?? {},
-    );
+    return fetchHttpClient.post<ApproveReturnResponse>(`/returns/${returnId}/approve`, payload ?? {});
   },
 
   rejectReturn: async (returnId: string, payload?: RejectReturnRequest) => {

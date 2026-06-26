@@ -1,5 +1,5 @@
 import { Outlet, NavLink } from "react-router-dom";
-import { User, MapPin, Package, HousePlus, Bell, RefreshCcw } from "lucide-react";
+import { User, MapPin, Package, HousePlus, Bell, RefreshCw } from "lucide-react";
 import { useEffect } from "react";
 
 export default function ProfileLayout() {
@@ -8,7 +8,7 @@ export default function ProfileLayout() {
     { name: "Địa chỉ", path: "/profile/addresses", icon: MapPin },
     { name: "Không gian làm việc", path: "/profile/workspace", icon: HousePlus },
     { name: "Đơn hàng của tôi", path: "/profile/orders", icon: Package },
-    { name: "Yêu cầu trả hàng", path: "/profile/returns", icon: RefreshCcw },
+    { name: "Yêu cầu trả hàng", path: "/profile/returns", icon: RefreshCw },
     { name: "Thông báo", path: "/profile/notifications", icon: Bell },
   ];
 
