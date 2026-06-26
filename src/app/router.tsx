@@ -19,7 +19,7 @@ import ProtectedRoute from "./ProtectedRoute";
 import ManageOrderReturnPage from "@/features/manager/pages/ManageOrderReturnPage";
 
 // Profile Pages
-import ProfileLayout from "@/features/users/pages/ProfileLayout";
+import ProfileLayout from "@/components/layouts/ProfileLayout";
 import ProfileInfoPage from "@/features/users/pages/ProfileInfoPage";
 import ProfileWorkspace from "@/features/users/pages/ProfileWorkspace";
 import AddressBookPage from "@/features/users/pages/AddressBookPage";

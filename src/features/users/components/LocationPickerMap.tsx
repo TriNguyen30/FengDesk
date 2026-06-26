@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { MapContainer, TileLayer, Marker, useMapEvents, useMap, ZoomControl } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
+import { GeoSearchControl, OpenStreetMapProvider } from "leaflet-geosearch";
+import "leaflet-geosearch/dist/geosearch.css";
 
 // Google Maps-style red pin icon
 const createGooglePin = () =>
@@ -288,6 +290,44 @@ function MapResizer({ isFullscreen }: { isFullscreen: boolean }) {
   return null;
 }
 
+function SearchControl({ onChange }: { onChange: (lat: number, lng: number) => void }) {
+  const map = useMap();
+
+  useEffect(() => {
+    const provider = new OpenStreetMapProvider();
+
+    // @ts-ignore
+    const searchControl = new GeoSearchControl({
+      provider: provider,
+      style: "bar",
+      showMarker: false,
+      showPopup: false,
+      autoClose: true,
+      retainZoomLevel: false,
+      animateZoom: true,
+      keepResult: true,
+      searchLabel: "Tìm kiếm địa điểm...",
+    });
+
+    map.addControl(searchControl);
+
+    const handleShowLocation = (e: any) => {
+      if (e.location) {
+        onChange(e.location.y, e.location.x);
+      }
+    };
+
+    map.on("geosearch/showlocation", handleShowLocation);
+
+    return () => {
+      map.removeControl(searchControl);
+      map.off("geosearch/showlocation", handleShowLocation);
+    };
+  }, [map, onChange]);
+
+  return null;
+}
+
 export default function LocationPickerMap({
   latitude,
   longitude,
@@ -347,7 +387,7 @@ export default function LocationPickerMap({
         onPointerUp={(e) => e.stopPropagation()}
         style={{
           position: "absolute",
-          top: 12,
+          top: 72,
           left: 12,
           zIndex: 1000,
           background: "white",
@@ -394,6 +434,7 @@ export default function LocationPickerMap({
         <MapResizer isFullscreen={isFullscreen} />
         <TileLayer key={tileKey} attribution={tile.attribution} url={tile.url} />
         <LocationMarker latitude={latitude} longitude={longitude} onChange={onChange} />
+        <SearchControl onChange={onChange} />
         <CustomZoomControls
           isFullscreen={isFullscreen}
           toggleFullscreen={() => setIsFullscreen(!isFullscreen)}

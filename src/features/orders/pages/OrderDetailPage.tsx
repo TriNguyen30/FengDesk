@@ -258,7 +258,12 @@ export default function OrderDetailPage() {
   const statusMeta = getOrderStatusMeta(order.status, order.paymentMethod);
   const canCancel = !["Cancelled", "Completed", "Expired"].includes(order.status);
   const deliveries: any[] = (order as any).deliveries ?? [];
-  const hasDeliveredDelivery = deliveries.some((d) => d.status === "Delivered");
+  const returnableDeliveries = deliveries.filter((d) => {
+    if (d.status !== "Delivered") return false;
+    const rr = d.returnRequest;
+    return !rr || ["Rejected", "Cancelled"].includes(rr.status);
+  });
+  const hasReturnableDelivery = returnableDeliveries.length > 0;
 
   const getDeliveryItems = (deliveryId: string): OrderLineItem[] =>
     (order.items ?? []).filter((item) => item.deliveryId === deliveryId);
@@ -527,7 +532,7 @@ export default function OrderDetailPage() {
                 <Truck className="h-4 w-4 text-primary" />
                 Đơn giao hàng
               </div>
-              {hasDeliveredDelivery && (
+              {hasReturnableDelivery && (
                 <button
                   onClick={() => setDeliveryPickerOpen(true)}
                   className="flex items-center gap-1.5 text-xs font-semibold text-orange-600 bg-orange-50 border border-orange-200 px-3 py-1.5 rounded-lg hover:bg-orange-100 transition-colors cursor-pointer"
@@ -547,7 +552,8 @@ export default function OrderDetailPage() {
                 const isDelivered = delivery.status === "Delivered";
                 const returnRequest: { id: string; status: string } | null =
                   delivery.returnRequest ?? null;
-                const hasPendingReturn = returnRequest && returnRequest.status === "Requested";
+                const hasActiveReturn =
+                  returnRequest && !["Rejected", "Cancelled"].includes(returnRequest.status);
                 const multiDelivered =
                   deliveries.filter((d) => d.status === "Delivered").length > 1;
 
@@ -565,15 +571,17 @@ export default function OrderDetailPage() {
                           #{delivery.orderCode}
                         </p>
                       )}
-                      {hasPendingReturn && (
+                      {hasActiveReturn && (
                         <span className="mt-1.5 inline-flex items-center gap-1 text-xs font-medium text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded">
                           <span className="h-1.5 w-1.5 rounded-full bg-amber-400 inline-block" />
-                          Đang chờ xử lý trả hàng
+                          {returnRequest.status === "Requested"
+                            ? "Đang chờ xử lý trả hàng"
+                            : "Đang xử lý trả hàng"}
                         </span>
                       )}
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
-                      {isDelivered && !hasPendingReturn && multiDelivered && (
+                      {isDelivered && !hasActiveReturn && multiDelivered && (
                         <button
                           onClick={() =>
                             openReturnModal(delivery.id, getDeliveryItems(delivery.id))
@@ -657,7 +665,7 @@ export default function OrderDetailPage() {
             )}
 
             {/* Return — shown when there's a delivered delivery and payment is done */}
-            {hasDeliveredDelivery && order.status !== "Pending" && (
+            {hasReturnableDelivery && order.status !== "Pending" && (
               <button
                 onClick={() => setDeliveryPickerOpen(true)}
                 className="flex-1 flex items-center justify-center gap-2 rounded-lg border border-orange-300 text-orange-600 bg-orange-50 text-sm font-semibold py-2.5 hover:bg-orange-100 cursor-pointer transition-colors"
@@ -727,32 +735,28 @@ export default function OrderDetailPage() {
               </button>
             </div>
             <div className="px-4 py-4 space-y-2 max-h-[60vh] overflow-y-auto">
-              {deliveries
-                .filter((d) => d.status === "Delivered")
-                .map((delivery) => (
-                  <button
-                    key={delivery.id}
-                    type="button"
-                    onClick={() => {
-                      setDeliveryPickerOpen(false);
-                      openReturnModal(delivery.id, getDeliveryItems(delivery.id));
-                    }}
-                    className="w-full text-left rounded-xl border border-gray-100 bg-gray-50 hover:border-orange-200 hover:bg-orange-50/50 px-4 py-3 transition-colors cursor-pointer"
-                  >
-                    {delivery.storeName && (
-                      <p className="text-sm font-semibold text-gray-800">{delivery.storeName}</p>
-                    )}
-                    {delivery.orderCode && (
-                      <p className="text-xs text-gray-400 font-mono mt-0.5">
-                        #{delivery.orderCode}
-                      </p>
-                    )}
-                    <span className="mt-1.5 inline-flex items-center gap-1 text-xs font-semibold text-emerald-600">
-                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 inline-block" />
-                      Đã giao hàng
-                    </span>
-                  </button>
-                ))}
+              {returnableDeliveries.map((delivery) => (
+                <button
+                  key={delivery.id}
+                  type="button"
+                  onClick={() => {
+                    setDeliveryPickerOpen(false);
+                    openReturnModal(delivery.id, getDeliveryItems(delivery.id));
+                  }}
+                  className="w-full text-left rounded-xl border border-gray-100 bg-gray-50 hover:border-orange-200 hover:bg-orange-50/50 px-4 py-3 transition-colors cursor-pointer"
+                >
+                  {delivery.storeName && (
+                    <p className="text-sm font-semibold text-gray-800">{delivery.storeName}</p>
+                  )}
+                  {delivery.orderCode && (
+                    <p className="text-xs text-gray-400 font-mono mt-0.5">#{delivery.orderCode}</p>
+                  )}
+                  <span className="mt-1.5 inline-flex items-center gap-1 text-xs font-semibold text-emerald-600">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 inline-block" />
+                    Đã giao hàng
+                  </span>
+                </button>
+              ))}
             </div>
             <div className="border-t border-gray-100 px-6 py-3 bg-gray-50/50">
               <button

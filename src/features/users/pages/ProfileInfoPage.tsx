@@ -23,7 +23,7 @@ export default function ProfileInfoPage() {
       clearSession();
       dispatch(logout());
       toast.success("Đăng xuất thành công");
-      navigate('/');
+      navigate("/");
     }
   };
 
@@ -32,8 +32,6 @@ export default function ProfileInfoPage() {
   }, []);
 
   if (!user) return null;
-
-
 
   return (
     <div className="max-w-2xl">

@@ -242,7 +242,7 @@ export default function OrdersPage() {
                           setRating(5);
                           setReviewContent("");
                         }}
-                        className="flex-1 sm:flex-none rounded bg-primary px-6 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-dark cursor-pointer"
+                        className="flex-1 sm:flex-none rounded-lg bg-primary px-6 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-dark cursor-pointer"
                       >
                         Đánh Giá
                       </button>
@@ -252,13 +252,13 @@ export default function OrdersPage() {
                         e.preventDefault();
                         dispatch(openChatbox({ isSupport: true }));
                       }}
-                      className="flex-1 sm:flex-none rounded border border-gray-200 bg-white px-6 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 cursor-pointer"
+                      className="flex-1 sm:flex-none rounded-lg border border-gray-200 bg-white px-6 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 cursor-pointer"
                     >
                       Liên Hệ Người Bán
                     </button>
                     <Link
                       to={`/profile/orders/${order.id}`}
-                      className="flex-1 sm:flex-none rounded border border-gray-200 bg-white px-6 py-2 text-center text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 cursor-pointer"
+                      className="flex-1 sm:flex-none rounded-lg border border-gray-200 bg-white px-6 py-2 text-center text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 cursor-pointer"
                     >
                       Xem Chi Tiết
                     </Link>
