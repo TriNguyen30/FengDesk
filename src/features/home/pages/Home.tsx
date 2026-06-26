@@ -15,7 +15,7 @@ const slides: HeroSlide[] = [
     desc1: "Tư vấn cây hợp mệnh bằng AI",
     desc2: "Mang lại may mắn & tài lộc",
     image:
-      "https://i.ex-cdn.com/danviet.vn/files/content/2026/01/01/031026tai-voi-lai-cay-canh-a-0222.jpg",
+      "https://images.squarespace-cdn.com/content/v1/663638597899f63cfa9deca6/1736727318707-KPNZ2QBTGEXVXAEC6WK8/7.16.24+Bristol+Botanics-27.jpg",
     primaryBtn: "Trải nghiệm AI",
     secondaryBtn: "Xem thêm",
   },
@@ -27,7 +27,7 @@ const slides: HeroSlide[] = [
     desc1: "Thanh lọc không khí, giảm căng thẳng",
     desc2: "Phù hợp mọi không gian văn phòng",
     image:
-      "https://i.ex-cdn.com/danviet.vn/files/content/2025/12/30/025751ngoc-bich-cay-canh-a2-0254.jpg",
+      "https://s.yimg.com/ny/api/res/1.2/OjlgtatUjnfv6rMRAgVNSA--/YXBwaWQ9aGlnaGxhbmRlcjt3PTk2MDtoPTU0MDtjZj13ZWJw/https://media.zenfs.com/en/real_homes_245/4b07f622a522e2e612f3336385080532",
     primaryBtn: "Khám phá",
     secondaryBtn: "Xem thêm",
   },
@@ -39,7 +39,7 @@ const slides: HeroSlide[] = [
     desc1: "Thiết kế chậu sành sứ cao cấp",
     desc2: "Giao hàng an toàn tận nơi",
     image:
-      "https://tapchivietnamhuongsac.vn/stores/news_dataimages/2026/042026/06/09/capture20260406090848.jpg?rt=20260406090850",
+      "https://www.thespruce.com/thmb/fQjL1wNf72Ez89dkS-VwpiQGiAM=/6127x0/filters:no_upscale():max_bytes(150000):strip_icc()/thespruce.com-best-houseplants-for-sun-4147670-1-3d69cd3cf2b943d9aa8363cde764e595.jpg",
     primaryBtn: "Mua ngay",
     secondaryBtn: "Xem thêm",
   },

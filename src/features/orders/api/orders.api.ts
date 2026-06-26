@@ -7,6 +7,7 @@ import type {
   GetOrdersResponse,
   ApiResponse,
   OrderDetail,
+  UpdateDeliveryStatusRequest,
 } from "../types/orders";
 
 export const ordersApi = {
@@ -28,5 +29,11 @@ export const ordersApi = {
 
   cancelOrder: (id: string) => {
     return fetchHttpClient.post<ApiResponse<OrderDetail>>(`/orders/${id}/cancel`);
+  },
+  updateDeliveryStatus: (deliveryId: string, payload: UpdateDeliveryStatusRequest) => {
+    return fetchHttpClient.patch<ApiResponse<any>>(
+      `/orders/deliveries/${deliveryId}/status`,
+      payload,
+    );
   },
 };

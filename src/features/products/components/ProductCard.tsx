@@ -6,7 +6,7 @@ import { Product } from "../types/product";
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function formatPrice(price: number): string {
-  return "₫" + price.toLocaleString("vi-VN");
+  return price.toLocaleString("vi-VN") + "đ";
 }
 
 // ─── ProductCard ─────────────────────────────────────────────────────────────

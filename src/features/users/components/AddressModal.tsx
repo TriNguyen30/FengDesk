@@ -173,8 +173,8 @@ export default function AddressModal({ isOpen, onClose, onSuccess, address }: Ad
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4">
-      <div className="w-full max-w-md rounded-2xl bg-white shadow-xl max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4 sticky top-0 bg-white z-10">
+      <div className="w-full max-w-2xl rounded-2xl bg-white shadow-xl max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4 sticky top-0 bg-white z-[500]">
           <h2 className="text-lg font-bold text-gray-900">
             {address ? "Cập nhật địa chỉ" : "Thêm địa chỉ mới"}
           </h2>
@@ -305,7 +305,7 @@ export default function AddressModal({ isOpen, onClose, onSuccess, address }: Ad
               />
             </div>
 
-            <div className="z-0 relative">
+            <div className="relative">
               <label className="mb-1.5 block text-sm font-medium text-gray-700">
                 Vị trí trên bản đồ
               </label>
