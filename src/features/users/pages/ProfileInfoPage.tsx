@@ -1,14 +1,39 @@
 import { useEffect } from "react";
-import { useAppSelector } from "@/app/store";
+import { useAppDispatch, useAppSelector } from "@/app/store";
+import { logout } from "@/features/auth/store/authSlice";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+import { logoutRequest } from "@/features/auth/api/auth.api";
+import { clearSession } from "@/utils";
 
 export default function ProfileInfoPage() {
   const user = useAppSelector((state) => state.auth.user);
+  const { refreshToken } = useAppSelector((state) => state.auth);
+  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    try {
+      if (refreshToken) {
+        await logoutRequest({ refreshToken });
+      }
+    } catch (error) {
+      console.error("Logout error", error);
+    } finally {
+      clearSession();
+      dispatch(logout());
+      toast.success("Đăng xuất thành công");
+      navigate('/');
+    }
+  };
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
 
   if (!user) return null;
+
+
 
   return (
     <div className="max-w-2xl">
@@ -48,7 +73,7 @@ export default function ProfileInfoPage() {
             />
           </div>
 
-          <div className="pt-4">
+          <div className="pt-4 flex gap-3">
             <button
               type="button"
               disabled
@@ -56,10 +81,17 @@ export default function ProfileInfoPage() {
             >
               Cập nhật thông tin
             </button>
-            <p className="mt-2 text-xs text-gray-500">
-              Tính năng cập nhật thông tin đang được phát triển.
-            </p>
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="rounded-lg bg-red-500 px-5 py-2.5 text-sm font-medium text-white hover:bg-red-600 transition-colors cursor-pointer"
+            >
+              Đăng xuất
+            </button>
           </div>
+          <p className="mt-2 text-xs text-gray-500">
+            Tính năng cập nhật thông tin đang được phát triển.
+          </p>
         </form>
       </div>
     </div>
