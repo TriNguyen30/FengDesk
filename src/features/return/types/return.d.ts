@@ -144,3 +144,12 @@ export interface RejectReturnResponse {
   message: string | null;
   errors: any;
 }
+
+// ── Detail response (từ GET /returns/{id}) ───────────────────────────────────
+export interface ReturnDetailResponse {
+  data: ReturnDetail;
+  isSuccess: boolean;
+  statusCode: number;
+  message: string | null;
+  errors: any;
+}

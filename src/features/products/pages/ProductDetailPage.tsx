@@ -31,6 +31,14 @@ import { ReviewSection } from "@/features/review";
 import { useAppDispatch } from "@/app/store";
 import { openChatbox } from "@/features/chatbox/store/chatboxSlice";
 
+const ELEMENT_LABELS: Record<string, string> = {
+  Kim: "Kim",
+  Moc: "Mộc",
+  Thuy: "Thủy",
+  Hoa: "Hỏa",
+  Tho: "Thổ",
+};
+
 export default function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -417,15 +425,26 @@ export default function ProductDetailPage() {
               </div>
             )}
 
-            {/* Tags */}
-            {product.tags.length > 0 && (
+            {/* Feng Shui attributes */}
+            {product.primaryElement && (
               <div className="flex flex-wrap gap-1.5">
-                {product.tags.map((tag) => (
+                <span className="rounded-md bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">
+                  Hành: {ELEMENT_LABELS[product.primaryElement] ?? product.primaryElement}
+                </span>
+                {(product.secondaryElements ?? []).map((el) => (
                   <span
-                    key={tag.id}
+                    key={el}
                     className="rounded-md bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-500"
                   >
-                    #{tag.name}
+                    {ELEMENT_LABELS[el] ?? el}
+                  </span>
+                ))}
+                {(product.vibes ?? []).concat(product.styles ?? []).map((code) => (
+                  <span
+                    key={code}
+                    className="rounded-md bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-500"
+                  >
+                    {code}
                   </span>
                 ))}
               </div>

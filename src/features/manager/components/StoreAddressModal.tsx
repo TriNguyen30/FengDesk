@@ -54,6 +54,7 @@ export function StoreAddressModal({
       open={open}
       title={editingAddress ? "Chỉnh sửa địa chỉ chi tiết" : "Thiết lập địa chỉ chi tiết"}
       onClose={onClose}
+      size="max-w-2xl"
     >
       <form onSubmit={onSubmit} className="space-y-4 pt-2">
         <div className="grid gap-4 sm:grid-cols-2">

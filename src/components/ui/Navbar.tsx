@@ -8,6 +8,8 @@ import PopUpLogin from "@/features/auth/components/PopUpLogin";
 import PopUpSignUp from "@/features/auth/components/PopUpSignUp";
 import { CartDropDown, useCart } from "@/features/cart";
 import { NotificationDropdown } from "@/features/notification";
+import WorkspaceSwitcher from "./WorkspaceSwitcher";
+import { getRoles } from "@/lib/workspace";
 import { useAppSelector, useAppDispatch } from "@/app/store";
 import { logout, setAuthModal } from "@/features/auth/store/authSlice";
 import { logoutRequest } from "@/features/auth/api/auth.api";
@@ -123,6 +125,8 @@ export default function Navbar() {
 
             {/* Icon group — always visible */}
             <div className="flex shrink-0 items-center gap-1 sm:gap-3">
+              {user && <WorkspaceSwitcher />}
+
               <button
                 type="button"
                 onClick={openAiAssistant}
@@ -180,15 +184,16 @@ export default function Navbar() {
                       >
                         Đơn Mua
                       </button>
-                      <button
-                        onClick={() => navigate("/seller")}
-                        className="flex w-full items-center px-3 py-2 text-sm text-primary hover:bg-primary/5 rounded-md transition-colors text-left font-medium cursor-pointer"
-                      >
-                        <Store size={16} className="mr-2" />
-                        {(user.role ?? "").split(",").some((r) => r.trim() === "GardenOwner")
-                          ? "Kênh người bán"
-                          : "Trở thành người bán"}
-                      </button>
+                      {/* Người bán đã có khu riêng ở switcher "Đổi khu" → avatar chỉ giữ CTA cho người chưa bán. */}
+                      {!getRoles(user).includes("GardenOwner") && (
+                        <button
+                          onClick={() => navigate("/become-seller")}
+                          className="flex w-full items-center px-3 py-2 text-sm text-primary hover:bg-primary/5 rounded-md transition-colors text-left font-medium cursor-pointer"
+                        >
+                          <Store size={16} className="mr-2" />
+                          Trở thành người bán
+                        </button>
+                      )}
 
                       <button
                         onClick={handleLogout}

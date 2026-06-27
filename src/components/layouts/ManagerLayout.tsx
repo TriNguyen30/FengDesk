@@ -19,6 +19,7 @@ import {
 import { useAppSelector, useAppDispatch } from "@/app/store";
 import { logout } from "@/features/auth/store/authSlice";
 import { clearSession } from "@/utils";
+import WorkspaceSwitcher from "@/components/ui/WorkspaceSwitcher";
 import FengDesk from "@/assets/image/fengdesk_logo_2.png";
 
 const navigation = [
@@ -194,6 +195,8 @@ export default function ManagerLayout() {
           </div>
 
           <div className="ml-auto flex items-center gap-3 sm:gap-5">
+            <WorkspaceSwitcher />
+
             {/* Search */}
             {/* <div className="relative hidden w-64 md:block">
               <Search

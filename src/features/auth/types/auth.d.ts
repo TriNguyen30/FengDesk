@@ -3,7 +3,10 @@ export interface AuthUser {
   email: string;
   fullName?: string;
   phone?: string;
+  /** Chuỗi role gộp (bit-flag), vd "Customer, GardenOwner". Giữ cho tương thích cũ. */
   role?: string;
+  /** Danh sách role tách rời từ BE (/me, login), vd ["Customer","GardenOwner"]. */
+  roles?: string[];
 }
 
 export interface LoginPayload {

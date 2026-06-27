@@ -12,10 +12,10 @@ import {
 } from "lucide-react";
 import { productApi } from "@/features/products/api/product.api";
 import { getCategoriesRequest } from "@/features/category/api/category.api";
-import { getTags } from "@/features/products/api/tag.api";
+import { getVibes, getStyles } from "@/features/products/api/taxonomy.api";
 import type { ProductDetail } from "@/features/products/types/product";
 import type { Category } from "@/features/category/types/category";
-import type { Tag } from "@/features/products/types/tag";
+import type { LookupItem } from "@/features/products/types/taxonomy";
 import { toast } from "sonner";
 import {
   ProductBasicForm,
@@ -23,13 +23,18 @@ import {
   ProductImagesSection,
   ProductRelationsForm,
   ProductFengShuiForm,
+  type FengShuiValues,
 } from "@/features/manager/components";
 
-function formatVnd(n: number): string {
-  return n.toLocaleString("vi-VN") + "đ";
-}
+type TabType = "basic" | "variants" | "images" | "categories" | "feng-shui";
 
-type TabType = "basic" | "variants" | "images" | "categories-tags" | "feng-shui";
+const EMPTY_FENG_SHUI: FengShuiValues = {
+  primaryElement: "Kim",
+  secondaryElements: [],
+  sizeClass: "Medium",
+  vibes: [],
+  styles: [],
+};
 
 export default function EditProductPage() {
   const { id } = useParams<{ id: string }>();
@@ -41,7 +46,8 @@ export default function EditProductPage() {
 
   // Global option lists
   const [categories, setCategories] = useState<Category[]>([]);
-  const [tags, setTags] = useState<Tag[]>([]);
+  const [vibeOptions, setVibeOptions] = useState<LookupItem[]>([]);
+  const [styleOptions, setStyleOptions] = useState<LookupItem[]>([]);
 
   // Tab 1: Basic Info states
   const [basicName, setBasicName] = useState("");
@@ -49,15 +55,12 @@ export default function EditProductPage() {
   const [basicIsActive, setBasicIsActive] = useState(true);
   const [savingBasic, setSavingBasic] = useState(false);
 
-  // Tab 2: Categories & Tags states
+  // Tab 2: Categories states
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
-  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
   const [savingRelations, setSavingRelations] = useState(false);
 
   // Tab 5: Feng Shui states
-  const [fsElement, setFsElement] = useState("Kim");
-  const [fsCompatibility, setFsCompatibility] = useState("");
-  const [fsDescription, setFsDescription] = useState("");
+  const [fengShui, setFengShui] = useState<FengShuiValues>(EMPTY_FENG_SHUI);
   const [savingFengShui, setSavingFengShui] = useState(false);
 
   // Fetch product detail
@@ -75,17 +78,17 @@ export default function EditProductPage() {
         setBasicDescription(p.description || "");
         setBasicIsActive(p.isActive);
 
-        // Populate categories/tags
+        // Populate categories
         setSelectedCategoryIds(p.categories?.map((c) => c.id) || []);
-        setSelectedTagIds(p.tags?.map((t) => t.id) || []);
 
-        // Populate Feng Shui (dynamic keys on product details)
-        const rawP = p as any;
-        setFsElement(rawP.element || rawP.fengShui?.element || "Kim");
-        setFsCompatibility(rawP.compatibility || rawP.fengShui?.compatibility || "");
-        setFsDescription(
-          rawP.descriptionFengShui || rawP.fengShuiDescription || rawP.fengShui?.description || "",
-        );
+        // Populate Feng Shui từ detail (BE đã phơi primaryElement/secondaryElements/sizeClass/vibes/styles)
+        setFengShui({
+          primaryElement: p.primaryElement || "Kim",
+          secondaryElements: p.secondaryElements || [],
+          sizeClass: p.sizeClass || "Medium",
+          vibes: p.vibes || [],
+          styles: p.styles || [],
+        });
       } else {
         toast.error("Không thể tải chi tiết sản phẩm");
         navigate("/manager/products");
@@ -104,13 +107,16 @@ export default function EditProductPage() {
 
     const fetchOptions = async () => {
       try {
-        const [categoriesRes, tagsRes] = await Promise.all([getCategoriesRequest(), getTags()]);
+        const [categoriesRes, vibesRes, stylesRes] = await Promise.all([
+          getCategoriesRequest(),
+          getVibes(),
+          getStyles(),
+        ]);
         if (categoriesRes.isSuccess && categoriesRes.data) {
           setCategories(categoriesRes.data.filter((c) => c.isActive));
         }
-        if (tagsRes.isSuccess && tagsRes.data) {
-          setTags(tagsRes.data);
-        }
+        if (vibesRes.isSuccess && vibesRes.data) setVibeOptions(vibesRes.data);
+        if (stylesRes.isSuccess && stylesRes.data) setStyleOptions(stylesRes.data);
       } catch (err) {
         console.error("Failed to load options", err);
       }
@@ -149,34 +155,29 @@ export default function EditProductPage() {
     }
   };
 
-  // Update Categories & Tags
+  // Update Categories
   const handleSaveRelations = async () => {
     if (!id) return;
     setSavingRelations(true);
     try {
-      // Call both APIs concurrently
-      const [catRes, tagRes] = await Promise.all([
-        productApi.updateProductCategories(id, { categoryIds: selectedCategoryIds }),
-        productApi.updateProductTags(id, { tagIds: selectedTagIds }),
-      ]);
-
-      if (catRes.data.isSuccess && tagRes.data.isSuccess) {
-        toast.success("Đã cập nhật danh mục và nhãn thành công");
+      const res = await productApi.updateProductCategories(id, {
+        categoryIds: selectedCategoryIds,
+      });
+      if (res.data.isSuccess) {
+        toast.success("Đã cập nhật danh mục thành công");
         fetchProductDetail();
       } else {
-        if (!catRes.data.isSuccess)
-          toast.error(catRes.data.message || "Cập nhật danh mục thất bại");
-        if (!tagRes.data.isSuccess) toast.error(tagRes.data.message || "Cập nhật nhãn thất bại");
+        toast.error(res.data.message || "Cập nhật danh mục thất bại");
       }
     } catch (err) {
       console.error(err);
-      toast.error("Lỗi khi cập nhật danh mục / nhãn");
+      toast.error("Lỗi khi cập nhật danh mục");
     } finally {
       setSavingRelations(false);
     }
   };
 
-  // Update Feng Shui
+  // Update Feng Shui (PUT /products/{id}/feng-shui)
   const handleSaveFengShui = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!id) return;
@@ -184,9 +185,11 @@ export default function EditProductPage() {
     setSavingFengShui(true);
     try {
       const res = await productApi.updateProductFengShui(id, {
-        element: fsElement,
-        compatibility: fsCompatibility.trim(),
-        description: fsDescription.trim(),
+        primaryElement: fengShui.primaryElement,
+        secondaryElements: fengShui.secondaryElements,
+        sizeClass: fengShui.sizeClass,
+        vibes: fengShui.vibes,
+        styles: fengShui.styles,
       });
 
       if (res.data.isSuccess) {
@@ -258,7 +261,7 @@ export default function EditProductPage() {
                 icon: DollarSign,
               },
               { id: "images", label: `Hình ảnh (${product.images?.length || 0})`, icon: ImageIcon },
-              { id: "categories-tags", label: "Danh mục & Nhãn", icon: Layers },
+              { id: "categories", label: "Danh mục", icon: Layers },
               { id: "feng-shui", label: "Phong thủy", icon: Sparkles },
             ] as const
           ).map((t) => {
@@ -315,15 +318,12 @@ export default function EditProductPage() {
         />
       )}
 
-      {/* ── TAB CONTENT: CATEGORIES & TAGS ────────────────────────────────── */}
-      {activeTab === "categories-tags" && (
+      {/* ── TAB CONTENT: CATEGORIES ───────────────────────────────────────── */}
+      {activeTab === "categories" && (
         <ProductRelationsForm
           categories={categories}
-          tags={tags}
           selectedCategoryIds={selectedCategoryIds}
           setSelectedCategoryIds={setSelectedCategoryIds}
-          selectedTagIds={selectedTagIds}
-          setSelectedTagIds={setSelectedTagIds}
           onSubmit={handleSaveRelations}
           saving={savingRelations}
         />
@@ -332,12 +332,10 @@ export default function EditProductPage() {
       {/* ── TAB CONTENT: FENG SHUI ────────────────────────────────────────── */}
       {activeTab === "feng-shui" && (
         <ProductFengShuiForm
-          fsElement={fsElement}
-          setFsElement={setFsElement}
-          fsCompatibility={fsCompatibility}
-          setFsCompatibility={setFsCompatibility}
-          fsDescription={fsDescription}
-          setFsDescription={setFsDescription}
+          value={fengShui}
+          onChange={setFengShui}
+          vibeOptions={vibeOptions}
+          styleOptions={styleOptions}
           onSubmit={handleSaveFengShui}
           saving={savingFengShui}
         />

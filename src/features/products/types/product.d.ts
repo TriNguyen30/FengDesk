@@ -86,7 +86,12 @@ export interface ProductDetail {
   items: ProductItem[];
   images: ProductImage[];
   categories: ProductCategory[];
-  tags: ProductTag[];
+  // Thuộc tính phong thủy (thay cho tags)
+  primaryElement?: string | null;
+  secondaryElements?: string[];
+  sizeClass?: string | null;
+  vibes?: string[];
+  styles?: string[];
   createdAt: string;
   updatedAt: string;
 }
@@ -107,8 +112,13 @@ export interface CreateProductRequest {
   items: CreateProductItemRequest[];
   images: CreateProductImageRequest[];
   categoryIds: string[];
-  tagIds: string[];
   isActive?: boolean;
+  // Phong thủy (tùy chọn) — bỏ trống primaryElement = tạo chưa có phong thủy
+  primaryElement?: string;
+  secondaryElements?: string[];
+  sizeClass?: string;
+  vibes?: string[];
+  styles?: string[];
 }
 
 export interface UpdateProductRequest {
@@ -137,16 +147,13 @@ export interface AddProductImageRequest {
 }
 
 export interface UpdateProductFengShuiRequest {
-  element: string;
-  compatibility?: string;
-  description?: string;
-  [key: string]: any;
+  primaryElement: string;
+  secondaryElements: string[];
+  sizeClass: string;
+  vibes: string[];
+  styles: string[];
 }
 
 export interface SetProductCategoriesRequest {
   categoryIds: string[];
-}
-
-export interface SetProductTagsRequest {
-  tagIds: string[];
 }

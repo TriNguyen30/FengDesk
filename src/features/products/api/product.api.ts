@@ -13,7 +13,6 @@ import type {
   AddProductImageRequest,
   UpdateProductFengShuiRequest,
   SetProductCategoriesRequest,
-  SetProductTagsRequest,
 } from "../types/product";
 
 export const productApi = {
@@ -71,10 +70,6 @@ export const productApi = {
 
   updateProductCategories: (id: string, data: SetProductCategoriesRequest) => {
     return fetchHttpClient.put<ApiResponse<ProductDetail>>(`/products/${id}/categories`, data);
-  },
-
-  updateProductTags: (id: string, data: SetProductTagsRequest) => {
-    return fetchHttpClient.put<ApiResponse<ProductDetail>>(`/products/${id}/tags`, data);
   },
 
   updateProductFengShui: (id: string, data: UpdateProductFengShuiRequest) => {
