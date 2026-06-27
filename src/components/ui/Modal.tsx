@@ -7,9 +7,10 @@ export interface ModalProps {
   title?: string;
   onClose: () => void;
   children: React.ReactNode;
+  size?: string;
 }
 
-export default function Modal({ open, title, onClose, children }: ModalProps) {
+export default function Modal({ open, title, onClose, children, size }: ModalProps) {
   useEffect(() => {
     if (!open) return;
     const onKeyDown = (e: KeyboardEvent) => {
@@ -71,7 +72,7 @@ export default function Modal({ open, title, onClose, children }: ModalProps) {
             role="dialog"
             aria-modal="true"
             aria-labelledby={title ? "modal-title" : undefined}
-            className="pointer-events-auto relative z-[101] flex max-h-[92dvh] w-full max-w-md flex-col rounded-t-2xl bg-white pb-[env(safe-area-inset-bottom)] shadow-2xl sm:max-h-[min(90dvh,720px)] sm:rounded-2xl sm:pb-0"
+            className={`pointer-events-auto relative z-[101] flex max-h-[92dvh] w-full ${size || "max-w-md"} flex-col rounded-t-2xl bg-white pb-[env(safe-area-inset-bottom)] shadow-2xl sm:max-h-[min(90dvh,720px)] sm:rounded-2xl sm:pb-0`}
           >
             <div className="flex shrink-0 items-center justify-between border-b border-gray-100 px-4 py-3 sm:px-6 sm:py-4">
               {title ? (
