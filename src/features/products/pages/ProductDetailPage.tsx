@@ -306,9 +306,9 @@ export default function ProductDetailPage() {
                     style={
                       isHovering
                         ? {
-                            transformOrigin: `${zoomPos.x}% ${zoomPos.y}%`,
-                            transform: "scale(2.2)",
-                          }
+                          transformOrigin: `${zoomPos.x}% ${zoomPos.y}%`,
+                          transform: "scale(2.2)",
+                        }
                         : undefined
                     }
                     className="h-full w-full object-contain transition-transform duration-100 ease-out"
@@ -332,11 +332,10 @@ export default function ProductDetailPage() {
                   <button
                     key={img.id}
                     onClick={() => setActiveImage(img.url)}
-                    className={`h-16 w-16 shrink-0 overflow-hidden rounded-lg border-2 bg-gray-50 transition-all cursor-pointer ${
-                      activeImage === img.url
+                    className={`h-16 w-16 shrink-0 overflow-hidden rounded-lg border-2 bg-gray-50 transition-all cursor-pointer ${activeImage === img.url
                         ? "border-primary"
                         : "border-transparent hover:border-gray-300"
-                    }`}
+                      }`}
                   >
                     <img src={img.url} alt="thumb" className="h-full w-full object-contain" />
                   </button>
@@ -405,11 +404,10 @@ export default function ProductDetailPage() {
                       <button
                         key={item.id}
                         onClick={() => setSelectedItem(item)}
-                        className={`relative flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-all focus:outline-none cursor-not-allowed ${
-                          isSelected
+                        className={`relative flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-all focus:outline-none cursor-not-allowed ${isSelected
                             ? "border-primary bg-primary/5 text-primary"
                             : "border-gray-200 text-gray-600 hover:border-primary/40 hover:bg-gray-50 cursor-pointer"
-                        }`}
+                          }`}
                       >
                         {item.name}
                         <span className="text-xs opacity-60">
@@ -447,6 +445,25 @@ export default function ProductDetailPage() {
                     {code}
                   </span>
                 ))}
+              </div>
+            )}
+
+            {/* Physical attributes */}
+            {selectedItem && (selectedItem.weightGram > 0 || selectedItem.lengthCm > 0) && (
+              <div className="flex flex-wrap gap-1.5">
+                {selectedItem.weightGram > 0 && (
+                  <span className="rounded-md  border border-gray-200 px-2.5 py-1 text-xs font-medium text-gray-500">
+                    Nặng: {selectedItem.weightGram}g
+                  </span>
+                )}
+                {(selectedItem.lengthCm > 0 ||
+                  selectedItem.widthCm > 0 ||
+                  selectedItem.heightCm > 0) && (
+                    <span className="rounded-md  border border-gray-200 px-2.5 py-1 text-xs font-medium text-gray-500">
+                      Kích thước: {selectedItem.lengthCm}x{selectedItem.widthCm}x
+                      {selectedItem.heightCm} cm
+                    </span>
+                  )}
               </div>
             )}
 
@@ -703,11 +720,10 @@ export default function ProductDetailPage() {
                       setScale(1);
                       setPanOffset({ x: 0, y: 0 });
                     }}
-                    className={`h-12 w-12 sm:h-16 sm:w-16 shrink-0 overflow-hidden rounded-lg border-2 bg-gray-900 transition-all ${
-                      lightboxIndex === idx
+                    className={`h-12 w-12 sm:h-16 sm:w-16 shrink-0 overflow-hidden rounded-lg border-2 bg-gray-900 transition-all ${lightboxIndex === idx
                         ? "border-primary"
                         : "border-transparent opacity-50 hover:opacity-100"
-                    }`}
+                      }`}
                   >
                     <img
                       src={img.url}

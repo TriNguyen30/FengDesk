@@ -34,7 +34,10 @@ export const returnApi = {
   },
 
   approveReturn: async (returnId: string, payload?: ApproveReturnRequest) => {
-    return fetchHttpClient.post<ApproveReturnResponse>(`/returns/${returnId}/approve`, payload ?? {});
+    return fetchHttpClient.post<ApproveReturnResponse>(
+      `/returns/${returnId}/approve`,
+      payload ?? {},
+    );
   },
 
   rejectReturn: async (returnId: string, payload?: RejectReturnRequest) => {

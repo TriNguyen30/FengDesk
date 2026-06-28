@@ -91,7 +91,7 @@ export default function AiAssistantDrawer({ open, onClose, productId }: AiAssist
         }`}
       >
         {/* Header xanh brand */}
-        <header className="flex items-center justify-between gap-2 bg-linear-to-r from-primary to-primary-dark px-4 py-3 text-white">
+        <header className="flex items-center justify-between gap-2 bg-primary px-4 py-3 text-white">
           <div className="flex items-center gap-2">
             <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/15">
               <Sparkles size={18} />

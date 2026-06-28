@@ -7,7 +7,7 @@ import type { Category } from "@/features/category/types/category";
 const navItems = [
   { label: "Trang chủ", to: "/" },
   { label: "Sản phẩm", to: "/products" },
-  { label: "Khuyến mãi", to: "/promotions" },
+  { label: "Giới thiệu", to: "/about" },
   { label: "Tin tức", to: "/news" },
   { label: "Liên Hệ", to: "/contact" },
 ] as const;

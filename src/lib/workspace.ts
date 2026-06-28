@@ -69,7 +69,8 @@ export function getDefaultWorkspace(roles: string[]): WorkspaceKey {
   const last = getLastWorkspace();
   if (last && isWorkspaceAllowed(last, roles)) return last;
   if (roles.includes("Customer")) return "shop";
-  if (roles.includes("Staff") || roles.includes("Manager") || roles.includes("Admin")) return "admin";
+  if (roles.includes("Staff") || roles.includes("Manager") || roles.includes("Admin"))
+    return "admin";
   if (roles.includes("GardenOwner")) return "seller";
   return "shop";
 }

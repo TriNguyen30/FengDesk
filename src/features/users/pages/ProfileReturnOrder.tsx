@@ -1,6 +1,17 @@
 import { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
-import { RotateCcw, Loader2, PackageX, ChevronRight, RefreshCw, Ban, Eye, X, Package, Clock } from "lucide-react";
+import {
+  RotateCcw,
+  Loader2,
+  PackageX,
+  ChevronRight,
+  RefreshCw,
+  Ban,
+  Eye,
+  X,
+  Package,
+  Clock,
+} from "lucide-react";
 import { toast } from "sonner";
 import { returnApi } from "@/features/return/api/return.api";
 import type { ReturnItem, ReturnDetail } from "@/features/return/types/return.d.ts";
@@ -372,7 +383,9 @@ export default function ProfileReturnOrder() {
                   <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                     <div className="rounded-lg border border-gray-100 bg-gray-50/50 p-3">
                       <p className="text-xs text-gray-400">Trạng thái</p>
-                      <span className={`mt-1 inline-block rounded-full px-2.5 py-1 text-xs font-semibold ${getStatusMeta(returnDetail.status).className}`}>
+                      <span
+                        className={`mt-1 inline-block rounded-full px-2.5 py-1 text-xs font-semibold ${getStatusMeta(returnDetail.status).className}`}
+                      >
                         {getStatusMeta(returnDetail.status).label}
                       </span>
                     </div>
@@ -392,7 +405,10 @@ export default function ProfileReturnOrder() {
 
                   {/* Ngày tạo */}
                   <p className="text-xs text-gray-500">
-                    Ngày tạo: <span className="text-gray-700 font-medium">{formatDate(returnDetail.createdAt)}</span>
+                    Ngày tạo:{" "}
+                    <span className="text-gray-700 font-medium">
+                      {formatDate(returnDetail.createdAt)}
+                    </span>
                   </p>
 
                   {/* Reason */}
@@ -422,7 +438,9 @@ export default function ProfileReturnOrder() {
                             <Package className="h-5 w-5 text-gray-400" />
                           </div>
                           <div className="min-w-0 flex-1">
-                            <p className="text-sm font-medium text-gray-900 truncate">{it.productName}</p>
+                            <p className="text-sm font-medium text-gray-900 truncate">
+                              {it.productName}
+                            </p>
                             <p className="text-xs text-gray-500 mt-0.5">
                               {formatVnd(it.unitPrice)} x {it.quantity}
                             </p>
@@ -436,19 +454,36 @@ export default function ProfileReturnOrder() {
                   </div>
 
                   {/* Bank info (only for Refund) */}
-                  {returnDetail.type === "Refund" && (returnDetail.bankAccountName || returnDetail.bankAccountNumber || returnDetail.bankName) && (
-                    <div className="rounded-xl border border-blue-100 bg-blue-50/40 p-4 space-y-1.5">
-                      <p className="text-xs font-bold text-blue-700 uppercase tracking-wide mb-1">
-                        Thông tin tài khoản ngân hàng
-                      </p>
-                      <p className="text-sm text-gray-700">Chủ tài khoản: <span className="font-medium">{returnDetail.bankAccountName || "-"}</span></p>
-                      <p className="text-sm text-gray-700">Số tài khoản: <span className="font-medium">{returnDetail.bankAccountNumber || "-"}</span></p>
-                      <p className="text-sm text-gray-700">Ngân hàng: <span className="font-medium">{returnDetail.bankName || "-"}</span></p>
-                      {returnDetail.refundMethod && (
-                        <p className="text-sm text-gray-700">Phương thức hoàn tiền: <span className="font-medium">{returnDetail.refundMethod}</span></p>
-                      )}
-                    </div>
-                  )}
+                  {returnDetail.type === "Refund" &&
+                    (returnDetail.bankAccountName ||
+                      returnDetail.bankAccountNumber ||
+                      returnDetail.bankName) && (
+                      <div className="rounded-xl border border-blue-100 bg-blue-50/40 p-4 space-y-1.5">
+                        <p className="text-xs font-bold text-blue-700 uppercase tracking-wide mb-1">
+                          Thông tin tài khoản ngân hàng
+                        </p>
+                        <p className="text-sm text-gray-700">
+                          Chủ tài khoản:{" "}
+                          <span className="font-medium">{returnDetail.bankAccountName || "-"}</span>
+                        </p>
+                        <p className="text-sm text-gray-700">
+                          Số tài khoản:{" "}
+                          <span className="font-medium">
+                            {returnDetail.bankAccountNumber || "-"}
+                          </span>
+                        </p>
+                        <p className="text-sm text-gray-700">
+                          Ngân hàng:{" "}
+                          <span className="font-medium">{returnDetail.bankName || "-"}</span>
+                        </p>
+                        {returnDetail.refundMethod && (
+                          <p className="text-sm text-gray-700">
+                            Phương thức hoàn tiền:{" "}
+                            <span className="font-medium">{returnDetail.refundMethod}</span>
+                          </p>
+                        )}
+                      </div>
+                    )}
 
                   {/* Images */}
                   {returnDetail.imageUrls.length > 0 && (
@@ -457,7 +492,11 @@ export default function ProfileReturnOrder() {
                       <div className="flex flex-wrap gap-2">
                         {returnDetail.imageUrls.map((url, idx) => (
                           <a key={idx} href={url} target="_blank" rel="noopener noreferrer">
-                            <img src={url} alt={`return-img-${idx}`} className="h-20 w-20 rounded-lg object-cover border border-gray-100" />
+                            <img
+                              src={url}
+                              alt={`return-img-${idx}`}
+                              className="h-20 w-20 rounded-lg object-cover border border-gray-100"
+                            />
                           </a>
                         ))}
                       </div>
@@ -480,10 +519,14 @@ export default function ProfileReturnOrder() {
                           </div>
                           <div className="pb-3">
                             <p className="text-sm font-semibold text-gray-800">
-                              {log.fromStatus ? `${log.fromStatus} → ${log.toStatus}` : log.toStatus}
+                              {log.fromStatus
+                                ? `${log.fromStatus} → ${log.toStatus}`
+                                : log.toStatus}
                             </p>
                             {log.note && <p className="text-xs text-gray-500 mt-0.5">{log.note}</p>}
-                            <p className="text-xs text-gray-400 mt-0.5">{formatDate(log.changedAt)}</p>
+                            <p className="text-xs text-gray-400 mt-0.5">
+                              {formatDate(log.changedAt)}
+                            </p>
                           </div>
                         </div>
                       ))}

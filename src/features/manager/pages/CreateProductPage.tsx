@@ -44,6 +44,10 @@ export default function CreateProductPage() {
   const [itemPrice, setItemPrice] = useState<number>(0);
   const [itemStock, setItemStock] = useState<number>(10);
   const [itemSku, setItemSku] = useState("");
+  const [itemWeight, setItemWeight] = useState<number>(0);
+  const [itemLength, setItemLength] = useState<number>(0);
+  const [itemWidth, setItemWidth] = useState<number>(0);
+  const [itemHeight, setItemHeight] = useState<number>(0);
 
   // Categories selection
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
@@ -222,6 +226,10 @@ export default function CreateProductPage() {
             price: Number(itemPrice),
             stock: Number(itemStock),
             sku: itemSku.trim() || "SKU-DEFAULT",
+            weightGram: Number(itemWeight),
+            lengthCm: Number(itemLength),
+            widthCm: Number(itemWidth),
+            heightCm: Number(itemHeight),
           },
         ],
         images: validImages,
@@ -395,6 +403,53 @@ export default function CreateProductPage() {
                   onChange={(e) => setItemSku(e.target.value)}
                   className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-700 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/30 font-mono"
                 />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-sm font-semibold text-gray-700">Trọng lượng (gram) *</label>
+                <input
+                  type="number"
+                  required
+                  min={0}
+                  value={itemWeight}
+                  onChange={(e) => setItemWeight(Number(e.target.value))}
+                  className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-700 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/30"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-sm font-semibold text-gray-700">
+                  Kích thước (Dài x Rộng x Cao) cm *
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="number"
+                    required
+                    min={0}
+                    placeholder="Dài"
+                    value={itemLength}
+                    onChange={(e) => setItemLength(Number(e.target.value))}
+                    className="w-full rounded-xl border border-gray-200 px-2 py-2.5 text-sm text-gray-700 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/30"
+                  />
+                  <input
+                    type="number"
+                    required
+                    min={0}
+                    placeholder="Rộng"
+                    value={itemWidth}
+                    onChange={(e) => setItemWidth(Number(e.target.value))}
+                    className="w-full rounded-xl border border-gray-200 px-2 py-2.5 text-sm text-gray-700 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/30"
+                  />
+                  <input
+                    type="number"
+                    required
+                    min={0}
+                    placeholder="Cao"
+                    value={itemHeight}
+                    onChange={(e) => setItemHeight(Number(e.target.value))}
+                    className="w-full rounded-xl border border-gray-200 px-2 py-2.5 text-sm text-gray-700 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/30"
+                  />
+                </div>
               </div>
             </div>
           </div>
