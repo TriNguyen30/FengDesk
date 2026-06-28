@@ -92,7 +92,7 @@ export default function ChatPanel({
         composerAiActive ? "border-primary ring-2 ring-primary/40" : "border-gray-200"
       }`}
     >
-      <header className="flex items-center justify-between gap-2 border-b border-gray-100 bg-linear-to-r from-primary to-primary-dark px-3 py-3 text-white">
+      <header className="flex items-center justify-between gap-2 border-b border-gray-100 bg-primary px-3 py-3 text-white">
         <div className="flex min-w-0 items-center gap-2">
           {isConversation && (
             <button

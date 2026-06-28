@@ -1,7 +1,7 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import AppLayout from "@/components/layouts/AppLayout";
 import ManagerLayout from "@/components/layouts/ManagerLayout";
-import HomePage from "@/features/home/pages/Home";
+import HomePage from "@/features/home/pages/HomePage";
 import ProductsPage from "@/features/products/pages/ProductsPage";
 import ProductDetailPage from "@/features/products/pages/ProductDetailPage";
 import ShopDetailPage from "@/features/shop/pages/ShopDetailPage";
@@ -17,6 +17,7 @@ import StaffSupportPage from "@/features/chatbox/pages/StaffSupportPage";
 import CartPage from "@/features/cart/pages/CartPage";
 import ProtectedRoute from "./ProtectedRoute";
 import ManageOrderReturnPage from "@/features/manager/pages/ManageOrderReturnPage";
+import AboutPage from "@/features/home/pages/AboutPage";
 
 // Profile Pages
 import ProfileLayout from "@/components/layouts/ProfileLayout";
@@ -35,6 +36,7 @@ export default function AppRoutes() {
     <Routes>
       <Route element={<AppLayout />}>
         <Route path="/" element={<HomePage />} />
+        <Route path="/about" element={<AboutPage />} />
         <Route path="/products" element={<ProductsPage />} />
         <Route path="/products/:id" element={<ProductDetailPage />} />
         <Route path="/stores/:id" element={<ShopDetailPage />} />

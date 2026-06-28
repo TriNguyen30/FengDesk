@@ -31,6 +31,7 @@ export interface Product {
   isActive: boolean;
   minPrice: number;
   primaryImageUrl: string;
+  items: ProductItem[];
 }
 
 // ============================================================
@@ -58,6 +59,10 @@ export interface ProductItem {
   price: number;
   stock: number;
   sku: string;
+  weightGram: number;
+  lengthCm: number;
+  widthCm: number;
+  heightCm: number;
 }
 
 export interface ProductImage {
@@ -132,6 +137,10 @@ export interface CreateProductItemRequest {
   price: number;
   stock: number;
   sku: string;
+  weightGram: number;
+  lengthCm: number;
+  widthCm: number;
+  heightCm: number;
 }
 
 export interface UpdateProductItemRequest {
@@ -139,6 +148,10 @@ export interface UpdateProductItemRequest {
   price: number;
   stock: number;
   sku: string;
+  weightGram: number;
+  lengthCm: number;
+  widthCm: number;
+  heightCm: number;
 }
 
 export interface AddProductImageRequest {

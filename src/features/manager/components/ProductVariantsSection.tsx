@@ -29,6 +29,10 @@ export function ProductVariantsSection({
   const [variantPrice, setVariantPrice] = useState<number>(0);
   const [variantStock, setVariantStock] = useState<number>(0);
   const [variantSku, setVariantSku] = useState("");
+  const [variantWeight, setVariantWeight] = useState<number>(0);
+  const [variantLength, setVariantLength] = useState<number>(0);
+  const [variantWidth, setVariantWidth] = useState<number>(0);
+  const [variantHeight, setVariantHeight] = useState<number>(0);
   const [savingVariant, setSavingVariant] = useState(false);
 
   const [deleteItemOpen, setDeleteItemOpen] = useState(false);
@@ -43,11 +47,19 @@ export function ProductVariantsSection({
       setVariantPrice(item.price);
       setVariantStock(item.stock);
       setVariantSku(item.sku);
+      setVariantWeight(item.weightGram || 0);
+      setVariantLength(item.lengthCm || 0);
+      setVariantWidth(item.widthCm || 0);
+      setVariantHeight(item.heightCm || 0);
     } else {
       setSelectedItem(null);
       setVariantName("");
       setVariantPrice(0);
       setVariantStock(10);
+      setVariantWeight(0);
+      setVariantLength(0);
+      setVariantWidth(0);
+      setVariantHeight(0);
       // Auto generate SKU prefix
       const prefix =
         productName
@@ -84,6 +96,10 @@ export function ProductVariantsSection({
           price: variantPrice,
           stock: variantStock,
           sku: variantSku.trim(),
+          weightGram: variantWeight,
+          lengthCm: variantLength,
+          widthCm: variantWidth,
+          heightCm: variantHeight,
         });
       } else {
         // Create
@@ -92,6 +108,10 @@ export function ProductVariantsSection({
           price: variantPrice,
           stock: variantStock,
           sku: variantSku.trim(),
+          weightGram: variantWeight,
+          lengthCm: variantLength,
+          widthCm: variantWidth,
+          heightCm: variantHeight,
         });
       }
 
@@ -257,6 +277,53 @@ export function ProductVariantsSection({
               onChange={(e) => setVariantSku(e.target.value)}
               className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-700 focus:border-primary focus:outline-none font-mono"
             />
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-sm font-semibold text-gray-700">Trọng lượng (gram) *</label>
+            <input
+              type="number"
+              required
+              min={0}
+              value={variantWeight}
+              onChange={(e) => setVariantWeight(Number(e.target.value))}
+              className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-700 focus:border-primary focus:outline-none"
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-sm font-semibold text-gray-700">
+              Kích thước (Dài x Rộng x Cao) cm *
+            </label>
+            <div className="flex gap-2">
+              <input
+                type="number"
+                required
+                min={0}
+                placeholder="Dài"
+                value={variantLength}
+                onChange={(e) => setVariantLength(Number(e.target.value))}
+                className="w-full rounded-xl border border-gray-200 px-2 py-2.5 text-sm text-gray-700 focus:border-primary focus:outline-none"
+              />
+              <input
+                type="number"
+                required
+                min={0}
+                placeholder="Rộng"
+                value={variantWidth}
+                onChange={(e) => setVariantWidth(Number(e.target.value))}
+                className="w-full rounded-xl border border-gray-200 px-2 py-2.5 text-sm text-gray-700 focus:border-primary focus:outline-none"
+              />
+              <input
+                type="number"
+                required
+                min={0}
+                placeholder="Cao"
+                value={variantHeight}
+                onChange={(e) => setVariantHeight(Number(e.target.value))}
+                className="w-full rounded-xl border border-gray-200 px-2 py-2.5 text-sm text-gray-700 focus:border-primary focus:outline-none"
+              />
+            </div>
           </div>
 
           <div className="flex gap-3 pt-3">
