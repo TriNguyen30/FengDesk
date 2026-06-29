@@ -61,6 +61,7 @@ interface LocationPickerMapProps {
   latitude: number;
   longitude: number;
   onChange: (lat: number, lng: number) => void;
+  zoomToLocation?: { lat: number; lng: number; zoom: number } | null;
 }
 
 // Zoom control buttons (replaces Leaflet's default)
@@ -328,10 +329,30 @@ function SearchControl({ onChange }: { onChange: (lat: number, lng: number) => v
   return null;
 }
 
+// Handles external zoom-to-location requests from parent
+function MapZoomToLocation({ zoomToLocation }: { zoomToLocation?: { lat: number; lng: number; zoom: number } | null }) {
+  const map = useMap();
+  const lastZoomRef = useRef<string>("");
+
+  useEffect(() => {
+    if (!zoomToLocation) return;
+    const key = `${zoomToLocation.lat},${zoomToLocation.lng},${zoomToLocation.zoom}`;
+    if (key === lastZoomRef.current) return;
+    lastZoomRef.current = key;
+    map.flyTo([zoomToLocation.lat, zoomToLocation.lng], zoomToLocation.zoom, {
+      animate: true,
+      duration: 0.8,
+    });
+  }, [zoomToLocation, map]);
+
+  return null;
+}
+
 export default function LocationPickerMap({
   latitude,
   longitude,
   onChange,
+  zoomToLocation,
 }: LocationPickerMapProps) {
   const [tileKey, setTileKey] = useState<TileKey>("street");
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -435,6 +456,7 @@ export default function LocationPickerMap({
         <TileLayer key={tileKey} attribution={tile.attribution} url={tile.url} />
         <LocationMarker latitude={latitude} longitude={longitude} onChange={onChange} />
         <SearchControl onChange={onChange} />
+        <MapZoomToLocation zoomToLocation={zoomToLocation} />
         <CustomZoomControls
           isFullscreen={isFullscreen}
           toggleFullscreen={() => setIsFullscreen(!isFullscreen)}

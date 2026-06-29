@@ -7,6 +7,8 @@ import type {
   GetOrdersResponse,
   ApiResponse,
   OrderDetail,
+  PreviewShippingFeePayload,
+  ShippingFeePreview,
   UpdateDeliveryStatusRequest,
 } from "../types/orders";
 
@@ -33,6 +35,13 @@ export const ordersApi = {
   updateDeliveryStatus: (deliveryId: string, payload: UpdateDeliveryStatusRequest) => {
     return fetchHttpClient.patch<ApiResponse<any>>(
       `/orders/deliveries/${deliveryId}/status`,
+      payload,
+    );
+  },
+
+  previewShippingFee: (payload: PreviewShippingFeePayload) => {
+    return fetchHttpClient.post<ApiResponse<ShippingFeePreview>>(
+      "/orders/shipping-fee-preview",
       payload,
     );
   },

@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { ordersApi } from "../api/orders.api";
-import type { CreateOrders, GetOrdersParams } from "../types/orders";
+import type { CreateOrders, GetOrdersParams, OrdersItem } from "../types/orders";
 import { useAppDispatch } from "@/app/store";
 import { fetchCart } from "@/features/cart/store/cartSlice";
 
@@ -99,6 +99,33 @@ export function useCancelOrder() {
       }
     },
   });
+}
+
+export function useShippingFeePreview(
+  shippingAddressId: string | undefined,
+  items: OrdersItem[],
+) {
+  const query = useQuery({
+    queryKey: ["shipping-fee-preview", shippingAddressId, items],
+    enabled: Boolean(shippingAddressId) && items.length > 0,
+    queryFn: async () => {
+      const res = await ordersApi.previewShippingFee({
+        shippingAddressId: shippingAddressId!,
+        items,
+      });
+      return res.data;
+    },
+  });
+
+  const preview = query.data?.isSuccess ? query.data.data : undefined;
+
+  return {
+    shippingFee: preview?.totalShippingFee ?? 0,
+    totalAmount: preview?.totalAmount,
+    stores: preview?.stores ?? [],
+    isLoading: query.isLoading || query.isFetching,
+    isError: query.isError,
+  };
 }
 
 export function useUpdateOrderDeliveryStatus() {

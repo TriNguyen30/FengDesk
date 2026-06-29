@@ -85,3 +85,22 @@ export interface UpdateDeliveryStatusRequest {
   shippingProvider?: string | null;
   note?: string | null;
 }
+
+export interface PreviewShippingFeePayload {
+  shippingAddressId: string;
+  items: OrdersItem[];
+}
+
+export interface StoreShippingFee {
+  storeId: string;
+  storeName: string;
+  subtotal: number;
+  shippingFee: number;
+}
+
+export interface ShippingFeePreview {
+  subtotal: number;
+  totalShippingFee: number;
+  totalAmount: number;
+  stores: StoreShippingFee[];
+}
