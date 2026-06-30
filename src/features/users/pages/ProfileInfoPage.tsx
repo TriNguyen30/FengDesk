@@ -40,7 +40,7 @@ export default function ProfileInfoPage() {
       <div className="space-y-6">
         <div className="flex items-center gap-6 pb-6 border-b border-gray-100">
           <div className="flex h-20 w-20 items-center justify-center rounded-full bg-primary/10 text-primary text-2xl font-bold">
-            {user.fullName ? user.fullName.charAt(0).toUpperCase() : "U"}
+            {user.fullName ? user.fullName.charAt(12).toUpperCase() : "U"}
           </div>
           <div>
             <h2 className="text-xl font-semibold text-gray-900">{user.fullName || "Người dùng"}</h2>
