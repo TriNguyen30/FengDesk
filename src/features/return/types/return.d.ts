@@ -112,6 +112,10 @@ export interface RejectReturnRequest {
   reason?: string | null;
 }
 
+export interface ShipBackRequest {
+  trackingCode?: string | null;
+}
+
 // ── Response types ───────────────────────────────────────────────────────────
 export interface CreateReturnResponse {
   data: ReturnDetail;
@@ -138,6 +142,14 @@ export interface ApproveReturnResponse {
 }
 
 export interface RejectReturnResponse {
+  data: ReturnDetail;
+  isSuccess: boolean;
+  statusCode: number;
+  message: string | null;
+  errors: any;
+}
+
+export interface ShipBackResponse {
   data: ReturnDetail;
   isSuccess: boolean;
   statusCode: number;

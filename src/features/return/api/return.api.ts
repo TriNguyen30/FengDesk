@@ -10,6 +10,8 @@ import type {
   ApproveReturnResponse,
   RejectReturnRequest,
   RejectReturnResponse,
+  ShipBackRequest,
+  ShipBackResponse,
 } from "@/features/return/types/return.d.ts";
 
 export const returnApi = {
@@ -19,6 +21,10 @@ export const returnApi = {
 
   getMyReturns: async (params?: ReturnQueryParams) => {
     return fetchHttpClient.get<ReturnListResponse>("/returns/mine", params);
+  },
+
+  getStoreReturns: async (storeId: string, params?: ReturnQueryParams) => {
+    return fetchHttpClient.get<ReturnListResponse>(`/returns/stores/${storeId}`, params);
   },
 
   getReturnById: async (returnId: string) => {
@@ -42,5 +48,13 @@ export const returnApi = {
 
   rejectReturn: async (returnId: string, payload?: RejectReturnRequest) => {
     return fetchHttpClient.post<RejectReturnResponse>(`/returns/${returnId}/reject`, payload ?? {});
+  },
+
+  shipBack: async (returnId: string, payload?: ShipBackRequest) => {
+    return fetchHttpClient.post<ShipBackResponse>(`/returns/${returnId}/ship-back`, payload ?? {});
+  },
+
+  receiveReturn: async (returnId: string) => {
+    return fetchHttpClient.post<ReturnDetailResponse>(`/returns/${returnId}/receive`, {});
   },
 };

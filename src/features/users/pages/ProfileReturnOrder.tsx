@@ -11,6 +11,7 @@ import {
   X,
   Package,
   Clock,
+  Truck,
 } from "lucide-react";
 import { toast } from "sonner";
 import { returnApi } from "@/features/return/api/return.api";
@@ -50,6 +51,10 @@ const RETURN_STATUS_META: Record<string, { label: string; className: string }> =
     className: "bg-emerald-50 text-emerald-600 border border-emerald-200",
   },
   Cancelled: { label: "Đã hủy", className: "bg-gray-100 text-gray-500 border border-gray-200" },
+  ReturnInTransit: {
+    label: "Đang chuyển hàng trả lại",
+    className: "bg-sky-50 text-sky-600 border border-sky-200",
+  },
 };
 
 const CANCELLABLE_STATUSES = ["Requested"];
@@ -100,6 +105,11 @@ export default function ProfileReturnOrder() {
   const [returnDetail, setReturnDetail] = useState<ReturnDetail | null>(null);
   const [loadingDetail, setLoadingDetail] = useState(false);
 
+  // Ship back state
+  const [shipBackId, setShipBackId] = useState<string | null>(null);
+  const [shippingBack, setShippingBack] = useState(false);
+  const [trackingCode, setTrackingCode] = useState("");
+
   const fetchReturns = useCallback(async (p: number) => {
     setLoading(true);
     try {
@@ -137,6 +147,28 @@ export default function ProfileReturnOrder() {
       toast.error("Có lỗi xảy ra khi hủy yêu cầu");
     } finally {
       setCancelling(false);
+    }
+  };
+
+  const handleShipBack = async () => {
+    if (!shipBackId) return;
+    setShippingBack(true);
+    try {
+      const res = await returnApi.shipBack(shipBackId, {
+        trackingCode: trackingCode.trim() || null,
+      });
+      if (res.data.isSuccess) {
+        toast.success("Xác nhận trả hàng thành công");
+        setShipBackId(null);
+        setTrackingCode("");
+        fetchReturns(page);
+      } else {
+        toast.error(res.data.message || "Không thể xác nhận trả hàng");
+      }
+    } catch {
+      toast.error("Có lỗi xảy ra khi xác nhận trả hàng");
+    } finally {
+      setShippingBack(false);
     }
   };
 
@@ -264,6 +296,18 @@ export default function ProfileReturnOrder() {
                       Hủy yêu cầu
                     </button>
                   )}
+                  {item.status === "Approved" && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShipBackId(item.id);
+                      }}
+                      className="flex items-center gap-1.5 rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-1.5 text-xs font-semibold text-indigo-600 hover:bg-indigo-100 transition-colors cursor-pointer"
+                    >
+                      <Truck className="h-3.5 w-3.5" />
+                      Trả hàng
+                    </button>
+                  )}
                   <Link
                     to={`/profile/orders/${item.orderId}`}
                     className="flex items-center gap-1 rounded-lg border border-gray-200 bg-gray-50 px-3 py-1.5 text-xs font-semibold text-gray-600 hover:bg-gray-100 transition-colors"
@@ -340,6 +384,54 @@ export default function ProfileReturnOrder() {
                   </>
                 ) : (
                   "Xác nhận hủy"
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Ship back confirm modal */}
+      {shipBackId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="w-full max-w-sm rounded-2xl bg-white shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="px-6 py-5 border-b border-gray-100">
+              <h3 className="text-base font-bold text-gray-900">Xác nhận trả hàng</h3>
+              <p className="mt-1 text-sm text-gray-500">
+                Nhập mã vận đơn (tracking code) nếu bạn có (không bắt buộc).
+              </p>
+            </div>
+            <div className="px-6 py-4">
+              <input
+                type="text"
+                placeholder="Mã vận đơn..."
+                value={trackingCode}
+                onChange={(e) => setTrackingCode(e.target.value)}
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+              />
+            </div>
+            <div className="flex gap-3 px-6 py-4 border-t border-gray-100">
+              <button
+                onClick={() => {
+                  setShipBackId(null);
+                  setTrackingCode("");
+                }}
+                className="flex-1 rounded-lg border border-gray-200 px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
+              >
+                Đóng
+              </button>
+              <button
+                onClick={handleShipBack}
+                disabled={shippingBack}
+                className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-indigo-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-600 disabled:opacity-60 transition-colors cursor-pointer"
+              >
+                {shippingBack ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Đang xử lý...
+                  </>
+                ) : (
+                  "Xác nhận"
                 )}
               </button>
             </div>
@@ -548,6 +640,18 @@ export default function ProfileReturnOrder() {
                 >
                   <Ban className="h-4 w-4" />
                   Hủy yêu cầu
+                </button>
+              )}
+              {returnDetail && returnDetail.status === "Approved" && (
+                <button
+                  onClick={() => {
+                    closeDetailModal();
+                    setShipBackId(returnDetail.id);
+                  }}
+                  className="flex-1 flex items-center justify-center gap-1.5 rounded-lg border border-indigo-200 bg-indigo-50 px-4 py-2.5 text-sm font-semibold text-indigo-600 hover:bg-indigo-100 transition-colors cursor-pointer"
+                >
+                  <Truck className="h-4 w-4" />
+                  Trả hàng
                 </button>
               )}
               <button
