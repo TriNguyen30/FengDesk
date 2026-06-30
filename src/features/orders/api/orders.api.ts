@@ -2,9 +2,11 @@ import fetchHttpClient from "@/lib/httpClient";
 import type {
   CreateOrders,
   CreateOrderResponse,
+  CreateShipmentResponse,
   GetOrderDetailResponse,
   GetOrdersParams,
   GetOrdersResponse,
+  GetStoreDeliveriesResponse,
   ApiResponse,
   OrderDetail,
   PreviewShippingFeePayload,
@@ -36,6 +38,21 @@ export const ordersApi = {
     return fetchHttpClient.patch<ApiResponse<any>>(
       `/orders/deliveries/${deliveryId}/status`,
       payload,
+    );
+  },
+
+  /** Garden owner/staff: danh sách delivery của một store (paged). */
+  getStoreDeliveries: (storeId: string, params?: GetOrdersParams) => {
+    return fetchHttpClient.get<GetStoreDeliveriesResponse>(
+      `/orders/stores/${storeId}/deliveries`,
+      params,
+    );
+  },
+
+  /** Garden owner/staff: bấm "Tạo đơn ship" sau khi đã Nhận đơn (delivery đang Confirmed). */
+  createDeliveryShipment: (deliveryId: string) => {
+    return fetchHttpClient.post<CreateShipmentResponse>(
+      `/orders/deliveries/${deliveryId}/shipment`,
     );
   },
 

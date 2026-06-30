@@ -7,6 +7,7 @@ import ProductDetailPage from "@/features/products/pages/ProductDetailPage";
 import ShopDetailPage from "@/features/shop/pages/ShopDetailPage";
 import CreateShopPage from "@/features/shop/pages/CreateShopPage";
 import MyShopsPage from "@/features/shop/pages/MyShopsPage";
+import ShopDeliveriesPage from "@/features/shop/pages/ShopDeliveriesPage";
 import DashboardPage from "@/features/manager/pages/DashboardPage";
 import ManageProductsPage from "@/features/manager/pages/ManageProductsPage";
 import CreateProductPage from "@/features/manager/pages/CreateProductPage";
@@ -49,6 +50,14 @@ export default function AppRoutes() {
           element={
             <ProtectedRoute>
               <MyShopsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/seller/:storeId/deliveries"
+          element={
+            <ProtectedRoute>
+              <ShopDeliveriesPage />
             </ProtectedRoute>
           }
         />

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { Store, Plus, Phone, Clock, Loader2, ChevronRight } from "lucide-react";
+import { Store, Plus, Phone, Clock, Loader2, ChevronRight, Truck } from "lucide-react";
 import { getMyShopsRequest } from "@/features/shop/api/shop.api";
 import type { Shop } from "@/features/shop/types/shop";
 
@@ -69,9 +69,8 @@ export default function MyShopsPage() {
 
       <div className="grid gap-4 sm:grid-cols-2">
         {shops.map((shop) => (
-          <button
+          <div
             key={shop.id}
-            onClick={() => navigate(`/stores/${shop.id}`)}
             className="group flex flex-col rounded-2xl border border-gray-100 bg-white p-5 text-left shadow-sm transition-all hover:border-primary/30 hover:shadow-md"
           >
             <div className="flex items-start justify-between gap-2">
@@ -104,14 +103,26 @@ export default function MyShopsPage() {
               )}
             </div>
 
-            <span className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-primary">
-              Xem cửa hàng
-              <ChevronRight
-                size={16}
-                className="transition-transform group-hover:translate-x-0.5"
-              />
-            </span>
-          </button>
+            <div className="mt-4 flex items-center justify-between gap-2">
+              <button
+                onClick={() => navigate(`/seller/${shop.id}/deliveries`)}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-primary/30 bg-primary/5 px-3 py-1.5 text-xs font-semibold text-primary hover:bg-primary/10 transition-all cursor-pointer"
+              >
+                <Truck size={13} />
+                Quản lý đơn giao
+              </button>
+              <button
+                onClick={() => navigate(`/stores/${shop.id}`)}
+                className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline cursor-pointer"
+              >
+                Xem cửa hàng
+                <ChevronRight
+                  size={16}
+                  className="transition-transform group-hover:translate-x-0.5"
+                />
+              </button>
+            </div>
+          </div>
         ))}
       </div>
     </div>

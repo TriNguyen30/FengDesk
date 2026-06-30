@@ -139,11 +139,51 @@ export function useUpdateOrderDeliveryStatus() {
       deliveryId: string;
       data: import("../types/orders").UpdateDeliveryStatusRequest;
     }) => ordersApi.updateDeliveryStatus(deliveryId, data),
-    onSuccess: (res, { deliveryId }) => {
+    onSuccess: () => {
       // Invalidate relevant queries.
       queryClient.invalidateQueries({ queryKey: ["orders"] });
       queryClient.invalidateQueries({ queryKey: ["all-orders"] });
+      queryClient.invalidateQueries({ queryKey: ["store-deliveries"] });
       // To invalidate specific order detail, we could rely on the UI to refetch or pass orderId.
+      queryClient.invalidateQueries({ queryKey: ["order"] });
+    },
+  });
+}
+
+export function useStoreDeliveries(storeId: string | undefined, params?: GetOrdersParams) {
+  const query = useQuery({
+    queryKey: ["store-deliveries", storeId, params],
+    enabled: !!storeId,
+    queryFn: async () => {
+      const response = await ordersApi.getStoreDeliveries(storeId!, params);
+      return response.data;
+    },
+  });
+
+  const data = query.data;
+
+  return {
+    deliveries: data?.isSuccess && data.data ? data.data.items : [],
+    pagination: {
+      page: data?.isSuccess && data.data ? data.data.page : 1,
+      pageSize: data?.isSuccess && data.data ? data.data.pageSize : 20,
+      totalCount: data?.isSuccess && data.data ? data.data.totalCount : 0,
+      totalPages: data?.isSuccess && data.data ? data.data.totalPages : 0,
+    },
+    listStatus: query.isLoading ? "loading" : query.isError ? "failed" : "idle",
+    query,
+  };
+}
+
+export function useCreateDeliveryShipment() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (deliveryId: string) => ordersApi.createDeliveryShipment(deliveryId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["store-deliveries"] });
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
+      queryClient.invalidateQueries({ queryKey: ["all-orders"] });
       queryClient.invalidateQueries({ queryKey: ["order"] });
     },
   });
