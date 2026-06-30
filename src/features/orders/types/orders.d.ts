@@ -104,3 +104,33 @@ export interface ShippingFeePreview {
   totalAmount: number;
   stores: StoreShippingFee[];
 }
+
+/** Tương ứng <c>StoreDeliveryResponse</c> BE — màn garden owner liệt kê delivery của store. */
+export interface StoreDelivery {
+  id: string;
+  orderId: string;
+  status: string;
+  shippingFee: number;
+  subtotal: number;
+  trackingCode: string | null;
+  createdAt: string;
+}
+
+export type GetStoreDeliveriesResponse = PaginatedResponse<StoreDelivery>;
+
+/** Tương ứng <c>DeliveryResponse</c> BE — payload trả về sau khi cập nhật/tạo ship. */
+export interface DeliveryDetail {
+  id: string;
+  gardenStoreId: string;
+  storeName: string | null;
+  status: string;
+  shippingFee: number;
+  subtotal: number;
+  trackingCode: string | null;
+  shippingProvider: string | null;
+  shippedAt: string | null;
+  deliveredAt: string | null;
+  estimatedDeliveryDate: string | null;
+}
+
+export type CreateShipmentResponse = ApiResponse<DeliveryDetail>;
