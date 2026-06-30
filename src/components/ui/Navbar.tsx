@@ -117,7 +117,7 @@ export default function Navbar() {
 
             {/* Search — grows in the middle, hidden on mobile (shown below) */}
             <div className="hidden flex-1 md:block">
-              <SearchBar placeholder="Bạn cần tìm gì?" onSearch={handleSearch} />
+              <SearchBar onSearch={handleSearch} />
             </div>
 
             {/* Spacer so icons always push right on mobile */}
@@ -227,7 +227,7 @@ export default function Navbar() {
 
           {/* Row 2: Search bar — mobile only, full width */}
           <div className="mt-2.5 md:hidden">
-            <SearchBar placeholder="Bạn cần tìm gì?" onSearch={handleSearch} />
+            <SearchBar onSearch={handleSearch} />
           </div>
         </div>
       </div>

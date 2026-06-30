@@ -10,6 +10,7 @@ import { useProductPrimaryImage } from "@/features/products";
 import { YouMightAlsoLikeSection } from "@/features/products/components/ProductCard";
 import type { UpdateCartItemParams } from "@/features/cart/types/cart";
 import Modal from "@/components/ui/Modal";
+import EmptyCartImg from "@/assets/image/EmptyCart.jpg";
 
 function formatVnd(n: number): string {
   return n.toLocaleString("vi-VN") + "đ";
@@ -160,16 +161,16 @@ export default function CartPage() {
       <div className="rounded-2xl bg-white shadow-sm ring-1 ring-gray-100 overflow-hidden">
         {items.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 px-4 text-center">
-            <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-gray-50 text-gray-400 ring-1 ring-gray-100">
-              <ShoppingCart size={40} strokeWidth={1.5} />
+            <div className="mb-4 flex items-center justify-center">
+              <img src={EmptyCartImg} alt="Empty Cart" className="h-70 w-70 object-contain" />
             </div>
-            <h2 className="text-xl font-bold text-gray-900">Giỏ hàng trống</h2>
-            <p className="mt-2 text-sm text-gray-500">Bạn chưa có sản phẩm nào trong giỏ hàng.</p>
+            <h2 className="text-xl font-bold text-gray-900">“Hổng” có gì trong giỏ hết</h2>
+            <p className="mt-2 text-sm text-gray-500">Về trang cửa hàng để chọn mua sản phẩm bạn nhé!!</p>
             <Link
               to="/products"
               className="mt-6 rounded-xl bg-primary px-8 py-3.5 text-sm font-bold text-white shadow-md transition-all hover:bg-primary-dark hover:shadow-lg active:scale-95 cursor-pointer"
             >
-              Tiếp tục mua sắm
+              Mua Sắm Ngay
             </Link>
           </div>
         ) : (

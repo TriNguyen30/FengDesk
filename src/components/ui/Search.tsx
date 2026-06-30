@@ -14,11 +14,19 @@ import { useSearch } from "@/features/search";
 import { filterPlantKeywordSuggestions } from "@/data/plantSearchKeywords";
 
 interface SearchBarProps {
-  placeholder?: string;
+  placeholder?: string | string[];
   onSearch?: (query: string) => void;
 }
 
-export default function SearchBar({ placeholder = "Bạn cần tìm gì?", onSearch }: SearchBarProps) {
+const DEFAULT_PLACEHOLDERS = [
+  "Bạn cần tìm cây gì?",
+  "Tìm cây phong thủy theo mệnh...",
+  "Cây cảnh để bàn làm việc...",
+  "Tìm kiếm vật phẩm may mắn...",
+  "Cây quà tặng ý nghĩa..."
+];
+
+export default function SearchBar({ placeholder = DEFAULT_PLACEHOLDERS, onSearch }: SearchBarProps) {
   const { keyword, setKeyword } = useSearch();
   const listId = useId();
   const rootRef = useRef<HTMLDivElement>(null);
@@ -28,6 +36,53 @@ export default function SearchBar({ placeholder = "Bạn cần tìm gì?", onSea
   const suggestions = useMemo(() => filterPlantKeywordSuggestions(keyword, 8), [keyword]);
 
   const showPanel = open && suggestions.length > 0;
+
+  const [typedPlaceholder, setTypedPlaceholder] = useState(
+    typeof placeholder === "string" ? placeholder : ""
+  );
+
+  useEffect(() => {
+    if (typeof placeholder === "string") {
+      setTypedPlaceholder(placeholder);
+      return;
+    }
+
+    if (!placeholder || placeholder.length === 0) return;
+
+    let currentText = "";
+    let currentIndex = 0;
+    let isDeleting = false;
+    let timeout: ReturnType<typeof setTimeout>;
+
+    const type = () => {
+      const fullText = placeholder[currentIndex];
+
+      if (isDeleting) {
+        currentText = fullText.substring(0, currentText.length - 1);
+      } else {
+        currentText = fullText.substring(0, currentText.length + 1);
+      }
+
+      setTypedPlaceholder(currentText);
+
+      let typeSpeed = isDeleting ? 30 : 60;
+
+      if (!isDeleting && currentText === fullText) {
+        typeSpeed = 2500;
+        isDeleting = true;
+      } else if (isDeleting && currentText === "") {
+        isDeleting = false;
+        currentIndex = (currentIndex + 1) % placeholder.length;
+        typeSpeed = 500;
+      }
+
+      timeout = setTimeout(type, typeSpeed);
+    };
+
+    timeout = setTimeout(type, 500);
+
+    return () => clearTimeout(timeout);
+  }, [placeholder]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -121,7 +176,7 @@ export default function SearchBar({ placeholder = "Bạn cần tìm gì?", onSea
           if (suggestions.length) setOpen(true);
         }}
         onKeyDown={handleKeyDown}
-        placeholder={placeholder}
+        placeholder={typedPlaceholder}
         autoComplete="off"
         className="h-10 min-h-10 w-full rounded-lg border-2 border-gray-200 bg-gray-50 py-2 pl-3 pr-11 text-sm transition-all focus:border-green-500 focus:bg-white focus:outline-none sm:pl-4 sm:pr-12"
       />
