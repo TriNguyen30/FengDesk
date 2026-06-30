@@ -20,7 +20,7 @@ interface HeroSliderProps {
 export default function HeroSlider({ slides }: HeroSliderProps) {
   return (
     <Splide
-      className="hero-splide mt-3 sm:mt-4"
+      className="hero-splide"
       options={{
         type: "fade",
         rewind: true,

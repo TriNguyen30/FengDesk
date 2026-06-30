@@ -54,11 +54,11 @@ export default function CategoryBar() {
   }, [menuOpen]);
 
   return (
-    <nav className="w-full min-w-0 border-t border-gray-200">
+    <nav className="w-full min-w-0">
       <div className="mx-auto flex w-full min-w-0 max-w-screen-xl flex-col gap-2 px-3 py-2 sm:flex-row sm:items-stretch sm:gap-0 sm:px-4 sm:py-0 lg:px-10">
         <div
           ref={menuRef}
-          className="relative shrink-0 sm:flex sm:items-center sm:border-r sm:border-gray-200 sm:pr-4 lg:pr-6"
+          className="relative shrink-0 sm:flex sm:items-center sm:pr-4 lg:pr-6"
         >
           <button
             type="button"
