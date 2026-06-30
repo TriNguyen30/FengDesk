@@ -15,6 +15,7 @@ import {
   Package,
   Clock,
   PackageCheck,
+  Banknote,
 } from "lucide-react";
 import { returnApi } from "@/features/return/api/return.api";
 import type { ReturnItem, ReturnDetail } from "@/features/return/types/return.d.ts";
@@ -75,6 +76,12 @@ interface ReceiveModalState {
   returnId: string | null;
 }
 
+// ── Resolve confirm modal state ──────────────────────────────────────────────
+interface ResolveModalState {
+  open: boolean;
+  returnId: string | null;
+}
+
 // ── Detail modal state ───────────────────────────────────────────────────────
 interface DetailModalState {
   open: boolean;
@@ -110,6 +117,12 @@ export default function ShopReturnsView({ storeId }: ShopReturnsViewProps) {
   // Receive modal
   const [receiveModal, setReceiveModal] = useState<ReceiveModalState>({ open: false, returnId: null });
   const [receiving, setReceiving] = useState(false);
+
+  // Resolve modal
+  const [resolveModal, setResolveModal] = useState<ResolveModalState>({ open: false, returnId: null });
+  const [resolveRestock, setResolveRestock] = useState(true);
+  const [resolveNote, setResolveNote] = useState("");
+  const [resolving, setResolving] = useState(false);
 
   // Detail modal
   const [detailModal, setDetailModal] = useState<DetailModalState>({ open: false, returnId: null });
@@ -269,6 +282,37 @@ export default function ShopReturnsView({ storeId }: ShopReturnsViewProps) {
     }
   };
 
+  // ── Resolve handlers ───────────────────────────────────────────────────────
+  const openResolveModal = (returnId: string) => {
+    setResolveRestock(true);
+    setResolveNote("");
+    setResolveModal({ open: true, returnId });
+  };
+
+  const closeResolveModal = () => setResolveModal({ open: false, returnId: null });
+
+  const handleResolve = async () => {
+    if (!resolveModal.returnId) return;
+    setResolving(true);
+    try {
+      const res = await returnApi.resolveReturn(resolveModal.returnId, {
+        restock: resolveRestock,
+        note: resolveNote || null,
+      });
+      if (res.data.isSuccess) {
+        toast.success("Xử lý hoàn tất thành công");
+        closeResolveModal();
+        fetchReturns(page);
+      } else {
+        toast.error(res.data.message || "Không thể xử lý hoàn tất");
+      }
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || "Có lỗi xảy ra khi xử lý hoàn tất");
+    } finally {
+      setResolving(false);
+    }
+  };
+
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
       <div className="border-b border-gray-100 p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gray-50/30">
@@ -394,6 +438,15 @@ export default function ShopReturnsView({ storeId }: ShopReturnsViewProps) {
                         >
                           <PackageCheck size={14} />
                           Nhận hàng
+                        </button>
+                      )}
+                      {r.status === "ItemReceived" && (
+                        <button
+                          onClick={() => openResolveModal(r.id)}
+                          className="inline-flex items-center gap-1 rounded-lg border border-purple-200 bg-purple-50 px-2.5 py-1.5 text-xs font-semibold text-purple-600 hover:bg-purple-100 transition-colors cursor-pointer"
+                        >
+                          <Banknote size={14} />
+                          Hoàn tiền
                         </button>
                       )}
                       <button
@@ -679,6 +732,21 @@ export default function ShopReturnsView({ storeId }: ShopReturnsViewProps) {
                 </button>
               </div>
             )}
+            
+            {returnDetail && returnDetail.status === "ItemReceived" && (
+              <div className="flex gap-3 border-t border-gray-100 px-6 py-4 bg-gray-50/50">
+                <button
+                  onClick={() => {
+                    closeDetailModal();
+                    openResolveModal(returnDetail.id);
+                  }}
+                  className="flex-1 flex items-center justify-center gap-1.5 rounded-lg bg-purple-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-purple-600 transition-colors cursor-pointer"
+                >
+                  <Banknote className="h-4 w-4" />
+                  Đồng ý hoàn tiền
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -817,6 +885,71 @@ export default function ShopReturnsView({ storeId }: ShopReturnsViewProps) {
                 className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-teal-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-teal-600 disabled:opacity-60 transition-colors cursor-pointer"
               >
                 {receiving ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Đang xử lý...
+                  </>
+                ) : (
+                  "Xác nhận"
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Resolve Confirm Modal ──────────────────────────────────────────── */}
+      {resolveModal.open && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="w-full max-w-sm rounded-2xl bg-white shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-start gap-3 px-6 py-5 border-b border-gray-100">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-purple-50">
+                <Banknote className="h-5 w-5 text-purple-500" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-gray-900">Đồng ý hoàn tiền?</h3>
+                <p className="mt-1 text-sm text-gray-500">
+                  Xác nhận hoàn tất xử lý và bắt đầu quá trình hoàn tiền/đổi hàng cho khách.
+                </p>
+              </div>
+            </div>
+            <div className="px-6 py-4 space-y-4">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={resolveRestock}
+                  onChange={(e) => setResolveRestock(e.target.checked)}
+                  className="h-4 w-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500 cursor-pointer"
+                />
+                <span className="text-sm font-medium text-gray-700">Nhập lại kho sản phẩm này</span>
+              </label>
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1.5">
+                  Ghi chú (tuỳ chọn)
+                </label>
+                <textarea
+                  value={resolveNote}
+                  onChange={(e) => setResolveNote(e.target.value)}
+                  placeholder="Ghi chú xử lý..."
+                  rows={2}
+                  className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-700 placeholder-gray-400 focus:border-purple-400 focus:outline-none focus:ring-1 focus:ring-purple-200 transition-all resize-none"
+                />
+              </div>
+            </div>
+            <div className="flex gap-3 px-6 py-4 border-t border-gray-100">
+              <button
+                onClick={closeResolveModal}
+                className="flex-1 rounded-lg border border-gray-200 px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
+              >
+                Hủy
+              </button>
+              <button
+                onClick={handleResolve}
+                disabled={resolving}
+                className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-purple-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-purple-600 disabled:opacity-60 transition-colors cursor-pointer"
+              >
+                {resolving ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin" />
                     Đang xử lý...

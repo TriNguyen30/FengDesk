@@ -116,6 +116,11 @@ export interface ShipBackRequest {
   trackingCode?: string | null;
 }
 
+export interface ResolveReturnRequest {
+  restock: boolean;
+  note?: string | null;
+}
+
 // ── Response types ───────────────────────────────────────────────────────────
 export interface CreateReturnResponse {
   data: ReturnDetail;
@@ -150,6 +155,14 @@ export interface RejectReturnResponse {
 }
 
 export interface ShipBackResponse {
+  data: ReturnDetail;
+  isSuccess: boolean;
+  statusCode: number;
+  message: string | null;
+  errors: any;
+}
+
+export interface ResolveReturnResponse {
   data: ReturnDetail;
   isSuccess: boolean;
   statusCode: number;

@@ -12,6 +12,8 @@ import type {
   RejectReturnResponse,
   ShipBackRequest,
   ShipBackResponse,
+  ResolveReturnRequest,
+  ResolveReturnResponse,
 } from "@/features/return/types/return.d.ts";
 
 export const returnApi = {
@@ -56,5 +58,9 @@ export const returnApi = {
 
   receiveReturn: async (returnId: string) => {
     return fetchHttpClient.post<ReturnDetailResponse>(`/returns/${returnId}/receive`, {});
+  },
+
+  resolveReturn: async (returnId: string, payload: ResolveReturnRequest) => {
+    return fetchHttpClient.post<ResolveReturnResponse>(`/returns/${returnId}/resolve`, payload);
   },
 };
