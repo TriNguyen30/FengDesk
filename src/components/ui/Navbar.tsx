@@ -1,5 +1,5 @@
 import { Truck, Package, User, LogOut, Sparkles, Store } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import SearchBar from "./Search";
@@ -30,6 +30,51 @@ export default function Navbar() {
   const { user, authModal, refreshToken } = useAppSelector((state) => state.auth);
   const dispatch = useAppDispatch();
   const { getCart, clearCart } = useCart();
+
+  const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+  const [userDropdownClosing, setUserDropdownClosing] = useState(false);
+  const userDropdownRootRef = useRef<HTMLDivElement>(null);
+  const userDropdownCloseTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const closeUserDropdown = useCallback(() => {
+    setUserDropdownClosing(true);
+    userDropdownCloseTimeoutRef.current = setTimeout(() => {
+      setUserDropdownOpen(false);
+      setUserDropdownClosing(false);
+    }, 150);
+  }, []);
+
+  const openUserDropdown = useCallback(() => {
+    if (userDropdownCloseTimeoutRef.current) {
+      clearTimeout(userDropdownCloseTimeoutRef.current);
+      userDropdownCloseTimeoutRef.current = null;
+    }
+    setUserDropdownClosing(false);
+    setUserDropdownOpen(true);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (userDropdownCloseTimeoutRef.current) clearTimeout(userDropdownCloseTimeoutRef.current);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!userDropdownOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") closeUserDropdown();
+    };
+    const onPointer = (e: MouseEvent | PointerEvent) => {
+      const el = userDropdownRootRef.current;
+      if (el && !el.contains(e.target as Node)) closeUserDropdown();
+    };
+    document.addEventListener("keydown", onKey);
+    document.addEventListener("pointerdown", onPointer, true);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.removeEventListener("pointerdown", onPointer, true);
+    };
+  }, [userDropdownOpen, closeUserDropdown]);
 
   // Trợ lý AI giờ là KHUNG CHAT trượt bên hông (thay cho trang /ai full-screen).
   const [aiOpen, setAiOpen] = useState(false);
@@ -74,6 +119,36 @@ export default function Navbar() {
 
   return (
     <header className="sticky top-0 z-50 w-full min-w-0">
+      <style>{`
+        @keyframes nav-dropdown-in {
+          from {
+            opacity: 0;
+            transform: translateY(-8px) scale(0.97);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+          }
+        }
+        @keyframes nav-dropdown-out {
+          from {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+          }
+          to {
+            opacity: 0;
+            transform: translateY(-8px) scale(0.97);
+          }
+        }
+        .nav-dropdown-enter {
+          animation: nav-dropdown-in 0.18s cubic-bezier(0.16, 1, 0.3, 1) both;
+          transform-origin: top right;
+        }
+        .nav-dropdown-exit {
+          animation: nav-dropdown-out 0.15s ease-in both;
+          transform-origin: top right;
+        }
+      `}</style>
       {/* Top promo bar — single line, always visible */}
       <div className="w-full border-b border-gray-200 bg-gray-100 px-3 py-1.5 sm:px-4">
         <div className="mx-auto flex min-w-0 max-w-screen-xl items-center justify-between gap-2 text-[11px] text-gray-600 sm:text-xs">
@@ -142,12 +217,12 @@ export default function Navbar() {
               {user && <NotificationDropdown />}
 
               {user ? (
-                <div className="relative group flex flex-col items-center">
+                <div ref={userDropdownRootRef} className="relative group flex flex-col items-center" onMouseEnter={openUserDropdown} onMouseLeave={closeUserDropdown}>
                   <button
                     type="button"
                     className="flex min-w-[44px] flex-col items-center gap-0.5 rounded-lg px-1 py-1 text-gray-700 transition-colors hover:text-primary cursor-pointer"
                     aria-label="Tài khoản"
-                    onClick={() => navigate("/profile/info")}
+                    onClick={() => { closeUserDropdown(); navigate("/profile/info"); }}
                   >
                     <div className="flex size-[22px] items-center justify-center rounded-full bg-primary/10 text-primary font-bold text-[11px]">
                       {lastName ? lastName.charAt(0) : <User size={14} />}
@@ -158,52 +233,54 @@ export default function Navbar() {
                   </button>
 
                   {/* Dropdown menu */}
-                  <div className="absolute right-0 top-full mt-0 hidden w-48 flex-col rounded-lg bg-white shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] ring-1 ring-black/5 group-hover:flex z-50 overflow-hidden">
-                    <div className="px-4 py-3 border-b border-gray-100 bg-gray-50/50">
-                      <p className="text-sm font-semibold text-gray-900 truncate">
-                        {user.fullName || "Người dùng"}
-                      </p>
-                      <p className="text-xs text-gray-500 truncate">{user.email}</p>
-                    </div>
-                    <div className="p-1">
-                      <button
-                        onClick={() => navigate("/profile/info")}
-                        className="flex w-full items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 rounded-md transition-colors text-left font-medium cursor-pointer"
-                      >
-                        Tài Khoản Của Tôi
-                      </button>
-                      <button
-                        onClick={() => navigate("/profile/workspace")}
-                        className="flex w-full items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 rounded-md transition-colors text-left font-medium cursor-pointer"
-                      >
-                        Không Gian Làm Việc
-                      </button>
-                      <button
-                        onClick={() => navigate("/profile/orders")}
-                        className="flex w-full items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 rounded-md transition-colors text-left font-medium cursor-pointer"
-                      >
-                        Đơn Mua
-                      </button>
-                      {/* Người bán đã có khu riêng ở switcher "Đổi khu" → avatar chỉ giữ CTA cho người chưa bán. */}
-                      {!getRoles(user).includes("GardenOwner") && (
+                  {userDropdownOpen && (
+                    <div className={`absolute right-0 top-full mt-0 flex w-48 flex-col rounded-lg bg-white shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] ring-1 ring-black/5 z-50 overflow-hidden ${userDropdownClosing ? "nav-dropdown-exit" : "nav-dropdown-enter"}`}>
+                      <div className="px-4 py-3 border-b border-gray-100 bg-gray-50/50">
+                        <p className="text-sm font-semibold text-gray-900 truncate">
+                          {user.fullName || "Người dùng"}
+                        </p>
+                        <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                      </div>
+                      <div className="p-1">
                         <button
-                          onClick={() => navigate("/become-seller")}
-                          className="flex w-full items-center px-3 py-2 text-sm text-primary hover:bg-primary/5 rounded-md transition-colors text-left font-medium cursor-pointer"
+                          onClick={() => { closeUserDropdown(); navigate("/profile/info"); }}
+                          className="flex w-full items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 rounded-md transition-colors text-left font-medium cursor-pointer"
                         >
-                          <Store size={16} className="mr-2" />
-                          Trở thành người bán
+                          Tài Khoản Của Tôi
                         </button>
-                      )}
+                        <button
+                          onClick={() => { closeUserDropdown(); navigate("/profile/workspace"); }}
+                          className="flex w-full items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 rounded-md transition-colors text-left font-medium cursor-pointer"
+                        >
+                          Không Gian Làm Việc
+                        </button>
+                        <button
+                          onClick={() => { closeUserDropdown(); navigate("/profile/orders"); }}
+                          className="flex w-full items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 rounded-md transition-colors text-left font-medium cursor-pointer"
+                        >
+                          Đơn Mua
+                        </button>
+                        {/* Người bán đã có khu riêng ở switcher "Đổi khu" → avatar chỉ giữ CTA cho người chưa bán. */}
+                        {!getRoles(user).includes("GardenOwner") && (
+                          <button
+                            onClick={() => { closeUserDropdown(); navigate("/become-seller"); }}
+                            className="flex w-full items-center px-3 py-2 text-sm text-primary hover:bg-primary/5 rounded-md transition-colors text-left font-medium cursor-pointer"
+                          >
+                            <Store size={16} className="mr-2" />
+                            Trở thành người bán
+                          </button>
+                        )}
 
-                      <button
-                        onClick={handleLogout}
-                        className="flex w-full items-center px-3 py-2 text-sm text-red-600 hover:bg-red-50 hover:text-red-700 rounded-md transition-colors text-left font-medium cursor-pointer"
-                      >
-                        <LogOut size={16} className="mr-2" />
-                        Đăng xuất
-                      </button>
+                        <button
+                          onClick={() => { closeUserDropdown(); handleLogout(); }}
+                          className="flex w-full items-center px-3 py-2 text-sm text-red-600 hover:bg-red-50 hover:text-red-700 rounded-md transition-colors text-left font-medium cursor-pointer"
+                        >
+                          <LogOut size={16} className="mr-2" />
+                          Đăng xuất
+                        </button>
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               ) : (
                 <button

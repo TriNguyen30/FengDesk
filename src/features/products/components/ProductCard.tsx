@@ -5,6 +5,22 @@ import { Product } from "../types/product";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
+const ELEMENT_LABELS: Record<string, string> = {
+  Metal: "Kim",
+  Wood: "Mộc",
+  Water: "Thủy",
+  Fire: "Hỏa",
+  Earth: "Thổ",
+};
+
+const ELEMENT_COLORS: Record<string, string> = {
+  Metal: "bg-gray-500",
+  Wood: "bg-green-500",
+  Water: "bg-blue-500",
+  Fire: "bg-red-500",
+  Earth: "bg-amber-600",
+};
+
 function formatPrice(price: number): string {
   return price.toLocaleString("vi-VN") + "đ";
 }
@@ -17,11 +33,21 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ product, soldCount }: ProductCardProps) {
+  const elementLabel = product.primaryElement ? ELEMENT_LABELS[product.primaryElement] || product.primaryElement : null;
+  const elementColor = product.primaryElement ? ELEMENT_COLORS[product.primaryElement] || "bg-primary" : "";
+
   return (
     <Link
       to={`/products/${product.id}`}
-      className="group flex flex-col rounded-md bg-white border border-gray-100 overflow-hidden hover:shadow-md transition-shadow duration-200"
+      className="group relative flex flex-col rounded-md bg-white border border-gray-100 overflow-hidden hover:shadow-md transition-shadow duration-200"
     >
+      {/* Feng Shui Badge */}
+      {elementLabel && (
+        <div className={`absolute top-2 left-2 z-10 rounded-sm px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white shadow-sm ${elementColor}`}>
+          Mệnh {elementLabel}
+        </div>
+      )}
+
       {/* Square image */}
       <div className="aspect-square w-full overflow-hidden bg-gray-50">
         <img
@@ -47,7 +73,10 @@ export default function ProductCard({ product, soldCount }: ProductCardProps) {
 
 export function ProductCardSkeleton() {
   return (
-    <div className="flex flex-col rounded-md bg-white border border-gray-100 overflow-hidden animate-pulse">
+    <div className="relative flex flex-col rounded-md bg-white border border-gray-100 overflow-hidden animate-pulse">
+      {/* Skeleton Badge */}
+      <div className="absolute top-2 left-2 z-10 h-4 w-8 rounded-sm bg-gray-200" />
+
       {/* Square image */}
       <div className="aspect-square w-full bg-gray-100" />
       {/* Info */}

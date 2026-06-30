@@ -68,9 +68,8 @@ export default function OrdersPage() {
               <button
                 key={tab.value}
                 onClick={() => setActiveTab(tab.value)}
-                className={`relative flex-1 whitespace-nowrap px-5 py-4 text-center text-sm font-medium transition-colors cursor-pointer ${
-                  isActive ? "text-primary" : "text-gray-500 hover:text-gray-700"
-                }`}
+                className={`relative flex-1 whitespace-nowrap px-5 py-4 text-center text-sm font-medium transition-colors cursor-pointer ${isActive ? "text-primary" : "text-gray-500 hover:text-gray-700"
+                  }`}
               >
                 {tab.label}
                 {isActive && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />}
