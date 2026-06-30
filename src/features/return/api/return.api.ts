@@ -63,4 +63,8 @@ export const returnApi = {
   resolveReturn: async (returnId: string, payload: ResolveReturnRequest) => {
     return fetchHttpClient.post<ResolveReturnResponse>(`/returns/${returnId}/resolve`, payload);
   },
+
+  completeRefund: async (returnId: string) => {
+    return fetchHttpClient.post<ReturnDetailResponse>(`/returns/${returnId}/complete-refund`, {});
+  },
 };

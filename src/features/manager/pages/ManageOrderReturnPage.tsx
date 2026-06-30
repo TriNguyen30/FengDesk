@@ -11,6 +11,7 @@ import {
   Clock,
   PackageCheck,
   Banknote,
+  CreditCard,
 } from "lucide-react";
 import { toast } from "sonner";
 import { returnApi } from "@/features/return/api/return.api";
@@ -71,6 +72,12 @@ interface ResolveModalState {
   returnId: string | null;
 }
 
+// ── Complete Refund confirm modal state ──────────────────────────────────────
+interface CompleteRefundModalState {
+  open: boolean;
+  returnId: string | null;
+}
+
 // ── Detail modal state ───────────────────────────────────────────────────────
 interface DetailModalState {
   open: boolean;
@@ -104,6 +111,10 @@ export default function ManageOrderReturnPage() {
   const [resolveRestock, setResolveRestock] = useState(true);
   const [resolveNote, setResolveNote] = useState("");
   const [resolving, setResolving] = useState(false);
+
+  // Complete Refund modal
+  const [completeRefundModal, setCompleteRefundModal] = useState<CompleteRefundModalState>({ open: false, returnId: null });
+  const [completingRefund, setCompletingRefund] = useState(false);
 
   // Detail modal
   const [detailModal, setDetailModal] = useState<DetailModalState>({ open: false, returnId: null });
@@ -273,6 +284,32 @@ export default function ManageOrderReturnPage() {
     }
   };
 
+  // ── Complete Refund handlers ───────────────────────────────────────────────
+  const openCompleteRefundModal = (returnId: string) => {
+    setCompleteRefundModal({ open: true, returnId });
+  };
+
+  const closeCompleteRefundModal = () => setCompleteRefundModal({ open: false, returnId: null });
+
+  const handleCompleteRefund = async () => {
+    if (!completeRefundModal.returnId) return;
+    setCompletingRefund(true);
+    try {
+      const res = await returnApi.completeRefund(completeRefundModal.returnId);
+      if (res.data.isSuccess) {
+        toast.success("Đã xác nhận hoàn tiền thành công");
+        closeCompleteRefundModal();
+        fetchReturns();
+      } else {
+        toast.error(res.data.message || "Không thể xác nhận hoàn tiền");
+      }
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || "Có lỗi xảy ra khi xác nhận hoàn tiền");
+    } finally {
+      setCompletingRefund(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -383,6 +420,15 @@ export default function ManageOrderReturnPage() {
                             >
                               <Banknote className="h-3.5 w-3.5" />
                               Đồng ý hoàn tiền
+                            </button>
+                          )}
+                          {item.status === "Refunding" && (
+                            <button
+                              onClick={() => openCompleteRefundModal(item.id)}
+                              className="flex items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-600 hover:bg-blue-100 transition-colors cursor-pointer"
+                            >
+                              <CreditCard className="h-3.5 w-3.5" />
+                              Xác nhận đã chuyển khoản
                             </button>
                           )}
                         </div>
@@ -654,6 +700,21 @@ export default function ManageOrderReturnPage() {
                 </button>
               </div>
             )}
+            
+            {returnDetail && returnDetail.status === "Refunding" && (
+              <div className="flex gap-3 border-t border-gray-100 px-6 py-4 bg-gray-50/50">
+                <button
+                  onClick={() => {
+                    closeDetailModal();
+                    openCompleteRefundModal(returnDetail.id);
+                  }}
+                  className="flex-1 flex items-center justify-center gap-1.5 rounded-lg bg-blue-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-600 transition-colors cursor-pointer"
+                >
+                  <CreditCard className="h-4 w-4" />
+                  Xác nhận đã chuyển khoản
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -857,6 +918,47 @@ export default function ManageOrderReturnPage() {
                 className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-purple-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-purple-600 disabled:opacity-60 transition-colors cursor-pointer"
               >
                 {resolving ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Đang xử lý...
+                  </>
+                ) : (
+                  "Xác nhận"
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Complete Refund Confirm Modal ────────────────────────────────────── */}
+      {completeRefundModal.open && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="w-full max-w-sm rounded-2xl bg-white shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-start gap-3 px-6 py-5 border-b border-gray-100">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-50">
+                <CreditCard className="h-5 w-5 text-blue-500" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-gray-900">Xác nhận đã hoàn tiền?</h3>
+                <p className="mt-1 text-sm text-gray-500">
+                  Bạn xác nhận đã chuyển khoản thành công cho khách hàng theo thông tin trên?
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-3 px-6 py-4">
+              <button
+                onClick={closeCompleteRefundModal}
+                className="flex-1 rounded-lg border border-gray-200 px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
+              >
+                Hủy
+              </button>
+              <button
+                onClick={handleCompleteRefund}
+                disabled={completingRefund}
+                className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-blue-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-600 disabled:opacity-60 transition-colors cursor-pointer"
+              >
+                {completingRefund ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin" />
                     Đang xử lý...
