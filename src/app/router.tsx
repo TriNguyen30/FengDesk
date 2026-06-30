@@ -18,6 +18,8 @@ import CartPage from "@/features/cart/pages/CartPage";
 import ProtectedRoute from "./ProtectedRoute";
 import ManageOrderReturnPage from "@/features/manager/pages/ManageOrderReturnPage";
 import AboutPage from "@/features/home/pages/AboutPage";
+import ContactPage from "@/features/home/pages/ContactPage";
+import NewsPage from "@/features/home/pages/NewsPage";
 
 // Profile Pages
 import ProfileLayout from "@/components/layouts/ProfileLayout";
@@ -37,6 +39,8 @@ export default function AppRoutes() {
       <Route element={<AppLayout />}>
         <Route path="/" element={<HomePage />} />
         <Route path="/about" element={<AboutPage />} />
+        <Route path="/contact" element={<ContactPage />} />
+        <Route path="/news" element={<NewsPage />} />
         <Route path="/products" element={<ProductsPage />} />
         <Route path="/products/:id" element={<ProductDetailPage />} />
         <Route path="/stores/:id" element={<ShopDetailPage />} />

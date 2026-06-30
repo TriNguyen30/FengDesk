@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import {
   ShoppingCart,
   AlertCircle,
@@ -90,6 +90,24 @@ export default function ProductDetailPage() {
     if (product && selectedItem) {
       addItem({ productItemId: selectedItem.id, quantity });
       toast.success("Đã thêm vào giỏ hàng");
+    }
+  };
+
+  const handleBuyNow = async () => {
+    if (product && selectedItem) {
+      try {
+        const response = await addItem({ productItemId: selectedItem.id, quantity });
+        if (response?.isSuccess && response.data) {
+          const cartItem = response.data.items.find((i) => i.productItemId === selectedItem.id);
+          if (cartItem) {
+            navigate("/checkout", { state: { selectedItemIds: [cartItem.id] } });
+          } else {
+            navigate("/cart");
+          }
+        }
+      } catch (error) {
+        toast.error("Lỗi khi mua ngay");
+      }
     }
   };
 
@@ -273,14 +291,24 @@ export default function ProductDetailPage() {
 
   return (
     <div className="mx-auto max-w-6xl px-3 py-4 sm:px-6 sm:py-6">
-      {/* Back button */}
-      <button
-        onClick={() => navigate(-1)}
-        className="mb-4 flex items-center gap-1.5 text-sm font-medium text-gray-500 hover:text-primary cursor-pointer transition-colors"
-      >
-        <ChevronLeft className="h-4 w-4" />
-        Quay lại
-      </button>
+      {/* Breadcrumb */}
+      <nav className="mb-4 flex items-center gap-2 text-sm font-medium text-gray-500">
+        <Link to="/" className="hover:text-primary transition-colors">
+          Trang chủ
+        </Link>
+        <ChevronRight className="h-4 w-4 text-gray-400" />
+        <Link to="/products" className="hover:text-primary transition-colors">
+          Sản phẩm
+        </Link>
+        {product && (
+          <>
+            <ChevronRight className="h-4 w-4 text-gray-400" />
+            <span className="text-gray-900 line-clamp-1" title={product.name}>
+              {product.name}
+            </span>
+          </>
+        )}
+      </nav>
 
       <div className="rounded-2xl bg-white shadow-sm ring-1 ring-gray-100">
         <div className="flex flex-col sm:flex-row">
@@ -365,17 +393,25 @@ export default function ProductDetailPage() {
               <h1 className="text-xl font-bold leading-snug text-gray-900 sm:text-2xl">
                 {product.name}
               </h1>
-              <p className="mt-1.5 text-sm text-gray-400">
-                Cửa hàng:{" "}
-                <button
-                  onClick={() =>
-                    product.gardenStoreId && navigate(`/stores/${product.gardenStoreId}`)
-                  }
-                  className="font-medium text-primary hover:underline cursor-pointer focus:outline-none bg-transparent border-0 p-0"
-                >
-                  {product.storeName}
-                </button>
-              </p>
+              <div className="mt-1.5 flex flex-wrap items-center gap-3 text-sm text-gray-400">
+                <p>
+                  Cửa hàng:{" "}
+                  <button
+                    onClick={() =>
+                      product.gardenStoreId && navigate(`/stores/${product.gardenStoreId}`)
+                    }
+                    className="font-medium text-primary hover:underline cursor-pointer focus:outline-none bg-transparent border-0 p-0"
+                  >
+                    {product.storeName}
+                  </button>
+                </p>
+                {selectedItem?.sku && (
+                  <>
+                    <span className="hidden sm:block h-3 w-px bg-gray-300"></span>
+                    <p>Mã sản phẩm: <span className="font-medium text-gray-600">{selectedItem.sku}</span></p>
+                  </>
+                )}
+              </div>
             </div>
 
             {/* Price */}
@@ -468,50 +504,60 @@ export default function ProductDetailPage() {
             )}
 
             {/* Add to cart */}
-            <div className="mt-auto pt-2 flex flex-col sm:flex-row gap-3">
-              {/* Quantity Selector */}
-              <div className="flex items-center rounded-lg border border-gray-200 bg-white p-1 h-10 w-28 shrink-0 shadow-sm">
+            <div className="mt-auto pt-2 flex flex-col gap-3">
+              <div className="flex flex-col sm:flex-row gap-3">
+                {/* Quantity Selector */}
+                <div className="flex items-center rounded-lg border border-gray-200 bg-white p-1 h-10 w-28 shrink-0 shadow-sm">
+                  <button
+                    onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                    disabled={quantity <= 1 || outOfStock}
+                    className="flex h-full flex-1 items-center justify-center rounded-md text-gray-600 hover:bg-gray-100 disabled:opacity-50 transition-colors cursor-pointer"
+                  >
+                    <Minus size={14} />
+                  </button>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    value={quantity}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/[^0-9]/g, "");
+                      setQuantity(val === "" ? ("" as any) : parseInt(val, 10));
+                    }}
+                    onBlur={() => {
+                      let val = Number(quantity);
+                      if (isNaN(val) || val < 1) val = 1;
+                      if (selectedItem && val > selectedItem.stock) val = selectedItem.stock;
+                      setQuantity(val);
+                    }}
+                    className="flex-1 w-10 text-center text-sm font-semibold tabular-nums text-gray-900 focus:outline-none bg-transparent"
+                  />
+                  <button
+                    onClick={() =>
+                      setQuantity((q) => (selectedItem ? Math.min(selectedItem.stock, q + 1) : q + 1))
+                    }
+                    disabled={(selectedItem && quantity >= selectedItem.stock) || outOfStock}
+                    className="flex h-full flex-1 items-center justify-center rounded-md text-gray-600 hover:bg-gray-100 disabled:opacity-50 transition-colors cursor-pointer"
+                  >
+                    <Plus size={14} />
+                  </button>
+                </div>
+
                 <button
-                  onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                  disabled={quantity <= 1 || outOfStock}
-                  className="flex h-full flex-1 items-center justify-center rounded-md text-gray-600 hover:bg-gray-100 disabled:opacity-50 transition-colors cursor-pointer"
+                  onClick={handleAddToCart}
+                  disabled={!selectedItem || outOfStock}
+                  className="flex flex-1 items-center justify-center gap-2 rounded-lg border-1 border-primary bg-primary/5 px-4 py-0 text-sm font-semibold text-primary transition-all hover:bg-primary/10 active:scale-95 disabled:cursor-not-allowed disabled:border-gray-200 disabled:text-gray-400 disabled:bg-gray-50 cursor-pointer h-10 w-full"
                 >
-                  <Minus size={14} />
-                </button>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  value={quantity}
-                  onChange={(e) => {
-                    const val = e.target.value.replace(/[^0-9]/g, "");
-                    setQuantity(val === "" ? ("" as any) : parseInt(val, 10));
-                  }}
-                  onBlur={() => {
-                    let val = Number(quantity);
-                    if (isNaN(val) || val < 1) val = 1;
-                    if (selectedItem && val > selectedItem.stock) val = selectedItem.stock;
-                    setQuantity(val);
-                  }}
-                  className="flex-1 w-10 text-center text-sm font-semibold tabular-nums text-gray-900 focus:outline-none bg-transparent"
-                />
-                <button
-                  onClick={() =>
-                    setQuantity((q) => (selectedItem ? Math.min(selectedItem.stock, q + 1) : q + 1))
-                  }
-                  disabled={(selectedItem && quantity >= selectedItem.stock) || outOfStock}
-                  className="flex h-full flex-1 items-center justify-center rounded-md text-gray-600 hover:bg-gray-100 disabled:opacity-50 transition-colors cursor-pointer"
-                >
-                  <Plus size={14} />
+                  <ShoppingCart className="h-4 w-4" />
+                  {outOfStock ? "Hết hàng" : "Thêm giỏ hàng"}
                 </button>
               </div>
 
               <button
-                onClick={handleAddToCart}
+                onClick={handleBuyNow}
                 disabled={!selectedItem || outOfStock}
-                className="flex items-center justify-center gap-2 rounded-lg bg-primary px-6 py-0 text-sm font-semibold text-white shadow-sm transition-all hover:bg-primary-dark active:scale-95 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:shadow-none cursor-pointer h-10 w-full sm:w-auto"
+                className="flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-0 text-sm font-semibold text-white shadow-sm transition-all hover:bg-primary-dark active:scale-95 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:shadow-none cursor-pointer h-10 w-full"
               >
-                <ShoppingCart className="h-4 w-4" />
-                {outOfStock ? "Hết hàng" : "Thêm vào giỏ hàng"}
+                {outOfStock ? "Hết hàng" : "Mua ngay"}
               </button>
             </div>
           </div>
@@ -600,11 +646,21 @@ export default function ProductDetailPage() {
       {/* Reviews Section */}
       <ReviewSection productId={product.id} />
 
+      {/* Same Store Products Section */}
+      {product.gardenStoreId && (
+        <SuggestedProductsSection
+          title="Các sản phẩm khác của shop"
+          currentProductId={product.id}
+          storeId={product.gardenStoreId}
+        />
+      )}
+
       {/* Suggested Products Section */}
       <SuggestedProductsSection
+        title="Có thể bạn cũng thích"
         currentProductId={product.id}
         categoryId={product.categories?.[0]?.id}
-        storeId={product.gardenStoreId}
+        hideViewAll
       />
 
       {/* Lightbox Modal */}
@@ -742,19 +798,23 @@ export default function ProductDetailPage() {
 }
 
 interface SuggestedProductsSectionProps {
+  title?: string;
   currentProductId: string;
   categoryId?: string;
   storeId?: string;
+  hideViewAll?: boolean;
 }
 
 function SuggestedProductsSection({
+  title = "Sản phẩm tương tự",
   currentProductId,
   categoryId,
   storeId,
+  hideViewAll,
 }: SuggestedProductsSectionProps) {
   const { products, loading } = useProductList({
     categoryId: categoryId || undefined,
-    storeId: !categoryId ? storeId : undefined,
+    storeId: storeId || undefined,
     pageSize: 6,
   });
 
@@ -764,25 +824,42 @@ function SuggestedProductsSection({
     return null;
   }
 
+  let viewAllLink = "";
+  if (!hideViewAll) {
+    if (categoryId) {
+      viewAllLink = `/products?categoryId=${categoryId}`;
+    } else if (storeId) {
+      viewAllLink = `/stores/${storeId}`;
+    }
+  }
+
   return (
-    <div className="mt-8 rounded-2xl bg-white shadow-sm ring-1 ring-gray-100 p-4 sm:p-6 mb-2">
-      <div className="flex items-center justify-between border-b border-gray-100 pb-4 mb-6">
-        <h2 className="text-lg font-bold text-gray-900">Sản phẩm tương tự</h2>
+    <section className="mt-8 min-w-0 sm:mt-12 w-full">
+      <div className="mb-4 flex items-center justify-between gap-2 sm:mb-6">
+        <h2 className="text-sm font-medium text-gray-500 sm:text-sm uppercase">{title}</h2>
+        {viewAllLink && (
+          <Link
+            to={viewAllLink}
+            className="shrink-0 text-sm font-medium text-primary transition-colors hover:text-primary-dark cursor-pointer"
+          >
+            Xem tất cả &rsaquo;
+          </Link>
+        )}
       </div>
 
       {loading ? (
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
           {Array.from({ length: 4 }).map((_, i) => (
             <ProductCardSkeleton key={i} />
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
           {displayProducts.map((p) => (
             <ProductCard key={p.id} product={p} />
           ))}
         </div>
       )}
-    </div>
+    </section>
   );
 }

@@ -27,13 +27,13 @@ export function useCart() {
   const getCart = useCallback(() => dispatch(fetchCart()), [dispatch]);
 
   const addItem = useCallback(
-    (params: AddCartItemParams) => {
+    async (params: AddCartItemParams) => {
       if (!user) {
         dispatch(setAuthModal("login"));
         toast.info("Vui lòng đăng nhập để thêm vào giỏ hàng");
-        return;
+        return null;
       }
-      dispatch(addCartItem(params));
+      return dispatch(addCartItem(params)).unwrap();
     },
     [dispatch, user],
   );

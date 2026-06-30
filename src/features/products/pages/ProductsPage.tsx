@@ -1,15 +1,26 @@
-import { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useEffect, useState, useMemo } from "react";
+import { useSearchParams, Link } from "react-router-dom";
 import { getCategoriesRequest } from "@/features/category/api/category.api";
 import type { Category } from "@/features/category/types/category";
 import ProductCard, { ProductCardSkeleton } from "@/features/products/components/ProductCard";
 import { useProductList } from "@/features/products/hooks/useProducts";
-import { SearchX, List } from "lucide-react";
+import { SearchX, List, ChevronRight } from "lucide-react";
 
 export default function ProductsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const search = searchParams.get("search") || "";
   const categoryId = searchParams.get("categoryId") || "";
+  const sort = searchParams.get("sort") || "default";
+
+  const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newParams = new URLSearchParams(searchParams);
+    if (e.target.value === "default") {
+      newParams.delete("sort");
+    } else {
+      newParams.set("sort", e.target.value);
+    }
+    setSearchParams(newParams);
+  };
 
   const [categories, setCategories] = useState<Category[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
@@ -19,6 +30,23 @@ export default function ProductsPage() {
     categoryId: categoryId || undefined,
     pageSize: 20,
   });
+
+  const sortedProducts = useMemo(() => {
+    if (!products) return [];
+    const arr = [...products];
+    switch (sort) {
+      case "name-asc":
+        return arr.sort((a, b) => a.name.localeCompare(b.name));
+      case "name-desc":
+        return arr.sort((a, b) => b.name.localeCompare(a.name));
+      case "price-asc":
+        return arr.sort((a, b) => a.minPrice - b.minPrice);
+      case "price-desc":
+        return arr.sort((a, b) => b.minPrice - a.minPrice);
+      default:
+        return arr;
+    }
+  }, [products, sort]);
 
   useEffect(() => {
     async function fetchCategories() {
@@ -60,6 +88,15 @@ export default function ProductsPage() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      {/* Breadcrumb */}
+      <nav className="mb-6 flex items-center gap-2 text-sm font-medium text-gray-500">
+        <Link to="/" className="hover:text-primary transition-colors">
+          Trang chủ
+        </Link>
+        <ChevronRight className="h-4 w-4 text-gray-400" />
+        <span className="text-gray-900">Sản phẩm</span>
+      </nav>
+
       <div className="flex flex-col gap-6 md:flex-row md:items-start md:gap-8">
         {/* Sidebar Filter */}
         <aside className="w-full shrink-0 md:w-64">
@@ -68,37 +105,46 @@ export default function ProductsPage() {
               <List className="h-4 w-4" />
               Danh Mục
             </h2>
-            <div className="flex flex-col gap-1.5">
+            <div className="flex flex-col gap-3 mt-2">
               {loadingCategories ? (
-                <div className="flex flex-col gap-2.5 animate-pulse">
+                <div className="flex flex-col gap-3 animate-pulse">
                   {[1, 2, 3, 4, 5].map((i) => (
-                    <div key={i} className="h-8 w-full rounded-lg bg-gray-100" />
+                    <div key={i} className="h-5 w-3/4 rounded bg-gray-100" />
                   ))}
                 </div>
               ) : (
                 <>
-                  <button
-                    onClick={() => handleCategorySelect("")}
-                    className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors ${
-                      !categoryId
-                        ? "bg-primary/10 text-primary"
-                        : "text-gray-600 hover:bg-gray-50 hover:text-gray-900 cursor-pointer"
-                    }`}
-                  >
-                    Tất cả sản phẩm
-                  </button>
-                  {categories.map((cat) => (
-                    <button
-                      key={cat.id}
-                      onClick={() => handleCategorySelect(cat.id)}
-                      className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors ${
-                        categoryId === cat.id
-                          ? "bg-primary/10 text-primary"
-                          : "text-gray-600 hover:bg-gray-50 hover:text-gray-900 cursor-pointer"
-                      }`}
+                  <label className="flex items-center gap-3 cursor-pointer group">
+                    <input
+                      type="checkbox"
+                      checked={!categoryId}
+                      onChange={() => handleCategorySelect("")}
+                      className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
+                    />
+                    <span
+                      className={`text-sm font-medium transition-colors ${!categoryId ? "text-primary" : "text-gray-600 group-hover:text-gray-900"
+                        }`}
                     >
-                      {cat.name}
-                    </button>
+                      Tất cả sản phẩm
+                    </span>
+                  </label>
+                  {categories.map((cat) => (
+                    <label key={cat.id} className="flex items-center gap-3 cursor-pointer group">
+                      <input
+                        type="checkbox"
+                        checked={categoryId === cat.id}
+                        onChange={() => handleCategorySelect(categoryId === cat.id ? "" : cat.id)}
+                        className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
+                      />
+                      <span
+                        className={`text-sm font-medium transition-colors ${categoryId === cat.id
+                            ? "text-primary"
+                            : "text-gray-600 group-hover:text-gray-900"
+                          }`}
+                      >
+                        {cat.name}
+                      </span>
+                    </label>
                   ))}
                 </>
               )}
@@ -114,7 +160,7 @@ export default function ProductsPage() {
                 <div className="h-6 w-48 rounded bg-gray-200 animate-pulse" />
               ) : (
                 <h1 className="text-lg font-medium text-gray-900">
-                  {selectedCategoryName ? selectedCategoryName : "Tất cả sản phẩm"}
+                  {selectedCategoryName ? selectedCategoryName : "Tất cả sản phẩm"} <span className="text-sm text-gray-600">({sortedProducts.length})</span>
                 </h1>
               )}
               {search && (
@@ -131,7 +177,22 @@ export default function ProductsPage() {
               )}
             </div>
             {!loading && (
-              <p className="text-sm text-gray-500">Hiển thị {products.length} sản phẩm</p>
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-600">Sắp xếp theo:</span>
+                  <select
+                    value={sort}
+                    onChange={handleSortChange}
+                    className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer"
+                  >
+                    <option value="default">Mặc định</option>
+                    <option value="name-asc">Tên A-Z</option>
+                    <option value="name-desc">Tên Z-A</option>
+                    <option value="price-asc">Giá tăng dần</option>
+                    <option value="price-desc">Giá giảm dần</option>
+                  </select>
+                </div>
+              </div>
             )}
           </div>
 
@@ -141,9 +202,9 @@ export default function ProductsPage() {
                 <ProductCardSkeleton key={i} />
               ))}
             </div>
-          ) : products.length > 0 ? (
+          ) : sortedProducts.length > 0 ? (
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 sm:gap-4 lg:gap-6">
-              {products.map((product) => (
+              {sortedProducts.map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))}
             </div>
