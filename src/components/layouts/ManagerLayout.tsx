@@ -29,7 +29,7 @@ const navigation = [
   { name: "Đơn hàng", href: "/manager/orders", icon: ShoppingCart },
   { name: "Trả hàng", href: "/manager/order-returns", icon: TicketX },
   { name: "Khách hàng", href: "/manager/customers", icon: Users },
-  { name: "Cài đặt", href: "/manager/settings", icon: Settings },
+  // { name: "Cài đặt", href: "/manager/settings", icon: Settings },
 ];
 
 const roleLabels: Record<string, string> = {

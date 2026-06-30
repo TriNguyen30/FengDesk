@@ -1,6 +1,6 @@
 import React from "react";
 import Modal from "@/components/ui/Modal";
-import { RefreshCw } from "lucide-react";
+import { Loader2, RefreshCw } from "lucide-react";
 import LocationPickerMap from "@/features/users/components/LocationPickerMap";
 import type { Provinces, District, Ward } from "@/features/users/types/location";
 import type { StoreAddress } from "@shop/types/shop";
@@ -31,6 +31,11 @@ interface StoreAddressModalProps {
   onProvinceChange: (id: string) => void;
   selectedDistrictId: string;
   onDistrictChange: (id: string) => void;
+  selectedWardId: string;
+  onWardChange: (id: string) => void;
+  zoomToLocation?: { lat: number; lng: number; zoom: number } | null;
+  onMapLocationChange?: (lat: number, lng: number) => void;
+  isReverseGeocoding?: boolean;
 }
 
 export function StoreAddressModal({
@@ -48,7 +53,20 @@ export function StoreAddressModal({
   onProvinceChange,
   selectedDistrictId,
   onDistrictChange,
+  selectedWardId,
+  onWardChange,
+  zoomToLocation,
+  onMapLocationChange,
+  isReverseGeocoding,
 }: StoreAddressModalProps) {
+  const handleMapChange = (lat: number, lng: number) => {
+    if (onMapLocationChange) {
+      onMapLocationChange(lat, lng);
+    } else {
+      onFormChange({ ...addressForm, latitude: lat, longitude: lng });
+    }
+  };
+
   return (
     <Modal
       open={open}
@@ -87,9 +105,17 @@ export function StoreAddressModal({
         </div>
 
         <div className="space-y-3 rounded-lg bg-gray-50 p-3 border border-gray-200">
-          <h4 className="text-xs font-bold text-gray-700 uppercase tracking-wider">
-            Khu vực địa lý
-          </h4>
+          <div className="flex items-center justify-between">
+            <h4 className="text-xs font-bold text-gray-700 uppercase tracking-wider">
+              Khu vực địa lý
+            </h4>
+            {isReverseGeocoding && (
+              <span className="flex items-center gap-1.5 text-xs text-primary">
+                <Loader2 size={12} className="animate-spin" />
+                Đang xác định địa chỉ...
+              </span>
+            )}
+          </div>
 
           <select
             value={selectedProvinceId}
@@ -119,8 +145,8 @@ export function StoreAddressModal({
           </select>
 
           <select
-            value={addressForm.wardId}
-            onChange={(e) => onFormChange({ ...addressForm, wardId: e.target.value })}
+            value={selectedWardId}
+            onChange={(e) => onWardChange(e.target.value)}
             disabled={!selectedDistrictId}
             className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary disabled:bg-gray-100 disabled:opacity-75 cursor-pointer"
           >
@@ -152,7 +178,8 @@ export function StoreAddressModal({
           <LocationPickerMap
             latitude={addressForm.latitude}
             longitude={addressForm.longitude}
-            onChange={(lat, lng) => onFormChange({ ...addressForm, latitude: lat, longitude: lng })}
+            onChange={handleMapChange}
+            zoomToLocation={zoomToLocation}
           />
           <p className="text-[10px] text-gray-400 mt-1">
             Chạm/Click lên bản đồ để di chuyển ghim định vị đến vị trí chính xác của cửa hàng.

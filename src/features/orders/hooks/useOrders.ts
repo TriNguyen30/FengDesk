@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { ordersApi } from "../api/orders.api";
-import type { CreateOrders, GetOrdersParams } from "../types/orders";
+import type { CreateOrders, GetOrdersParams, OrdersItem } from "../types/orders";
 import { useAppDispatch } from "@/app/store";
 import { fetchCart } from "@/features/cart/store/cartSlice";
 
@@ -101,6 +101,33 @@ export function useCancelOrder() {
   });
 }
 
+export function useShippingFeePreview(
+  shippingAddressId: string | undefined,
+  items: OrdersItem[],
+) {
+  const query = useQuery({
+    queryKey: ["shipping-fee-preview", shippingAddressId, items],
+    enabled: Boolean(shippingAddressId) && items.length > 0,
+    queryFn: async () => {
+      const res = await ordersApi.previewShippingFee({
+        shippingAddressId: shippingAddressId!,
+        items,
+      });
+      return res.data;
+    },
+  });
+
+  const preview = query.data?.isSuccess ? query.data.data : undefined;
+
+  return {
+    shippingFee: preview?.totalShippingFee ?? 0,
+    totalAmount: preview?.totalAmount,
+    stores: preview?.stores ?? [],
+    isLoading: query.isLoading || query.isFetching,
+    isError: query.isError,
+  };
+}
+
 export function useUpdateOrderDeliveryStatus() {
   const queryClient = useQueryClient();
 
@@ -112,11 +139,51 @@ export function useUpdateOrderDeliveryStatus() {
       deliveryId: string;
       data: import("../types/orders").UpdateDeliveryStatusRequest;
     }) => ordersApi.updateDeliveryStatus(deliveryId, data),
-    onSuccess: (res, { deliveryId }) => {
+    onSuccess: () => {
       // Invalidate relevant queries.
       queryClient.invalidateQueries({ queryKey: ["orders"] });
       queryClient.invalidateQueries({ queryKey: ["all-orders"] });
+      queryClient.invalidateQueries({ queryKey: ["store-deliveries"] });
       // To invalidate specific order detail, we could rely on the UI to refetch or pass orderId.
+      queryClient.invalidateQueries({ queryKey: ["order"] });
+    },
+  });
+}
+
+export function useStoreDeliveries(storeId: string | undefined, params?: GetOrdersParams) {
+  const query = useQuery({
+    queryKey: ["store-deliveries", storeId, params],
+    enabled: !!storeId,
+    queryFn: async () => {
+      const response = await ordersApi.getStoreDeliveries(storeId!, params);
+      return response.data;
+    },
+  });
+
+  const data = query.data;
+
+  return {
+    deliveries: data?.isSuccess && data.data ? data.data.items : [],
+    pagination: {
+      page: data?.isSuccess && data.data ? data.data.page : 1,
+      pageSize: data?.isSuccess && data.data ? data.data.pageSize : 20,
+      totalCount: data?.isSuccess && data.data ? data.data.totalCount : 0,
+      totalPages: data?.isSuccess && data.data ? data.data.totalPages : 0,
+    },
+    listStatus: query.isLoading ? "loading" : query.isError ? "failed" : "idle",
+    query,
+  };
+}
+
+export function useCreateDeliveryShipment() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (deliveryId: string) => ordersApi.createDeliveryShipment(deliveryId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["store-deliveries"] });
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
+      queryClient.invalidateQueries({ queryKey: ["all-orders"] });
       queryClient.invalidateQueries({ queryKey: ["order"] });
     },
   });

@@ -7,6 +7,7 @@ import ProductDetailPage from "@/features/products/pages/ProductDetailPage";
 import ShopDetailPage from "@/features/shop/pages/ShopDetailPage";
 import CreateShopPage from "@/features/shop/pages/CreateShopPage";
 import MyShopsPage from "@/features/shop/pages/MyShopsPage";
+import ShopDeliveriesPage from "@/features/shop/pages/ShopDeliveriesPage";
 import DashboardPage from "@/features/manager/pages/DashboardPage";
 import ManageProductsPage from "@/features/manager/pages/ManageProductsPage";
 import CreateProductPage from "@/features/manager/pages/CreateProductPage";
@@ -18,6 +19,8 @@ import CartPage from "@/features/cart/pages/CartPage";
 import ProtectedRoute from "./ProtectedRoute";
 import ManageOrderReturnPage from "@/features/manager/pages/ManageOrderReturnPage";
 import AboutPage from "@/features/home/pages/AboutPage";
+import ContactPage from "@/features/home/pages/ContactPage";
+import NewsPage from "@/features/home/pages/NewsPage";
 
 // Profile Pages
 import ProfileLayout from "@/components/layouts/ProfileLayout";
@@ -37,6 +40,8 @@ export default function AppRoutes() {
       <Route element={<AppLayout />}>
         <Route path="/" element={<HomePage />} />
         <Route path="/about" element={<AboutPage />} />
+        <Route path="/contact" element={<ContactPage />} />
+        <Route path="/news" element={<NewsPage />} />
         <Route path="/products" element={<ProductsPage />} />
         <Route path="/products/:id" element={<ProductDetailPage />} />
         <Route path="/stores/:id" element={<ShopDetailPage />} />
@@ -45,6 +50,14 @@ export default function AppRoutes() {
           element={
             <ProtectedRoute>
               <MyShopsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/seller/:storeId/deliveries"
+          element={
+            <ProtectedRoute>
+              <ShopDeliveriesPage />
             </ProtectedRoute>
           }
         />

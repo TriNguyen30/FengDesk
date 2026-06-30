@@ -2,7 +2,7 @@ import { useCart } from "@/features/cart";
 import CartItemImage from "@/features/cart/components/CartItemImage";
 import type { CartItem } from "@/features/cart/types/cart";
 import { Link, useNavigate } from "react-router-dom";
-import { Minus, Plus, ShoppingCart, Trash2, ChevronLeft } from "lucide-react";
+import { Minus, Plus, ShoppingCart, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { useState, useMemo, useEffect } from "react";
 import { useAppSelector } from "@/app/store";
@@ -148,14 +148,14 @@ export default function CartPage() {
 
   return (
     <div className="mx-auto max-w-6xl px-3 py-4 sm:px-6 sm:py-6">
-      {/* Back button */}
-      <button
-        onClick={() => navigate(-1)}
-        className="mb-4 flex items-center gap-1.5 text-sm font-medium text-gray-500 hover:text-primary cursor-pointer transition-colors"
-      >
-        <ChevronLeft className="h-4 w-4" />
-        Quay lại
-      </button>
+      {/* Breadcrumb */}
+      <nav className="mb-4 flex items-center gap-2 text-sm font-medium text-gray-500">
+        <Link to="/" className="hover:text-primary transition-colors">
+          Trang chủ
+        </Link>
+        <ChevronRight className="h-4 w-4 text-gray-400" />
+        <span className="text-gray-900">Giỏ hàng</span>
+      </nav>
 
       <div className="rounded-2xl bg-white shadow-sm ring-1 ring-gray-100 overflow-hidden">
         {items.length === 0 ? (

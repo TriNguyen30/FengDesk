@@ -4,7 +4,7 @@ import { ChevronLeft, Loader2, MapPin, ShoppingBag, CreditCard } from "lucide-re
 import { toast } from "sonner";
 
 import { useCart } from "@/features/cart";
-import { useCreateOrder } from "@/features/orders";
+import { useCreateOrder, useShippingFeePreview } from "@/features/orders";
 import { getAddresses } from "@/features/users/api/address.api";
 import type { Address } from "@/features/users/types/address";
 import type { PaymentMethod } from "@/features/orders/types/orders";
@@ -39,6 +39,20 @@ export default function CheckoutPage() {
 
   const subtotal = checkoutItems.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
   const totalQuantity = checkoutItems.reduce((sum, item) => sum + item.quantity, 0);
+
+  const previewItems = useMemo(
+    () =>
+      checkoutItems.map((item) => ({
+        productItemId: item.productItemId,
+        quantity: item.quantity,
+      })),
+    [checkoutItems],
+  );
+
+  const { shippingFee, isLoading: feeLoading } = useShippingFeePreview(
+    selectedAddressId || undefined,
+    previewItems,
+  );
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -290,11 +304,15 @@ export default function CheckoutPage() {
             </div>
             <div className="flex justify-between text-gray-600">
               <span>Phí vận chuyển</span>
-              <span className="font-semibold text-gray-900">Chưa tính</span>
+              <span className="font-semibold text-gray-900">
+                {feeLoading ? "Đang tính..." : formatVnd(shippingFee)}
+              </span>
             </div>
             <div className="flex justify-between border-t border-gray-100 pt-3 text-base font-bold text-gray-900">
               <span>Tổng cộng</span>
-              <span className="text-primary">{formatVnd(subtotal)}</span>
+              <span className="text-primary">
+                {feeLoading ? "..." : formatVnd(subtotal + shippingFee)}
+              </span>
             </div>
           </div>
 

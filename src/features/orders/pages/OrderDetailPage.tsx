@@ -571,6 +571,11 @@ export default function OrderDetailPage() {
                           #{delivery.orderCode}
                         </p>
                       )}
+                      {delivery.shippingProvider && (
+                        <p className="text-xs text-gray-500 mt-0.5">
+                          Đơn vị vận chuyển : <span className="font-medium text-gray-700">{delivery.shippingProvider}</span>
+                        </p>
+                      )}
                       {hasActiveReturn && (
                         <span className="mt-1.5 inline-flex items-center gap-1 text-xs font-medium text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded">
                           <span className="h-1.5 w-1.5 rounded-full bg-amber-400 inline-block" />
@@ -750,6 +755,11 @@ export default function OrderDetailPage() {
                   )}
                   {delivery.orderCode && (
                     <p className="text-xs text-gray-400 font-mono mt-0.5">#{delivery.orderCode}</p>
+                  )}
+                  {delivery.shippingProvider && (
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      ĐVVC: <span className="font-medium text-gray-700">{delivery.shippingProvider}</span>
+                    </p>
                   )}
                   <span className="mt-1.5 inline-flex items-center gap-1 text-xs font-semibold text-emerald-600">
                     <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 inline-block" />
