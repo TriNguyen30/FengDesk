@@ -94,7 +94,7 @@ export default function NotificationPage() {
           <button
             type="button"
             onClick={handleMarkAllRead}
-            className="flex items-center gap-1.5 rounded-lg border border-primary px-4 py-2 text-sm font-semibold text-primary hover:bg-primary/5 transition-colors"
+            className="flex items-center gap-1.5 rounded-lg border border-primary px-4 py-2 text-sm font-semibold text-primary hover:bg-primary/5 transition-colors cursor-pointer"
           >
             <Check size={16} />
             Đánh dấu tất cả đã đọc
