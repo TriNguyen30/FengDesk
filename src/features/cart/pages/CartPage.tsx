@@ -186,7 +186,7 @@ export default function CartPage() {
                 </span>
               </div>
 
-              <div className="mb-4 flex items-center justify-between rounded-xl bg-gray-50 px-4 py-3">
+              <div className="mb-4 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <input
                     type="checkbox"
