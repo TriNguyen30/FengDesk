@@ -684,7 +684,7 @@ export default function ManageOrderReturnPage() {
                 </button>
               </div>
             )}
-            
+
             {returnDetail && returnDetail.status === "ReturnInTransit" && (
               <div className="flex gap-3 border-t border-gray-100 px-6 py-4 bg-gray-50/50">
                 <button
@@ -699,7 +699,7 @@ export default function ManageOrderReturnPage() {
                 </button>
               </div>
             )}
-            
+
             {returnDetail && returnDetail.status === "ItemReceived" && (
               <div className="flex gap-3 border-t border-gray-100 px-6 py-4 bg-gray-50/50">
                 <button
@@ -714,7 +714,7 @@ export default function ManageOrderReturnPage() {
                 </button>
               </div>
             )}
-            
+
             {returnDetail && returnDetail.status === "Refunding" && (
               <div className="flex gap-3 border-t border-gray-100 px-6 py-4 bg-gray-50/50">
                 <button
