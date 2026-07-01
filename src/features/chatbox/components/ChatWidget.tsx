@@ -81,7 +81,7 @@ export default function ChatWidget() {
             </span>
           )}
 
-          <span className="pointer-events-none absolute -top-10 right-0 whitespace-nowrap rounded-lg bg-gray-900 px-2.5 py-1 text-xs font-medium text-white opacity-0 shadow-md transition-opacity group-hover:opacity-100">
+          <span className="pointer-events-none absolute -top-7 right-0 whitespace-nowrap rounded-lg bg-gray-900 px-2.5 py-1 text-xs font-medium text-white opacity-0 shadow-md transition-opacity group-hover:opacity-100">
             Tin nhắn
           </span>
         </button>

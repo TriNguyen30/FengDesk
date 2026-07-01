@@ -25,3 +25,8 @@ export const updateAddress = async (id: string, data: UpdateAddressDto): Promise
 export const deleteAddress = async (id: string): Promise<void> => {
   await fetchHttpClient.delete(`/addresses/${id}`);
 };
+
+export const setDefaultAddress = async (id: string): Promise<Address> => {
+  const response = await fetchHttpClient.patch<ApiResponse<Address>>(`/addresses/${id}/set-default`);
+  return response.data.data;
+};  

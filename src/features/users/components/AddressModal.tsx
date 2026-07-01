@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { X, Loader2 } from "lucide-react";
 import { CreateAddressDto, UpdateAddressDto, Address } from "../types/address";
-import { createAddress, updateAddress } from "../api/address.api";
+import { createAddress, updateAddress, setDefaultAddress } from "../api/address.api";
 import { getProvinces, getDistrictsByProvinceId, getWardsByDistrictId } from "../api/location.api";
 import { Provinces, District, Ward } from "../types/location";
 import { toast } from "sonner";
@@ -285,9 +285,15 @@ export default function AddressModal({ isOpen, onClose, onSuccess, address }: Ad
     try {
       if (address) {
         await updateAddress(address.id, formData as UpdateAddressDto);
+        if (formData.isDefault && !address.isDefault) {
+          await setDefaultAddress(address.id);
+        }
         toast.success("Cập nhật địa chỉ thành công");
       } else {
-        await createAddress(formData as CreateAddressDto);
+        const newAddress = await createAddress(formData as CreateAddressDto);
+        if (formData.isDefault) {
+          await setDefaultAddress(newAddress.id);
+        }
         toast.success("Thêm địa chỉ thành công");
       }
       onSuccess();

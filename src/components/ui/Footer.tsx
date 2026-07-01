@@ -1,6 +1,7 @@
 import { Leaf, Mail, Phone, MapPin } from "lucide-react";
 import { FaFacebook, FaInstagram, FaTiktok } from "react-icons/fa";
 import Logo from "@/assets/image/fengdesk_logo_2.png";
+import DTBBCT from "@/assets/image/DTBBCT.png"
 
 export default function Footer() {
   return (
@@ -64,6 +65,11 @@ export default function Footer() {
                 </a>
               </li>
             </ul>
+            <div className="mt-4">
+              <a href="#" className="inline-block hover:opacity-80 transition-opacity">
+                <img src={DTBBCT} alt="Đã đăng ký với Bộ Công Thương" className="h-16 w-auto object-contain" />
+              </a>
+            </div>
           </div>
 
           {/* Customer Support */}

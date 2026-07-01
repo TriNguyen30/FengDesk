@@ -21,6 +21,7 @@ import { useAppSelector, useAppDispatch } from "@/app/store";
 import { logout } from "@/features/auth/store/authSlice";
 import { clearSession } from "@/utils";
 import WorkspaceSwitcher from "@/components/ui/WorkspaceSwitcher";
+import FooterManager from "@/components/ui/FooterManager";
 import FengDesk from "@/assets/image/fengdesk_logo_2.png";
 
 const navigation = [
@@ -98,8 +99,8 @@ export default function ManagerLayout() {
             <img src={FengDesk} alt="FengDesk" className="h-9 w-9 ml-1.5" />
             {!collapsed && (
               <span className="whitespace-nowrap">
-                <span className="block text-base font-bold leading-tight text-gray-900">
-                  FengShui
+                <span className="text-md font-extrabold tracking-tight text-gray-900">
+                  Feng<span className="text-primary">Desk</span>
                 </span>
                 <span className="block text-xs leading-tight text-gray-500">Quản lý cửa hàng</span>
               </span>
@@ -254,8 +255,11 @@ export default function ManagerLayout() {
         </header>
 
         {/* Page content */}
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6">
-          <Outlet />
+        <main className="flex flex-1 flex-col overflow-y-auto">
+          <div className="flex-1 p-4 sm:p-6">
+            <Outlet />
+          </div>
+          <FooterManager />
         </main>
       </div>
     </div>

@@ -2,6 +2,7 @@ import { Outlet, NavLink } from "react-router-dom";
 import { User, MapPin, Package, HousePlus, Bell, RefreshCw } from "lucide-react";
 import { useEffect } from "react";
 
+
 export default function ProfileLayout() {
   const navItems = [
     { name: "Thông tin tài khoản", path: "/profile/info", icon: User },

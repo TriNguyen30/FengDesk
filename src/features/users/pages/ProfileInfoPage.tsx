@@ -3,14 +3,22 @@ import { useAppDispatch, useAppSelector } from "@/app/store";
 import { logout } from "@/features/auth/store/authSlice";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { logoutRequest } from "@/features/auth/api/auth.api";
+import { logoutRequest, myProfileRequest } from "@/features/auth/api/auth.api";
 import { clearSession } from "@/utils";
+import { useQuery } from "@tanstack/react-query";
 
 export default function ProfileInfoPage() {
   const user = useAppSelector((state) => state.auth.user);
   const { refreshToken } = useAppSelector((state) => state.auth);
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+
+  const { data: profileResponse, isLoading } = useQuery({
+    queryKey: ["myProfile"],
+    queryFn: myProfileRequest,
+  });
+
+  const profile = profileResponse?.data || user;
 
   const handleLogout = async () => {
     try {
@@ -31,7 +39,11 @@ export default function ProfileInfoPage() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
 
-  if (!user) return null;
+  if (isLoading) {
+    return <div className="max-w-2xl animate-pulse space-y-6">Đang tải thông tin...</div>;
+  }
+
+  if (!profile) return null;
 
   return (
     <div className="max-w-2xl">
@@ -40,12 +52,12 @@ export default function ProfileInfoPage() {
       <div className="space-y-6">
         <div className="flex items-center gap-6 pb-6 border-b border-gray-100">
           <div className="flex h-20 w-20 items-center justify-center rounded-full bg-primary/10 text-primary text-2xl font-bold">
-            {user.fullName ? user.fullName.charAt(12).toUpperCase() : "U"}
+            {profile.fullName ? profile.fullName.charAt(0).toUpperCase() : "U"}
           </div>
           <div>
-            <h2 className="text-xl font-semibold text-gray-900">{user.fullName || "Người dùng"}</h2>
+            <h2 className="text-xl font-semibold text-gray-900">{profile.fullName || "Người dùng"}</h2>
             <p className="text-sm text-gray-500">
-              {user.role === "Customer" ? "Khách hàng" : "Nhân viên"}
+              {profile.role === "Customer" ? "Khách hàng" : "Nhân viên"}
             </p>
           </div>
         </div>
@@ -56,7 +68,7 @@ export default function ProfileInfoPage() {
             <input
               type="text"
               disabled
-              defaultValue={user.fullName || ""}
+              defaultValue={profile.fullName || ""}
               className="block w-full rounded-lg border border-gray-300 bg-gray-50 px-4 py-2.5 text-sm text-gray-900 opacity-70 cursor-not-allowed"
             />
           </div>
@@ -66,9 +78,58 @@ export default function ProfileInfoPage() {
             <input
               type="email"
               disabled
-              defaultValue={user.email || ""}
+              defaultValue={profile.email || ""}
               className="block w-full rounded-lg border border-gray-300 bg-gray-50 px-4 py-2.5 text-sm text-gray-900 opacity-70 cursor-not-allowed"
             />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-gray-700">Số điện thoại</label>
+              <input
+                type="text"
+                disabled
+                defaultValue={profile.phone || "Chưa cập nhật"}
+                className="block w-full rounded-lg border border-gray-300 bg-gray-50 px-4 py-2.5 text-sm text-gray-900 opacity-70 cursor-not-allowed"
+              />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-gray-700">Giới tính</label>
+              <input
+                type="text"
+                disabled
+                defaultValue={profile.gender === "Male" ? "Nam" : profile.gender === "Female" ? "Nữ" : "Chưa cập nhật"}
+                className="block w-full rounded-lg border border-gray-300 bg-gray-50 px-4 py-2.5 text-sm text-gray-900 opacity-70 cursor-not-allowed"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-gray-700">Ngày sinh</label>
+              <input
+                type="text"
+                disabled
+                defaultValue={profile.dateOfBirth ? new Date(profile.dateOfBirth).toLocaleDateString("vi-VN") : "Chưa cập nhật"}
+                className="block w-full rounded-lg border border-gray-300 bg-gray-50 px-4 py-2.5 text-sm text-gray-900 opacity-70 cursor-not-allowed"
+              />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-gray-700">Mệnh Phong Thuỷ</label>
+              <input
+                type="text"
+                disabled
+                defaultValue={
+                  profile.fengShui?.element === "Kim" ? "Kim" :
+                  profile.fengShui?.element === "Moc" ? "Mộc" :
+                  profile.fengShui?.element === "Thuy" ? "Thủy" :
+                  profile.fengShui?.element === "Hoa" ? "Hỏa" :
+                  profile.fengShui?.element === "Tho" ? "Thổ" :
+                  "Chưa cập nhật"
+                }
+                className="block w-full rounded-lg border border-gray-300 bg-gray-50 px-4 py-2.5 text-sm text-gray-900 opacity-70 cursor-not-allowed"
+              />
+            </div>
           </div>
 
           <div className="pt-4 flex gap-3">
