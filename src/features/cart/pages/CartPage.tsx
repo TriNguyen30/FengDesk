@@ -11,6 +11,7 @@ import { YouMightAlsoLikeSection } from "@/features/products/components/ProductC
 import type { UpdateCartItemParams } from "@/features/cart/types/cart";
 import Modal from "@/components/ui/Modal";
 import EmptyCartImg from "@/assets/image/EmptyCart.jpg";
+import { generateSlug } from "@/utils/string";
 
 function formatVnd(n: number): string {
   return n.toLocaleString("vi-VN") + "đ";
@@ -47,7 +48,7 @@ function CartLineItem({ item, selected, onSelect, onQuantityChange, onRemove }: 
       <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <Link
-            to={`/products/${item.productId}`}
+            to={`/product/${generateSlug(item.productName)}.${item.productId}`}
             className="text-base font-bold text-gray-900 hover:text-primary line-clamp-2"
           >
             {item.productName} {item.variantName ? `(${item.variantName})` : ""}

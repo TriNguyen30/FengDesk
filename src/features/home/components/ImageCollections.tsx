@@ -74,7 +74,7 @@ export default function ZenCollectionSection() {
 
         {/* New Arrival — tall right column */}
         <a
-          href="/products/fengdesk-grow-light"
+          href="/product/fengdesk-grow-light"
           className="group relative min-h-[280px] overflow-hidden rounded-3xl bg-[#0e1a14] md:col-start-3 md:row-span-2 md:min-h-0"
         >
           <span className="absolute left-4 top-4 z-10 rounded-full bg-white px-3 py-1 text-xs font-medium text-neutral-900 shadow-sm">

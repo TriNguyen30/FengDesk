@@ -22,6 +22,7 @@ import type { Product } from "@/features/products/types/product";
 import type { Shop } from "@/features/shop/types/shop";
 import type { Category } from "@/features/category/types/category";
 import type { Tag } from "@/features/products/types/tag";
+import { generateSlug } from "@/utils/string";
 import { toast } from "sonner";
 import Modal from "@/components/ui/Modal";
 
@@ -294,7 +295,7 @@ export default function ManageProductsPage() {
                       <td className="whitespace-nowrap px-6 py-4 text-right">
                         <div className="flex justify-end gap-2">
                           <Link
-                            to={`/products/${product.id}`}
+                            to={`/product/${generateSlug(product.name)}.${product.id}`}
                             target="_blank"
                             title="Xem chi tiết (cửa hàng)"
                             className="inline-flex items-center justify-center p-2 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors cursor-pointer"

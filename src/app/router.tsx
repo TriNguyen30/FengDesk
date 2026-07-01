@@ -44,7 +44,7 @@ export default function AppRoutes() {
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/news" element={<NewsPage />} />
         <Route path="/products" element={<ProductsPage />} />
-        <Route path="/products/:id" element={<ProductDetailPage />} />
+        <Route path="/product/:slugId" element={<ProductDetailPage />} />
         <Route path="/stores/:id" element={<ShopDetailPage />} />
         <Route
           path="/seller"
