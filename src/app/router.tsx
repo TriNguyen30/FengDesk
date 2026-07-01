@@ -10,6 +10,7 @@ import MyShopsPage from "@/features/shop/pages/MyShopsPage";
 import ShopDeliveriesPage from "@/features/shop/pages/ShopDeliveriesPage";
 import ShopStaffPage from "@/features/shop/pages/ShopStaffPage";
 import DashboardPage from "@/features/manager/pages/DashboardPage";
+import ManageCategoriesPage from "@/features/manager/pages/ManageCategoriesPage";
 import ManageProductsPage from "@/features/manager/pages/ManageProductsPage";
 import CreateProductPage from "@/features/manager/pages/CreateProductPage";
 import EditProductPage from "@/features/manager/pages/EditProductPage";
@@ -45,7 +46,7 @@ export default function AppRoutes() {
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/news" element={<NewsPage />} />
         <Route path="/products" element={<ProductsPage />} />
-        <Route path="/products/:id" element={<ProductDetailPage />} />
+        <Route path="/product/:slugId" element={<ProductDetailPage />} />
         <Route path="/stores/:id" element={<ShopDetailPage />} />
         <Route
           path="/seller"
@@ -135,6 +136,7 @@ export default function AppRoutes() {
       >
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard" element={<DashboardPage />} />
+        <Route path="categories" element={<ManageCategoriesPage />} />
         <Route path="products" element={<ManageProductsPage />} />
         <Route path="products/new" element={<CreateProductPage />} />
         <Route path="products/:id/edit" element={<EditProductPage />} />

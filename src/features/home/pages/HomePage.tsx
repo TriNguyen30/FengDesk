@@ -47,14 +47,16 @@ const slides: HeroSlide[] = [
 
 export default function HomePage() {
   return (
-    <main className="mx-auto w-full min-w-0 max-w-screen-xl px-3 py-4 sm:px-4 sm:py-6 lg:px-10">
-      <CategoryBar />
-      <HeroSlider slides={slides} />
-      <FeatureBar />
-      <FiveElementsSection />
-      <PopularCategories />
-      <BestSellersSection />
-      <ImageCollections />
-    </main>
+    <>
+      <main className="mx-auto w-full min-w-0 max-w-screen-xl px-3 py-4 sm:px-4 sm:py-6 lg:px-10">
+        <CategoryBar />
+        <HeroSlider slides={slides} />
+        <FeatureBar />
+        <FiveElementsSection />
+        <PopularCategories />
+        <BestSellersSection />
+        <ImageCollections />
+      </main>
+    </>
   );
 }

@@ -12,3 +12,17 @@ export interface Category {
   parentId?: string;
   isActive: boolean;
 }
+
+export interface CreateCategoryRequest {
+  name: string;
+  description?: string;
+  parentId?: string;
+  isActive: boolean;
+}
+
+export interface UpdateCategoryRequest {
+  name: string;
+  description?: string;
+  parentId?: string;
+  isActive: boolean;
+}

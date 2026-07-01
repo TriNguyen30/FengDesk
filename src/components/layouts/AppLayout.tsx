@@ -5,6 +5,7 @@ import Footer from "@/components/ui/Footer";
 import { Toaster } from "sonner";
 import { ChatWidget } from "@/features/chatbox";
 import { useAppSelector } from "@/app/store";
+import BackToTopButton from "@/components/ui/BackToTopButton";
 
 const toasterStyle = { "--width": "min(100vw - 1.5rem, 356px)" } as CSSProperties;
 
@@ -36,6 +37,7 @@ export default function AppLayout() {
       </div>
       <Footer />
       <ChatWidget />
+      <BackToTopButton />
       <Toaster
         richColors
         closeButton

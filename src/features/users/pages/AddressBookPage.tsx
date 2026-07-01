@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { Plus, Edit2, Trash2 } from "lucide-react";
-import { getAddresses, deleteAddress } from "../api/address.api";
+import { Plus, Edit2, Trash2, CheckCircle } from "lucide-react";
+import { getAddresses, deleteAddress, setDefaultAddress } from "../api/address.api";
 import { Address } from "../types/address";
 import { toast } from "sonner";
 import AddressModal from "../components/AddressModal";
@@ -58,6 +58,17 @@ export default function AddressBookPage() {
     } finally {
       setIsDeleteModalOpen(false);
       setAddressToDelete(null);
+    }
+  };
+
+  const handleSetDefault = async (id: string) => {
+    try {
+      await setDefaultAddress(id);
+      toast.success("Đã thiết lập địa chỉ mặc định");
+      fetchAddresses();
+    } catch (error) {
+      toast.error("Không thể thiết lập địa chỉ mặc định");
+      console.error(error);
     }
   };
 
@@ -121,13 +132,22 @@ export default function AddressBookPage() {
                   Cập nhật
                 </button>
                 {!address.isDefault && (
-                  <button
-                    onClick={() => handleDeleteClick(address.id)}
-                    className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 cursor-pointer"
-                  >
-                    <Trash2 size={14} />
-                    Xóa
-                  </button>
+                  <>
+                    <button
+                      onClick={() => handleSetDefault(address.id)}
+                      className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-green-600 transition-colors hover:bg-green-50 cursor-pointer"
+                    >
+                      <CheckCircle size={14} />
+                      Mặc định
+                    </button>
+                    <button
+                      onClick={() => handleDeleteClick(address.id)}
+                      className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 cursor-pointer"
+                    >
+                      <Trash2 size={14} />
+                      Xóa
+                    </button>
+                  </>
                 )}
               </div>
             </div>

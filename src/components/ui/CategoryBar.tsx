@@ -54,11 +54,11 @@ export default function CategoryBar() {
   }, [menuOpen]);
 
   return (
-    <nav className="w-full min-w-0 border-t border-gray-200">
+    <nav className="w-full min-w-0">
       <div className="mx-auto flex w-full min-w-0 max-w-screen-xl flex-col gap-2 px-3 py-2 sm:flex-row sm:items-stretch sm:gap-0 sm:px-4 sm:py-0 lg:px-10">
         <div
           ref={menuRef}
-          className="relative shrink-0 sm:flex sm:items-center sm:border-r sm:border-gray-200 sm:pr-4 lg:pr-6"
+          className="relative shrink-0 sm:flex sm:items-center sm:pr-4 lg:pr-6"
         >
           <button
             type="button"
@@ -92,7 +92,7 @@ export default function CategoryBar() {
                   navigate(`/products?categoryId=${item.id}`);
                   setMenuOpen(false);
                 }}
-                className="block w-full px-4 py-3 text-left text-sm transition hover:bg-primary-light/20 hover:text-primary hover:ring-1 hover:ring-primary/40"
+                className="block w-full px-4 py-3 text-left text-sm transition hover:bg-primary-light/20 hover:text-primary hover:ring-1 hover:ring-primary/40 cursor-pointer"
               >
                 {item.name}
               </button>

@@ -40,7 +40,8 @@ const ELEMENT_LABELS: Record<string, string> = {
 };
 
 export default function ProductDetailPage() {
-  const { id } = useParams<{ id: string }>();
+  const { slugId } = useParams<{ slugId: string }>();
+  const id = slugId?.split(".").pop() || "";
   const navigate = useNavigate();
   const { addItem } = useCart();
   const { product, loading, failed } = useProductDetail(id);
@@ -300,9 +301,20 @@ export default function ProductDetailPage() {
         <Link to="/products" className="hover:text-primary transition-colors">
           Sản phẩm
         </Link>
+        {product && product.categories && product.categories.length > 0 && (
+          <>
+            <ChevronRight className="h-4 w-4 text-gray-400 shrink-0" />
+            <Link
+              to={`/products?categoryId=${product.categories[0].id}`}
+              className="hover:text-primary transition-colors whitespace-nowrap"
+            >
+              {product.categories[0].name}
+            </Link>
+          </>
+        )}
         {product && (
           <>
-            <ChevronRight className="h-4 w-4 text-gray-400" />
+            <ChevronRight className="h-4 w-4 text-gray-400 shrink-0" />
             <span className="text-gray-900 line-clamp-1" title={product.name}>
               {product.name}
             </span>

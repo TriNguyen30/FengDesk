@@ -138,8 +138,8 @@ export default function ProductsPage() {
                       />
                       <span
                         className={`text-sm font-medium transition-colors ${categoryId === cat.id
-                            ? "text-primary"
-                            : "text-gray-600 group-hover:text-gray-900"
+                          ? "text-primary"
+                          : "text-gray-600 group-hover:text-gray-900"
                           }`}
                       >
                         {cat.name}

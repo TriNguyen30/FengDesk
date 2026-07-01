@@ -3,6 +3,7 @@ import { User, MapPin, Package, HousePlus, Bell, RefreshCw, Mail } from "lucide-
 import { useEffect } from "react";
 import { useMyStoreInvitations } from "@/features/shop/hooks/useShopStaff";
 
+
 export default function ProfileLayout() {
   // Load lời mời (nhẹ) để hiện badge số lượng bên cạnh menu; nếu 0 thì ẩn badge.
   const { invitations } = useMyStoreInvitations();
@@ -33,7 +34,7 @@ export default function ProfileLayout() {
         {/* Sidebar */}
         <aside className="w-full shrink-0 md:w-64">
           <div className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm">
-            <h2 className="mb-4 px-2 text-lg font-bold text-gray-900">Quản lý tài khoản</h2>
+            <h2 className="mb-4 px-2 text-lg font-bold text-gray-900">Hồ Sơ</h2>
             <nav className="flex flex-col gap-1">
               {navItems.map((item) => {
                 const Icon = item.icon;
