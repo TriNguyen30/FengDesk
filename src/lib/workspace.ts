@@ -20,7 +20,7 @@ export const WORKSPACES: WorkspaceDef[] = [
   { key: "shop", label: "Mua sắm", route: "/", allow: () => true },
   {
     key: "seller",
-    label: "Kênh người bán",
+    label: "Cửa hàng",
     route: "/seller",
     allow: (r) => r.includes("GardenOwner"),
   },

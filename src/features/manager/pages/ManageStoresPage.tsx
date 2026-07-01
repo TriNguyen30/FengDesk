@@ -8,6 +8,7 @@ import {
 } from "@/features/users/api/location.api";
 import type { Provinces, District, Ward } from "@/features/users/types/location";
 import { geocodeLocation, reverseGeocode, findBestMatch } from "@/features/users/api/geocoding";
+import { splitOpeningHours } from "@/features/shop/utils/opening-hours";
 import {
   getAllShopRequest,
   getShopRequestById,
@@ -64,18 +65,14 @@ export default function ManageStoresPage() {
   const [isHardDelete, setIsHardDelete] = useState(false);
   const [deletingStore, setDeletingStore] = useState(false);
 
-  // Address Modals / Forms (Store Address)
+  // Address Modals / Forms (Store Address = pickup point: chỉ 4 field BE nhận)
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
   const [editingAddress, setEditingAddress] = useState<StoreAddress | null>(null);
   const [addressForm, setAddressForm] = useState({
     wardId: "",
     streetAddress: "",
-    recipientName: "",
-    recipientPhone: "",
     latitude: 0,
     longitude: 0,
-    isDefault: true,
-    label: "Cửa hàng",
   });
   const [submittingAddress, setSubmittingAddress] = useState(false);
 
@@ -328,6 +325,26 @@ export default function ManageStoresPage() {
     }
   }, [provinces]);
 
+  // Payload địa chỉ store — chỉ 4 field BE nhận (pickup point, không có người nhận).
+  const toStoreAddressPayload = (f: typeof addressForm) => ({
+    wardId: f.wardId,
+    streetAddress: f.streetAddress.trim(),
+    latitude: f.latitude || null,
+    longitude: f.longitude || null,
+  });
+
+  // POST khi store chưa có địa chỉ, PUT khi đã có (quyết định theo existing address.id — đọc đúng field `address`).
+  const saveStoreAddress = (
+    storeId: string,
+    existingAddressId: string | undefined,
+    f: typeof addressForm,
+  ) => {
+    const payload = toStoreAddressPayload(f);
+    return existingAddressId
+      ? updateShopAddressRequest(storeId, payload)
+      : createShopAddressRequest(storeId, payload);
+  };
+
   // Handle store form open
   const handleOpenStoreModal = (store: Shop | null = null) => {
     if (store) {
@@ -339,7 +356,17 @@ export default function ManageStoresPage() {
         hotline: store.hotline || "",
         openingHours: store.openingHours || "",
         isActive: store.isActive ?? true,
-        address: store.address || "",
+        address: typeof store.address === "string" ? store.address : "",
+      });
+      // BE trả địa chỉ ở field `address` (object StoreAddressResponse).
+      const existingAddr = (selectedStoreDetails as any)?.address ?? null;
+      setAddressForm({
+        wardId: existingAddr?.wardId ?? "",
+        streetAddress:
+          existingAddr?.streetAddress ??
+          (typeof store.address === "string" ? store.address : ""),
+        latitude: existingAddr?.latitude ?? 0,
+        longitude: existingAddr?.longitude ?? 0,
       });
     } else {
       setEditingStore(null);
@@ -352,6 +379,7 @@ export default function ManageStoresPage() {
         isActive: true,
         address: "",
       });
+      setAddressForm({ wardId: "", streetAddress: "", latitude: 0, longitude: 0 });
     }
     setIsStoreModalOpen(true);
   };
@@ -364,13 +392,37 @@ export default function ManageStoresPage() {
       return;
     }
 
+    const { open, close } = splitOpeningHours(storeForm.openingHours);
+    if (open && close && open >= close) {
+      toast.error("Giờ đóng cửa phải sau giờ mở cửa");
+      return;
+    }
+
+    const hasAddressInput =
+      !!addressForm.wardId ||
+      !!addressForm.streetAddress.trim() ||
+      addressForm.latitude !== 0 ||
+      addressForm.longitude !== 0;
+
+    if (hasAddressInput && (!addressForm.wardId || !addressForm.streetAddress.trim())) {
+      toast.error("Vui lòng chọn khu vực và nhập số nhà/đường");
+      return;
+    }
+
     setSubmittingStore(true);
     try {
       if (editingStore) {
         const res = await updateShopRequest(editingStore.id, storeForm);
         if (res.isSuccess) {
+          if (hasAddressInput) {
+            const existingAddr = (selectedStoreDetails as any)?.address ?? null;
+            await saveStoreAddress(editingStore.id, existingAddr?.id, addressForm);
+          }
           toast.success("Cập nhật cửa hàng thành công");
           fetchStores();
+          if (selectedStore?.id === editingStore.id) {
+            fetchStoreDetails(editingStore.id);
+          }
           setIsStoreModalOpen(false);
         } else {
           toast.error(res.message || "Lỗi khi cập nhật cửa hàng");
@@ -378,6 +430,9 @@ export default function ManageStoresPage() {
       } else {
         const res = await createShopRequest(storeForm);
         if (res.isSuccess) {
+          if (res.data && hasAddressInput) {
+            await saveStoreAddress(res.data.id, undefined, addressForm);
+          }
           toast.success("Tạo cửa hàng mới thành công");
           fetchStores();
           setIsStoreModalOpen(false);
@@ -441,12 +496,8 @@ export default function ManageStoresPage() {
       setAddressForm({
         wardId: addr.wardId || "",
         streetAddress: addr.streetAddress || "",
-        recipientName: addr.recipientName || "",
-        recipientPhone: addr.recipientPhone || "",
         latitude: addr.latitude || 0,
         longitude: addr.longitude || 0,
-        isDefault: addr.isDefault ?? true,
-        label: addr.label || "Cửa hàng",
       });
       setSelectedProvinceId("");
       setSelectedDistrictId("");
@@ -455,12 +506,8 @@ export default function ManageStoresPage() {
       setAddressForm({
         wardId: "",
         streetAddress: "",
-        recipientName: selectedStore?.name || "",
-        recipientPhone: selectedStore?.hotline || "",
         latitude: 10.8231, // Default coordinates (HCMC)
         longitude: 106.6297,
-        isDefault: true,
-        label: "Cửa hàng",
       });
       setSelectedProvinceId("");
       setSelectedDistrictId("");
@@ -472,43 +519,25 @@ export default function ManageStoresPage() {
   const handleSubmitAddress = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedStore) return;
-    if (
-      !addressForm.streetAddress.trim() ||
-      !addressForm.recipientName.trim() ||
-      !addressForm.recipientPhone.trim()
-    ) {
-      toast.error("Vui lòng nhập đầy đủ thông tin liên hệ và số nhà");
-      return;
-    }
-    if (!addressForm.wardId) {
-      toast.error("Vui lòng chọn đầy đủ Phường/Xã");
+    if (!addressForm.wardId || !addressForm.streetAddress.trim()) {
+      toast.error("Vui lòng chọn khu vực và nhập số nhà/đường");
       return;
     }
 
     setSubmittingAddress(true);
     try {
-      if (editingAddress) {
-        const res = await updateShopAddressRequest(selectedStore.id, addressForm);
-        if (res.isSuccess) {
-          toast.success("Cập nhật địa chỉ thành công");
-          fetchStoreDetails(selectedStore.id);
-          setIsAddressModalOpen(false);
-        } else {
-          toast.error(res.message || "Lỗi khi cập nhật địa chỉ");
-        }
+      // PUT khi sửa địa chỉ đã có, POST khi thêm mới — quyết định theo editingAddress.id.
+      const res = await saveStoreAddress(selectedStore.id, editingAddress?.id, addressForm);
+      if (res.isSuccess) {
+        toast.success(editingAddress ? "Cập nhật địa chỉ thành công" : "Thêm địa chỉ cửa hàng thành công");
+        fetchStoreDetails(selectedStore.id);
+        setIsAddressModalOpen(false);
       } else {
-        const res = await createShopAddressRequest(selectedStore.id, addressForm);
-        if (res.isSuccess) {
-          toast.success("Thêm địa chỉ cửa hàng thành công");
-          fetchStoreDetails(selectedStore.id);
-          setIsAddressModalOpen(false);
-        } else {
-          toast.error(res.message || "Lỗi khi thêm địa chỉ");
-        }
+        toast.error(res.message || "Lỗi khi lưu địa chỉ");
       }
     } catch (err) {
       console.error(err);
-      toast.error("Lỗi hệ thống khi cập nhật địa chỉ");
+      toast.error("Lỗi hệ thống khi lưu địa chỉ");
     } finally {
       setSubmittingAddress(false);
     }
@@ -560,9 +589,9 @@ export default function ManageStoresPage() {
 
     setSubmittingStaff(true);
     try {
+      // BE chỉ lưu phân công store-scoped, không có "role"; chuyển thẳng GUID sang staffId.
       const res = await addShopStaffRequest(selectedStore.id, {
-        userId: staffUserId.trim(),
-        role: staffRole,
+        staffId: staffUserId.trim(),
       });
 
       if (res.isSuccess) {
@@ -676,6 +705,20 @@ export default function ManageStoresPage() {
         onFormChange={setStoreForm}
         onSubmit={handleSubmitStore}
         submitting={submittingStore}
+        addressForm={addressForm}
+        onAddressFormChange={setAddressForm}
+        provinces={provinces}
+        districts={districts}
+        wards={wards}
+        selectedProvinceId={selectedProvinceId}
+        onProvinceChange={handleProvinceChange}
+        selectedDistrictId={selectedDistrictId}
+        onDistrictChange={handleDistrictChange}
+        selectedWardId={selectedWardId}
+        onWardChange={handleWardChange}
+        zoomToLocation={zoomToLocation}
+        onMapLocationChange={handleMapLocationChange}
+        isReverseGeocoding={isReverseGeocoding}
       />
 
       {/* ── Modal: Delete Confirmation ─────────────────────────────────────── */}

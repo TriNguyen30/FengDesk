@@ -8,6 +8,7 @@ import ShopDetailPage from "@/features/shop/pages/ShopDetailPage";
 import CreateShopPage from "@/features/shop/pages/CreateShopPage";
 import MyShopsPage from "@/features/shop/pages/MyShopsPage";
 import ShopDeliveriesPage from "@/features/shop/pages/ShopDeliveriesPage";
+import ShopStaffPage from "@/features/shop/pages/ShopStaffPage";
 import DashboardPage from "@/features/manager/pages/DashboardPage";
 import ManageCategoriesPage from "@/features/manager/pages/ManageCategoriesPage";
 import ManageProductsPage from "@/features/manager/pages/ManageProductsPage";
@@ -34,6 +35,7 @@ import OrderDetailPage from "@/features/orders/pages/OrderDetailPage";
 import { PaymentSuccessPage, PaymentCancelPage } from "@/features/payment";
 import NotificationPage from "@/features/notification/pages/NotificationPage";
 import ProfileReturnOrder from "@/features/users/pages/ProfileReturnOrder";
+import MyInvitationsPage from "@/features/shop/pages/MyInvitationsPage";
 
 export default function AppRoutes() {
   return (
@@ -59,6 +61,14 @@ export default function AppRoutes() {
           element={
             <ProtectedRoute>
               <ShopDeliveriesPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/seller/:storeId/staff"
+          element={
+            <ProtectedRoute>
+              <ShopStaffPage />
             </ProtectedRoute>
           }
         />
@@ -112,6 +122,7 @@ export default function AppRoutes() {
           <Route path="orders" element={<OrdersPage />} />
           <Route path="orders/:id" element={<OrderDetailPage />} />
           <Route path="returns" element={<ProfileReturnOrder />} />
+          <Route path="invitations" element={<MyInvitationsPage />} />
           <Route path="notifications" element={<NotificationPage />} />
         </Route>
       </Route>

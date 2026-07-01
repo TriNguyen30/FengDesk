@@ -9,9 +9,11 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { useAppSelector } from "@/app/store";
+import { useHasSellerWorkspaceAccess } from "@/features/shop/hooks/useShopStaff";
 import {
   getRoles,
   getVisibleWorkspaces,
+  WORKSPACES,
   setLastWorkspace,
   type WorkspaceDef,
   type WorkspaceKey,
@@ -30,6 +32,7 @@ export default function WorkspaceSwitcher() {
   const location = useLocation();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const { hasSellerWorkspaceAccess } = useHasSellerWorkspaceAccess(!!user);
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -40,7 +43,12 @@ export default function WorkspaceSwitcher() {
   }, []);
 
   const roles = getRoles(user);
-  const visible = getVisibleWorkspaces(roles);
+  const baseVisible = getVisibleWorkspaces(roles);
+  const sellerWorkspace = WORKSPACES.find((w) => w.key === "seller");
+  const visible =
+    hasSellerWorkspaceAccess && sellerWorkspace && !baseVisible.some((w) => w.key === "seller")
+      ? [...baseVisible.filter((w) => w.key !== "seller"), sellerWorkspace]
+      : baseVisible;
 
   if (!user || visible.length <= 1) return null;
 
