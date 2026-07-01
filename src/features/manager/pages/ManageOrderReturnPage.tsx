@@ -379,9 +379,9 @@ export default function ManageOrderReturnPage() {
                       </td>
                       <td className="p-4">
                         <span
-                          className={`inline-block rounded-md border px-2 py-0.5 text-xs font-semibold ${RETURN_STATUS_META[item.status].className}`}
+                          className={`inline-block rounded-md border px-2 py-0.5 text-xs font-semibold ${RETURN_STATUS_META[item.status]?.className}`}
                         >
-                          {item.status}
+                          {RETURN_STATUS_META[item.status]?.label ?? item.status}
                         </span>
                       </td>
                       <td className="p-4 text-center">{item.itemCount}</td>
@@ -493,9 +493,9 @@ export default function ManageOrderReturnPage() {
                     <div className="rounded-lg border border-gray-100 bg-gray-50/50 p-3">
                       <p className="text-xs text-gray-400">Trạng thái</p>
                       <span
-                        className={`mt-1 inline-block rounded-md border px-2 py-0.5 text-xs font-semibold ${RETURN_STATUS_META[returnDetail.status].className}`}
+                        className={`mt-1 inline-block rounded-md border px-2 py-0.5 text-xs font-semibold ${RETURN_STATUS_META[returnDetail.status]?.className}`}
                       >
-                        {returnDetail.status}
+                        {RETURN_STATUS_META[returnDetail.status]?.label ?? returnDetail.status}
                       </span>
                     </div>
                     <div className="rounded-lg border border-gray-100 bg-gray-50/50 p-3">
@@ -643,8 +643,8 @@ export default function ManageOrderReturnPage() {
                           <div className="pb-3">
                             <p className="text-sm font-semibold text-gray-800">
                               {log.fromStatus
-                                ? `${STATUS_LABEL[log.fromStatus] ?? log.fromStatus} → ${STATUS_LABEL[log.toStatus] ?? log.toStatus}`
-                                : STATUS_LABEL[log.toStatus] ?? log.toStatus}
+                                ? `${RETURN_STATUS_META[log.fromStatus]?.label ?? log.fromStatus} → ${RETURN_STATUS_META[log.toStatus]?.label ?? log.toStatus}`
+                                : RETURN_STATUS_META[log.toStatus]?.label ?? log.toStatus}
                             </p>
                             {log.note && <p className="text-xs text-gray-500 mt-0.5">{log.note}</p>}
                             <p className="text-xs text-gray-400 mt-0.5">
