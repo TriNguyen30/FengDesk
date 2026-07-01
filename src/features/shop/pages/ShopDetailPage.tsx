@@ -1,21 +1,23 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ChevronLeft, MessagesSquare, Store, Truck } from "lucide-react";
+import { ChevronLeft, MessagesSquare, Store, Truck, Users } from "lucide-react";
 import { toast } from "sonner";
 import { useProductList } from "@/features/products/hooks/useProducts";
 import { getMyShopsRequest, getShopRequestById } from "@/features/shop/api/shop.api";
 import { Shop } from "@/features/shop/types/shop";
 import { useAppDispatch, useAppSelector } from "@/app/store";
 import { openChatbox } from "@/features/chatbox/store/chatboxSlice";
+import { getRoles } from "@/lib/workspace";
 import {
   ShopChatInboxMockup,
   ShopDeliveriesView,
   ShopHeader,
   ShopProductCatalog,
   ShopSidebar,
+  ShopStaffSection,
 } from "../components";
 
-type ShopTab = "products" | "deliveries" | "chat";
+type ShopTab = "products" | "deliveries" | "chat" | "staff";
 
 export default function ShopDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -163,6 +165,8 @@ export default function ShopDetailPage() {
   // isMember = owner | co-owner | (sau này: staff) — quyết định ẩn nút "Theo dõi" + bật tab owner.
   const isOwner = !!currentUser?.id && currentUser.id === shop.ownerUserId;
   const isShopMember = isOwner || isMember;
+  const roles = getRoles(currentUser);
+  const canEditShopProfile = roles.includes("GardenOwner") && !roles.includes("Staff");
   const shopAddressText =
     typeof shop.address === "object" && shop.address
       ? (shop.address as any).streetAddress || "Đang cập nhật"
@@ -170,10 +174,13 @@ export default function ShopDetailPage() {
         ? shop.address
         : "Đang cập nhật";
 
+  // BE gate mỗi tab bằng IsOwnerOrAdmin — cả owner-chính lẫn co-owner (đều nằm trong /stores/mine) đều pass.
+  // Vì thế chỉ cần isShopMember là hiện tab; nếu user không phải owner-thực-sự, BE sẽ trả 403 và toast hiện lỗi.
   const TABS: { value: ShopTab; label: string; icon: typeof Store }[] = [
     { value: "products", label: "Sản phẩm", icon: Store },
     { value: "deliveries", label: "Đơn giao", icon: Truck },
     { value: "chat", label: "Tin nhắn", icon: MessagesSquare },
+    { value: "staff", label: "Nhân viên", icon: Users },
   ];
 
   return (
@@ -228,7 +235,7 @@ export default function ShopDetailPage() {
           <ShopSidebar
             shop={shop}
             shopAddressText={shopAddressText}
-            canEdit={isOwner}
+            canEdit={canEditShopProfile}
             onShopUpdated={(updated) => setShop(updated)}
           />
           <ShopProductCatalog
@@ -272,6 +279,8 @@ export default function ShopDetailPage() {
           <ShopChatInboxMockup />
         </div>
       )}
+
+      {activeTab === "staff" && isShopMember && shop.id && <ShopStaffSection storeId={shop.id} />}
     </div>
   );
 }

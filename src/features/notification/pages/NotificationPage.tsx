@@ -8,6 +8,7 @@ import {
   Package,
   ChevronLeft,
   ChevronRight,
+  Mail,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -36,6 +37,9 @@ export default function NotificationPage() {
 
     if (item.referenceType === "Order" && item.referenceId) {
       navigate(`/profile/orders/${item.referenceId}`);
+    } else if (item.referenceType === "StaffInvitation") {
+      // Deep-link cho cả 3 loại (invited/accepted/rejected): về trang lời mời của tôi.
+      navigate("/profile/invitations");
     }
   };
 
@@ -68,6 +72,14 @@ export default function NotificationPage() {
         return (
           <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-green-50 text-green-600">
             <Package size={24} />
+          </div>
+        );
+      case "StaffInvited":
+      case "StaffInvitationAccepted":
+      case "StaffInvitationRejected":
+        return (
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+            <Mail size={24} />
           </div>
         );
       default:

@@ -9,6 +9,7 @@ import PopUpSignUp from "@/features/auth/components/PopUpSignUp";
 import { CartDropDown, useCart } from "@/features/cart";
 import { NotificationDropdown } from "@/features/notification";
 import WorkspaceSwitcher from "./WorkspaceSwitcher";
+import { useHasSellerWorkspaceAccess } from "@/features/shop/hooks/useShopStaff";
 import { getRoles } from "@/lib/workspace";
 import { useAppSelector, useAppDispatch } from "@/app/store";
 import { logout, setAuthModal } from "@/features/auth/store/authSlice";
@@ -30,6 +31,7 @@ export default function Navbar() {
   const { user, authModal, refreshToken } = useAppSelector((state) => state.auth);
   const dispatch = useAppDispatch();
   const { getCart, clearCart } = useCart();
+  const { hasSellerWorkspaceAccess } = useHasSellerWorkspaceAccess(!!user);
 
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [userDropdownClosing, setUserDropdownClosing] = useState(false);
@@ -261,7 +263,7 @@ export default function Navbar() {
                           Đơn Mua
                         </button>
                         {/* Người bán đã có khu riêng ở switcher "Đổi khu" → avatar chỉ giữ CTA cho người chưa bán. */}
-                        {!getRoles(user).includes("GardenOwner") && (
+                        {!getRoles(user).includes("GardenOwner") && !hasSellerWorkspaceAccess && (
                           <button
                             onClick={() => { closeUserDropdown(); navigate("/become-seller"); }}
                             className="flex w-full items-center px-3 py-2 text-sm text-primary hover:bg-primary/5 rounded-md transition-colors text-left font-medium cursor-pointer"

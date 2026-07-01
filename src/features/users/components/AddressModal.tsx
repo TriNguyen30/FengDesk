@@ -5,7 +5,7 @@ import { createAddress, updateAddress } from "../api/address.api";
 import { getProvinces, getDistrictsByProvinceId, getWardsByDistrictId } from "../api/location.api";
 import { Provinces, District, Ward } from "../types/location";
 import { toast } from "sonner";
-import LocationPickerMap from "./LocationPickerMap";
+import AddressLocationFields from "./AddressLocationFields";
 import { geocodeLocation, reverseGeocode, findBestMatch } from "../api/geocoding";
 
 interface AddressModalProps {
@@ -349,113 +349,42 @@ export default function AddressModal({ isOpen, onClose, onSuccess, address }: Ad
 
             {/* Location Section */}
             {address && !changeLocation ? (
-              <div className="rounded-lg bg-gray-50 p-3 border border-gray-200">
-                <p className="text-sm text-gray-700 mb-2">Đang sử dụng khu vực của địa chỉ cũ.</p>
+              <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
+                <p className="mb-2 text-sm text-gray-700">Đang sử dụng khu vực của địa chỉ cũ.</p>
                 <button
                   type="button"
                   onClick={() => setChangeLocation(true)}
-                  className="text-sm font-medium text-primary hover:underline cursor-pointer"
+                  className="cursor-pointer text-sm font-medium text-primary hover:underline"
                 >
                   Thay đổi khu vực (Tỉnh/Thành, Quận/Huyện)
                 </button>
               </div>
             ) : (
-              <div className="space-y-3 rounded-lg bg-gray-50 p-3 border border-gray-200">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-semibold text-gray-900">Khu vực</h3>
-                  {isReverseGeocoding && (
-                    <span className="flex items-center gap-1.5 text-xs text-primary">
-                      <Loader2 size={12} className="animate-spin" />
-                      Đang xác định địa chỉ...
-                    </span>
-                  )}
-                </div>
-
-                <select
-                  value={selectedProvinceId}
-                  onChange={(e) => handleProvinceChange(e.target.value)}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer"
-                >
-                  <option value="">Chọn Tỉnh/Thành</option>
-                  {provinces.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.name}
-                    </option>
-                  ))}
-                </select>
-
-                <select
-                  value={selectedDistrictId}
-                  onChange={(e) => handleDistrictChange(e.target.value)}
-                  disabled={!selectedProvinceId}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary disabled:bg-gray-100 disabled:opacity-70 cursor-pointer"
-                >
-                  <option value="">Chọn Quận/Huyện</option>
-                  {districts.map((d) => (
-                    <option key={d.id} value={d.id}>
-                      {d.name}
-                    </option>
-                  ))}
-                </select>
-
-                <select
-                  value={selectedWardId}
-                  onChange={(e) => handleWardChange(e.target.value)}
-                  disabled={!selectedDistrictId}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary disabled:bg-gray-100 disabled:opacity-70 cursor-pointer"
-                >
-                  <option value="">Chọn Phường/Xã</option>
-                  {wards.map((w) => (
-                    <option key={w.id} value={w.id}>
-                      {w.name}
-                    </option>
-                  ))}
-                </select>
-
-                {address && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setChangeLocation(false);
-                      setFormData((prev) => ({ ...prev, wardId: address.wardId }));
-                    }}
-                    className="text-xs font-medium text-gray-500 hover:text-gray-700 mt-2 block cursor-pointer"
-                  >
-                    Hủy thay đổi khu vực
-                  </button>
-                )}
-              </div>
-            )}
-
-            <div>
-              <label className="mb-1.5 block text-sm font-medium text-gray-700">
-                Địa chỉ cụ thể
-              </label>
-              <input
-                type="text"
-                name="streetAddress"
-                required
-                value={formData.streetAddress}
-                onChange={handleChange}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-                placeholder="Số nhà, tên đường..."
-              />
-            </div>
-
-            <div className="relative">
-              <label className="mb-1.5 block text-sm font-medium text-gray-700">
-                Vị trí trên bản đồ
-              </label>
-              <LocationPickerMap
+              <AddressLocationFields
+                streetAddress={formData.streetAddress}
+                wardId={formData.wardId}
                 latitude={formData.latitude}
                 longitude={formData.longitude}
-                onChange={handleMapLocationChange}
+                provinces={provinces}
+                districts={districts}
+                wards={wards}
+                selectedProvinceId={selectedProvinceId}
+                selectedDistrictId={selectedDistrictId}
+                selectedWardId={selectedWardId}
+                onProvinceChange={handleProvinceChange}
+                onDistrictChange={handleDistrictChange}
+                onWardChange={handleWardChange}
+                onStreetAddressChange={(value) => setFormData((prev) => ({ ...prev, streetAddress: value }))}
                 zoomToLocation={zoomToLocation}
+                onMapLocationChange={handleMapLocationChange}
+                isReverseGeocoding={isReverseGeocoding}
+                areaTitle="Khu vực"
+                streetLabel="Địa chỉ cụ thể"
+                streetPlaceholder="Số nhà, tên đường..."
+                mapLabel="Vị trí trên bản đồ"
+                mapNote="Chạm vào bản đồ để chọn vị trí chính xác của địa chỉ nhận hàng"
               />
-              <p className="mt-1 text-xs text-gray-500">
-                Chạm vào bản đồ để chọn vị trí chính xác của địa chỉ nhận hàng
-              </p>
-            </div>
+            )}
 
             <div>
               <label className="mb-1.5 block text-sm font-medium text-gray-700">Loại địa chỉ</label>
