@@ -1,8 +1,13 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { toast } from "sonner";
-import { Clock, Loader2, MapPin, Pencil, Phone, Store, X } from "lucide-react";
+import { Clock, Loader2, MapPin, Pencil, Phone, Power, Store, X } from "lucide-react";
 import { Shop } from "../types/shop";
 import { updateShopRequest } from "../api/shop.api";
+import { joinOpeningHours, normalizeOpeningHours, splitOpeningHours } from "../utils/opening-hours";
+import AddressLocationFields from "@/features/users/components/AddressLocationFields";
+import { getProvinces, getDistrictsByProvinceId, getWardsByDistrictId } from "@/features/users/api/location.api";
+import { geocodeLocation, reverseGeocode, findBestMatch } from "@/features/users/api/geocoding";
+import type { Provinces, District, Ward } from "@/features/users/types/location";
 
 interface ShopSidebarProps {
   shop: Shop;
@@ -113,8 +118,147 @@ function EditShopProfileModal({ shop, onClose, onSaved }: EditShopProfileModalPr
   const [name, setName] = useState(shop.name);
   const [description, setDescription] = useState(shop.description ?? "");
   const [hotline, setHotline] = useState(shop.hotline ?? "");
-  const [openingHours, setOpeningHours] = useState(shop.openingHours ?? "");
+  const initialHours = splitOpeningHours(shop.openingHours);
+  const [openTime, setOpenTime] = useState(initialHours.open);
+  const [closeTime, setCloseTime] = useState(initialHours.close);
+  const [streetAddress, setStreetAddress] = useState("");
+  const [provinces, setProvinces] = useState<Provinces[]>([]);
+  const [districts, setDistricts] = useState<District[]>([]);
+  const [wards, setWards] = useState<Ward[]>([]);
+  const [selectedProvinceId, setSelectedProvinceId] = useState("");
+  const [selectedDistrictId, setSelectedDistrictId] = useState("");
+  const [selectedWardId, setSelectedWardId] = useState("");
+  const [zoomToLocation, setZoomToLocation] = useState<{ lat: number; lng: number; zoom: number } | null>(null);
+  const [isReverseGeocoding, setIsReverseGeocoding] = useState(false);
+  const [isActive, setIsActive] = useState(shop.isActive);
   const [submitting, setSubmitting] = useState(false);
+  const isMapTriggeredRef = useRef(false);
+
+  useEffect(() => {
+    setStreetAddress(typeof shop.address === "string" ? shop.address : "");
+  }, [shop.address]);
+
+  useEffect(() => {
+    getProvinces()
+      .then((data) => setProvinces(data || []))
+      .catch((err) => console.error(err));
+  }, []);
+
+  useEffect(() => {
+    if (selectedProvinceId) {
+      getDistrictsByProvinceId(selectedProvinceId)
+        .then((data) => {
+          setDistricts(data || []);
+          if (!isMapTriggeredRef.current) {
+            setSelectedDistrictId("");
+            setWards([]);
+            setSelectedWardId("");
+          }
+        })
+        .catch((err) => console.error(err));
+    } else {
+      setDistricts([]);
+      setWards([]);
+      setSelectedDistrictId("");
+      setSelectedWardId("");
+    }
+  }, [selectedProvinceId]);
+
+  useEffect(() => {
+    if (selectedDistrictId) {
+      getWardsByDistrictId(selectedDistrictId)
+        .then((data) => {
+          setWards(data || []);
+          if (!isMapTriggeredRef.current) {
+            setSelectedWardId("");
+          }
+        })
+        .catch((err) => console.error(err));
+    } else {
+      setWards([]);
+      setSelectedWardId("");
+    }
+  }, [selectedDistrictId]);
+
+  const handleDropdownGeocode = useCallback(async (provinceName: string, districtName: string, wardName: string) => {
+    if (isMapTriggeredRef.current) return;
+    let query = "";
+    let zoom = 11;
+    if (wardName) {
+      query = `${wardName}, ${districtName}, ${provinceName}, Việt Nam`;
+      zoom = 15;
+    } else if (districtName) {
+      query = `${districtName}, ${provinceName}, Việt Nam`;
+      zoom = 13;
+    } else if (provinceName) {
+      query = `${provinceName}, Việt Nam`;
+      zoom = 11;
+    }
+    if (!query) return;
+    try {
+      const result = await geocodeLocation(query);
+      if (result) setZoomToLocation({ lat: result.lat, lng: result.lng, zoom });
+    } catch (err) {
+      console.error(err);
+    }
+  }, []);
+
+  const handleProvinceChange = useCallback((provinceId: string) => {
+    isMapTriggeredRef.current = false;
+    setSelectedProvinceId(provinceId);
+    const province = provinces.find((p) => p.id === provinceId);
+    if (province) handleDropdownGeocode(province.name, "", "");
+  }, [provinces, handleDropdownGeocode]);
+
+  const handleDistrictChange = useCallback((districtId: string) => {
+    isMapTriggeredRef.current = false;
+    setSelectedDistrictId(districtId);
+    const province = provinces.find((p) => p.id === selectedProvinceId);
+    const district = districts.find((d) => d.id === districtId);
+    if (province && district) handleDropdownGeocode(province.name, district.name, "");
+  }, [provinces, districts, selectedProvinceId, handleDropdownGeocode]);
+
+  const handleWardChange = useCallback((wardId: string) => {
+    isMapTriggeredRef.current = false;
+    setSelectedWardId(wardId);
+    const province = provinces.find((p) => p.id === selectedProvinceId);
+    const district = districts.find((d) => d.id === selectedDistrictId);
+    const ward = wards.find((w) => w.id === wardId);
+    if (province && district && ward) handleDropdownGeocode(province.name, district.name, ward.name);
+  }, [provinces, districts, wards, selectedProvinceId, selectedDistrictId, handleDropdownGeocode]);
+
+  const handleMapLocationChange = useCallback(async (lat: number, lng: number) => {
+    setIsReverseGeocoding(true);
+    isMapTriggeredRef.current = true;
+    try {
+      const result = await reverseGeocode(lat, lng);
+      if (!result) return;
+      let currentProvinces = provinces;
+      if (currentProvinces.length === 0) {
+        currentProvinces = await getProvinces();
+        setProvinces(currentProvinces || []);
+      }
+      const matchedProvinceId = findBestMatch(currentProvinces, result.province);
+      if (matchedProvinceId) {
+        setSelectedProvinceId(matchedProvinceId);
+        const districtData = await getDistrictsByProvinceId(matchedProvinceId);
+        setDistricts(districtData || []);
+        const matchedDistrictId = findBestMatch(districtData || [], result.district);
+        if (matchedDistrictId) {
+          setSelectedDistrictId(matchedDistrictId);
+          const wardData = await getWardsByDistrictId(matchedDistrictId);
+          setWards(wardData || []);
+          const matchedWardId = findBestMatch(wardData || [], result.ward);
+          if (matchedWardId) setSelectedWardId(matchedWardId);
+        }
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      isMapTriggeredRef.current = false;
+      setIsReverseGeocoding(false);
+    }
+  }, [provinces]);
 
   // Esc đóng modal — giữ thói quen của các modal khác trong app.
   useEffect(() => {
@@ -134,18 +278,30 @@ function EditShopProfileModal({ shop, onClose, onSaved }: EditShopProfileModalPr
       toast.error("Hotline không được để trống");
       return;
     }
+    if (openTime && closeTime && openTime >= closeTime) {
+      toast.error("Giờ đóng cửa phải sau giờ mở cửa");
+      return;
+    }
 
     setSubmitting(true);
     try {
+      const normalizedOpeningHours = normalizeOpeningHours(joinOpeningHours(openTime, closeTime));
+      const computedAddress = [
+        streetAddress.trim(),
+        wards.find((w) => w.id === selectedWardId)?.name,
+        districts.find((d) => d.id === selectedDistrictId)?.name,
+        provinces.find((p) => p.id === selectedProvinceId)?.name,
+      ]
+        .filter(Boolean)
+        .join(", ");
       const res = await updateShopRequest(shop.id, {
         ownerUserId: shop.ownerUserId,
         name: name.trim(),
         description: description.trim(),
         hotline: hotline.trim(),
-        openingHours: openingHours.trim(),
-        isActive: shop.isActive,
-        // Địa chỉ tách qua /stores/{id}/address — giữ nguyên để PUT này không đụng tới.
-        address: typeof shop.address === "string" ? shop.address : "",
+        openingHours: normalizedOpeningHours,
+        isActive,
+        address: computedAddress || (typeof shop.address === "string" ? shop.address : ""),
       });
       if (res.isSuccess && res.data) {
         toast.success(res.message || "Cập nhật hồ sơ cửa hàng thành công");
@@ -162,8 +318,8 @@ function EditShopProfileModal({ shop, onClose, onSaved }: EditShopProfileModalPr
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <div className="relative w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+    <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/60 p-2 backdrop-blur-sm sm:items-center sm:p-4">
+      <div className="relative flex w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-white shadow-xl animate-in fade-in zoom-in-95 duration-200 max-h-[92dvh] sm:max-h-[90dvh]">
         <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4 bg-gray-50/50">
           <div>
             <span className="text-xs font-bold text-primary uppercase tracking-wide">
@@ -180,7 +336,7 @@ function EditShopProfileModal({ shop, onClose, onSaved }: EditShopProfileModalPr
           </button>
         </div>
 
-        <div className="px-5 py-4 space-y-4 text-sm">
+        <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-4 text-sm overscroll-contain">
           <Field label="Tên cửa hàng" required>
             <input
               type="text"
@@ -211,19 +367,97 @@ function EditShopProfileModal({ shop, onClose, onSaved }: EditShopProfileModalPr
             />
           </Field>
 
-          <Field label="Giờ hoạt động">
-            <input
-              type="text"
-              value={openingHours}
-              onChange={(e) => setOpeningHours(e.target.value)}
-              disabled={submitting}
-              placeholder="Ví dụ: 7:00AM - 12:00PM"
-              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/20"
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Field label="Giờ mở cửa">
+              <input
+                type="time"
+                value={openTime}
+                onChange={(e) => setOpenTime(e.target.value)}
+                disabled={submitting}
+                className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/20"
+              />
+            </Field>
+            <Field label="Giờ đóng cửa">
+              <input
+                type="time"
+                value={closeTime}
+                onChange={(e) => setCloseTime(e.target.value)}
+                disabled={submitting}
+                className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/20"
+              />
+            </Field>
+          </div>
+          <p className="text-[11px] text-gray-400">
+            Dùng bộ chọn giờ để nhập thời gian mở và đóng cửa, hệ thống sẽ lưu thành một chuỗi giờ
+            hoạt động.
+          </p>
+
+          <div className="space-y-3 rounded-lg bg-gray-50 p-3 border border-gray-200">
+            <div>
+              <p className="text-sm font-semibold text-gray-900">Địa chỉ cửa hàng</p>
+              <p className="text-xs text-gray-500">
+                Chọn khu vực hoặc chạm lên bản đồ để cập nhật địa chỉ hiển thị.
+              </p>
+            </div>
+            <AddressLocationFields
+              streetAddress={streetAddress}
+              wardId={selectedWardId}
+              latitude={0}
+              longitude={0}
+              provinces={provinces}
+              districts={districts}
+              wards={wards}
+              selectedProvinceId={selectedProvinceId}
+              selectedDistrictId={selectedDistrictId}
+              selectedWardId={selectedWardId}
+              onProvinceChange={handleProvinceChange}
+              onDistrictChange={handleDistrictChange}
+              onWardChange={handleWardChange}
+              onStreetAddressChange={setStreetAddress}
+              zoomToLocation={zoomToLocation}
+              onMapLocationChange={handleMapLocationChange}
+              isReverseGeocoding={isReverseGeocoding}
+              areaTitle="Khu vực"
+              streetLabel="Địa chỉ cụ thể"
+              streetPlaceholder="Số nhà, tên đường..."
+              mapLabel="Vị trí trên bản đồ"
+              mapNote="Chạm vào bản đồ để chọn vị trí chính xác của cửa hàng."
             />
-          </Field>
+          </div>
+
+          <div className="flex items-center justify-between rounded-lg border border-gray-100 bg-gray-50/50 px-3 py-2.5">
+            <div className="flex items-center gap-2">
+              <Power
+                size={16}
+                className={isActive ? "text-emerald-600" : "text-gray-400"}
+              />
+              <div>
+                <p className="text-xs font-semibold text-gray-700">Trạng thái cửa hàng</p>
+                <p className="text-[11px] text-gray-500">
+                  {isActive ? "Đang hoạt động — khách thấy được." : "Tạm ngừng — ẩn khỏi danh sách."}
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={isActive}
+              onClick={() => setIsActive((v) => !v)}
+              disabled={submitting}
+              className={`relative h-5 w-9 rounded-full transition-colors cursor-pointer disabled:opacity-50 ${
+                isActive ? "bg-primary" : "bg-gray-300"
+              }`}
+            >
+              <span
+                className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform ${
+                  isActive ? "translate-x-4" : "translate-x-0.5"
+                }`}
+              />
+            </button>
+          </div>
 
           <p className="text-xs text-gray-400">
-            Địa chỉ cửa hàng cập nhật ở mục riêng — phần này chỉ sửa thông tin liên hệ.
+            Màn này cập nhật thông tin liên hệ, giờ hoạt động và trạng thái của cửa hàng.
           </p>
         </div>
 

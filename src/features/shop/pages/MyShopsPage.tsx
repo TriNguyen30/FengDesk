@@ -1,9 +1,21 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { Store, Plus, Phone, Clock, Loader2, ChevronRight, Truck } from "lucide-react";
+import { Store, Plus, Phone, Clock, Loader2, ChevronRight, Truck, Users } from "lucide-react";
 import { getMyShopsRequest } from "@/features/shop/api/shop.api";
 import type { Shop } from "@/features/shop/types/shop";
+
+type SellerShopCard = {
+  id: string;
+  name: string;
+  description?: string;
+  hotline?: string;
+  openingHours?: string;
+  isActive: boolean;
+  isOwner: boolean;
+  roleLabel: string;
+  roleDescription: string;
+};
 
 export default function MyShopsPage() {
   const navigate = useNavigate();
@@ -33,6 +45,25 @@ export default function MyShopsPage() {
     };
   }, []);
 
+  // /stores/mine đã gồm store user là owner HOẶC nhân viên (Accepted). Phân biệt nhãn qua isOwner.
+  const storeCards = useMemo<SellerShopCard[]>(
+    () =>
+      shops.map((shop) => ({
+        id: shop.id,
+        name: shop.name,
+        hotline: shop.hotline,
+        openingHours: shop.openingHours,
+        isActive: shop.isActive,
+        isOwner: shop.isOwner ?? true,
+        roleLabel: shop.isOwner === false ? "Nhân viên được phân công" : "Chủ cửa hàng",
+        roleDescription:
+          shop.isOwner === false
+            ? "Bạn là nhân viên của cửa hàng này."
+            : "Bạn đang quản lý cửa hàng này.",
+      })),
+    [shops],
+  );
+
   if (loading) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center text-gray-400">
@@ -41,8 +72,8 @@ export default function MyShopsPage() {
     );
   }
 
-  // Chưa có cửa hàng → đẩy thẳng sang màn tạo shop.
-  if (shops.length === 0) {
+  // Chưa có cửa hàng owned hoặc được phân công → đẩy thẳng sang màn tạo shop.
+  if (storeCards.length === 0) {
     return <Navigate to="/become-seller" replace />;
   }
 
@@ -55,7 +86,7 @@ export default function MyShopsPage() {
           </span>
           <div>
             <h1 className="text-xl font-bold tracking-tight text-gray-900">Cửa hàng của tôi</h1>
-            <p className="text-sm text-gray-500">Bạn đang quản lý {shops.length} cửa hàng.</p>
+            <p className="text-sm text-gray-500">Bạn đang có {storeCards.length} cửa hàng để truy cập.</p>
           </div>
         </div>
         <button
@@ -68,13 +99,18 @@ export default function MyShopsPage() {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        {shops.map((shop) => (
+        {storeCards.map((shop) => (
           <div
             key={shop.id}
             className="group flex flex-col rounded-2xl border border-gray-100 bg-white p-5 text-left shadow-sm transition-all hover:border-primary/30 hover:shadow-md"
           >
             <div className="flex items-start justify-between gap-2">
-              <h2 className="font-bold text-gray-900 line-clamp-1">{shop.name}</h2>
+              <div className="min-w-0">
+                <h2 className="font-bold text-gray-900 line-clamp-1">{shop.name}</h2>
+                <p className="mt-1 text-[11px] font-semibold uppercase tracking-wide text-primary/80">
+                  {shop.roleLabel}
+                </p>
+              </div>
               <span
                 className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${
                   shop.isActive ? "bg-green-50 text-green-600" : "bg-gray-100 text-gray-500"
@@ -87,6 +123,8 @@ export default function MyShopsPage() {
             {shop.description && (
               <p className="mt-1 line-clamp-2 text-sm text-gray-500">{shop.description}</p>
             )}
+
+            <p className="mt-2 text-xs text-gray-400">{shop.roleDescription}</p>
 
             <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-500">
               {shop.hotline && (
@@ -103,14 +141,25 @@ export default function MyShopsPage() {
               )}
             </div>
 
-            <div className="mt-4 flex items-center justify-between gap-2">
-              <button
-                onClick={() => navigate(`/seller/${shop.id}/deliveries`)}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-primary/30 bg-primary/5 px-3 py-1.5 text-xs font-semibold text-primary hover:bg-primary/10 transition-all cursor-pointer"
-              >
-                <Truck size={13} />
-                Quản lý đơn giao
-              </button>
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  onClick={() => navigate(`/seller/${shop.id}/deliveries`)}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-primary/30 bg-primary/5 px-3 py-1.5 text-xs font-semibold text-primary hover:bg-primary/10 transition-all cursor-pointer"
+                >
+                  <Truck size={13} />
+                  Quản lý đơn giao
+                </button>
+                {shop.isOwner && (
+                  <button
+                    onClick={() => navigate(`/seller/${shop.id}/staff`)}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50 transition-all cursor-pointer"
+                  >
+                    <Users size={13} />
+                    Nhân viên
+                  </button>
+                )}
+              </div>
               <button
                 onClick={() => navigate(`/stores/${shop.id}`)}
                 className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline cursor-pointer"

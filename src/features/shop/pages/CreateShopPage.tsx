@@ -1,13 +1,28 @@
+import { useEffect, useRef, useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Store, Phone, Clock, FileText, Loader2, Sparkles, Check } from "lucide-react";
-import { createShopRequest } from "@/features/shop/api/shop.api";
+import { createShopRequest, createShopAddressRequest } from "@/features/shop/api/shop.api";
 import { createShopSchema, type CreateShopFormValues } from "@/features/shop/schemas/shop-schema";
 import { refreshTokenRequest } from "@/features/auth/api/auth.api";
 import { useAuthSession } from "@/features/auth/hooks/useAuthSession";
 import { getRefreshToken } from "@/utils";
+import { joinOpeningHours } from "@/features/shop/utils/opening-hours";
+import AddressLocationFields from "@/features/users/components/AddressLocationFields";
+import { getProvinces, getDistrictsByProvinceId, getWardsByDistrictId } from "@/features/users/api/location.api";
+import type { Provinces, District, Ward } from "@/features/users/types/location";
+import { geocodeLocation, reverseGeocode, findBestMatch } from "@/features/users/api/geocoding";
+
+interface CreateShopAddressFormState {
+  wardId: string;
+  streetAddress: string;
+  latitude: number;
+  longitude: number;
+  isDefault: boolean;
+  label: string;
+}
 
 const PERKS = [
   "Tự quản lý cửa hàng, sản phẩm và giá",
@@ -18,6 +33,25 @@ const PERKS = [
 export default function CreateShopPage() {
   const navigate = useNavigate();
   const { persistSession } = useAuthSession();
+  const [openTime, setOpenTime] = useState("");
+  const [closeTime, setCloseTime] = useState("");
+  const [addressForm, setAddressForm] = useState<CreateShopAddressFormState>({
+    wardId: "",
+    streetAddress: "",
+    latitude: 0,
+    longitude: 0,
+    isDefault: true,
+    label: "Cửa hàng",
+  });
+  const [provinces, setProvinces] = useState<Provinces[]>([]);
+  const [districts, setDistricts] = useState<District[]>([]);
+  const [wards, setWards] = useState<Ward[]>([]);
+  const [selectedProvinceId, setSelectedProvinceId] = useState("");
+  const [selectedDistrictId, setSelectedDistrictId] = useState("");
+  const [selectedWardId, setSelectedWardId] = useState("");
+  const [zoomToLocation, setZoomToLocation] = useState<{ lat: number; lng: number; zoom: number } | null>(null);
+  const [isReverseGeocoding, setIsReverseGeocoding] = useState(false);
+  const isMapTriggeredRef = useRef(false);
 
   const {
     register,
@@ -27,6 +61,156 @@ export default function CreateShopPage() {
     resolver: zodResolver(createShopSchema),
     defaultValues: { name: "", hotline: "", description: "", openingHours: "" },
   });
+
+  useEffect(() => {
+    getProvinces()
+      .then((data) => setProvinces(data || []))
+      .catch((err) => console.error("Error fetching provinces", err));
+  }, []);
+
+  useEffect(() => {
+    if (selectedProvinceId) {
+      getDistrictsByProvinceId(selectedProvinceId)
+        .then((data) => {
+          setDistricts(data || []);
+          if (!isMapTriggeredRef.current) {
+            setSelectedDistrictId("");
+            setWards([]);
+            setSelectedWardId("");
+          }
+        })
+        .catch((err) => console.error("Error fetching districts", err));
+    } else {
+      setDistricts([]);
+      setWards([]);
+      setSelectedDistrictId("");
+      setSelectedWardId("");
+    }
+  }, [selectedProvinceId]);
+
+  useEffect(() => {
+    if (selectedDistrictId) {
+      getWardsByDistrictId(selectedDistrictId)
+        .then((data) => {
+          setWards(data || []);
+          if (!isMapTriggeredRef.current) {
+            setSelectedWardId("");
+          }
+        })
+        .catch((err) => console.error("Error fetching wards", err));
+    } else {
+      setWards([]);
+      setSelectedWardId("");
+    }
+  }, [selectedDistrictId]);
+
+  const handleDropdownGeocode = useCallback(async (provinceName: string, districtName: string, wardName: string) => {
+    if (isMapTriggeredRef.current) return;
+
+    let query = "";
+    let zoom = 11;
+
+    if (wardName) {
+      query = `${wardName}, ${districtName}, ${provinceName}, Việt Nam`;
+      zoom = 15;
+    } else if (districtName) {
+      query = `${districtName}, ${provinceName}, Việt Nam`;
+      zoom = 13;
+    } else if (provinceName) {
+      query = `${provinceName}, Việt Nam`;
+      zoom = 11;
+    }
+
+    if (!query) return;
+
+    try {
+      const result = await geocodeLocation(query);
+      if (result) {
+        setZoomToLocation({ lat: result.lat, lng: result.lng, zoom });
+      }
+    } catch (error) {
+      console.error("Geocoding error:", error);
+    }
+  }, []);
+
+  const handleProvinceChange = useCallback((provinceId: string) => {
+    isMapTriggeredRef.current = false;
+    setSelectedProvinceId(provinceId);
+    const province = provinces.find((p) => p.id === provinceId);
+    if (province) {
+      handleDropdownGeocode(province.name, "", "");
+    }
+  }, [provinces, handleDropdownGeocode]);
+
+  const handleDistrictChange = useCallback((districtId: string) => {
+    isMapTriggeredRef.current = false;
+    setSelectedDistrictId(districtId);
+    const province = provinces.find((p) => p.id === selectedProvinceId);
+    const district = districts.find((d) => d.id === districtId);
+    if (province && district) {
+      handleDropdownGeocode(province.name, district.name, "");
+    }
+  }, [provinces, districts, selectedProvinceId, handleDropdownGeocode]);
+
+  const handleWardChange = useCallback((wardId: string) => {
+    isMapTriggeredRef.current = false;
+    setSelectedWardId(wardId);
+    setAddressForm((prev) => ({ ...prev, wardId }));
+    const province = provinces.find((p) => p.id === selectedProvinceId);
+    const district = districts.find((d) => d.id === selectedDistrictId);
+    const ward = wards.find((w) => w.id === wardId);
+    if (province && district && ward) {
+      handleDropdownGeocode(province.name, district.name, ward.name);
+    }
+  }, [provinces, districts, wards, selectedProvinceId, selectedDistrictId, handleDropdownGeocode]);
+
+  const handleMapLocationChange = useCallback(async (lat: number, lng: number) => {
+    setAddressForm((prev) => ({ ...prev, latitude: lat, longitude: lng }));
+    setIsReverseGeocoding(true);
+    isMapTriggeredRef.current = true;
+
+    try {
+      const result = await reverseGeocode(lat, lng);
+      if (!result) {
+        isMapTriggeredRef.current = false;
+        setIsReverseGeocoding(false);
+        return;
+      }
+
+      let currentProvinces = provinces;
+      if (currentProvinces.length === 0) {
+        currentProvinces = await getProvinces();
+        setProvinces(currentProvinces || []);
+      }
+
+      const matchedProvinceId = findBestMatch(currentProvinces, result.province);
+      if (matchedProvinceId) {
+        setSelectedProvinceId(matchedProvinceId);
+
+        const districtData = await getDistrictsByProvinceId(matchedProvinceId);
+        setDistricts(districtData || []);
+
+        const matchedDistrictId = findBestMatch(districtData || [], result.district);
+        if (matchedDistrictId) {
+          setSelectedDistrictId(matchedDistrictId);
+
+          const wardData = await getWardsByDistrictId(matchedDistrictId);
+          setWards(wardData || []);
+
+          const matchedWardId = findBestMatch(wardData || [], result.ward);
+          if (matchedWardId) {
+            setSelectedWardId(matchedWardId);
+            setAddressForm((prev) => ({ ...prev, wardId: matchedWardId }));
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Reverse geocoding error:", error);
+    } finally {
+      isMapTriggeredRef.current = false;
+      setIsReverseGeocoding(false);
+    }
+  }, [provinces]);
 
   // Sau khi mở shop, user được BE cấp role GardenOwner. Làm mới phiên để token/menu phản ánh ngay
   // (best-effort — lỗi cũng không chặn điều hướng, lần refresh sau sẽ tự cập nhật).
@@ -43,16 +227,30 @@ export default function CreateShopPage() {
 
   const onSubmit = async (values: CreateShopFormValues) => {
     try {
+      if (openTime && closeTime && openTime >= closeTime) {
+        toast.error("Giờ đóng cửa phải sau giờ mở cửa");
+        return;
+      }
+
       const res = await createShopRequest({
         name: values.name,
         hotline: values.hotline,
         description: values.description || "",
-        openingHours: values.openingHours || "",
+        openingHours: joinOpeningHours(openTime, closeTime),
       });
 
       if (!res.isSuccess || !res.data) {
         toast.error(res.message || "Không thể tạo cửa hàng. Vui lòng thử lại.");
         return;
+      }
+
+      if (addressForm.streetAddress.trim() && addressForm.wardId) {
+        await createShopAddressRequest(res.data.id, {
+          wardId: addressForm.wardId,
+          streetAddress: addressForm.streetAddress.trim(),
+          latitude: addressForm.latitude || null,
+          longitude: addressForm.longitude || null,
+        });
       }
 
       toast.success("Tạo cửa hàng thành công! Bạn đã trở thành người bán.");
@@ -123,27 +321,72 @@ export default function CreateShopPage() {
             {/* Giờ mở cửa */}
             <div>
               <label
-                htmlFor="openingHours"
+                htmlFor="openTime"
                 className="mb-1.5 block text-sm font-semibold text-gray-700"
               >
                 Giờ mở cửa
               </label>
-              <div className="relative">
-                <Clock
-                  size={16}
-                  className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400"
-                />
-                <input
-                  id="openingHours"
-                  type="text"
-                  placeholder="VD: 08:00 - 21:00"
-                  className="w-full rounded-xl border border-gray-200 py-2.5 pl-10 pr-4 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
-                  {...register("openingHours")}
-                />
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="relative">
+                  <Clock
+                    size={16}
+                    className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400"
+                  />
+                  <input
+                    id="openTime"
+                    type="time"
+                    value={openTime}
+                    onChange={(e) => setOpenTime(e.target.value)}
+                    className="w-full rounded-xl border border-gray-200 py-2.5 pl-10 pr-4 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+                  />
+                </div>
+                <div className="relative">
+                  <Clock
+                    size={16}
+                    className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400"
+                  />
+                  <input
+                    id="closeTime"
+                    type="time"
+                    value={closeTime}
+                    onChange={(e) => setCloseTime(e.target.value)}
+                    className="w-full rounded-xl border border-gray-200 py-2.5 pl-10 pr-4 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+                  />
+                </div>
               </div>
-              {errors.openingHours && (
-                <p className="mt-1 text-xs text-red-500">{errors.openingHours.message}</p>
-              )}
+              <p className="mt-1 text-xs text-gray-400">Nhập giờ mở và giờ đóng riêng biệt.</p>
+            </div>
+
+              {/* Địa chỉ cửa hàng */}
+            <div className="space-y-3">
+              <div>
+                <p className="text-sm font-semibold text-gray-900">Địa chỉ cửa hàng</p>
+                <p className="text-xs text-gray-400">Tự fill khu vực từ bản đồ và zoom ngược lại từ khu vực.</p>
+              </div>
+              <AddressLocationFields
+                streetAddress={addressForm.streetAddress}
+                wardId={addressForm.wardId}
+                latitude={addressForm.latitude}
+                longitude={addressForm.longitude}
+                provinces={provinces}
+                districts={districts}
+                wards={wards}
+                selectedProvinceId={selectedProvinceId}
+                selectedDistrictId={selectedDistrictId}
+                selectedWardId={selectedWardId}
+                onProvinceChange={handleProvinceChange}
+                onDistrictChange={handleDistrictChange}
+                onWardChange={handleWardChange}
+                onStreetAddressChange={(value) => setAddressForm((prev) => ({ ...prev, streetAddress: value }))}
+                zoomToLocation={zoomToLocation}
+                onMapLocationChange={handleMapLocationChange}
+                isReverseGeocoding={isReverseGeocoding}
+                areaTitle="Khu vực"
+                streetLabel="Địa chỉ cụ thể"
+                streetPlaceholder="Số nhà, tên đường..."
+                mapLabel="Vị trí trên bản đồ"
+                mapNote="Chạm vào bản đồ để chọn vị trí chính xác của cửa hàng."
+              />
             </div>
 
             {/* Mô tả */}
@@ -187,9 +430,7 @@ export default function CreateShopPage() {
               )}
             </button>
 
-            <p className="text-xs text-gray-400">
-              Địa chỉ giao nhận có thể thêm sau trong phần quản lý cửa hàng.
-            </p>
+            <p className="text-xs text-gray-400">Bạn có thể cập nhật lại giờ hoạt động sau trong phần quản lý cửa hàng.</p>
           </form>
         </div>
 

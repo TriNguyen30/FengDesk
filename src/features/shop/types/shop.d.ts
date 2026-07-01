@@ -14,6 +14,8 @@ export interface Shop {
   hotline: string;
   openingHours: string;
   isActive: boolean;
+  /** Chỉ có ở /stores/mine: true = user là owner store này, false = chỉ là nhân viên (Accepted). */
+  isOwner?: boolean;
   address: string;
   createdAt: string;
   updatedAt: string;
@@ -40,54 +42,84 @@ export interface UpdateShopDto {
   address: string;
 }
 
+/**
+ * Địa chỉ cửa hàng = điểm lấy hàng (pickup). Khớp hợp đồng BE StoreAddressResponse —
+ * KHÔNG có recipientName/recipientPhone/isDefault/label (khác địa chỉ customer).
+ */
 export interface StoreAddress {
   id: string;
+  storeId: string;
   wardId: string;
   streetAddress: string;
-  recipientName: string;
-  recipientPhone: string;
-  latitude: number;
-  longitude: number;
-  isDefault: boolean;
-  label: string;
+  latitude: number | null;
+  longitude: number | null;
+  isActive: boolean;
 }
 
 export interface CreateStoreAddressDto {
   wardId: string;
   streetAddress: string;
-  recipientName: string;
-  recipientPhone: string;
-  latitude: number;
-  longitude: number;
-  isDefault: boolean;
-  label: string;
+  latitude?: number | null;
+  longitude?: number | null;
 }
 
-export interface UpdateStoreAddressDto {
-  wardId: string;
-  streetAddress: string;
-  recipientName: string;
-  recipientPhone: string;
-  latitude: number;
-  longitude: number;
-  isDefault: boolean;
-  label: string;
-}
+export type UpdateStoreAddressDto = CreateStoreAddressDto;
 
+/** Trạng thái lời mời — khớp BE enum InvitationStatus (stored as string). */
+export type InvitationStatus = "Pending" | "Accepted" | "Rejected" | "Revoked";
+
+/**
+ * Bản ghi phân công nhân sự cho store.
+ *
+ * BE hiện mô tả theo assignment:
+ * - gardenStoreId: cửa hàng nào
+ * - staffId: user nào
+ * - assignedBy: ai phân công
+ * - isActive: còn đang làm hay đã gỡ
+ * - assignedAt / unassignedAt: thời điểm bắt đầu/kết thúc
+ *
+ * Một số màn hình cũ vẫn đang đọc thêm các field invite/status, nên giữ optional fallback.
+ */
 export interface StoreStaff {
   id: string;
-  storeId: string;
-  userId: string;
-  role: string;
-  user?: {
-    id: string;
-    email: string;
-    fullName?: string;
-    phone?: string;
-  };
+  gardenStoreId: string;
+  staffId: string;
+  staffName: string;
+  staffEmail: string;
+  staffPhone?: string | null;
+  assignedBy: string;
+  assignedByName?: string | null;
+  isActive: boolean;
+  assignedAt: string;
+  unassignedAt?: string | null;
+  invitedBy?: string;
+  invitedByName?: string | null;
+  status?: InvitationStatus;
+  invitedAt?: string;
+  respondedAt?: string | null;
 }
 
+/** Mời nhân viên — FE mới dùng staffId (từ user search); email chỉ giữ để tương thích. */
 export interface AssignStaffDto {
-  userId: string;
-  role: string;
+  staffId?: string;
+  staffEmail?: string;
+}
+
+/** Lời mời gửi cho user hiện tại (MyInvitationsPage). */
+export interface StoreInvitation {
+  id: string;
+  gardenStoreId: string;
+  storeName: string;
+  invitedBy: string;
+  invitedByName?: string | null;
+  status: InvitationStatus;
+  invitedAt: string;
+}
+
+/** Kết quả /api/users/search — field công khai tối thiểu. */
+export interface UserSearchItem {
+  id: string;
+  fullName: string;
+  email: string;
+  phone?: string | null;
 }

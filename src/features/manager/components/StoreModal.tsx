@@ -1,7 +1,10 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Modal from "@/components/ui/Modal";
 import { RefreshCw } from "lucide-react";
-import type { Shop } from "@shop/types/shop";
+import type { Shop } from "@/features/shop/types/shop";
+import { joinOpeningHours, splitOpeningHours } from "@/features/shop/utils/opening-hours";
+import AddressLocationFields from "@/features/users/components/AddressLocationFields";
+import type { Provinces, District, Ward } from "@/features/users/types/location";
 
 interface StoreFormState {
   ownerUserId: string;
@@ -21,6 +24,27 @@ interface StoreModalProps {
   onFormChange: (form: StoreFormState) => void;
   onSubmit: (e: React.FormEvent) => void;
   submitting: boolean;
+  addressForm: StoreAddressFormState;
+  onAddressFormChange: (form: StoreAddressFormState) => void;
+  provinces: Provinces[];
+  districts: District[];
+  wards: Ward[];
+  selectedProvinceId: string;
+  onProvinceChange: (id: string) => void;
+  selectedDistrictId: string;
+  onDistrictChange: (id: string) => void;
+  selectedWardId: string;
+  onWardChange: (id: string) => void;
+  zoomToLocation?: { lat: number; lng: number; zoom: number } | null;
+  onMapLocationChange?: (lat: number, lng: number) => void;
+  isReverseGeocoding?: boolean;
+}
+
+interface StoreAddressFormState {
+  wardId: string;
+  streetAddress: string;
+  latitude: number;
+  longitude: number;
 }
 
 export function StoreModal({
@@ -31,12 +55,42 @@ export function StoreModal({
   onFormChange,
   onSubmit,
   submitting,
+  addressForm,
+  onAddressFormChange,
+  provinces,
+  districts,
+  wards,
+  selectedProvinceId,
+  onProvinceChange,
+  selectedDistrictId,
+  onDistrictChange,
+  selectedWardId,
+  onWardChange,
+  zoomToLocation,
+  onMapLocationChange,
+  isReverseGeocoding,
 }: StoreModalProps) {
+  const initialHours = splitOpeningHours(storeForm.openingHours);
+  const [openTime, setOpenTime] = useState(initialHours.open);
+  const [closeTime, setCloseTime] = useState(initialHours.close);
+
+  useEffect(() => {
+    const nextHours = splitOpeningHours(storeForm.openingHours);
+    setOpenTime(nextHours.open);
+    setCloseTime(nextHours.close);
+  }, [storeForm.openingHours, open]);
+
+  const handleTimeChange = (nextOpen: string, nextClose: string) => {
+    const nextOpeningHours = joinOpeningHours(nextOpen, nextClose);
+    onFormChange({ ...storeForm, openingHours: nextOpeningHours });
+  };
+
   return (
     <Modal
       open={open}
       title={editingStore ? "Chỉnh sửa thông tin cửa hàng" : "Thêm cửa hàng mới"}
       onClose={onClose}
+      size="max-w-2xl"
     >
       <form onSubmit={onSubmit} className="space-y-4 pt-2">
         <div>
@@ -66,6 +120,37 @@ export function StoreModal({
           />
         </div>
 
+        <div className="space-y-3 rounded-lg border border-gray-200 bg-gray-50 p-3">
+          <div>
+            <p className="text-sm font-semibold text-gray-900">Địa chỉ cửa hàng</p>
+            <p className="text-xs text-gray-500">Tỉnh/Thành, Quận/Huyện, Phường/Xã và bản đồ sẽ liên kết hai chiều.</p>
+          </div>
+          <AddressLocationFields
+            streetAddress={addressForm.streetAddress}
+            wardId={addressForm.wardId}
+            latitude={addressForm.latitude}
+            longitude={addressForm.longitude}
+            provinces={provinces}
+            districts={districts}
+            wards={wards}
+            selectedProvinceId={selectedProvinceId}
+            selectedDistrictId={selectedDistrictId}
+            selectedWardId={selectedWardId}
+            onProvinceChange={onProvinceChange}
+            onDistrictChange={onDistrictChange}
+            onWardChange={onWardChange}
+            onStreetAddressChange={(value) => onAddressFormChange({ ...addressForm, streetAddress: value })}
+            zoomToLocation={zoomToLocation}
+            onMapLocationChange={onMapLocationChange}
+            isReverseGeocoding={isReverseGeocoding}
+            areaTitle="Khu vực"
+            streetLabel="Địa chỉ cụ thể"
+            streetPlaceholder="Số nhà, tên đường..."
+            mapLabel="Vị trí trên bản đồ"
+            mapNote="Chạm vào bản đồ để chọn vị trí chính xác của cửa hàng."
+          />
+        </div>
+
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-1">
@@ -82,25 +167,28 @@ export function StoreModal({
           </div>
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-1">Giờ mở cửa</label>
-            <input
-              type="text"
-              value={storeForm.openingHours}
-              onChange={(e) => onFormChange({ ...storeForm, openingHours: e.target.value })}
-              className="w-full rounded-lg border border-gray-300 px-3.5 py-2.5 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-              placeholder="08:00 - 21:00 hàng ngày"
-            />
+            <div className="grid grid-cols-2 gap-3">
+              <input
+                type="time"
+                value={openTime}
+                onChange={(e) => {
+                  setOpenTime(e.target.value);
+                  handleTimeChange(e.target.value, closeTime);
+                }}
+                className="w-full rounded-lg border border-gray-300 px-3.5 py-2.5 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+              />
+              <input
+                type="time"
+                value={closeTime}
+                onChange={(e) => {
+                  setCloseTime(e.target.value);
+                  handleTimeChange(openTime, e.target.value);
+                }}
+                className="w-full rounded-lg border border-gray-300 px-3.5 py-2.5 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+              />
+            </div>
+            <p className="mt-1 text-[11px] text-gray-400">Nhập riêng giờ mở và giờ đóng cửa.</p>
           </div>
-        </div>
-
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-1">Địa chỉ hiển thị</label>
-          <input
-            type="text"
-            value={storeForm.address}
-            onChange={(e) => onFormChange({ ...storeForm, address: e.target.value })}
-            className="w-full rounded-lg border border-gray-300 px-3.5 py-2.5 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-            placeholder="Số 12, Đường Lê Lợi, Phường Bến Nghé, Quận 1, TP. HCM"
-          />
         </div>
 
         <div>

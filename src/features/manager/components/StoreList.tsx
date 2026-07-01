@@ -1,5 +1,5 @@
 import { Store as StoreIcon, RefreshCw, Phone, Clock, Edit, Trash2 } from "lucide-react";
-import type { Shop } from "@shop/types/shop";
+import type { Shop } from "@/features/shop/types/shop";
 
 interface StoreListProps {
   stores: Shop[];

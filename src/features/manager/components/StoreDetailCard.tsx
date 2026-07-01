@@ -1,6 +1,5 @@
 import React from "react";
 import {
-  Store as StoreIcon,
   MapPin,
   Plus,
   Info,
@@ -10,7 +9,7 @@ import {
   UserPlus,
   RefreshCw,
 } from "lucide-react";
-import type { Shop, StoreAddress, StoreStaff } from "@shop/types/shop";
+import type { Shop, StoreAddress, StoreStaff } from "@/features/shop/types/shop";
 
 interface StoreDetailCardProps {
   selectedStore: Shop;
@@ -54,9 +53,8 @@ export function StoreDetailCard({
   const renderStoreAddressDetails = (storeDetails: Shop | null) => {
     if (!storeDetails) return null;
 
-    // Check if the storeDetails object contains a nested Address entity (often called 'storeAddress' or 'addressInfo' or similar)
-    const storeAddr: StoreAddress | null =
-      (storeDetails as any).storeAddress || (storeDetails as any).addressEntity || null;
+    // BE trả địa chỉ store ở field `address` (object StoreAddressResponse).
+    const storeAddr: StoreAddress | null = (storeDetails as any).address ?? null;
 
     if (storeAddr && typeof storeAddr === "object" && storeAddr.streetAddress) {
       return (
@@ -93,14 +91,6 @@ export function StoreDetailCard({
             </div>
           </div>
           <div className="grid gap-4 sm:grid-cols-2 text-sm text-gray-600">
-            <div>
-              <p className="text-xs text-gray-400 font-medium">Người liên hệ</p>
-              <p className="font-semibold text-gray-800 mt-0.5">{storeAddr.recipientName}</p>
-            </div>
-            <div>
-              <p className="text-xs text-gray-400 font-medium">Số điện thoại nhận hàng</p>
-              <p className="font-semibold text-gray-800 mt-0.5">{storeAddr.recipientPhone}</p>
-            </div>
             <div className="sm:col-span-2">
               <p className="text-xs text-gray-400 font-medium">Địa chỉ cụ thể</p>
               <p className="font-semibold text-gray-800 mt-0.5">{storeAddr.streetAddress}</p>
@@ -302,17 +292,17 @@ export function StoreDetailCard({
                         <td className="px-4 py-3.5">
                           <div className="flex items-center gap-2">
                             <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs uppercase">
-                              {member.user?.fullName?.charAt(0) || member.userId.charAt(0) || "U"}
+                              {member.staffName?.charAt(0) || member.staffId.charAt(0) || "U"}
                             </div>
                             <div>
                               <p className="font-semibold text-gray-900">
-                                {member.user?.fullName || "Chưa cập nhật họ tên"}
+                                {member.staffName || "Chưa cập nhật họ tên"}
                               </p>
                               <p className="text-[10px] text-gray-400 font-mono mt-0.5">
-                                UID: {member.userId}
+                                UID: {member.staffId}
                               </p>
-                              {member.user?.email && (
-                                <p className="text-xs text-gray-500">{member.user.email}</p>
+                              {member.staffEmail && (
+                                <p className="text-xs text-gray-500">{member.staffEmail}</p>
                               )}
                             </div>
                           </div>
@@ -320,7 +310,7 @@ export function StoreDetailCard({
                         <td className="px-4 py-3.5">
                           <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary capitalize">
                             <Shield size={10} />
-                            {member.role}
+                            Nhân viên
                           </span>
                         </td>
                         <td className="px-4 py-3.5 text-right">

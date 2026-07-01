@@ -9,6 +9,8 @@ import {
   UpdateStoreAddressDto,
   StoreStaff,
   AssignStaffDto,
+  StoreInvitation,
+  UserSearchItem,
 } from "../types/shop";
 
 export async function getAllShopRequest() {
@@ -89,6 +91,40 @@ export async function addShopStaffRequest(id: string, payload: AssignStaffDto) {
 export async function removeShopStaffRequest(id: string, assignmentId: string) {
   const { data } = await fetchHttpClient.delete<ApiResponse<null>>(
     `/stores/${id}/staff/${assignmentId}`,
+  );
+  return data;
+}
+
+// ===== User search (dùng cho combobox mời nhân viên) =====
+
+/** GET /api/users/search — BE yêu cầu tối thiểu 3 ký tự; trả field tối thiểu. */
+export async function searchUsersRequest(q: string, limit = 10) {
+  const { data } = await fetchHttpClient.get<ApiResponse<UserSearchItem[]>>(
+    `/users/search`,
+    { q, limit },
+  );
+  return data;
+}
+
+// ===== Invitation (góc nhìn người được mời) =====
+
+export async function getMyStoreInvitationsRequest() {
+  const { data } = await fetchHttpClient.get<ApiResponse<StoreInvitation[]>>(
+    `/stores/staff/invitations/mine`,
+  );
+  return data;
+}
+
+export async function acceptStoreInvitationRequest(assignmentId: string) {
+  const { data } = await fetchHttpClient.post<ApiResponse<StoreStaff>>(
+    `/stores/staff/${assignmentId}/accept`,
+  );
+  return data;
+}
+
+export async function rejectStoreInvitationRequest(assignmentId: string) {
+  const { data } = await fetchHttpClient.post<ApiResponse<null>>(
+    `/stores/staff/${assignmentId}/reject`,
   );
   return data;
 }

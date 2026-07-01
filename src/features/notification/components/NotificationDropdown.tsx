@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Bell, Check, ShoppingBag, XCircle, Package, AlertCircle } from "lucide-react";
+import { Bell, Check, ShoppingBag, XCircle, Package, Mail } from "lucide-react";
 import { toast } from "sonner";
 import {
   useNotificationsList,
@@ -69,9 +69,11 @@ export default function NotificationDropdown() {
     }
     close();
 
-    // Navigate based on type
+    // Deep-link theo referenceType. StaffInvited/Accepted/Rejected đều về trang lời mời.
     if (item.referenceType === "Order" && item.referenceId) {
       navigate(`/profile/orders/${item.referenceId}`);
+    } else if (item.referenceType === "StaffInvitation") {
+      navigate("/profile/invitations");
     }
   };
 
@@ -104,6 +106,14 @@ export default function NotificationDropdown() {
         return (
           <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-green-50 text-green-600">
             <Package size={18} />
+          </div>
+        );
+      case "StaffInvited":
+      case "StaffInvitationAccepted":
+      case "StaffInvitationRejected":
+        return (
+          <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+            <Mail size={18} />
           </div>
         );
       default:
