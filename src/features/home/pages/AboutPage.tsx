@@ -1,7 +1,8 @@
 import { motion } from "framer-motion";
 import { Leaf, ShieldCheck, Heart, Sparkles, Sprout, ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
-import FengShui from "@/assets/image/FengShuiv2.png";
+// import FengShui from "@/assets/image/FengShuiv2.png";
+import FengDeskIllustration from "@/assets/video/FengShuiIllustration.mp4";
 
 export default function AboutPage() {
   const fadeInUp = {
@@ -74,13 +75,17 @@ export default function AboutPage() {
             variants={fadeInUp}
             className="order-2 lg:order-1"
           >
-            <div className="group relative aspect-[4/5] overflow-hidden rounded-2xl shadow-2xl md:aspect-auto md:h-[400px]">
-              <img
-                src={FengShui}
-                alt="Our Workspace"
-                className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
-              />
-            </div>
+            <motion.video
+              src={FengDeskIllustration}
+              autoPlay
+              muted
+              loop
+              playsInline
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              className="w-full rounded-2xl shadow-2xl"
+            />
           </motion.div>
 
           <motion.div

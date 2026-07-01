@@ -92,7 +92,7 @@ export default function CategoryBar() {
                   navigate(`/products?categoryId=${item.id}`);
                   setMenuOpen(false);
                 }}
-                className="block w-full px-4 py-3 text-left text-sm transition hover:bg-primary-light/20 hover:text-primary hover:ring-1 hover:ring-primary/40"
+                className="block w-full px-4 py-3 text-left text-sm transition hover:bg-primary-light/20 hover:text-primary hover:ring-1 hover:ring-primary/40 cursor-pointer"
               >
                 {item.name}
               </button>

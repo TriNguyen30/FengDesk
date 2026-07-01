@@ -15,6 +15,7 @@ import {
   ChevronsRight,
   Store,
   TicketX,
+  Tags,
 } from "lucide-react";
 import { useAppSelector, useAppDispatch } from "@/app/store";
 import { logout } from "@/features/auth/store/authSlice";
@@ -24,6 +25,7 @@ import FengDesk from "@/assets/image/fengdesk_logo_2.png";
 
 const navigation = [
   { name: "Tổng quan", href: "/manager/dashboard", icon: LayoutDashboard },
+  { name: "Danh mục", href: "/manager/categories", icon: Tags },
   { name: "Sản phẩm", href: "/manager/products", icon: Package },
   { name: "Cửa hàng", href: "/manager/stores", icon: Store },
   { name: "Đơn hàng", href: "/manager/orders", icon: ShoppingCart },
@@ -87,9 +89,8 @@ export default function ManagerLayout() {
 
       {/* Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-30 flex w-64 flex-col border-r border-gray-200 bg-white transition-all duration-300 lg:static lg:inset-0 ${
-          sidebarOpen ? "translate-x-0" : "-translate-x-full"
-        } lg:translate-x-0 ${collapsed ? "lg:w-20" : "lg:w-64"}`}
+        className={`fixed inset-y-0 left-0 z-30 flex w-64 flex-col border-r border-gray-200 bg-white transition-all duration-300 lg:static lg:inset-0 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"
+          } lg:translate-x-0 ${collapsed ? "lg:w-20" : "lg:w-64"}`}
       >
         {/* Logo */}
         <div className="flex h-16 shrink-0 items-center justify-between border-b border-gray-200 px-4">
@@ -118,11 +119,10 @@ export default function ManagerLayout() {
                 key={item.name}
                 to={item.href}
                 title={collapsed ? item.name : undefined}
-                className={`group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
-                  isActive
+                className={`group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${isActive
                     ? "bg-primary/10 text-primary"
                     : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
-                } ${collapsed ? "justify-center" : ""}`}
+                  } ${collapsed ? "justify-center" : ""}`}
               >
                 {isActive && (
                   <span className="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-full bg-primary" />
@@ -149,9 +149,8 @@ export default function ManagerLayout() {
         {/* User + logout */}
         <div className="border-t border-gray-200 p-3">
           <div
-            className={`mb-2 flex items-center gap-3 rounded-lg px-2 py-2 ${
-              collapsed ? "justify-center" : ""
-            }`}
+            className={`mb-2 flex items-center gap-3 rounded-lg px-2 py-2 ${collapsed ? "justify-center" : ""
+              }`}
           >
             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/15 font-bold text-primary">
               {initial}
@@ -168,9 +167,8 @@ export default function ManagerLayout() {
           <button
             onClick={handleLogout}
             title={collapsed ? "Đăng xuất" : undefined}
-            className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 cursor-pointer ${
-              collapsed ? "justify-center" : ""
-            }`}
+            className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 cursor-pointer ${collapsed ? "justify-center" : ""
+              }`}
           >
             <LogOut size={19} />
             {!collapsed && "Đăng xuất"}

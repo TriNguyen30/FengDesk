@@ -5,8 +5,6 @@ import PopularCategories from "@/components/ui/PopularCategories";
 import { BestSellersSection } from "@/features/products/components/ProductCard";
 import FiveElementsSection from "../components/FiveElementsSection";
 import ImageCollections from "../components/ImageCollections";
-// import { motion } from "framer-motion";
-// import FengDeskIllustration from "@/assets/video/FengShuiIllustration.mp4";
 
 const slides: HeroSlide[] = [
   {
@@ -50,17 +48,6 @@ const slides: HeroSlide[] = [
 export default function HomePage() {
   return (
     <>
-      {/* <motion.video
-        src={FengDeskIllustration}
-        autoPlay
-        muted
-        loop
-        playsInline
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="w-full"
-      /> */}
       <main className="mx-auto w-full min-w-0 max-w-screen-xl px-3 py-4 sm:px-4 sm:py-6 lg:px-10">
         <CategoryBar />
         <HeroSlider slides={slides} />
