@@ -31,6 +31,7 @@ export interface Product {
   isActive: boolean;
   minPrice: number;
   primaryImageUrl: string;
+  primaryElement?: string | null;
   items: ProductItem[];
 }
 

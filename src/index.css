@@ -224,3 +224,65 @@ body {
 .ai-badge-up {
   animation: ai-badge-up 0.2s ease-out;
 }
+
+/* =========================
+   Quill Content Styles
+========================= */
+.quill-content > :first-child {
+  margin-top: 0;
+}
+.quill-content > :last-child {
+  margin-bottom: 0;
+}
+.quill-content p {
+  margin: 0.5rem 0;
+}
+.quill-content h1,
+.quill-content h2,
+.quill-content h3 {
+  margin: 1rem 0 0.5rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+.quill-content h1 { font-size: 1.5rem; }
+.quill-content h2 { font-size: 1.25rem; }
+.quill-content h3 { font-size: 1.125rem; }
+.quill-content ul {
+  margin: 0.5rem 0;
+  padding-left: 1.5rem;
+  list-style: disc;
+}
+.quill-content ol {
+  margin: 0.5rem 0;
+  padding-left: 1.5rem;
+  list-style: decimal;
+}
+.quill-content li {
+  margin: 0.25rem 0;
+}
+.quill-content strong {
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+.quill-content em {
+  font-style: italic;
+}
+.quill-content blockquote {
+  border-left: 3px solid var(--color-primary);
+  padding-left: 1rem;
+  margin: 1rem 0;
+  color: var(--color-text-secondary);
+  font-style: italic;
+}
+.quill-content a {
+  color: var(--color-primary);
+  text-decoration: underline;
+}
+.quill-content img {
+  max-width: 100%;
+  height: auto !important;
+  object-fit: contain;
+  border-radius: 0.5rem;
+  margin: 1rem auto;
+  display: block;
+}

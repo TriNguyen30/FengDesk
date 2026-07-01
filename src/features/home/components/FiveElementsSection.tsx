@@ -315,6 +315,64 @@ function makeBlankParticle(obj: THREE.Object3D, type: ElementType): Particle3D {
   };
 }
 
+// ─── Hover Particles ──────────────────────────────────────────────────────────
+const HoverParticles = ({ type }: { type: ElementType }) => {
+  const getIcon = () => {
+    switch (type) {
+      case "wood": return <Leaf size={16} className="text-green-500/80 drop-shadow-sm" />;
+      case "water": return <Droplets size={16} className="text-blue-500/80 drop-shadow-sm" />;
+      case "fire": return <Flame size={16} className="text-red-500/80 drop-shadow-sm" />;
+      case "metal": return <Diamond size={16} className="text-slate-500/80 drop-shadow-sm" />;
+      case "earth": return <Mountain size={16} className="text-amber-600/80 drop-shadow-sm" />;
+      default: return null;
+    }
+  };
+
+  const particles = [
+    { delay: 0.1, duration: 3.5, xStart: -60, yStart: -90, xEnd: -80, yEnd: -140, rotEnd: 180 },
+    { delay: 0.8, duration: 4.0, xStart: 60, yStart: -80, xEnd: 90, yEnd: -130, rotEnd: -180 },
+    { delay: 1.5, duration: 3.2, xStart: -70, yStart: 70, xEnd: -110, yEnd: 110, rotEnd: 240 },
+    { delay: 0.4, duration: 3.8, xStart: 70, yStart: 80, xEnd: 110, yEnd: 120, rotEnd: -240 },
+    { delay: 2.1, duration: 4.5, xStart: -30, yStart: 100, xEnd: -50, yEnd: 150, rotEnd: 360 },
+    { delay: 1.2, duration: 3.6, xStart: 30, yStart: 110, xEnd: 50, yEnd: 160, rotEnd: -360 },
+    { delay: 2.5, duration: 3.9, xStart: 0, yStart: -110, xEnd: 10, yEnd: -170, rotEnd: 120 },
+    { delay: 0.6, duration: 4.2, xStart: 90, yStart: 0, xEnd: 140, yEnd: -10, rotEnd: -120 },
+  ];
+
+  return (
+    <div className="absolute inset-[-40px] z-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+      {particles.map((p, i) => (
+        <motion.div
+          key={i}
+          className="absolute left-1/2 top-1/2"
+          initial={{
+            x: p.xStart,
+            y: p.yStart,
+            scale: 0.5,
+            opacity: 0,
+            rotate: 0,
+          }}
+          animate={{
+            y: [p.yStart, p.yEnd],
+            x: [p.xStart, p.xEnd],
+            scale: [0.5, 1, 0],
+            opacity: [0, 1, 0],
+            rotate: [0, p.rotEnd],
+          }}
+          transition={{
+            duration: p.duration,
+            repeat: Infinity,
+            delay: p.delay,
+            ease: "easeInOut"
+          }}
+        >
+          {getIcon()}
+        </motion.div>
+      ))}
+    </div>
+  );
+};
+
 // ─── Three.js scene overlay ─────────────────────────────────────────────────
 export function ElementCanvas({ elementId }: { elementId: string }) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -777,28 +835,51 @@ export default function FiveElementsSection() {
             key={element.id}
             href={`/products?element=${element.id}`}
             onClick={(e) => handleElementClick(e, element.id)}
-            className={`group relative flex flex-col items-center justify-center overflow-hidden rounded-2xl p-6 text-center transition-all duration-300 ${element.color} ${element.hoverColor} hover:-translate-y-1 hover:shadow-lg cursor-pointer`}
+            className={`group relative flex flex-col items-center justify-center rounded-2xl text-center transition-all duration-300 ${element.color} ${element.hoverColor} hover:-translate-y-1 hover:shadow-lg cursor-pointer`}
           >
-            <div
-              className="absolute inset-0 opacity-[0.03] mix-blend-multiply transition-opacity duration-300 group-hover:opacity-[0.08]"
-              style={{
-                backgroundImage: `url(${element.image})`,
-                backgroundSize: "cover",
-                backgroundPosition: "center",
-              }}
-            />
-            <div
-              className={`mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-white shadow-sm transition-transform duration-300 group-hover:scale-110 ${element.iconColor}`}
-            >
-              {element.icon}
+            {/* Background effects container (clipped to rounded-2xl) */}
+            <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden rounded-2xl">
+              {/* Spinning border gradient */}
+              <div
+                className="absolute inset-[-100%] opacity-0 group-hover:opacity-100 animate-[spin_3s_linear_infinite] transition-opacity duration-300"
+                style={{
+                  background: `conic-gradient(from 0deg, transparent 0 180deg, ${element.overlayColor} 360deg)`,
+                }}
+              />
+              {/* Inner background to mask the center */}
+              <div
+                className={`absolute inset-[2px] rounded-[14px] ${element.color} ${element.hoverColor.replace("hover:", "group-hover:")} transition-colors duration-300`}
+              />
+
+              {/* Image overlay */}
+              <div
+                className="absolute inset-[2px] opacity-[0.03] mix-blend-multiply transition-opacity duration-300 group-hover:opacity-[0.08] rounded-[14px]"
+                style={{
+                  backgroundImage: `url(${element.image})`,
+                  backgroundSize: "cover",
+                  backgroundPosition: "center",
+                }}
+              />
             </div>
-            <h3 className={`text-lg font-bold ${element.textColor}`}>{element.name}</h3>
-            <p className="mt-1 text-xs font-medium text-gray-500 sm:text-sm">{element.traits}</p>
-            <span
-              className={`mt-4 rounded-full bg-white/60 px-3 py-1 text-[10px] font-semibold uppercase tracking-wider ${element.textColor} backdrop-blur-sm transition-colors group-hover:bg-white`}
-            >
-              Khám phá
-            </span>
+
+            {/* Hover particles (unclipped) */}
+            <HoverParticles type={element.id as ElementType} />
+
+            {/* Content layer */}
+            <div className="relative z-10 flex w-full flex-col items-center p-6">
+              <div
+                className={`mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-white shadow-sm transition-transform duration-300 group-hover:scale-110 ${element.iconColor}`}
+              >
+                {element.icon}
+              </div>
+              <h3 className={`text-lg font-bold ${element.textColor}`}>{element.name}</h3>
+              <p className="mt-1 text-xs font-medium text-gray-500 sm:text-sm">{element.traits}</p>
+              <span
+                className={`mt-4 rounded-full bg-white/60 px-3 py-1 text-[10px] font-semibold uppercase tracking-wider ${element.textColor} backdrop-blur-sm transition-colors group-hover:bg-white`}
+              >
+                Khám phá
+              </span>
+            </div>
           </a>
         ))}
       </div>

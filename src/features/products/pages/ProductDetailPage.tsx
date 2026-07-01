@@ -637,9 +637,10 @@ export default function ProductDetailPage() {
           <h2 className="text-lg font-bold text-gray-900 mb-4 pb-4 border-b border-gray-100">
             Mô tả sản phẩm
           </h2>
-          <p className="text-sm leading-relaxed text-gray-600 whitespace-pre-line">
-            {product.description}
-          </p>
+          <div 
+            className="text-sm leading-relaxed text-gray-600 quill-content"
+            dangerouslySetInnerHTML={{ __html: product.description }}
+          />
         </div>
       )}
 

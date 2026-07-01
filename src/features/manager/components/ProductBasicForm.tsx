@@ -1,5 +1,7 @@
 import React from "react";
 import { Info, Save, RefreshCw } from "lucide-react";
+import ReactQuill from "react-quill-new";
+import "react-quill-new/dist/quill.snow.css";
 
 interface ProductBasicFormProps {
   name: string;
@@ -73,12 +75,15 @@ export function ProductBasicForm({
 
         <div className="space-y-1.5 sm:col-span-2">
           <label className="text-sm font-semibold text-gray-700">Mô tả sản phẩm</label>
-          <textarea
-            rows={6}
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-700 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/30"
-          />
+          <div className="rounded-xl overflow-hidden border border-gray-200 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary/30">
+            <ReactQuill
+              theme="snow"
+              value={description}
+              onChange={setDescription}
+              placeholder="Nhập mô tả chi tiết về sản phẩm này..."
+              className="bg-white [&_.ql-toolbar]:border-none [&_.ql-toolbar]:border-b [&_.ql-toolbar]:border-gray-200 [&_.ql-toolbar]:bg-gray-50 [&_.ql-container]:border-none [&_.ql-container]:text-sm [&_.ql-container]:text-gray-700 [&_.ql-editor]:min-h-[150px]"
+            />
+          </div>
         </div>
       </div>
 

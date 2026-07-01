@@ -22,6 +22,8 @@ import type { LookupItem } from "@/features/products/types/taxonomy";
 import { ProductFengShuiFields, type FengShuiValues } from "@/features/manager/components";
 import { toast } from "sonner";
 import { uploadFile } from "@/services/upload.service";
+import ReactQuill from "react-quill-new";
+import "react-quill-new/dist/quill.snow.css";
 
 export default function CreateProductPage() {
   const navigate = useNavigate();
@@ -337,13 +339,15 @@ export default function CreateProductPage() {
 
               <div className="space-y-1.5 sm:col-span-2">
                 <label className="text-sm font-semibold text-gray-700">Mô tả sản phẩm</label>
-                <textarea
-                  rows={4}
-                  placeholder="Nhập mô tả chi tiết về sản phẩm này..."
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-700 placeholder:text-gray-400 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/30"
-                />
+                <div className="rounded-xl overflow-hidden border border-gray-200 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary/30">
+                  <ReactQuill
+                    theme="snow"
+                    value={description}
+                    onChange={setDescription}
+                    placeholder="Nhập mô tả chi tiết về sản phẩm này..."
+                    className="bg-white [&_.ql-toolbar]:border-none [&_.ql-toolbar]:border-b [&_.ql-toolbar]:border-gray-200 [&_.ql-toolbar]:bg-gray-50 [&_.ql-container]:border-none [&_.ql-container]:text-sm [&_.ql-container]:text-gray-700 [&_.ql-editor]:min-h-[150px]"
+                  />
+                </div>
               </div>
             </div>
           </div>
