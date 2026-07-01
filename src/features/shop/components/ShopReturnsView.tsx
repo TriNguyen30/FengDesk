@@ -1,49 +1,25 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { toast } from "sonner";
 import {
+  ChevronLeft,
+  ChevronRight,
   Loader2,
+  Search,
+  X,
   PackageX,
   Check,
-  X,
+  Ban,
+  Eye,
   CheckCircle2,
   XCircle,
-  Eye,
   Package,
   Clock,
   PackageCheck,
   Banknote,
-  CreditCard,
 } from "lucide-react";
-import { toast } from "sonner";
 import { returnApi } from "@/features/return/api/return.api";
 import type { ReturnItem, ReturnDetail } from "@/features/return/types/return.d.ts";
-import { formatVnd, formatOrderDate } from "@/features/orders/utils/orderUtils";
-import { useQueryClient } from "@tanstack/react-query";
-
-const PENDING_STATUS = "Requested";
-
-const STATUS_LABEL: Record<string, string> = {
-  Requested: "Chờ duyệt",
-  Approved: "Đã duyệt",
-  ItemReceived: "Đã nhận hàng",
-  Refunding: "Đang hoàn tiền",
-  Rejected: "Từ chối",
-  Completed: "Đã hoàn thành",
-  Cancelled: "Đã hủy",
-};
-
-const RETURN_TYPE_LABEL: Record<string, string> = {
-  Refund: "Hoàn tiền",
-  Exchange: "Đổi hàng",
-};
-
-const REASON_LABEL: Record<string, string> = {
-  Defective: "Sản phẩm bị lỗi",
-  WrongItem: "Sai sản phẩm",
-  NotAsDescribed: "Không đúng mô tả",
-  DamagedInTransit: "Hư hỏng trong vận chuyển",
-  ChangedMind: "Đổi ý",
-  Other: "Lý do khác",
-};
+import { formatOrderDate, formatVnd } from "@/features/orders/utils/orderUtils";
 
 const RETURN_STATUS_META: Record<string, { label: string; className: string }> = {
   Requested: { label: "Yêu cầu mới", className: "bg-amber-50 text-amber-600 border border-amber-200" },
@@ -56,6 +32,30 @@ const RETURN_STATUS_META: Record<string, { label: string; className: string }> =
   ItemReceived: { label: "Đã nhận hàng", className: "bg-teal-50 text-teal-600 border border-teal-200" },
   Refunding: { label: "Đang hoàn tiền", className: "bg-violet-50 text-violet-600 border border-violet-200" },
   Exchanging: { label: "Đang đổi hàng", className: "bg-purple-50 text-purple-600 border border-purple-200" },
+};
+
+const RETURN_TYPE_LABEL: Record<string, string> = {
+  Refund: "Hoàn tiền",
+  Exchange: "Đổi hàng",
+};
+
+const TABS: { value: string; label: string }[] = [
+  { value: "All", label: "Tất cả" },
+  { value: "Requested", label: "Yêu cầu mới" },
+  { value: "ReturnInTransit", label: "Đang chuyển về" },
+  { value: "Processing", label: "Đang xử lý" },
+  { value: "Completed", label: "Hoàn tất" },
+];
+
+const PAGE_SIZE = 20;
+
+const REASON_LABEL: Record<string, string> = {
+  Defective: "Sản phẩm bị lỗi",
+  WrongItem: "Sai sản phẩm",
+  NotAsDescribed: "Không đúng mô tả",
+  DamagedInTransit: "Hư hỏng trong vận chuyển",
+  ChangedMind: "Đổi ý",
+  Other: "Lý do khác",
 };
 
 // ── Approve confirm modal state ──────────────────────────────────────────────
@@ -82,22 +82,24 @@ interface ResolveModalState {
   returnId: string | null;
 }
 
-// ── Complete Refund confirm modal state ──────────────────────────────────────
-interface CompleteRefundModalState {
-  open: boolean;
-  returnId: string | null;
-}
-
 // ── Detail modal state ───────────────────────────────────────────────────────
 interface DetailModalState {
   open: boolean;
   returnId: string | null;
 }
 
-export default function ManageOrderReturnPage() {
+interface ShopReturnsViewProps {
+  storeId: string;
+}
+
+export default function ShopReturnsView({ storeId }: ShopReturnsViewProps) {
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const [activeTab, setActiveTab] = useState<string>("All");
+  const [searchTerm, setSearchTerm] = useState("");
   const [returns, setReturns] = useState<ReturnItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const queryClient = useQueryClient();
+  const [loading, setLoading] = useState(true);
 
   // Approve modal
   const [approveModal, setApproveModal] = useState<ApproveModalState>({
@@ -122,36 +124,53 @@ export default function ManageOrderReturnPage() {
   const [resolveNote, setResolveNote] = useState("");
   const [resolving, setResolving] = useState(false);
 
-  // Complete Refund modal
-  const [completeRefundModal, setCompleteRefundModal] = useState<CompleteRefundModalState>({ open: false, returnId: null });
-  const [completingRefund, setCompletingRefund] = useState(false);
-
   // Detail modal
   const [detailModal, setDetailModal] = useState<DetailModalState>({ open: false, returnId: null });
   const [returnDetail, setReturnDetail] = useState<ReturnDetail | null>(null);
   const [loadingDetail, setLoadingDetail] = useState(false);
 
-  const fetchReturns = useCallback(async () => {
+  const fetchReturns = useCallback(async (p: number) => {
+    setLoading(true);
     try {
-      setIsLoading(true);
-      const response = await returnApi.getAllReturns({ Page: 1, PageSize: 50 });
-      await queryClient.invalidateQueries({ queryKey: ["returns"] });
-      if (response.data?.isSuccess) {
-        setReturns(response.data.data.items);
+      const res = await returnApi.getStoreReturns(storeId, { Page: p, PageSize: PAGE_SIZE });
+      if (res.data.isSuccess) {
+        setReturns(res.data.data.items);
+        setTotalPages(res.data.data.totalPages);
+        setTotalCount(res.data.data.totalCount);
       } else {
-        toast.error(response.data?.message || "Lỗi khi tải danh sách trả hàng");
+        toast.error(res.data.message || "Không thể tải danh sách trả hàng");
       }
-    } catch (error) {
-      console.error(error);
-      toast.error("Có lỗi xảy ra khi tải danh sách trả hàng");
+    } catch {
+      toast.error("Có lỗi xảy ra khi tải dữ liệu");
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
-  }, [queryClient]);
+  }, [storeId]);
 
   useEffect(() => {
-    fetchReturns();
-  }, [fetchReturns]);
+    fetchReturns(page);
+  }, [fetchReturns, page]);
+
+  const counts = useMemo(() => {
+    const acc: Record<string, number> = { All: returns.length };
+    for (const r of returns) acc[r.status] = (acc[r.status] ?? 0) + 1;
+    return acc;
+  }, [returns]);
+
+  const filtered = useMemo(() => {
+    return returns.filter((r) => {
+      if (activeTab !== "All" && r.status !== activeTab) return false;
+      if (searchTerm.trim()) {
+        const q = searchTerm.toLowerCase();
+        const codeMatch =
+          r.id.toLowerCase().includes(q) ||
+          r.orderId.toLowerCase().includes(q) ||
+          r.deliveryId.toLowerCase().includes(q);
+        if (!codeMatch) return false;
+      }
+      return true;
+    });
+  }, [returns, activeTab, searchTerm]);
 
   // ── Detail handlers ───────────────────────────────────────────────────────
   const openDetailModal = async (returnId: string) => {
@@ -195,7 +214,7 @@ export default function ManageOrderReturnPage() {
       if (res.data.isSuccess) {
         toast.success("Đã duyệt yêu cầu trả hàng");
         closeApproveModal();
-        fetchReturns();
+        fetchReturns(page);
       } else {
         toast.error(res.data.message || "Không thể duyệt yêu cầu trả hàng");
       }
@@ -226,7 +245,7 @@ export default function ManageOrderReturnPage() {
       if (res.data.isSuccess) {
         toast.success("Đã từ chối yêu cầu trả hàng");
         closeRejectModal();
-        fetchReturns();
+        fetchReturns(page);
       } else {
         toast.error(res.data.message || "Không thể từ chối yêu cầu trả hàng");
       }
@@ -252,7 +271,7 @@ export default function ManageOrderReturnPage() {
       if (res.data.isSuccess) {
         toast.success("Xác nhận đã nhận hàng thành công");
         closeReceiveModal();
-        fetchReturns();
+        fetchReturns(page);
       } else {
         toast.error(res.data.message || "Không thể xác nhận nhận hàng");
       }
@@ -283,7 +302,7 @@ export default function ManageOrderReturnPage() {
       if (res.data.isSuccess) {
         toast.success("Xử lý hoàn tất thành công");
         closeResolveModal();
-        fetchReturns();
+        fetchReturns(page);
       } else {
         toast.error(res.data.message || "Không thể xử lý hoàn tất");
       }
@@ -294,167 +313,181 @@ export default function ManageOrderReturnPage() {
     }
   };
 
-  // ── Complete Refund handlers ───────────────────────────────────────────────
-  const openCompleteRefundModal = (returnId: string) => {
-    setCompleteRefundModal({ open: true, returnId });
-  };
-
-  const closeCompleteRefundModal = () => setCompleteRefundModal({ open: false, returnId: null });
-
-  const handleCompleteRefund = async () => {
-    if (!completeRefundModal.returnId) return;
-    setCompletingRefund(true);
-    try {
-      const res = await returnApi.completeRefund(completeRefundModal.returnId);
-      if (res.data.isSuccess) {
-        toast.success("Đã xác nhận hoàn tiền thành công");
-        closeCompleteRefundModal();
-        fetchReturns();
-      } else {
-        toast.error(res.data.message || "Không thể xác nhận hoàn tiền");
-      }
-    } catch (err: any) {
-      toast.error(err?.response?.data?.message || "Có lỗi xảy ra khi xác nhận hoàn tiền");
-    } finally {
-      setCompletingRefund(false);
-    }
-  };
-
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-gray-900">Yêu cầu trả hàng</h1>
-          <p className="text-gray-500 mt-1 text-sm">
-            Xem và quản lý các yêu cầu trả hàng / hoàn tiền.
-          </p>
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      <div className="border-b border-gray-100 p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gray-50/30">
+        <div className="flex flex-wrap gap-1.5">
+          {TABS.map((tab) => {
+            const count = counts[tab.value] ?? 0;
+            return (
+              <button
+                key={tab.value}
+                onClick={() => setActiveTab(tab.value)}
+                className={`rounded-lg px-3.5 py-1.5 text-xs font-semibold transition-all cursor-pointer ${
+                  activeTab === tab.value
+                    ? "bg-primary text-white shadow-sm"
+                    : "text-gray-500 hover:bg-gray-100 hover:text-gray-900"
+                }`}
+              >
+                {tab.label}
+                {activeTab !== tab.value && count > 0 && (
+                  <span className="ml-1.5 rounded-full bg-gray-200/60 px-1.5 py-0.5 text-[10px] text-gray-600 font-medium">
+                    {count}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="relative w-full md:w-72">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Tìm theo mã đơn/yêu cầu..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full rounded-lg border border-gray-200 bg-white py-2 pl-9 pr-3 text-sm text-gray-700 placeholder-gray-400 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/20 transition-all shadow-inner"
+          />
+          {searchTerm && (
+            <button
+              onClick={() => setSearchTerm("")}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer"
+            >
+              <X size={14} />
+            </button>
+          )}
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-        {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-20 gap-3">
-            <Loader2 className="h-8 w-8 text-primary animate-spin" />
-            <p className="text-sm text-gray-400 font-medium">Đang tải danh sách...</p>
-          </div>
-        ) : returns.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-center">
-            <PackageX className="mb-4 h-12 w-12 text-gray-300" />
-            <h3 className="text-base font-semibold text-gray-900">Không có yêu cầu trả hàng nào</h3>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm border-collapse">
-              <thead>
-                <tr className="border-b border-gray-200 bg-gray-50/50 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                  <th className="p-4">Mã đơn</th>
-                  <th className="p-4">Loại</th>
-                  <th className="p-4">Lý do</th>
-                  <th className="p-4">Trạng thái</th>
-                  <th className="p-4">Số lượng</th>
-                  <th className="p-4">Tiền hoàn</th>
-                  <th className="p-4">Ngày yêu cầu</th>
-                  <th className="p-4">Hành động</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {returns.map((item) => {
-                  const isPending = item.status === PENDING_STATUS;
-                  return (
-                    <tr
-                      key={item.id}
-                      onClick={() => openDetailModal(item.id)}
-                      className="hover:bg-gray-50/30 transition-colors cursor-pointer"
-                    >
-                      <td className="p-4 font-mono font-medium text-gray-900">
-                        #{item.deliveryId.substring(0, 8)}
-                      </td>
-                      <td className="p-4">
-                        <span className="font-semibold text-gray-800">
-                          {RETURN_TYPE_LABEL[item.type] ?? item.type}
-                        </span>
-                      </td>
-                      <td className="p-4 text-gray-600">
-                        {REASON_LABEL[item.reason] ?? item.reason}
-                      </td>
-                      <td className="p-4">
-                        <span
-                          className={`inline-block rounded-md border px-2 py-0.5 text-xs font-semibold ${RETURN_STATUS_META[item.status].className}`}
-                        >
-                          {item.status}
-                        </span>
-                      </td>
-                      <td className="p-4 text-center">{item.itemCount}</td>
-                      <td className="p-4 font-bold text-gray-900">
-                        {item.refundAmount > 0 ? formatVnd(item.refundAmount) : "-"}
-                      </td>
-                      <td className="p-4 text-xs text-gray-500">
-                        {formatOrderDate(item.createdAt)}
-                      </td>
-                      <td className="p-4" onClick={(e) => e.stopPropagation()}>
-                        <div className="flex items-center gap-2">
+      {loading ? (
+        <div className="flex flex-col items-center justify-center py-20 gap-3">
+          <Loader2 className="h-8 w-8 text-primary animate-spin" />
+          <p className="text-sm text-gray-400 font-medium">Đang tải đơn trả hàng...</p>
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-20 text-center">
+          <PackageX className="mb-4 h-12 w-12 text-gray-300" />
+          <h3 className="text-base font-semibold text-gray-900">Không có yêu cầu trả hàng</h3>
+          <p className="text-sm text-gray-500 mt-1">Các yêu cầu trả hàng của khách sẽ hiển thị ở đây.</p>
+        </div>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm border-collapse">
+            <thead>
+              <tr className="border-b border-gray-200 bg-gray-50/50 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                <th className="p-4 w-32">Mã yêu cầu</th>
+                <th className="p-4 w-32">Ngày tạo</th>
+                <th className="p-4 w-32">Hình thức</th>
+                <th className="p-4 w-28">Số lượng</th>
+                <th className="p-4 w-32">Hoàn tiền</th>
+                <th className="p-4 w-36">Trạng thái</th>
+                <th className="p-4 w-44 text-right">Thao tác</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {filtered.map((r) => {
+                const meta = RETURN_STATUS_META[r.status] ?? {
+                  label: r.status,
+                  className: "bg-gray-100 text-gray-700 border-gray-200",
+                };
+
+                return (
+                  <tr key={r.id} className="hover:bg-gray-50/30 transition-colors cursor-pointer" onClick={() => openDetailModal(r.id)}>
+                    <td className="p-4 font-mono font-bold text-gray-900">#{r.id.substring(0, 8)}</td>
+                    <td className="p-4 text-xs text-gray-500 whitespace-nowrap">
+                      {formatOrderDate(r.createdAt)}
+                    </td>
+                    <td className="p-4 font-medium text-gray-800 whitespace-nowrap">
+                      {RETURN_TYPE_LABEL[r.type] || r.type}
+                    </td>
+                    <td className="p-4 text-gray-700 whitespace-nowrap">{r.itemCount} sản phẩm</td>
+                    <td className="p-4 font-semibold text-orange-600 whitespace-nowrap">
+                      {r.refundAmount > 0 ? formatVnd(r.refundAmount) : "-"}
+                    </td>
+                    <td className="p-4">
+                      <span
+                        className={`inline-block rounded-lg border px-2.5 py-1 text-xs font-semibold ${meta.className}`}
+                      >
+                        {meta.label}
+                      </span>
+                    </td>
+                    <td className="p-4 text-right flex items-center justify-end gap-2" onClick={(e) => e.stopPropagation()}>
+                      {r.status === "Requested" && (
+                        <>
                           <button
-                            onClick={() => openDetailModal(item.id)}
-                            className="flex items-center gap-1.5 rounded-lg border border-gray-200 bg-gray-50 px-3 py-1.5 text-xs font-semibold text-gray-600 hover:bg-gray-100 transition-colors cursor-pointer"
+                            onClick={() => openApproveModal(r.id)}
+                            className="inline-flex items-center gap-1 rounded-lg border border-indigo-200 bg-indigo-50 px-2.5 py-1.5 text-xs font-semibold text-indigo-600 hover:bg-indigo-100 transition-colors cursor-pointer"
                           >
-                            <Eye className="h-3.5 w-3.5" />
-                            Xem
+                            <Check size={14} />
+                            Duyệt
                           </button>
-                          {isPending && (
-                            <>
-                              <button
-                                onClick={() => openApproveModal(item.id)}
-                                className="flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-600 hover:bg-emerald-100 transition-colors cursor-pointer"
-                              >
-                                <Check className="h-3.5 w-3.5" />
-                                Duyệt
-                              </button>
-                              <button
-                                onClick={() => openRejectModal(item.id)}
-                                className="flex items-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-100 transition-colors cursor-pointer"
-                              >
-                                <X className="h-3.5 w-3.5" />
-                                Từ chối
-                              </button>
-                            </>
-                          )}
-                          {item.status === "ReturnInTransit" && (
-                            <button
-                              onClick={() => openReceiveModal(item.id)}
-                              className="flex items-center gap-1.5 rounded-lg border border-teal-200 bg-teal-50 px-3 py-1.5 text-xs font-semibold text-teal-600 hover:bg-teal-100 transition-colors cursor-pointer"
-                            >
-                              <PackageCheck className="h-3.5 w-3.5" />
-                              Nhận hàng
-                            </button>
-                          )}
-                          {item.status === "ItemReceived" && (
-                            <button
-                              onClick={() => openResolveModal(item.id)}
-                              className="flex items-center gap-1.5 rounded-lg border border-purple-200 bg-purple-50 px-3 py-1.5 text-xs font-semibold text-purple-600 hover:bg-purple-100 transition-colors cursor-pointer"
-                            >
-                              <Banknote className="h-3.5 w-3.5" />
-                              Đồng ý hoàn tiền
-                            </button>
-                          )}
-                          {item.status === "Refunding" && (
-                            <button
-                              onClick={() => openCompleteRefundModal(item.id)}
-                              className="flex items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-600 hover:bg-blue-100 transition-colors cursor-pointer"
-                            >
-                              <CreditCard className="h-3.5 w-3.5" />
-                              Xác nhận đã chuyển khoản
-                            </button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                          <button
+                            onClick={() => openRejectModal(r.id)}
+                            className="inline-flex items-center gap-1 rounded-lg border border-red-200 bg-red-50 px-2.5 py-1.5 text-xs font-semibold text-red-500 hover:bg-red-100 transition-colors cursor-pointer"
+                          >
+                            <Ban size={14} />
+                            Từ chối
+                          </button>
+                        </>
+                      )}
+                      {r.status === "ReturnInTransit" && (
+                        <button
+                          onClick={() => openReceiveModal(r.id)}
+                          className="inline-flex items-center gap-1 rounded-lg border border-teal-200 bg-teal-50 px-2.5 py-1.5 text-xs font-semibold text-teal-600 hover:bg-teal-100 transition-colors cursor-pointer"
+                        >
+                          <PackageCheck size={14} />
+                          Nhận hàng
+                        </button>
+                      )}
+                      {r.status === "ItemReceived" && (
+                        <button
+                          onClick={() => openResolveModal(r.id)}
+                          className="inline-flex items-center gap-1 rounded-lg border border-purple-200 bg-purple-50 px-2.5 py-1.5 text-xs font-semibold text-purple-600 hover:bg-purple-100 transition-colors cursor-pointer"
+                        >
+                          <Banknote size={14} />
+                          Hoàn tiền
+                        </button>
+                      )}
+                      <button
+                        onClick={() => openDetailModal(r.id)}
+                        className="inline-flex items-center gap-1 rounded-lg border border-gray-200 bg-gray-50 px-2.5 py-1.5 text-xs font-semibold text-gray-600 hover:bg-gray-100 transition-colors cursor-pointer"
+                      >
+                         <Eye size={14} />
+                         Chi tiết
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between border-t border-gray-100 px-4 py-3 text-xs text-gray-500">
+          <span>
+            Trang {page} / {totalPages} · {totalCount} yêu cầu
+          </span>
+          <div className="flex items-center gap-1">
+            <button
+              disabled={page <= 1}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+            >
+              <ChevronLeft size={14} />
+            </button>
+            <button
+              disabled={page >= totalPages}
+              onClick={() => setPage((p) => p + 1)}
+              className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+            >
+              <ChevronRight size={14} />
+            </button>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* ── Detail Modal ───────────────────────────────────────────────────── */}
       {detailModal.open && (
@@ -493,9 +526,9 @@ export default function ManageOrderReturnPage() {
                     <div className="rounded-lg border border-gray-100 bg-gray-50/50 p-3">
                       <p className="text-xs text-gray-400">Trạng thái</p>
                       <span
-                        className={`mt-1 inline-block rounded-md border px-2 py-0.5 text-xs font-semibold ${RETURN_STATUS_META[returnDetail.status].className}`}
+                        className={`mt-1 inline-block rounded-md border px-2 py-0.5 text-xs font-semibold ${RETURN_STATUS_META[returnDetail.status]?.className || ""}`}
                       >
-                        {returnDetail.status}
+                        {RETURN_STATUS_META[returnDetail.status]?.label || returnDetail.status}
                       </span>
                     </div>
                     <div className="rounded-lg border border-gray-100 bg-gray-50/50 p-3">
@@ -643,8 +676,8 @@ export default function ManageOrderReturnPage() {
                           <div className="pb-3">
                             <p className="text-sm font-semibold text-gray-800">
                               {log.fromStatus
-                                ? `${STATUS_LABEL[log.fromStatus] ?? log.fromStatus} → ${STATUS_LABEL[log.toStatus] ?? log.toStatus}`
-                                : STATUS_LABEL[log.toStatus] ?? log.toStatus}
+                                ? `${log.fromStatus} → ${log.toStatus}`
+                                : log.toStatus}
                             </p>
                             {log.note && <p className="text-xs text-gray-500 mt-0.5">{log.note}</p>}
                             <p className="text-xs text-gray-400 mt-0.5">
@@ -660,7 +693,7 @@ export default function ManageOrderReturnPage() {
             </div>
 
             {/* Footer: quick actions when pending */}
-            {returnDetail && returnDetail.status === PENDING_STATUS && (
+            {returnDetail && returnDetail.status === "Requested" && (
               <div className="flex gap-3 border-t border-gray-100 px-6 py-4 bg-gray-50/50">
                 <button
                   onClick={() => {
@@ -677,7 +710,7 @@ export default function ManageOrderReturnPage() {
                     closeDetailModal();
                     openApproveModal(returnDetail.id);
                   }}
-                  className="flex-1 flex items-center justify-center gap-1.5 rounded-lg bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-600 transition-colors cursor-pointer"
+                  className="flex-1 flex items-center justify-center gap-1.5 rounded-lg border border-indigo-200 bg-indigo-50 px-4 py-2.5 text-sm font-semibold text-indigo-600 hover:bg-indigo-100 transition-colors cursor-pointer"
                 >
                   <Check className="h-4 w-4" />
                   Duyệt
@@ -714,21 +747,6 @@ export default function ManageOrderReturnPage() {
                 </button>
               </div>
             )}
-            
-            {returnDetail && returnDetail.status === "Refunding" && (
-              <div className="flex gap-3 border-t border-gray-100 px-6 py-4 bg-gray-50/50">
-                <button
-                  onClick={() => {
-                    closeDetailModal();
-                    openCompleteRefundModal(returnDetail.id);
-                  }}
-                  className="flex-1 flex items-center justify-center gap-1.5 rounded-lg bg-blue-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-600 transition-colors cursor-pointer"
-                >
-                  <CreditCard className="h-4 w-4" />
-                  Xác nhận đã chuyển khoản
-                </button>
-              </div>
-            )}
           </div>
         </div>
       )}
@@ -738,8 +756,8 @@ export default function ManageOrderReturnPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
           <div className="w-full max-w-sm rounded-2xl bg-white shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
             <div className="flex items-start gap-3 px-6 py-5 border-b border-gray-100">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-50">
-                <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-indigo-50">
+                <CheckCircle2 className="h-5 w-5 text-indigo-500" />
               </div>
               <div>
                 <h3 className="text-base font-bold text-gray-900">Duyệt yêu cầu trả hàng?</h3>
@@ -757,7 +775,7 @@ export default function ManageOrderReturnPage() {
                 onChange={(e) => setApproveNote(e.target.value)}
                 placeholder="Thêm ghi chú cho yêu cầu này..."
                 rows={3}
-                className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-700 placeholder-gray-400 focus:border-emerald-400 focus:outline-none focus:ring-1 focus:ring-emerald-200 transition-all resize-none"
+                className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-700 placeholder-gray-400 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-200 transition-all resize-none"
               />
             </div>
             <div className="flex gap-3 px-6 py-4 border-t border-gray-100">
@@ -770,7 +788,7 @@ export default function ManageOrderReturnPage() {
               <button
                 onClick={handleApprove}
                 disabled={approving}
-                className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-600 disabled:opacity-60 transition-colors cursor-pointer"
+                className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-indigo-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-600 disabled:opacity-60 transition-colors cursor-pointer"
               >
                 {approving ? (
                   <>
@@ -932,47 +950,6 @@ export default function ManageOrderReturnPage() {
                 className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-purple-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-purple-600 disabled:opacity-60 transition-colors cursor-pointer"
               >
                 {resolving ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Đang xử lý...
-                  </>
-                ) : (
-                  "Xác nhận"
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ── Complete Refund Confirm Modal ────────────────────────────────────── */}
-      {completeRefundModal.open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="w-full max-w-sm rounded-2xl bg-white shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-            <div className="flex items-start gap-3 px-6 py-5 border-b border-gray-100">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-50">
-                <CreditCard className="h-5 w-5 text-blue-500" />
-              </div>
-              <div>
-                <h3 className="text-base font-bold text-gray-900">Xác nhận đã hoàn tiền?</h3>
-                <p className="mt-1 text-sm text-gray-500">
-                  Bạn xác nhận đã chuyển khoản thành công cho khách hàng theo thông tin trên?
-                </p>
-              </div>
-            </div>
-            <div className="flex gap-3 px-6 py-4">
-              <button
-                onClick={closeCompleteRefundModal}
-                className="flex-1 rounded-lg border border-gray-200 px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
-              >
-                Hủy
-              </button>
-              <button
-                onClick={handleCompleteRefund}
-                disabled={completingRefund}
-                className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-blue-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-600 disabled:opacity-60 transition-colors cursor-pointer"
-              >
-                {completingRefund ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin" />
                     Đang xử lý...

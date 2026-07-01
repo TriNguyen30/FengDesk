@@ -29,7 +29,7 @@ export default function ShopDeliveriesPage() {
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
       <div className="mb-4 flex items-center gap-2 text-sm text-gray-500">
-        <Link to="/seller" className="inline-flex items-center gap-1 hover:text-primary">
+        <Link to={`/stores/${storeId}`} className="inline-flex items-center gap-1 hover:text-primary">
           <ArrowLeft size={14} />
           Cửa hàng của tôi
         </Link>
