@@ -43,6 +43,14 @@ const RETURN_STATUS_META: Record<string, { label: string; className: string }> =
     label: "Đã duyệt",
     className: "bg-indigo-50 text-indigo-600 border border-indigo-200",
   },
+  ItemReceived: {
+    label: "Đã nhận hàng",
+    className: "bg-purple-50 text-purple-600 border border-purple-200",
+  },
+  Refunding: {
+    label: "Đang hoàn tiền",
+    className: "bg-orange-50 text-orange-600 border border-orange-200",
+  },
   Rejected: { label: "Bị từ chối", className: "bg-red-50 text-red-500 border border-red-200" },
   Processing: { label: "Đang xử lý", className: "bg-blue-50 text-blue-600 border border-blue-200" },
   Completed: {
@@ -233,7 +241,7 @@ export default function ProfileReturnOrder() {
                     <RefreshCw className="h-3 w-3 text-orange-400" />
                     {RETURN_TYPE_LABEL[item.type] ?? item.type}
                   </span>
-                  <span>Lý do: {item.reason}</span>
+                  <span>Lý do: {REASON_LABEL[item.reason] ?? item.reason}</span>
                   <span>{item.itemCount} sản phẩm</span>
                   {item.refundAmount > 0 && (
                     <span className="font-semibold text-orange-600">
@@ -520,8 +528,8 @@ export default function ProfileReturnOrder() {
                           <div className="pb-3">
                             <p className="text-sm font-semibold text-gray-800">
                               {log.fromStatus
-                                ? `${log.fromStatus} → ${log.toStatus}`
-                                : log.toStatus}
+                                ? `${RETURN_STATUS_META[log.fromStatus]?.label ?? log.fromStatus} → ${RETURN_STATUS_META[log.toStatus]?.label ?? log.toStatus}`
+                                : RETURN_STATUS_META[log.toStatus]?.label ?? log.toStatus}
                             </p>
                             {log.note && <p className="text-xs text-gray-500 mt-0.5">{log.note}</p>}
                             <p className="text-xs text-gray-400 mt-0.5">

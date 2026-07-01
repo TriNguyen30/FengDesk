@@ -645,13 +645,13 @@ export default function ProductDetailPage() {
 
       {/* Description */}
       {product.description && (
-        <div className="mt-6 rounded-2xl bg-white shadow-sm ring-1 ring-gray-100 p-4 sm:p-6">
+        <div className="mt-6 rounded-2xl bg-white shadow-sm ring-1 ring-gray-100 p-4 sm:p-6 overflow-hidden">
           <h2 className="text-lg font-bold text-gray-900 mb-4 pb-4 border-b border-gray-100">
             Mô tả sản phẩm
           </h2>
           <div 
             className="text-sm leading-relaxed text-gray-600 quill-content"
-            dangerouslySetInnerHTML={{ __html: product.description }}
+            dangerouslySetInnerHTML={{ __html: product.description.replace(/&nbsp;/g, " "), }}
           />
         </div>
       )}

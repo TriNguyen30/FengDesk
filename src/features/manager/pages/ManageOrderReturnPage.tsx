@@ -18,6 +18,16 @@ import { useQueryClient } from "@tanstack/react-query";
 
 const PENDING_STATUS = "Requested";
 
+const STATUS_LABEL: Record<string, string> = {
+  Requested: "Chờ duyệt",
+  Approved: "Đã duyệt",
+  ItemReceived: "Đã nhận hàng",
+  Refunding: "Đang hoàn tiền",
+  Rejected: "Từ chối",
+  Completed: "Đã hoàn thành",
+  Cancelled: "Đã hủy",
+};
+
 const RETURN_TYPE_LABEL: Record<string, string> = {
   Refund: "Hoàn tiền",
   Exchange: "Đổi hàng",
@@ -244,14 +254,18 @@ export default function ManageOrderReturnPage() {
                         #{item.deliveryId.substring(0, 8)}
                       </td>
                       <td className="p-4">
-                        <span className="font-semibold text-gray-800">{item.type}</span>
+                        <span className="font-semibold text-gray-800">
+                          {RETURN_TYPE_LABEL[item.type] ?? item.type}
+                        </span>
                       </td>
-                      <td className="p-4 text-gray-600">{item.reason}</td>
+                      <td className="p-4 text-gray-600">
+                        {REASON_LABEL[item.reason] ?? item.reason}
+                      </td>
                       <td className="p-4">
                         <span
                           className={`inline-block rounded-md border px-2 py-0.5 text-xs font-semibold ${statusBadgeClass(item.status)}`}
                         >
-                          {item.status}
+                          {STATUS_LABEL[item.status] ?? item.status}
                         </span>
                       </td>
                       <td className="p-4 text-center">{item.itemCount}</td>
@@ -338,7 +352,7 @@ export default function ManageOrderReturnPage() {
                       <span
                         className={`mt-1 inline-block rounded-md border px-2 py-0.5 text-xs font-semibold ${statusBadgeClass(returnDetail.status)}`}
                       >
-                        {returnDetail.status}
+                        {STATUS_LABEL[returnDetail.status] ?? returnDetail.status}
                       </span>
                     </div>
                     <div className="rounded-lg border border-gray-100 bg-gray-50/50 p-3">
@@ -486,8 +500,8 @@ export default function ManageOrderReturnPage() {
                           <div className="pb-3">
                             <p className="text-sm font-semibold text-gray-800">
                               {log.fromStatus
-                                ? `${log.fromStatus} → ${log.toStatus}`
-                                : log.toStatus}
+                                ? `${STATUS_LABEL[log.fromStatus] ?? log.fromStatus} → ${STATUS_LABEL[log.toStatus] ?? log.toStatus}`
+                                : STATUS_LABEL[log.toStatus] ?? log.toStatus}
                             </p>
                             {log.note && <p className="text-xs text-gray-500 mt-0.5">{log.note}</p>}
                             <p className="text-xs text-gray-400 mt-0.5">
