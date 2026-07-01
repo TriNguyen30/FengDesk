@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { useAppSelector } from "@/app/store";
 import { useProductPrimaryImage } from "@/features/products";
 import type { UpdateCartItemParams } from "@/features/cart/types/cart";
+import { generateSlug } from "@/utils/string";
 
 function formatVnd(n: number): string {
   return n.toLocaleString("vi-VN") + "đ";
@@ -28,8 +29,8 @@ function CartDropdownItem({ item, onNavigate, onQuantityChange, onRemove }: Cart
       <CartItemImage imageUrl={imageUrl} alt={item.productName} />
       <div className="min-w-0 flex-1">
         <a
-          href={`/products/${item.productId}`}
-          onClick={(e) => onNavigate(e, `/products/${item.productId}`)}
+          href={`/product/${generateSlug(item.productName)}.${item.productId}`}
+          onClick={(e) => onNavigate(e, `/product/${generateSlug(item.productName)}.${item.productId}`)}
           className="line-clamp-2 text-left text-xs font-medium leading-snug text-gray-800 hover:text-primary"
         >
           {item.productName} {item.variantName ? `(${item.variantName})` : ""}
