@@ -7,11 +7,21 @@ export interface AuthUser {
   role?: string;
   /** Danh sách role tách rời từ BE (/me, login), vd ["Customer","GardenOwner"]. */
   roles?: string[];
+  dateOfBirth?: string;
+  gender?: string;
+  fengShui?: FengShui;
 }
 
 export interface LoginPayload {
   email: string;
   password: string;
+}
+
+export interface FengShui {
+  element: string | null;
+  kuaNumber: number | null;
+  kuaGroup: string | null;
+  favorableDirections: string[];
 }
 
 export interface MyProfile {
@@ -20,6 +30,10 @@ export interface MyProfile {
   fullName?: string;
   phone?: string;
   role?: string;
+  roles?: string[];
+  dateOfBirth?: string;
+  gender?: string;
+  fengShui?: FengShui;
 }
 
 export interface LoginResponseData {
