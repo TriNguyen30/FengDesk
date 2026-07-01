@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ChevronRight, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import Modal from "@/components/ui/Modal";
+import Calendar from "@/components/ui/Calendar";
 import {
   registerInitiateRequest,
   registerVerifyRequest,
@@ -37,6 +38,21 @@ export default function PopUpSignUp({ open, onClose, onSwitchToLogin }: PopUpSig
   const [registrationToken, setRegistrationToken] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  
+  const [showCalendar, setShowCalendar] = useState(false);
+  const calendarRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (calendarRef.current && !calendarRef.current.contains(e.target as Node)) {
+        setShowCalendar(false);
+      }
+    };
+    if (showCalendar) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showCalendar]);
 
   const initiateForm = useForm<SignUpInitiateFormValues>({
     resolver: zodResolver(signUpInitiateSchema),
@@ -273,16 +289,36 @@ export default function PopUpSignUp({ open, onClose, onSwitchToLogin }: PopUpSig
                 label="Ngày sinh"
                 error={finalizeForm.formState.errors.dateOfBirth?.message}
               >
-                <input
-                  id="signup-dob"
-                  type="date"
-                  aria-invalid={Boolean(finalizeForm.formState.errors.dateOfBirth)}
-                  aria-describedby={
-                    finalizeForm.formState.errors.dateOfBirth ? "signup-dob-error" : undefined
-                  }
-                  className={inputClassName(Boolean(finalizeForm.formState.errors.dateOfBirth))}
-                  {...finalizeForm.register("dateOfBirth")}
-                />
+                <div className="relative" ref={calendarRef}>
+                  <input
+                    id="signup-dob"
+                    type="text"
+                    readOnly
+                    onClick={() => setShowCalendar(true)}
+                    value={
+                      finalizeForm.watch("dateOfBirth")
+                        ? new Date(finalizeForm.watch("dateOfBirth")).toLocaleDateString("vi-VN")
+                        : ""
+                    }
+                    aria-invalid={Boolean(finalizeForm.formState.errors.dateOfBirth)}
+                    aria-describedby={
+                      finalizeForm.formState.errors.dateOfBirth ? "signup-dob-error" : undefined
+                    }
+                    className={inputClassName(Boolean(finalizeForm.formState.errors.dateOfBirth)) + " cursor-pointer bg-white"}
+                    placeholder="DD/MM/YYYY"
+                  />
+                  {showCalendar && (
+                    <div className="absolute top-full right-0 z-50 mt-1">
+                      <Calendar
+                        value={finalizeForm.watch("dateOfBirth")}
+                        onChange={(val) => {
+                          finalizeForm.setValue("dateOfBirth", val, { shouldValidate: true });
+                          setShowCalendar(false);
+                        }}
+                      />
+                    </div>
+                  )}
+                </div>
               </AuthField>
             </div>
 
