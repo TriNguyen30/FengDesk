@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ChevronLeft, MessagesSquare, Store, Truck, Users } from "lucide-react";
+import { ChevronLeft, MessagesSquare, Store, Truck, Users, Package } from "lucide-react";
 import { toast } from "sonner";
 import { useProductList } from "@/features/products/hooks/useProducts";
 import { getMyShopsRequest, getShopRequestById } from "@/features/shop/api/shop.api";
@@ -177,12 +177,12 @@ export default function ShopDetailPage() {
 
   // BE gate mỗi tab bằng IsOwnerOrAdmin — cả owner-chính lẫn co-owner (đều nằm trong /stores/mine) đều pass.
   // Vì thế chỉ cần isShopMember là hiện tab; nếu user không phải owner-thực-sự, BE sẽ trả 403 và toast hiện lỗi.
-  const TABS: { value: ShopTab; label: string; icon: typeof Store }[] = [
+  const TABS: { value: ShopTab; label: string; icon: typeof Store; disabled?: boolean }[] = [
     { value: "products", label: "Sản phẩm", icon: Store },
-    { value: "deliveries", label: "Đơn giao", icon: Truck },
-    { value: "returns", label: "Trả hàng", icon: Truck },
+    { value: "deliveries", label: "Đơn giao", icon: Truck, disabled: roles.includes("Customer") },
+    { value: "returns", label: "Trả hàng", icon: Package, disabled: roles.includes("Customer") },
     { value: "chat", label: "Tin nhắn", icon: MessagesSquare },
-    { value: "staff", label: "Nhân viên", icon: Users },
+    { value: "staff", label: "Nhân viên", icon: Users, disabled: roles.includes("Customer") },
   ];
 
   return (
@@ -216,11 +216,16 @@ export default function ShopDetailPage() {
             return (
               <button
                 key={tab.value}
-                onClick={() => setActiveTab(tab.value)}
-                className={`flex items-center gap-2 border-b-2 px-4 py-2.5 text-sm font-semibold transition-all cursor-pointer ${
-                  active
-                    ? "border-primary text-primary"
-                    : "border-transparent text-gray-500 hover:text-gray-800"
+                onClick={() => !tab.disabled && setActiveTab(tab.value)}
+                disabled={tab.disabled}
+                className={`flex items-center gap-2 border-b-2 px-4 py-2.5 text-sm font-semibold transition-all ${
+                  tab.disabled
+                    ? "opacity-50 cursor-not-allowed border-transparent text-gray-400"
+                    : `cursor-pointer ${
+                        active
+                          ? "border-primary text-primary"
+                          : "border-transparent text-gray-500 hover:text-gray-800"
+                      }`
                 }`}
               >
                 <Icon size={15} />

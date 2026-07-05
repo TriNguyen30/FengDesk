@@ -40,8 +40,7 @@ const ELEMENT_LABELS: Record<string, string> = {
 };
 
 export default function ProductDetailPage() {
-  const { slugId } = useParams<{ slugId: string }>();
-  const id = slugId?.split(".").pop() || "";
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { addItem } = useCart();
   const { product, loading, failed } = useProductDetail(id);

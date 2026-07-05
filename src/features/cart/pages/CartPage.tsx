@@ -48,7 +48,7 @@ function CartLineItem({ item, selected, onSelect, onQuantityChange, onRemove }: 
       <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <Link
-            to={`/product/${generateSlug(item.productName)}.${item.productId}`}
+            to={`/products/${item.productId}`}
             className="text-base font-bold text-gray-900 hover:text-primary line-clamp-2"
           >
             {item.productName} {item.variantName ? `(${item.variantName})` : ""}

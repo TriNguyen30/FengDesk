@@ -29,8 +29,8 @@ function CartDropdownItem({ item, onNavigate, onQuantityChange, onRemove }: Cart
       <CartItemImage imageUrl={imageUrl} alt={item.productName} />
       <div className="min-w-0 flex-1">
         <a
-          href={`/product/${generateSlug(item.productName)}.${item.productId}`}
-          onClick={(e) => onNavigate(e, `/product/${generateSlug(item.productName)}.${item.productId}`)}
+          href={`/products/${item.productId}`}
+          onClick={(e) => onNavigate(e, `/product/${item.productId}`)}
           className="line-clamp-2 text-left text-xs font-medium leading-snug text-gray-800 hover:text-primary"
         >
           {item.productName} {item.variantName ? `(${item.variantName})` : ""}

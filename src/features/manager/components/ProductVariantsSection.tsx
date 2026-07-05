@@ -370,7 +370,7 @@ export function ProductVariantsSection({
               type="button"
               onClick={handleDeleteItemConfirm}
               disabled={deletingVariant}
-              className="flex-1 rounded-xl bg-red-650 py-2.5 text-sm font-semibold text-white hover:bg-red-750 cursor-pointer flex items-center justify-center gap-1.5"
+              className="flex-1 rounded-xl bg-red-600 py-2.5 text-sm font-semibold text-white hover:bg-red-700 cursor-pointer flex items-center justify-center gap-1.5"
             >
               {deletingVariant && <RefreshCw size={14} className="animate-spin" />}
               Xóa bỏ

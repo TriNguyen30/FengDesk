@@ -39,7 +39,7 @@ export default function ProductCard({ product, soldCount }: ProductCardProps) {
 
   return (
     <Link
-      to={`/product/${generateSlug(product.name)}.${product.id}`}
+      to={`/products/${product.id}`}
       className="group relative flex flex-col rounded-md bg-white border border-gray-100 overflow-hidden hover:shadow-md transition-shadow duration-200"
     >
       {/* Feng Shui Badge */}
