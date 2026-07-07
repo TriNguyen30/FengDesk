@@ -87,7 +87,7 @@ export default function InvitationCard({ invitation }: Props) {
             type="button"
             onClick={handleReject}
             disabled={busy}
-            className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"
           >
             {reject.isPending ? (
               <Loader2 size={14} className="animate-spin" />
@@ -100,7 +100,7 @@ export default function InvitationCard({ invitation }: Props) {
             type="button"
             onClick={handleAccept}
             disabled={busy}
-            className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:bg-primary-dark disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:bg-primary-dark disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"
           >
             {accept.isPending ? (
               <Loader2 size={14} className="animate-spin" />

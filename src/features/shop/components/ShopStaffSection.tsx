@@ -27,7 +27,7 @@ export function ShopStaffSection({ storeId }: Props) {
         </div>
         <button
           onClick={() => setInviteOpen(true)}
-          className="inline-flex items-center justify-center gap-2 self-start rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:bg-primary-dark active:scale-95 sm:self-auto"
+          className="inline-flex items-center justify-center gap-2 self-start rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:bg-primary-dark active:scale-95 sm:self-auto cursor-pointer"
         >
           <UserPlus size={16} />
           Mời nhân viên

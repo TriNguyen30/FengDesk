@@ -16,8 +16,9 @@ import {
   ShopSidebar,
   ShopStaffSection,
 } from "../components";
+import ShopReturnsView from "../components/ShopReturnsView";
 
-type ShopTab = "products" | "deliveries" | "chat" | "staff";
+type ShopTab = "products" | "deliveries" | "returns" | "chat";
 
 export default function ShopDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -179,6 +180,7 @@ export default function ShopDetailPage() {
   const TABS: { value: ShopTab; label: string; icon: typeof Store }[] = [
     { value: "products", label: "Sản phẩm", icon: Store },
     { value: "deliveries", label: "Đơn giao", icon: Truck },
+    { value: "returns", label: "Trả hàng", icon: Truck },
     { value: "chat", label: "Tin nhắn", icon: MessagesSquare },
     { value: "staff", label: "Nhân viên", icon: Users },
   ];
@@ -265,6 +267,26 @@ export default function ShopDetailPage() {
             </button>
           </div>
           <ShopDeliveriesView storeId={shop.id} />
+        </div>
+      )}
+
+      {activeTab === "returns" && isShopMember && shop.id && (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between gap-2">
+            <div>
+              <h2 className="text-lg font-bold text-gray-900">Đơn trả hàng của cửa hàng</h2>
+              <p className="text-xs text-gray-500 mt-0.5">
+                Nhận đơn để vào trạng thái xử lý, sau đó tạo vận đơn để gọi đơn vị giao hàng.
+              </p>
+            </div>
+            <button
+              onClick={() => navigate(`/seller/${shop.id}/returns`)}
+              className="text-xs font-semibold text-primary hover:underline cursor-pointer"
+            >
+              Mở trang đầy đủ →
+            </button>
+          </div>
+          <ShopReturnsView storeId={shop.id} />
         </div>
       )}
 

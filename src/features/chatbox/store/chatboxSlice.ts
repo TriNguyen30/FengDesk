@@ -1,4 +1,5 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
+import { logout } from "@/features/auth/store/authSlice";
 import type {
   AiActivity,
   Chatbox,
@@ -113,6 +114,11 @@ const chatboxSlice = createSlice({
     resetChatbox() {
       return initialState;
     },
+  },
+  // Đăng xuất → xóa toàn bộ state chat trong RAM. Nếu không, account mới đăng nhập
+  // (SPA không reload) sẽ thấy tin nhắn của account cũ còn sót trong messagesByRoom.
+  extraReducers: (builder) => {
+    builder.addCase(logout, () => initialState);
   },
 });
 

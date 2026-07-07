@@ -23,6 +23,7 @@ import ManageOrderReturnPage from "@/features/manager/pages/ManageOrderReturnPag
 import AboutPage from "@/features/home/pages/AboutPage";
 import ContactPage from "@/features/home/pages/ContactPage";
 import NewsPage from "@/features/home/pages/NewsPage";
+import ShopReturnsPage from "@/features/shop/pages/ShopReturnsPage";
 
 // Profile Pages
 import ProfileLayout from "@/components/layouts/ProfileLayout";
@@ -61,6 +62,14 @@ export default function AppRoutes() {
           element={
             <ProtectedRoute>
               <ShopDeliveriesPage />
+            </ProtectedRoute>
+          }
+        />
+         <Route
+          path="/seller/:storeId/returns"
+          element={
+            <ProtectedRoute>
+              <ShopReturnsPage />
             </ProtectedRoute>
           }
         />

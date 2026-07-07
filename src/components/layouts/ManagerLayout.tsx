@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, type CSSProperties } from "react";
 import { Link, Outlet, useLocation } from "react-router-dom";
+import { Toaster } from "sonner";
 import {
   LayoutDashboard,
   Package,
@@ -23,6 +24,8 @@ import { clearSession } from "@/utils";
 import WorkspaceSwitcher from "@/components/ui/WorkspaceSwitcher";
 import FooterManager from "@/components/ui/FooterManager";
 import FengDesk from "@/assets/image/fengdesk_logo_2.png";
+
+const toasterStyle = { "--width": "min(100vw - 1.5rem, 356px)" } as CSSProperties;
 
 const navigation = [
   { name: "Tổng quan", href: "/manager/dashboard", icon: LayoutDashboard },
@@ -121,8 +124,8 @@ export default function ManagerLayout() {
                 to={item.href}
                 title={collapsed ? item.name : undefined}
                 className={`group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${isActive
-                    ? "bg-primary/10 text-primary"
-                    : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                  ? "bg-primary/10 text-primary"
+                  : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
                   } ${collapsed ? "justify-center" : ""}`}
               >
                 {isActive && (
@@ -261,6 +264,14 @@ export default function ManagerLayout() {
           </div>
           <FooterManager />
         </main>
+
+        <Toaster
+          richColors
+          closeButton
+          position="top-right"
+          className="top-[max(0.75rem,env(safe-area-inset-top))]! right-[max(0.75rem,env(safe-area-inset-right))]! sm:top-4! sm:right-4!"
+          style={toasterStyle}
+        />
       </div>
     </div>
   );
