@@ -8,6 +8,7 @@ import {
   getStyles,
 } from "../api/workspace.api";
 import { toast } from "sonner";
+import { toCm2, fromCm2 } from "../utils/deskArea";
 
 interface WorkspaceModalProps {
   isOpen: boolean;
@@ -78,7 +79,7 @@ export default function WorkspaceModal({
           roomFacingDirection: workspace.roomFacingDirection,
           workPurpose: workspace.workPurpose,
           fengShuiElement: workspace.fengShuiElement,
-          deskArea: workspace.deskArea,
+          deskArea: fromCm2(workspace.deskArea),
           isDefault: workspace.isDefault,
         });
       } else {
@@ -135,10 +136,10 @@ export default function WorkspaceModal({
       if (isEditMode) {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { isDefault, ...updateData } = formData;
-        await updateWorkspace(workspace.id, updateData);
+        await updateWorkspace(workspace.id, { ...updateData, deskArea: toCm2(updateData.deskArea) });
         toast.success("Cập nhật không gian làm việc thành công");
       } else {
-        await createWorkspace(formData);
+        await createWorkspace({ ...formData, deskArea: toCm2(formData.deskArea) });
         toast.success("Tạo không gian làm việc thành công");
       }
       onSuccess();

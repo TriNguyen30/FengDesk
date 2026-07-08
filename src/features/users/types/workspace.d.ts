@@ -59,3 +59,17 @@ export interface UpdateWorkspaceDto {
   fengShuiElement: string;
   deskArea: number;
 }
+
+export interface ElementAnalysisRow {
+  element: "Kim" | "Moc" | "Thuy" | "Hoa" | "Tho";
+  ideal: number;
+  adjustedIdeal: number;
+  current: number;
+  gap: number; // + = thiếu (cần bù), − = thừa
+}
+
+export interface WorkspaceElementAnalysis {
+  workspaceProfileId: string;
+  dominantNeed: string; // hành gap dương lớn nhất
+  elements: ElementAnalysisRow[];
+}

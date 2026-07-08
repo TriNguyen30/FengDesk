@@ -28,8 +28,10 @@ import { useCart } from "@/features/cart";
 import { getShopRequestById } from "@/features/shop/api/shop.api";
 import { Shop } from "@/features/shop/types/shop";
 import { ReviewSection } from "@/features/review";
-import { useAppDispatch } from "@/app/store";
+import { useAppDispatch, useAppSelector } from "@/app/store";
 import { openChatbox } from "@/features/chatbox/store/chatboxSlice";
+import { setAuthModal } from "@/features/auth/store/authSlice";
+import ProductFitPanel from "@/features/recommendation/components/element-vector/ProductFitPanel";
 
 const ELEMENT_LABELS: Record<string, string> = {
   Kim: "Kim",
@@ -576,6 +578,9 @@ export default function ProductDetailPage() {
         </div>
       </div>
 
+      {/* ── Độ phù hợp phong thủy với không gian của bạn ─────────────────── */}
+      {product.primaryElement && <ProductFitSection productId={product.id} />}
+
       {/* ── Store Info ─────────────────────────────────────────────────── */}
       {shop && (
         <div className="mt-6 rounded-2xl bg-white shadow-sm ring-1 ring-gray-100 p-4 sm:p-6 flex flex-col md:flex-row items-start md:items-center gap-6">
@@ -806,6 +811,34 @@ export default function ProductDetailPage() {
           </div>
         )}
       </AnimatePresence>
+    </div>
+  );
+}
+
+function ProductFitSection({ productId }: { productId: string }) {
+  const dispatch = useAppDispatch();
+  const isAuthenticated = useAppSelector((s) => !!s.auth.token);
+
+  return (
+    <div className="mt-6 rounded-2xl bg-white shadow-sm ring-1 ring-gray-100 p-4 sm:p-6">
+      {isAuthenticated ? (
+        <ProductFitPanel productId={productId} />
+      ) : (
+        <div className="flex flex-col items-center gap-3 py-4 text-center">
+          <span className="text-sm font-bold text-gray-900">
+            Độ phù hợp phong thủy với không gian của bạn
+          </span>
+          <p className="max-w-md text-sm text-gray-500">
+            Đăng nhập để xem sản phẩm này hợp đến đâu với bản mệnh và Ngũ hành từng phòng của bạn.
+          </p>
+          <button
+            onClick={() => dispatch(setAuthModal("login"))}
+            className="cursor-pointer rounded-lg bg-primary px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary/90"
+          >
+            Đăng nhập
+          </button>
+        </div>
+      )}
     </div>
   );
 }

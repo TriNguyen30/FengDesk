@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "baseUrl": "..",
+    "paths": {
+      "@/lib/axios": ["./.design-sync/mocks/axios-stub.ts"],
+      "@/app/store": ["./src/app/store.ts"],
+      "@/constants": ["./src/constants/index.ts"],
+      "@/utils": ["./src/utils/index.ts"],
+      "@/features/cart": ["./src/features/cart/index.ts"],
+      "@/features/category": ["./src/features/category/index.ts"],
+      "@/features/chatbox": ["./src/features/chatbox/index.ts"],
+      "@/features/manager/components": ["./src/features/manager/components/index.ts"],
+      "@/features/notification": ["./src/features/notification/index.ts"],
+      "@/features/orders": ["./src/features/orders/index.ts"],
+      "@/features/payment": ["./src/features/payment/index.ts"],
+      "@/features/products": ["./src/features/products/index.ts"],
+      "@/features/review": ["./src/features/review/index.ts"],
+      "@/features/search": ["./src/features/search/index.ts"],
+      "@/*": ["src/*"]
+    }
+  }
+}

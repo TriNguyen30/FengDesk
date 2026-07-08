@@ -3,6 +3,9 @@ import { getWorkspaces, deleteWorkspace, setDefaultWorkspace } from "../api/work
 import { Workspace } from "../types/workspace";
 import { toast } from "sonner";
 import WorkspaceModal from "../components/WorkspaceModal";
+import { useWorkspaceElementAnalysis } from "../hooks/useWorkspace";
+import { fromCm2 } from "../utils/deskArea";
+import ElementVectorFit from "@/features/recommendation/components/element-vector/ElementVectorFit";
 import {
   MapPinHouse,
   Briefcase,
@@ -18,6 +21,30 @@ import {
   AlertTriangle,
 } from "lucide-react";
 
+// ── Ngũ hành không gian: full panel cho phòng mặc định, mini vector cho các phòng còn lại ──
+function WorkspaceElementSection({ workspace }: { workspace: Workspace }) {
+  const { analysis, status } = useWorkspaceElementAnalysis(workspace.id);
+
+  if (workspace.isDefault) {
+    if (status === "pending") {
+      return <div className="mt-4 h-40 animate-pulse rounded-2xl border border-gray-100 bg-gray-50" />;
+    }
+    if (status === "error" || !analysis) return null;
+    return (
+      <div className="mt-4">
+        <ElementVectorFit analysis={analysis} variant="full" />
+      </div>
+    );
+  }
+
+  if (!analysis) return null;
+  return (
+    <div className="mt-4">
+      <ElementVectorFit analysis={analysis} variant="compact" />
+    </div>
+  );
+}
+
 const fieldConfig = [
   { key: "locationType", label: "Vị trí", icon: MapPinHouse },
   { key: "styleCode", label: "Phong cách", icon: Sparkles },
@@ -27,7 +54,7 @@ const fieldConfig = [
   { key: "roomFacingDirection", label: "Hướng phòng", icon: Compass },
   { key: "workPurpose", label: "Mục đích", icon: Briefcase },
   { key: "fengShuiElement", label: "Ngũ hành", icon: Wind },
-  { key: "deskArea", label: "Diện tích bàn (m²)", icon: Maximize2 },
+  { key: "deskArea", label: "Diện tích bàn", icon: Maximize2 },
 ] as const;
 
 // ── Confirm Dialog ──────────────────────────────────────────
@@ -223,8 +250,10 @@ export default function ProfileWorkspace() {
               {/* Info Grid */}
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {fieldConfig.map(({ key, label, icon: Icon }) => {
-                  const value = workspace[key as keyof Workspace];
-                  if (value === null || value === undefined) return null;
+                  const raw = workspace[key as keyof Workspace];
+                  if (raw === null || raw === undefined) return null;
+                  const value =
+                    key === "deskArea" ? `${fromCm2(Number(raw)).toFixed(2)} m²` : String(raw);
                   return (
                     <div
                       key={key}
@@ -237,14 +266,14 @@ export default function ProfileWorkspace() {
                         <p className="text-[11px] font-medium uppercase tracking-wide text-gray-400">
                           {label}
                         </p>
-                        <p className="truncate text-sm font-medium text-gray-800">
-                          {String(value)}
-                        </p>
+                        <p className="truncate text-sm font-medium text-gray-800">{value}</p>
                       </div>
                     </div>
                   );
                 })}
               </div>
+
+              <WorkspaceElementSection workspace={workspace} />
             </div>
           ))}
         </div>

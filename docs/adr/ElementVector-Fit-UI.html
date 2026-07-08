@@ -1,0 +1,1069 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: "Inter", system-ui, sans-serif; background: #eef0ea; color: #111827; -webkit-font-smoothing: antialiased; }
+  a { color: #7d8f69; text-decoration: none; }
+  a:hover { color: #6a7a58; }
+</style>
+</head><body>
+
+<div style="min-width: 1360px; padding: 56px 48px 96px; position: absolute; left: 264px; top: 50px">
+
+  <section style="max-width: 1280px; margin: 0 auto 64px;">
+    <div style="display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap;">
+      <span style="display:inline-flex; align-items:center; height:26px; padding:0 11px; border-radius:9999px; background:#111827; color:#fff; font-size:12px; font-weight:700; letter-spacing:.04em;">TURN 6</span>
+      <h1 style="margin:0; font-size:30px; font-weight:800; letter-spacing:-0.02em;">Đặt bên trái, dưới ảnh sản phẩm</h1>
+    </div>
+    <p style="margin:14px 0 30px; max-width: 880px; font-size:15px; line-height:1.65; color:#4b5563;">
+      Mô phỏng đúng layout trang của bạn (ảnh trái · thông tin phải). Panel độ phù hợp đặt <b>ngay dưới ảnh ở cột trái</b> —
+      lấp khoảng trống có sẵn, vừa bề ngang ảnh, không đẩy dài cột mua hàng bên phải. Dùng sản phẩm demo hành Thủy để khớp phân tích.
+      So sánh: <a href="#5a">5a</a> là bản đặt full-width bên dưới.
+    </p>
+
+    <div id="6a" style="width:1040px;max-width:100%;">
+      <div style="background:#fff;border:1px solid #e5e7eb;border-radius:16px;box-shadow:0 1px 3px rgba(16,24,40,.06);padding:22px;">
+        <div style="display:flex;gap:24px;flex-wrap:wrap;">
+
+          <!-- LEFT: image + fit panel -->
+          <div style="width:472px;max-width:100%;flex:0 0 auto;display:flex;flex-direction:column;gap:16px;">
+            <div style="width:100%;height:420px;border-radius:12px;background:linear-gradient(135deg,#f3f4f6,#e9ece4);display:grid;place-items:center;color:#b5bbad;font-size:13px;font-weight:600;">Ảnh sản phẩm</div>
+
+            <div>
+              <div style="display:flex;align-items:center;gap:7px;margin-bottom:9px;">
+                <span style="font-size:13px;font-weight:800;color:#111827;">Độ phù hợp với không gian của bạn</span>
+              </div>
+              <!-- tab strip -->
+              <div style="display:flex;gap:4px;align-items:flex-end;overflow-x:auto;padding:0 2px 2px;">
+                <sc-for list="{{ wsList5 }}" as="w" hint-placeholder-count="6">
+                  <button onClick="{{ w.pickWs5 }}" style="{{ w.tabStyle }}" style-hover="{{ w.tabHover }}" title="{{ w.name }}">
+                    <span style="width:8px;height:8px;border-radius:9999px;background:{{ w.fg }};flex:0 0 auto;"></span>
+                    <span style="font-size:13px;font-weight:800;color:{{ w.fg }};flex:0 0 auto;">{{ w.score }}<span style="font-size:9px;">%</span></span>
+                    <span style="font-size:12px;font-weight:600;color:#6b7280;overflow:hidden;text-overflow:ellipsis;">{{ w.name }}</span>
+                  </button>
+                </sc-for>
+                <button style="flex:0 0 auto;display:flex;align-items:center;gap:5px;white-space:nowrap;cursor:pointer;border:1.5px dashed #cdd3c4;background:transparent;color:#7d8f69;font-family:inherit;padding:8px 12px;border-radius:11px 11px 0 0;font-size:12.5px;font-weight:700;">+ Thêm</button>
+              </div>
+              <!-- panel -->
+              <div style="background:#fff;border:1px solid #e5e7eb;border-radius:0 14px 14px 14px;overflow:hidden;box-shadow:0 1px 3px rgba(16,24,40,.06);">
+                <div onClick="{{ toggleRadar }}" style="padding:16px 18px 14px;display:flex;align-items:center;gap:13px;cursor:pointer;">
+                  <div style="width:56px;height:56px;border-radius:9999px;flex:0 0 auto;display:grid;place-items:center;background:{{ wsSel5.ringStyle }};">
+                    <div style="width:45px;height:45px;border-radius:9999px;background:#fff;display:grid;place-items:center;">
+                      <span style="font-size:17px;font-weight:800;color:{{ wsSel5.fg }};line-height:1;">{{ wsSel5.score }}<span style="font-size:9px;">%</span></span>
+                    </div>
+                  </div>
+                  <div style="flex:1;min-width:0;">
+                    <div style="font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:#9ca3af;">{{ wsSel5.name }} · {{ wsSel5.scope }}</div>
+                    <div style="font-size:18px;font-weight:800;color:{{ wsSel5.fg }};line-height:1.2;margin-top:2px;">{{ wsSel5.tier }}</div>
+                  </div>
+                  <div style="text-align:right;flex:0 0 auto;">
+                    <div style="font-size:11px;color:#9ca3af;">Bản mệnh</div>
+                    <div style="display:inline-flex;align-items:center;gap:5px;margin-top:3px;padding:3px 9px;border-radius:9999px;background:#fdecea;">
+                      <span style="width:9px;height:9px;border-radius:9999px;background:#ef4444;"></span>
+                      <span style="font-size:13px;font-weight:700;color:#ef4444;">Hỏa</span>
+                    </div>
+                  </div>
+                </div>
+                <div onClick="{{ toggleRadar }}" style="display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;padding:0 0 6px;color:#7d8f69;font-size:12px;font-weight:600;">
+                  <span>{{ radarToggleLabel }}</span><span style="font-size:10px;">{{ radarChevron }}</span>
+                </div>
+                <sc-if value="{{ radarOpen }}" hint-placeholder-val="{{ true }}">
+                  <div style="display:grid;place-items:center;padding:2px 0 0;">
+                    <svg width="248" height="226" viewBox="0 0 248 230">
+                      <sc-for list="{{ wsSel5.radar.rings }}" as="g" hint-placeholder-count="3">
+                        <polygon points="{{ g }}" fill="none" stroke="#eceee9" stroke-width="1"></polygon>
+                      </sc-for>
+                      <sc-for list="{{ wsSel5.radar.spokes }}" as="s" hint-placeholder-count="5">
+                        <line x1="124" y1="112" x2="{{ s.x }}" y2="{{ s.y }}" stroke="#eceee9" stroke-width="1"></line>
+                      </sc-for>
+                      <polygon points="{{ wsSel5.radar.need }}" fill="none" stroke="#c4a86a" stroke-width="2" stroke-dasharray="4 3"></polygon>
+                      <polygon points="{{ wsSel5.radar.product }}" fill="rgba(125,143,105,.22)" stroke="#7d8f69" stroke-width="2.5"></polygon>
+                      <sc-for list="{{ wsSel5.radar.nodes }}" as="n" hint-placeholder-count="5">
+                        <circle cx="{{ n.x }}" cy="{{ n.y }}" r="3.5" fill="{{ n.c }}"></circle>
+                      </sc-for>
+                      <sc-for list="{{ wsSel5.radar.labels }}" as="l" hint-placeholder-count="5">
+                        <text x="{{ l.x }}" y="{{ l.y }}" fill="{{ l.c }}" font-size="12.5" font-weight="700" text-anchor="{{ l.anchor }}" dominant-baseline="middle" font-family="Inter">{{ l.vi }}</text>
+                        <text x="{{ l.x }}" y="{{ l.sy }}" fill="{{ l.statusC }}" font-size="9.5" font-weight="600" text-anchor="{{ l.anchor }}" dominant-baseline="middle" font-family="Inter">{{ l.status }}</text>
+                      </sc-for>
+                    </svg>
+                  </div>
+                  <div style="display:flex;justify-content:center;gap:18px;padding:0 0 8px;">
+                    <div style="display:flex;align-items:center;gap:6px;"><span style="width:14px;height:10px;border-radius:2px;background:rgba(125,143,105,.35);border:1.5px solid #7d8f69;"></span><span style="font-size:12px;color:#6b7280;">Sản phẩm cấp</span></div>
+                    <div style="display:flex;align-items:center;gap:6px;"><span style="width:14px;height:0;border-top:2px dashed #c4a86a;"></span><span style="font-size:12px;color:#6b7280;">Phòng đang cần</span></div>
+                  </div>
+                </sc-if>
+                <div style="padding:6px 18px 12px;">
+                  <div style="font-size:11px;font-weight:600;letter-spacing:.03em;text-transform:uppercase;color:#9ca3af;margin-bottom:8px;">Cân bằng phòng · sản phẩm bù gì</div>
+                  <div style="display:flex;flex-wrap:wrap;gap:6px;">
+                    <sc-for list="{{ wsSel5.elChips }}" as="e" hint-placeholder-count="5">
+                      <span style="display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:9999px;background:{{ e.bg }};">
+                        <span style="width:8px;height:8px;border-radius:9999px;background:{{ e.c }};"></span>
+                        <span style="font-size:12px;font-weight:700;color:#374151;">{{ e.vi }}</span>
+                        <span style="font-size:11px;font-weight:600;color:{{ e.tc }};">{{ e.tag }}</span>
+                      </span>
+                    </sc-for>
+                  </div>
+                </div>
+                <div style="padding:0 18px 14px;display:flex;flex-direction:column;">
+                  <div style="display:flex;gap:11px;padding:11px 0;border-top:1px solid #f3f4f6;">
+                    <div style="width:28px;height:28px;border-radius:9999px;flex:0 0 auto;display:grid;place-items:center;background:{{ wsSel5.spaceBg }};color:{{ wsSel5.spaceFg }};font-size:14px;">{{ wsSel5.spaceIcon }}</div>
+                    <div style="min-width:0;">
+                      <div style="font-size:13.5px;font-weight:600;color:#1f2937;">{{ wsSel5.spaceTitle }}</div>
+                      <div style="font-size:12.5px;color:#6b7280;line-height:1.5;margin-top:1px;">{{ wsSel5.spaceLine }}</div>
+                    </div>
+                  </div>
+                  <div style="display:flex;gap:11px;padding:11px 0;border-top:1px solid #f3f4f6;">
+                    <div style="width:28px;height:28px;border-radius:9999px;flex:0 0 auto;display:grid;place-items:center;background:{{ wsSel5.menhBg }};color:{{ wsSel5.menhFg }};font-size:14px;">{{ wsSel5.menhIcon }}</div>
+                    <div style="min-width:0;">
+                      <div style="font-size:13.5px;font-weight:600;color:#1f2937;">Hợp với bản mệnh của bạn</div>
+                      <div style="font-size:12.5px;color:#6b7280;line-height:1.5;margin-top:1px;">{{ wsSel5.menhLine }}</div>
+                    </div>
+                  </div>
+                  <div style="display:flex;gap:11px;padding:11px 0;border-top:1px solid #f3f4f6;">
+                    <div style="width:28px;height:28px;border-radius:9999px;flex:0 0 auto;display:grid;place-items:center;background:#f3f4f6;color:#6b7280;font-size:13px;">◑</div>
+                    <div style="min-width:0;">
+                      <div style="font-size:13.5px;font-weight:600;color:#1f2937;">Hướng đặt gợi ý</div>
+                      <div style="font-size:12.5px;color:#6b7280;line-height:1.5;margin-top:1px;">{{ wsSel5.place }}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- RIGHT: product info -->
+          <div style="flex:1;min-width:280px;display:flex;flex-direction:column;gap:16px;">
+            <div style="display:flex;flex-wrap:wrap;gap:6px;">
+              <span style="border-radius:9999px;background:rgba(125,143,105,.12);padding:3px 10px;font-size:12px;font-weight:600;color:#7d8f69;">Vật phẩm phong thủy</span>
+            </div>
+            <div>
+              <h2 style="margin:0;font-size:24px;font-weight:800;color:#111827;line-height:1.25;">Thác nước sứ men xanh mini</h2>
+              <div style="margin-top:6px;font-size:13px;color:#9ca3af;">Cửa hàng: <span style="color:#7d8f69;font-weight:600;">Vườn Phong Thủy Demo</span> &nbsp;|&nbsp; Mã sản phẩm: TN-12</div>
+            </div>
+            <div style="border-radius:12px;background:#f9fafb;padding:14px 18px;"><span style="font-size:30px;font-weight:800;color:#7d8f69;">1.290.000<span style="font-size:18px;">đ</span></span></div>
+            <div>
+              <div style="display:flex;align-items:center;gap:12px;margin-bottom:9px;"><span style="font-size:14px;font-weight:600;color:#374151;">Phân loại</span><span style="font-size:12px;color:#9ca3af;">Kho: 24 sản phẩm</span></div>
+              <div style="display:flex;flex-wrap:wrap;gap:8px;">
+                <button style="border:1px solid #7d8f69;background:rgba(125,143,105,.05);color:#7d8f69;border-radius:10px;padding:9px 14px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;">Bản mini <span style="opacity:.6;">1.290.000đ</span></button>
+                <button style="border:1px solid #e5e7eb;background:#fff;color:#6b7280;border-radius:10px;padding:9px 14px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;">Bản lớn <span style="opacity:.6;">1.890.000đ</span></button>
+              </div>
+            </div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;">
+              <span style="border-radius:8px;background:rgba(59,130,246,.1);padding:4px 10px;font-size:12px;font-weight:700;color:#3b82f6;">Hành: Thủy</span>
+              <span style="border-radius:8px;background:#f3f4f6;padding:4px 10px;font-size:12px;font-weight:600;color:#6b7280;">Mộc</span>
+              <span style="border-radius:8px;background:#f3f4f6;padding:4px 10px;font-size:12px;font-weight:600;color:#6b7280;">Calm</span>
+            </div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;">
+              <span style="border-radius:8px;border:1px solid #e5e7eb;padding:4px 10px;font-size:12px;font-weight:600;color:#6b7280;">Nặng: 1200g</span>
+              <span style="border-radius:8px;border:1px solid #e5e7eb;padding:4px 10px;font-size:12px;font-weight:600;color:#6b7280;">Kích thước: 18×14×14 cm</span>
+            </div>
+            <div style="margin-top:auto;display:flex;flex-direction:column;gap:12px;">
+              <div style="display:flex;gap:12px;">
+                <div style="display:flex;align-items:center;border:1px solid #e5e7eb;border-radius:10px;height:44px;width:120px;overflow:hidden;">
+                  <div style="flex:1;display:grid;place-items:center;color:#9ca3af;font-size:18px;">−</div>
+                  <div style="flex:1;display:grid;place-items:center;font-size:14px;font-weight:700;color:#111827;">1</div>
+                  <div style="flex:1;display:grid;place-items:center;color:#9ca3af;font-size:18px;">+</div>
+                </div>
+                <button style="flex:1;border:1px solid #7d8f69;background:rgba(125,143,105,.06);color:#7d8f69;border-radius:10px;height:44px;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;">🛒 Thêm giỏ hàng</button>
+              </div>
+              <button style="border:0;background:#7d8f69;color:#fff;border-radius:10px;height:44px;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;">Mua ngay</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section style="max-width: 1280px; margin: 0 auto 64px;">
+    <div style="display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap;">
+      <span style="display:inline-flex; align-items:center; height:26px; padding:0 11px; border-radius:9999px; background:#111827; color:#fff; font-size:12px; font-weight:700; letter-spacing:.04em;">TURN 5</span>
+      <h1 style="margin:0; font-size:30px; font-weight:800; letter-spacing:-0.02em;">Nhúng vào trang chi tiết sản phẩm</h1>
+    </div>
+    <p style="margin:14px 0 30px; max-width: 880px; font-size:15px; line-height:1.65; color:#4b5563;">
+      2b đặt trong khung trang chi tiết: radar <b>bấm header để mở/thu</b>, dải tab <b>cuộn ngang</b> xử lý nhiều không gian
+      (prototype có 9), có shortcut <b>+ Thêm không gian</b>, và <b>empty-state</b> khi user chưa có không gian.
+      Dùng công tắc demo bên dưới để xem cả hai trạng thái.
+    </p>
+
+    <div id="5a" style="width:960px;max-width:100%;">
+      <div style="background:#fff;border:1px solid #e5e7eb;border-radius:16px;overflow:hidden;box-shadow:0 1px 3px rgba(16,24,40,.06);">
+
+        <!-- Product top row -->
+        <div style="display:flex;gap:24px;padding:22px;flex-wrap:wrap;">
+          <div style="width:300px;height:300px;flex:0 0 auto;border-radius:12px;background:linear-gradient(135deg,#f3f4f6,#e9ece4);display:grid;place-items:center;color:#b5bbad;font-size:13px;font-weight:600;">Ảnh sản phẩm</div>
+          <div style="flex:1;min-width:260px;display:flex;flex-direction:column;gap:14px;">
+            <div style="display:flex;flex-wrap:wrap;gap:6px;">
+              <span style="border-radius:9999px;background:rgba(125,143,105,.12);padding:3px 10px;font-size:12px;font-weight:600;color:#7d8f69;">Vật phẩm phong thủy</span>
+            </div>
+            <h2 style="margin:0;font-size:22px;font-weight:800;color:#111827;line-height:1.25;">Thác nước sứ men xanh mini</h2>
+            <div style="border-radius:12px;background:#f9fafb;padding:12px 16px;"><span style="font-size:28px;font-weight:800;color:#7d8f69;">1.290.000<span style="font-size:16px;">đ</span></span></div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;">
+              <span style="border-radius:8px;background:rgba(59,130,246,.1);padding:4px 10px;font-size:12px;font-weight:700;color:#3b82f6;">Hành: Thủy</span>
+              <span style="border-radius:8px;background:#f3f4f6;padding:4px 10px;font-size:12px;font-weight:600;color:#6b7280;">Mộc</span>
+              <span style="border-radius:8px;background:#f3f4f6;padding:4px 10px;font-size:12px;font-weight:600;color:#6b7280;">Thư giãn</span>
+            </div>
+            <div style="margin-top:auto;display:flex;gap:10px;">
+              <button style="flex:1;border:1px solid #7d8f69;background:rgba(125,143,105,.06);color:#7d8f69;border-radius:10px;padding:11px;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;">Thêm giỏ hàng</button>
+              <button style="flex:1;border:0;background:#7d8f69;color:#fff;border-radius:10px;padding:11px;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;">Mua ngay</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Fit section -->
+        <div style="border-top:8px solid #f3f4f6;padding:20px 22px 24px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:16px;">
+            <div>
+              <h3 style="margin:0;font-size:17px;font-weight:800;color:#111827;">Độ phù hợp phong thủy với không gian của bạn</h3>
+              <p style="margin:4px 0 0;font-size:13px;color:#9ca3af;">Dựa trên bản mệnh của bạn và Ngũ hành từng không gian.</p>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span style="font-size:11px;font-weight:600;color:#c4a86a;text-transform:uppercase;letter-spacing:.04em;">Demo</span>
+              <div style="display:flex;background:#f3f4f6;border-radius:10px;padding:3px;gap:2px;">
+                <button onClick="{{ setHasWs }}" style="{{ demoOnStyle }}">Có không gian</button>
+                <button onClick="{{ setNoWs }}" style="{{ demoOffStyle }}">Chưa có</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- HAS workspaces -->
+          <sc-if value="{{ hasWs }}" hint-placeholder-val="{{ true }}">
+            <div style="width:452px;max-width:100%;">
+              <!-- scrollable tab strip -->
+              <div style="display:flex;gap:4px;align-items:flex-end;overflow-x:auto;padding:0 2px 2px;">
+                <sc-for list="{{ wsList5 }}" as="w" hint-placeholder-count="6">
+                  <button onClick="{{ w.pickWs5 }}" style="{{ w.tabStyle }}" style-hover="{{ w.tabHover }}" title="{{ w.name }}">
+                    <span style="width:8px;height:8px;border-radius:9999px;background:{{ w.fg }};flex:0 0 auto;"></span>
+                    <span style="font-size:13px;font-weight:800;color:{{ w.fg }};flex:0 0 auto;">{{ w.score }}<span style="font-size:9px;">%</span></span>
+                    <span style="font-size:12px;font-weight:600;color:#6b7280;overflow:hidden;text-overflow:ellipsis;">{{ w.name }}</span>
+                  </button>
+                </sc-for>
+                <button style="flex:0 0 auto;display:flex;align-items:center;gap:5px;white-space:nowrap;cursor:pointer;border:1.5px dashed #cdd3c4;background:transparent;color:#7d8f69;font-family:inherit;padding:8px 12px;border-radius:11px 11px 0 0;font-size:12.5px;font-weight:700;">+ Thêm</button>
+              </div>
+
+              <!-- panel -->
+              <div style="background:#fff;border:1px solid #e5e7eb;border-radius:0 14px 14px 14px;overflow:hidden;box-shadow:0 1px 3px rgba(16,24,40,.06);">
+                <!-- clickable header (toggle radar) -->
+                <div onClick="{{ toggleRadar }}" style="padding:16px 18px 14px;display:flex;align-items:center;gap:13px;cursor:pointer;">
+                  <div style="width:56px;height:56px;border-radius:9999px;flex:0 0 auto;display:grid;place-items:center;background:{{ wsSel5.ringStyle }};">
+                    <div style="width:45px;height:45px;border-radius:9999px;background:#fff;display:grid;place-items:center;">
+                      <span style="font-size:17px;font-weight:800;color:{{ wsSel5.fg }};line-height:1;">{{ wsSel5.score }}<span style="font-size:9px;">%</span></span>
+                    </div>
+                  </div>
+                  <div style="flex:1;min-width:0;">
+                    <div style="font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:#9ca3af;">{{ wsSel5.name }} · {{ wsSel5.scope }}</div>
+                    <div style="font-size:18px;font-weight:800;color:{{ wsSel5.fg }};line-height:1.2;margin-top:2px;">{{ wsSel5.tier }}</div>
+                  </div>
+                  <div style="text-align:right;flex:0 0 auto;">
+                    <div style="font-size:11px;color:#9ca3af;">Bản mệnh</div>
+                    <div style="display:inline-flex;align-items:center;gap:5px;margin-top:3px;padding:3px 9px;border-radius:9999px;background:#fdecea;">
+                      <span style="width:9px;height:9px;border-radius:9999px;background:#ef4444;"></span>
+                      <span style="font-size:13px;font-weight:700;color:#ef4444;">Hỏa</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- radar toggle affordance -->
+                <div onClick="{{ toggleRadar }}" style="display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;padding:0 0 6px;color:#7d8f69;font-size:12px;font-weight:600;">
+                  <span>{{ radarToggleLabel }}</span><span style="font-size:10px;">{{ radarChevron }}</span>
+                </div>
+
+                <sc-if value="{{ radarOpen }}" hint-placeholder-val="{{ true }}">
+                  <div style="display:grid;place-items:center;padding:2px 0 0;">
+                    <svg width="248" height="226" viewBox="0 0 248 230">
+                      <sc-for list="{{ wsSel5.radar.rings }}" as="g" hint-placeholder-count="3">
+                        <polygon points="{{ g }}" fill="none" stroke="#eceee9" stroke-width="1"></polygon>
+                      </sc-for>
+                      <sc-for list="{{ wsSel5.radar.spokes }}" as="s" hint-placeholder-count="5">
+                        <line x1="124" y1="112" x2="{{ s.x }}" y2="{{ s.y }}" stroke="#eceee9" stroke-width="1"></line>
+                      </sc-for>
+                      <polygon points="{{ wsSel5.radar.need }}" fill="none" stroke="#c4a86a" stroke-width="2" stroke-dasharray="4 3"></polygon>
+                      <polygon points="{{ wsSel5.radar.product }}" fill="rgba(125,143,105,.22)" stroke="#7d8f69" stroke-width="2.5"></polygon>
+                      <sc-for list="{{ wsSel5.radar.nodes }}" as="n" hint-placeholder-count="5">
+                        <circle cx="{{ n.x }}" cy="{{ n.y }}" r="3.5" fill="{{ n.c }}"></circle>
+                      </sc-for>
+                      <sc-for list="{{ wsSel5.radar.labels }}" as="l" hint-placeholder-count="5">
+                        <text x="{{ l.x }}" y="{{ l.y }}" fill="{{ l.c }}" font-size="12.5" font-weight="700" text-anchor="{{ l.anchor }}" dominant-baseline="middle" font-family="Inter">{{ l.vi }}</text>
+                        <text x="{{ l.x }}" y="{{ l.sy }}" fill="{{ l.statusC }}" font-size="9.5" font-weight="600" text-anchor="{{ l.anchor }}" dominant-baseline="middle" font-family="Inter">{{ l.status }}</text>
+                      </sc-for>
+                    </svg>
+                  </div>
+                  <div style="display:flex;justify-content:center;gap:18px;padding:0 0 8px;">
+                    <div style="display:flex;align-items:center;gap:6px;"><span style="width:14px;height:10px;border-radius:2px;background:rgba(125,143,105,.35);border:1.5px solid #7d8f69;"></span><span style="font-size:12px;color:#6b7280;">Sản phẩm cấp</span></div>
+                    <div style="display:flex;align-items:center;gap:6px;"><span style="width:14px;height:0;border-top:2px dashed #c4a86a;"></span><span style="font-size:12px;color:#6b7280;">Phòng đang cần</span></div>
+                  </div>
+                </sc-if>
+
+                <div style="padding:6px 18px 12px;">
+                  <div style="font-size:11px;font-weight:600;letter-spacing:.03em;text-transform:uppercase;color:#9ca3af;margin-bottom:8px;">Cân bằng phòng · sản phẩm bù gì</div>
+                  <div style="display:flex;flex-wrap:wrap;gap:6px;">
+                    <sc-for list="{{ wsSel5.elChips }}" as="e" hint-placeholder-count="5">
+                      <span style="display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:9999px;background:{{ e.bg }};">
+                        <span style="width:8px;height:8px;border-radius:9999px;background:{{ e.c }};"></span>
+                        <span style="font-size:12px;font-weight:700;color:#374151;">{{ e.vi }}</span>
+                        <span style="font-size:11px;font-weight:600;color:{{ e.tc }};">{{ e.tag }}</span>
+                      </span>
+                    </sc-for>
+                  </div>
+                </div>
+
+                <div style="padding:0 18px 14px;display:flex;flex-direction:column;">
+                  <div style="display:flex;gap:11px;padding:11px 0;border-top:1px solid #f3f4f6;">
+                    <div style="width:28px;height:28px;border-radius:9999px;flex:0 0 auto;display:grid;place-items:center;background:{{ wsSel5.spaceBg }};color:{{ wsSel5.spaceFg }};font-size:14px;">{{ wsSel5.spaceIcon }}</div>
+                    <div style="min-width:0;">
+                      <div style="font-size:13.5px;font-weight:600;color:#1f2937;">{{ wsSel5.spaceTitle }}</div>
+                      <div style="font-size:12.5px;color:#6b7280;line-height:1.5;margin-top:1px;">{{ wsSel5.spaceLine }}</div>
+                    </div>
+                  </div>
+                  <div style="display:flex;gap:11px;padding:11px 0;border-top:1px solid #f3f4f6;">
+                    <div style="width:28px;height:28px;border-radius:9999px;flex:0 0 auto;display:grid;place-items:center;background:{{ wsSel5.menhBg }};color:{{ wsSel5.menhFg }};font-size:14px;">{{ wsSel5.menhIcon }}</div>
+                    <div style="min-width:0;">
+                      <div style="font-size:13.5px;font-weight:600;color:#1f2937;">Hợp với bản mệnh của bạn</div>
+                      <div style="font-size:12.5px;color:#6b7280;line-height:1.5;margin-top:1px;">{{ wsSel5.menhLine }}</div>
+                    </div>
+                  </div>
+                  <div style="display:flex;gap:11px;padding:11px 0;border-top:1px solid #f3f4f6;">
+                    <div style="width:28px;height:28px;border-radius:9999px;flex:0 0 auto;display:grid;place-items:center;background:#f3f4f6;color:#6b7280;font-size:13px;">◑</div>
+                    <div style="min-width:0;">
+                      <div style="font-size:13.5px;font-weight:600;color:#1f2937;">Hướng đặt gợi ý</div>
+                      <div style="font-size:12.5px;color:#6b7280;line-height:1.5;margin-top:1px;">{{ wsSel5.place }}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </sc-if>
+
+          <!-- NO workspaces (empty state) -->
+          <sc-if value="{{ noWs }}" hint-placeholder-val="{{ true }}">
+            <div style="border:1.5px dashed #d5ddc9;border-radius:14px;background:#fafbf9;padding:32px 24px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:12px;max-width:520px;">
+              <div style="width:56px;height:56px;border-radius:9999px;background:rgba(125,143,105,.12);display:grid;place-items:center;color:#7d8f69;font-size:26px;font-weight:700;">＋</div>
+              <div style="font-size:17px;font-weight:800;color:#111827;">Bạn chưa có không gian nào</div>
+              <div style="font-size:14px;color:#6b7280;line-height:1.6;max-width:400px;">Thêm một không gian (phòng ngủ, phòng làm việc, phòng họp…) để xem sản phẩm này hợp đến đâu với <b>bản mệnh</b> và <b>Ngũ hành từng phòng</b> của bạn.</div>
+              <button style="margin-top:4px;border:0;background:#7d8f69;color:#fff;border-radius:10px;padding:11px 20px;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;">+ Thêm không gian để xem phân tích</button>
+              <div style="font-size:12.5px;color:#9ca3af;">Sản phẩm này thuộc <b style="color:#3b82f6;">hành Thủy</b> trội — hợp phòng đang thiếu Thủy.</div>
+            </div>
+          </sc-if>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section style="max-width: 1280px; margin: 0 auto 64px;">
+    <div style="display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap;">
+      <span style="display:inline-flex; align-items:center; height:26px; padding:0 11px; border-radius:9999px; background:#111827; color:#fff; font-size:12px; font-weight:700; letter-spacing:.04em;">TURN 4</span>
+      <h1 style="margin:0; font-size:30px; font-weight:800; letter-spacing:-0.02em;">Bản gọn — tab không gian (2b)</h1>
+    </div>
+    <p style="margin:14px 0 30px; max-width: 880px; font-size:15px; line-height:1.65; color:#4b5563;">
+      Bản rút gọn cho khung nhỏ (cột phải trang chi tiết / modal): các không gian thu về <b>dải tab kiểu folder</b> phía trên panel —
+      hover để tab nở ra xem tên đầy đủ, bấm để mở chi tiết. Panel gồm <b>radar trực quan</b> + <b>chip Ngũ hành thiếu/thừa</b>,
+      chỉ hiện một không gian tại một thời điểm nên gọn hơn danh sách đầy đủ ở <a href="#3a">3a</a>.
+    </p>
+
+    <div id="2b" style="display:flex;gap:32px;align-items:flex-start;flex-wrap:wrap;">
+      <div style="width:452px;flex:0 0 auto;">
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
+          <span style="display:inline-flex;align-items:center;justify-content:center;min-width:30px;height:24px;padding:0 8px;border-radius:6px;background:#111827;color:#fff;font-size:12px;font-weight:700;">2b</span>
+          <span style="font-size:14px;font-weight:700;color:#374151;">Tab không gian gọn</span>
+        </div>
+
+        <!-- Folder-tab strip -->
+        <div style="display:flex;gap:4px;align-items:flex-end;padding:0 2px;">
+          <sc-for list="{{ wsList }}" as="w" hint-placeholder-count="6">
+            <button onClick="{{ w.pickWs }}" style="{{ w.tabStyle }}" style-hover="{{ w.tabHover }}" title="{{ w.name }}">
+              <span style="width:8px;height:8px;border-radius:9999px;background:{{ w.fg }};flex:0 0 auto;"></span>
+              <span style="font-size:13px;font-weight:800;color:{{ w.fg }};flex:0 0 auto;">{{ w.score }}<span style="font-size:9px;">%</span></span>
+              <span style="font-size:12px;font-weight:600;color:#6b7280;overflow:hidden;text-overflow:ellipsis;">{{ w.name }}</span>
+            </button>
+          </sc-for>
+        </div>
+
+        <!-- Compact detail panel -->
+        <div style="background:#fff;border:1px solid #e5e7eb;border-radius:0 14px 14px 14px;overflow:hidden;box-shadow:0 1px 3px rgba(16,24,40,.06);">
+          <div style="padding:16px 18px 12px;display:flex;align-items:center;gap:13px;">
+            <div style="width:56px;height:56px;border-radius:9999px;flex:0 0 auto;display:grid;place-items:center;background:{{ wsSel.ringStyle }};">
+              <div style="width:45px;height:45px;border-radius:9999px;background:#fff;display:grid;place-items:center;">
+                <span style="font-size:17px;font-weight:800;color:{{ wsSel.fg }};line-height:1;">{{ wsSel.score }}<span style="font-size:9px;">%</span></span>
+              </div>
+            </div>
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:#9ca3af;">{{ wsSel.name }} · {{ wsSel.scope }}</div>
+              <div style="font-size:18px;font-weight:800;color:{{ wsSel.fg }};line-height:1.2;margin-top:2px;">{{ wsSel.tier }}</div>
+            </div>
+            <div style="text-align:right;flex:0 0 auto;">
+              <div style="font-size:11px;color:#9ca3af;">Bản mệnh</div>
+              <div style="display:inline-flex;align-items:center;gap:5px;margin-top:3px;padding:3px 9px;border-radius:9999px;background:#fdecea;">
+                <span style="width:9px;height:9px;border-radius:9999px;background:#ef4444;"></span>
+                <span style="font-size:13px;font-weight:700;color:#ef4444;">Hỏa</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Radar trực quan -->
+          <div style="display:grid;place-items:center;padding:2px 0 0;">
+            <svg width="248" height="226" viewBox="0 0 248 230">
+              <sc-for list="{{ wsSel.radar.rings }}" as="g" hint-placeholder-count="3">
+                <polygon points="{{ g }}" fill="none" stroke="#eceee9" stroke-width="1"></polygon>
+              </sc-for>
+              <sc-for list="{{ wsSel.radar.spokes }}" as="s" hint-placeholder-count="5">
+                <line x1="124" y1="112" x2="{{ s.x }}" y2="{{ s.y }}" stroke="#eceee9" stroke-width="1"></line>
+              </sc-for>
+              <polygon points="{{ wsSel.radar.need }}" fill="none" stroke="#c4a86a" stroke-width="2" stroke-dasharray="4 3"></polygon>
+              <polygon points="{{ wsSel.radar.product }}" fill="rgba(125,143,105,.22)" stroke="#7d8f69" stroke-width="2.5"></polygon>
+              <sc-for list="{{ wsSel.radar.nodes }}" as="n" hint-placeholder-count="5">
+                <circle cx="{{ n.x }}" cy="{{ n.y }}" r="3.5" fill="{{ n.c }}"></circle>
+              </sc-for>
+              <sc-for list="{{ wsSel.radar.labels }}" as="l" hint-placeholder-count="5">
+                <text x="{{ l.x }}" y="{{ l.y }}" fill="{{ l.c }}" font-size="12.5" font-weight="700" text-anchor="{{ l.anchor }}" dominant-baseline="middle" font-family="Inter">{{ l.vi }}</text>
+                <text x="{{ l.x }}" y="{{ l.sy }}" fill="{{ l.statusC }}" font-size="9.5" font-weight="600" text-anchor="{{ l.anchor }}" dominant-baseline="middle" font-family="Inter">{{ l.status }}</text>
+              </sc-for>
+            </svg>
+          </div>
+          <div style="display:flex;justify-content:center;gap:18px;padding:0 0 8px;">
+            <div style="display:flex;align-items:center;gap:6px;"><span style="width:14px;height:10px;border-radius:2px;background:rgba(125,143,105,.35);border:1.5px solid #7d8f69;"></span><span style="font-size:12px;color:#6b7280;">Sản phẩm cấp</span></div>
+            <div style="display:flex;align-items:center;gap:6px;"><span style="width:14px;height:0;border-top:2px dashed #c4a86a;"></span><span style="font-size:12px;color:#6b7280;">Phòng đang cần</span></div>
+          </div>
+
+          <!-- Ngũ hành chips -->
+          <div style="padding:2px 18px 12px;">
+            <div style="font-size:11px;font-weight:600;letter-spacing:.03em;text-transform:uppercase;color:#9ca3af;margin-bottom:8px;">Cân bằng phòng · sản phẩm bù gì</div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;">
+              <sc-for list="{{ wsSel.elChips }}" as="e" hint-placeholder-count="5">
+                <span style="display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:9999px;background:{{ e.bg }};">
+                  <span style="width:8px;height:8px;border-radius:9999px;background:{{ e.c }};"></span>
+                  <span style="font-size:12px;font-weight:700;color:#374151;">{{ e.vi }}</span>
+                  <span style="font-size:11px;font-weight:600;color:{{ e.tc }};">{{ e.tag }}</span>
+                </span>
+              </sc-for>
+            </div>
+          </div>
+
+          <!-- Lens rows compact -->
+          <div style="padding:0 18px 14px;display:flex;flex-direction:column;">
+            <div style="display:flex;gap:11px;padding:11px 0;border-top:1px solid #f3f4f6;">
+              <div style="width:28px;height:28px;border-radius:9999px;flex:0 0 auto;display:grid;place-items:center;background:{{ wsSel.spaceBg }};color:{{ wsSel.spaceFg }};font-size:14px;">{{ wsSel.spaceIcon }}</div>
+              <div style="min-width:0;">
+                <div style="font-size:13.5px;font-weight:600;color:#1f2937;">{{ wsSel.spaceTitle }}</div>
+                <div style="font-size:12.5px;color:#6b7280;line-height:1.5;margin-top:1px;">{{ wsSel.spaceLine }}</div>
+              </div>
+            </div>
+            <div style="display:flex;gap:11px;padding:11px 0;border-top:1px solid #f3f4f6;">
+              <div style="width:28px;height:28px;border-radius:9999px;flex:0 0 auto;display:grid;place-items:center;background:{{ wsSel.menhBg }};color:{{ wsSel.menhFg }};font-size:14px;">{{ wsSel.menhIcon }}</div>
+              <div style="min-width:0;">
+                <div style="font-size:13.5px;font-weight:600;color:#1f2937;">Hợp với bản mệnh của bạn</div>
+                <div style="font-size:12.5px;color:#6b7280;line-height:1.5;margin-top:1px;">{{ wsSel.menhLine }}</div>
+              </div>
+            </div>
+            <div style="display:flex;gap:11px;padding:11px 0;border-top:1px solid #f3f4f6;">
+              <div style="width:28px;height:28px;border-radius:9999px;flex:0 0 auto;display:grid;place-items:center;background:#f3f4f6;color:#6b7280;font-size:13px;">◑</div>
+              <div style="min-width:0;">
+                <div style="font-size:13.5px;font-weight:600;color:#1f2937;">Hướng đặt gợi ý</div>
+                <div style="font-size:12.5px;color:#6b7280;line-height:1.5;margin-top:1px;">{{ wsSel.place }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section style="max-width: 1280px; margin: 0 auto 64px;">
+    <div style="display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap;">
+      <span style="display:inline-flex; align-items:center; height:26px; padding:0 11px; border-radius:9999px; background:#111827; color:#fff; font-size:12px; font-weight:700; letter-spacing:.04em;">TURN 3</span>
+      <h1 style="margin:0; font-size:30px; font-weight:800; letter-spacing:-0.02em;">Hợp với không gian nào của bạn?</h1>
+    </div>
+    <p style="margin:14px 0 30px; max-width: 880px; font-size:15px; line-height:1.65; color:#4b5563;">
+      Đảo ngược câu hỏi: thay vì bắt người dùng tự chọn loại không gian trừu tượng, panel liệt kê thẳng
+      <b>các workspace thật của họ</b> (phòng ngủ, phòng làm việc, bếp… và khu công cộng như phòng họp, khoang làm việc chung),
+      <b>xếp hạng theo độ hợp</b> với chính sản phẩm này. Scope (riêng/chung/công cộng) tự suy ra từ loại phòng — người dùng không cần nghĩ.
+      Bấm một phòng để xem chi tiết. Tham chiếu turn trước: <a href="#2a">2a</a>.
+    </p>
+
+    <div id="3a" style="display: flex; gap: 32px; align-items: flex-start; flex-wrap: wrap; position: relative">
+      <div style="width:468px;flex:0 0 auto;">
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
+          <span style="display:inline-flex;align-items:center;justify-content:center;min-width:30px;height:24px;padding:0 8px;border-radius:6px;background:#111827;color:#fff;font-size:12px;font-weight:700;">3a</span>
+          <span style="font-size:14px;font-weight:700;color:#374151;">Bảng độ hợp theo workspace</span>
+        </div>
+
+        <div style="background:#fff;border:1px solid #e5e7eb;border-radius:15px;overflow:hidden;box-shadow:0 1px 3px rgba(16,24,40,.06);">
+
+          <!-- Ranked workspace list -->
+          <div style="padding: 18px 20px 8px; position: relative">
+            <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:12px;">
+              <div style="font-size:15px;font-weight:700;color:#1f2937;">Sản phẩm này hợp với không gian nào của bạn?</div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:7px;">
+              <button onClick="{{ w0.pickWs }}" style="{{ w0.rowStyle }}">
+                <div style="flex:1;min-width:0;">
+                  <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                    <span style="font-size:14px;font-weight:700;color:#1f2937;">{{ w0.name }}</span>
+                    <sc-if value="{{ w0.best }}" hint-placeholder-val="{{ true }}"><span style="font-size:9.5px;font-weight:700;letter-spacing:.03em;color:#7d8f69;background:#eef1e9;border-radius:9999px;padding:2px 7px;white-space:nowrap;">PHÙ HỢP NHẤT</span></sc-if>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:9px;margin-top:6px;">
+                    <span style="font-size:11px;color:#6b7280;background:#f3f4f6;border-radius:9999px;padding:2px 9px;">{{ w0.scope }}</span>
+                    <div style="flex:1;height:6px;border-radius:9999px;background:#eceee9;overflow:hidden;max-width:130px;"><div style="{{ w0.barStyle }}"></div></div>
+                  </div>
+                </div>
+                <div style="text-align:right;flex:0 0 auto;">
+                  <div style="font-size:17px;font-weight:800;color:{{ w0.fg }};line-height:1;">{{ w0.score }}<span style="font-size:10px;">%</span></div>
+                  <div style="font-size:11px;font-weight:600;color:{{ w0.fg }};margin-top:3px;">{{ w0.tier }}</div>
+                </div>
+              </button>
+              <button onClick="{{ w1.pickWs }}" style="{{ w1.rowStyle }}">
+                <div style="flex:1;min-width:0;">
+                  <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                    <span style="font-size:14px;font-weight:700;color:#1f2937;">{{ w1.name }}</span>
+                    <sc-if value="{{ w1.best }}" hint-placeholder-val="{{ true }}"><span style="font-size:9.5px;font-weight:700;letter-spacing:.03em;color:#7d8f69;background:#eef1e9;border-radius:9999px;padding:2px 7px;white-space:nowrap;">PHÙ HỢP NHẤT</span></sc-if>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:9px;margin-top:6px;">
+                    <span style="font-size:11px;color:#6b7280;background:#f3f4f6;border-radius:9999px;padding:2px 9px;">{{ w1.scope }}</span>
+                    <div style="flex:1;height:6px;border-radius:9999px;background:#eceee9;overflow:hidden;max-width:130px;"><div style="{{ w1.barStyle }}"></div></div>
+                  </div>
+                </div>
+                <div style="text-align:right;flex:0 0 auto;">
+                  <div style="font-size:17px;font-weight:800;color:{{ w1.fg }};line-height:1;">{{ w1.score }}<span style="font-size:10px;">%</span></div>
+                  <div style="font-size:11px;font-weight:600;color:{{ w1.fg }};margin-top:3px;">{{ w1.tier }}</div>
+                </div>
+              </button>
+              <button onClick="{{ w2.pickWs }}" style="{{ w2.rowStyle }}">
+                <div style="flex:1;min-width:0;">
+                  <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                    <span style="font-size:14px;font-weight:700;color:#1f2937;">{{ w2.name }}</span>
+                    <sc-if value="{{ w2.best }}" hint-placeholder-val="{{ true }}"><span style="font-size:9.5px;font-weight:700;letter-spacing:.03em;color:#7d8f69;background:#eef1e9;border-radius:9999px;padding:2px 7px;white-space:nowrap;">PHÙ HỢP NHẤT</span></sc-if>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:9px;margin-top:6px;">
+                    <span style="font-size:11px;color:#6b7280;background:#f3f4f6;border-radius:9999px;padding:2px 9px;">{{ w2.scope }}</span>
+                    <div style="flex:1;height:6px;border-radius:9999px;background:#eceee9;overflow:hidden;max-width:130px;"><div style="{{ w2.barStyle }}"></div></div>
+                  </div>
+                </div>
+                <div style="text-align:right;flex:0 0 auto;">
+                  <div style="font-size:17px;font-weight:800;color:{{ w2.fg }};line-height:1;">{{ w2.score }}<span style="font-size:10px;">%</span></div>
+                  <div style="font-size:11px;font-weight:600;color:{{ w2.fg }};margin-top:3px;">{{ w2.tier }}</div>
+                </div>
+              </button>
+              <button onClick="{{ w3.pickWs }}" style="{{ w3.rowStyle }}">
+                <div style="flex:1;min-width:0;">
+                  <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                    <span style="font-size:14px;font-weight:700;color:#1f2937;">{{ w3.name }}</span>
+                    <sc-if value="{{ w3.best }}" hint-placeholder-val="{{ true }}"><span style="font-size:9.5px;font-weight:700;letter-spacing:.03em;color:#7d8f69;background:#eef1e9;border-radius:9999px;padding:2px 7px;white-space:nowrap;">PHÙ HỢP NHẤT</span></sc-if>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:9px;margin-top:6px;">
+                    <span style="font-size:11px;color:#6b7280;background:#f3f4f6;border-radius:9999px;padding:2px 9px;">{{ w3.scope }}</span>
+                    <div style="flex:1;height:6px;border-radius:9999px;background:#eceee9;overflow:hidden;max-width:130px;"><div style="{{ w3.barStyle }}"></div></div>
+                  </div>
+                </div>
+                <div style="text-align:right;flex:0 0 auto;">
+                  <div style="font-size:17px;font-weight:800;color:{{ w3.fg }};line-height:1;">{{ w3.score }}<span style="font-size:10px;">%</span></div>
+                  <div style="font-size:11px;font-weight:600;color:{{ w3.fg }};margin-top:3px;">{{ w3.tier }}</div>
+                </div>
+              </button>
+              <button onClick="{{ w4.pickWs }}" style="{{ w4.rowStyle }}">
+                <div style="flex:1;min-width:0;">
+                  <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                    <span style="font-size:14px;font-weight:700;color:#1f2937;">{{ w4.name }}</span>
+                    <sc-if value="{{ w4.best }}" hint-placeholder-val="{{ true }}"><span style="font-size:9.5px;font-weight:700;letter-spacing:.03em;color:#7d8f69;background:#eef1e9;border-radius:9999px;padding:2px 7px;white-space:nowrap;">PHÙ HỢP NHẤT</span></sc-if>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:9px;margin-top:6px;">
+                    <span style="font-size:11px;color:#6b7280;background:#f3f4f6;border-radius:9999px;padding:2px 9px;">{{ w4.scope }}</span>
+                    <div style="flex:1;height:6px;border-radius:9999px;background:#eceee9;overflow:hidden;max-width:130px;"><div style="{{ w4.barStyle }}"></div></div>
+                  </div>
+                </div>
+                <div style="text-align:right;flex:0 0 auto;">
+                  <div style="font-size:17px;font-weight:800;color:{{ w4.fg }};line-height:1;">{{ w4.score }}<span style="font-size:10px;">%</span></div>
+                  <div style="font-size:11px;font-weight:600;color:{{ w4.fg }};margin-top:3px;">{{ w4.tier }}</div>
+                </div>
+              </button>
+              <button onClick="{{ w5.pickWs }}" style="{{ w5.rowStyle }}">
+                <div style="flex:1;min-width:0;">
+                  <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                    <span style="font-size:14px;font-weight:700;color:#1f2937;">{{ w5.name }}</span>
+                    <sc-if value="{{ w5.best }}" hint-placeholder-val="{{ true }}"><span style="font-size:9.5px;font-weight:700;letter-spacing:.03em;color:#7d8f69;background:#eef1e9;border-radius:9999px;padding:2px 7px;white-space:nowrap;">PHÙ HỢP NHẤT</span></sc-if>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:9px;margin-top:6px;">
+                    <span style="font-size:11px;color:#6b7280;background:#f3f4f6;border-radius:9999px;padding:2px 9px;">{{ w5.scope }}</span>
+                    <div style="flex:1;height:6px;border-radius:9999px;background:#eceee9;overflow:hidden;max-width:130px;"><div style="{{ w5.barStyle }}"></div></div>
+                  </div>
+                </div>
+                <div style="text-align:right;flex:0 0 auto;">
+                  <div style="font-size:17px;font-weight:800;color:{{ w5.fg }};line-height:1;">{{ w5.score }}<span style="font-size:10px;">%</span></div>
+                  <div style="font-size:11px;font-weight:600;color:{{ w5.fg }};margin-top:3px;">{{ w5.tier }}</div>
+                </div>
+              </button>
+            </div>
+            <div style="font-size:12px;color:#9ca3af;margin:12px 2px 4px;">Chưa có không gian? <span style="color:#7d8f69;font-weight:600;">+ Tạo nhanh một phòng</span> để xem độ hợp.</div>
+          </div>
+
+          <!-- Selected workspace detail -->
+          <div style="border-top:8px solid #f3f4f6;">
+            <div style="padding: 16px 20px 12px; display: flex; align-items: center; gap: 14px; position: relative">
+              <div style="width:60px;height:60px;border-radius:9999px;flex:0 0 auto;display:grid;place-items:center;background:{{ wsSel.ringStyle }};">
+                <div style="width:48px;height:48px;border-radius:9999px;background:#fff;display:grid;place-items:center;">
+                  <span style="font-size:18px;font-weight:800;color:{{ wsSel.fg }};line-height:1;">{{ wsSel.score }}<span style="font-size:10px;">%</span></span>
+                </div>
+              </div>
+              <div style="flex:1;min-width:0;">
+                <div style="font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:#9ca3af;">Đang xem · {{ wsSel.name }} · {{ wsSel.scope }}</div>
+                <div style="font-size:19px;font-weight:800;color:{{ wsSel.fg }};line-height:1.2;margin-top:2px;">{{ wsSel.tier }}</div>
+              </div>
+              <div style="text-align:right;flex:0 0 auto;">
+                <div style="font-size:11px;color:#9ca3af;">Bản mệnh</div>
+                <div style="display:inline-flex;align-items:center;gap:5px;margin-top:3px;padding:3px 9px;border-radius:9999px;background:#fdecea;">
+                  <span style="width:9px;height:9px;border-radius:9999px;background:#ef4444;"></span>
+                  <span style="font-size:13px;font-weight:700;color:#ef4444;">Hỏa</span>
+                </div>
+              </div>
+            </div>
+
+            <div style="display:grid;place-items:center;padding:4px 0 0;">
+              <svg width="256" height="234" viewBox="0 0 248 230">
+                <sc-for list="{{ wsSel.radar.rings }}" as="g" hint-placeholder-count="3">
+                  <polygon points="{{ g }}" fill="none" stroke="#eceee9" stroke-width="1"></polygon>
+                </sc-for>
+                <sc-for list="{{ wsSel.radar.spokes }}" as="s" hint-placeholder-count="5">
+                  <line x1="124" y1="112" x2="{{ s.x }}" y2="{{ s.y }}" stroke="#eceee9" stroke-width="1"></line>
+                </sc-for>
+                <polygon points="{{ wsSel.radar.need }}" fill="none" stroke="#c4a86a" stroke-width="2" stroke-dasharray="4 3"></polygon>
+                <polygon points="{{ wsSel.radar.product }}" fill="rgba(125,143,105,.22)" stroke="#7d8f69" stroke-width="2.5"></polygon>
+                <sc-for list="{{ wsSel.radar.nodes }}" as="n" hint-placeholder-count="5">
+                  <circle cx="{{ n.x }}" cy="{{ n.y }}" r="3.5" fill="{{ n.c }}"></circle>
+                </sc-for>
+                <sc-for list="{{ wsSel.radar.labels }}" as="l" hint-placeholder-count="5">
+                  <text x="{{ l.x }}" y="{{ l.y }}" fill="{{ l.c }}" font-size="12.5" font-weight="700" text-anchor="{{ l.anchor }}" dominant-baseline="middle" font-family="Inter">{{ l.vi }}</text>
+                  <text x="{{ l.x }}" y="{{ l.sy }}" fill="{{ l.statusC }}" font-size="9.5" font-weight="600" text-anchor="{{ l.anchor }}" dominant-baseline="middle" font-family="Inter">{{ l.status }}</text>
+                </sc-for>
+              </svg>
+            </div>
+            <div style="display:flex;justify-content:center;gap:18px;padding:0 0 8px;">
+              <div style="display:flex;align-items:center;gap:6px;"><span style="width:14px;height:10px;border-radius:2px;background:rgba(125,143,105,.35);border:1.5px solid #7d8f69;"></span><span style="font-size:12px;color:#6b7280;">Sản phẩm cấp</span></div>
+              <div style="display:flex;align-items:center;gap:6px;"><span style="width:14px;height:0;border-top:2px dashed #c4a86a;"></span><span style="font-size:12px;color:#6b7280;">Phòng đang cần</span></div>
+            </div>
+
+            <div style="padding:4px 20px 18px;display:flex;flex-direction:column;">
+              <div style="display:flex;gap:12px;padding:12px 0;border-top:1px solid #f3f4f6;">
+                <div style="width:30px;height:30px;border-radius:9999px;flex:0 0 auto;display:grid;place-items:center;background:{{ wsSel.spaceBg }};color:{{ wsSel.spaceFg }};font-size:15px;">{{ wsSel.spaceIcon }}</div>
+                <div style="min-width:0;">
+                  <div style="font-size:14px;font-weight:600;color:#1f2937;">{{ wsSel.spaceTitle }}</div>
+                  <div style="font-size:13px;color:#6b7280;line-height:1.5;margin-top:1px;">{{ wsSel.spaceLine }}</div>
+                </div>
+              </div>
+              <div style="display:flex;gap:12px;padding:12px 0;border-top:1px solid #f3f4f6;">
+                <div style="width:30px;height:30px;border-radius:9999px;flex:0 0 auto;display:grid;place-items:center;background:{{ wsSel.menhBg }};color:{{ wsSel.menhFg }};font-size:15px;">{{ wsSel.menhIcon }}</div>
+                <div style="min-width:0;">
+                  <div style="font-size:14px;font-weight:600;color:#1f2937;">Hợp với bản mệnh của bạn</div>
+                  <div style="font-size:13px;color:#6b7280;line-height:1.5;margin-top:1px;">{{ wsSel.menhLine }}</div>
+                </div>
+              </div>
+              <div style="display:flex;gap:12px;padding:12px 0;border-top:1px solid #f3f4f6;">
+                <div style="width:30px;height:30px;border-radius:9999px;flex:0 0 auto;display:grid;place-items:center;background:#f3f4f6;color:#6b7280;font-size:14px;">◑</div>
+                <div style="min-width:0;">
+                  <div style="font-size:14px;font-weight:600;color:#1f2937;">Hướng đặt gợi ý</div>
+                  <div style="font-size:13px;color:#6b7280;line-height:1.5;margin-top:1px;">{{ wsSel.place }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section style="max-width: 1280px; margin: 0 auto 64px;">
+    <div style="display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap;">
+      <span style="display:inline-flex; align-items:center; height:26px; padding:0 11px; border-radius:9999px; background:#111827; color:#fff; font-size:12px; font-weight:700; letter-spacing:.04em;">TURN 2</span>
+      <h1 style="margin:0; font-size:30px; font-weight:800; letter-spacing:-0.02em;">Bảng độ phù hợp — bản gộp</h1>
+    </div>
+    <p style="margin:14px 0 30px; max-width: 860px; font-size:15px; line-height:1.65; color:#4b5563;">
+      Gộp lại thành một bảng hoàn chỉnh: vòng điểm &amp; các dòng gợi ý của <a href="#1a">1a</a>, radar của <a href="#1b">1b</a>,
+      và phần thiếu/thừa của <a href="#1c">1c</a> đưa vào ngay dưới radar. Bấm bộ chọn không gian để thấy điểm và kết luận đổi theo.
+    </p>
+
+    <div id="2a" style="display:flex;gap:32px;align-items:flex-start;flex-wrap:wrap;">
+      <div style="width:452px;flex:0 0 auto;">
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
+          <span style="display:inline-flex;align-items:center;justify-content:center;min-width:30px;height:24px;padding:0 8px;border-radius:6px;background:#111827;color:#fff;font-size:12px;font-weight:700;">2a</span>
+          <span style="font-size:14px;font-weight:700;color:#374151;">Bảng độ phù hợp Ngũ hành</span>
+          <span style="font-size:12px;color:#9ca3af;">— bản gộp cho trang chi tiết / modal</span>
+        </div>
+
+        <div style="background:#fff;border:1px solid #e5e7eb;border-radius:15px;overflow:hidden;box-shadow:0 1px 3px rgba(16,24,40,.06);">
+
+          <!-- Header: score ring + tier + mệnh -->
+          <div style="padding:18px 20px 16px;border-bottom:1px solid #f3f4f6;display:flex;align-items:center;gap:14px;">
+            <div style="width:66px;height:66px;border-radius:9999px;flex:0 0 auto;display:grid;place-items:center;background:{{ ringStyleM }};">
+              <div style="width:53px;height:53px;border-radius:9999px;background:#fff;display:grid;place-items:center;">
+                <span style="font-size:20px;font-weight:800;color:{{ vM.fg }};line-height:1;">{{ vM.score }}<span style="font-size:11px;">%</span></span>
+              </div>
+            </div>
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:#9ca3af;">Độ phù hợp</div>
+              <div style="font-size:20px;font-weight:800;color:{{ vM.fg }};line-height:1.2;margin-top:2px;">{{ vM.tier }}</div>
+            </div>
+            <div style="text-align:right;flex:0 0 auto;">
+              <div style="font-size:11px;color:#9ca3af;">Bản mệnh</div>
+              <div style="display:inline-flex;align-items:center;gap:5px;margin-top:3px;padding:3px 9px;border-radius:9999px;background:#fdecea;">
+                <span style="width:9px;height:9px;border-radius:9999px;background:#ef4444;"></span>
+                <span style="font-size:13px;font-weight:700;color:#ef4444;">Hỏa</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Scope switcher -->
+          <div style="padding:14px 20px 6px;">
+            <div style="font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:#9ca3af;margin-bottom:8px;">Bạn đặt sản phẩm ở đâu?</div>
+            <div style="display:flex;background:#f3f4f6;border-radius:10px;padding:3px;gap:2px;">
+              <sc-for list="{{ scopes }}" as="s" hint-placeholder-count="3">
+                <button onClick="{{ s.pickM }}" style="{{ s.tabMStyle }}">{{ s.short }}</button>
+              </sc-for>
+            </div>
+            <div style="font-size:12px;color:#9ca3af;margin:8px 2px 2px;">{{ scopeMsub }}</div>
+          </div>
+
+          <!-- Radar -->
+          <div style="display:grid;place-items:center;padding:6px 0 0;">
+            <svg width="256" height="234" viewBox="0 0 248 230">
+              <sc-for list="{{ radar.rings }}" as="g" hint-placeholder-count="3">
+                <polygon points="{{ g }}" fill="none" stroke="#eceee9" stroke-width="1"></polygon>
+              </sc-for>
+              <sc-for list="{{ radar.spokes }}" as="s" hint-placeholder-count="5">
+                <line x1="124" y1="112" x2="{{ s.x }}" y2="{{ s.y }}" stroke="#eceee9" stroke-width="1"></line>
+              </sc-for>
+              <polygon points="{{ radar.need }}" fill="none" stroke="#c4a86a" stroke-width="2" stroke-dasharray="4 3"></polygon>
+              <polygon points="{{ radar.product }}" fill="rgba(125,143,105,.22)" stroke="#7d8f69" stroke-width="2.5"></polygon>
+              <sc-for list="{{ radar.nodes }}" as="n" hint-placeholder-count="5">
+                <circle cx="{{ n.x }}" cy="{{ n.y }}" r="3.5" fill="{{ n.c }}"></circle>
+              </sc-for>
+              <sc-for list="{{ radar.labels }}" as="l" hint-placeholder-count="5">
+                <text x="{{ l.x }}" y="{{ l.y }}" fill="{{ l.c }}" font-size="12.5" font-weight="700" text-anchor="{{ l.anchor }}" dominant-baseline="middle" font-family="Inter">{{ l.vi }}</text>
+                <text x="{{ l.x }}" y="{{ l.sy }}" fill="{{ l.statusC }}" font-size="9.5" font-weight="600" text-anchor="{{ l.anchor }}" dominant-baseline="middle" font-family="Inter">{{ l.status }}</text>
+              </sc-for>
+            </svg>
+          </div>
+          <div style="display:flex;justify-content:center;gap:18px;padding:0 0 8px;">
+            <div style="display:flex;align-items:center;gap:6px;"><span style="width:14px;height:10px;border-radius:2px;background:rgba(125,143,105,.35);border:1.5px solid #7d8f69;"></span><span style="font-size:12px;color:#6b7280;">Sản phẩm cấp</span></div>
+            <div style="display:flex;align-items:center;gap:6px;"><span style="width:14px;height:0;border-top:2px dashed #c4a86a;"></span><span style="font-size:12px;color:#6b7280;">Phòng đang cần</span></div>
+          </div>
+
+          <!-- Lens rows -->
+          <div style="padding:8px 20px 18px;display:flex;flex-direction:column;">
+            <div style="display:flex;gap:12px;padding:12px 0;border-top:1px solid #f3f4f6;">
+              <div style="width:30px;height:30px;border-radius:9999px;flex:0 0 auto;display:grid;place-items:center;background:#eef1e9;color:#7d8f69;font-size:15px;">✓</div>
+              <div style="min-width:0;">
+                <div style="font-size:14px;font-weight:600;color:#1f2937;">Hợp với không gian này</div>
+                <div style="font-size:13px;color:#6b7280;line-height:1.5;margin-top:1px;">Bù mạnh hành <b style="color:#3b82f6;">Thủy</b> và <b style="color:#22c55e;">Mộc</b> mà phòng đang thiếu.</div>
+              </div>
+            </div>
+            <div style="display:flex;gap:12px;padding:12px 0;border-top:1px solid #f3f4f6;">
+              <div style="width:30px;height:30px;border-radius:9999px;flex:0 0 auto;display:grid;place-items:center;background:{{ vM.menhBg }};color:{{ vM.menhFg }};font-size:15px;">{{ vM.menhIcon }}</div>
+              <div style="min-width:0;">
+                <div style="font-size:14px;font-weight:600;color:#1f2937;">Hợp với bản mệnh của bạn</div>
+                <div style="font-size:13px;color:#6b7280;line-height:1.5;margin-top:1px;">{{ vM.menhLine }}</div>
+              </div>
+            </div>
+            <div style="display:flex;gap:12px;padding:12px 0;border-top:1px solid #f3f4f6;">
+              <div style="width:30px;height:30px;border-radius:9999px;flex:0 0 auto;display:grid;place-items:center;background:#f3f4f6;color:#6b7280;font-size:14px;">◑</div>
+              <div style="min-width:0;">
+                <div style="font-size:14px;font-weight:600;color:#1f2937;">Hướng đặt gợi ý</div>
+                <div style="font-size:13px;color:#6b7280;line-height:1.5;margin-top:1px;">Đặt ở <b style="color:#374151;">hướng Bắc</b> của phòng (thuộc Thủy) để kích hoạt tốt nhất.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section style="max-width: 1280px; margin: 0 auto;">
+    <div style="display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap;">
+      <span style="display:inline-flex; align-items:center; height:26px; padding:0 11px; border-radius:9999px; background:#7d8f69; color:#fff; font-size:12px; font-weight:700; letter-spacing:.04em;">TURN 1</span>
+      <h1 style="margin:0; font-size:30px; font-weight:800; letter-spacing:-0.02em;">Độ hợp Ngũ hành cho khách hàng — 3 hướng UI</h1>
+    </div>
+    <p style="margin:14px 0 4px; max-width: 900px; font-size:15px; line-height:1.65; color:#4b5563;">
+      Cùng một logic của engine v3: sản phẩm là “viên thuốc” bù mất cân bằng <b>Ngũ hành của căn phòng</b>, còn
+      <b>bản mệnh của bạn</b> là ràng buộc — và mức độ quan trọng của bản mệnh <b>thay đổi theo loại không gian</b>.
+      Đây là điểm cốt lõi: cùng một sản phẩm có thể <i>rất hợp</i> cho không gian công cộng nhưng <i>nên cân nhắc</i> cho phòng riêng.
+      Cả 3 hướng đều dùng <b>bộ chọn không gian</b> (Cá nhân / Dùng chung / Công cộng) — bấm thử để thấy kết luận đổi theo.
+    </p>
+    <p style="margin:6px 0 34px; font-size:13px; color:#9ca3af;">
+      Ngữ cảnh mẫu: <b style="color:#6b7280;">Thác nước sứ men xanh</b> (hành Thủy trội) · phòng đang thiếu Thủy &amp; Mộc · bản mệnh bạn: <b style="color:#ef4444;">Hỏa</b>. Tham chiếu: <a href="#1a">1a</a> · <a href="#1b">1b</a> · <a href="#1c">1c</a>.
+    </p>
+
+    <div style="display:flex; gap:32px; align-items:flex-start; flex-wrap:wrap;">
+
+      <!-- ============ OPTION 1A — Match panel (list forward) ============ -->
+      <div id="1a" style="width:400px; flex:0 0 auto;">
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
+          <span style="display:inline-flex;align-items:center;justify-content:center;min-width:30px;height:24px;padding:0 8px;border-radius:6px;background:#111827;color:#fff;font-size:12px;font-weight:700;">1a</span>
+          <span style="font-size:14px;font-weight:700;color:#374151;">Bảng độ hợp</span>
+          <span style="font-size:12px;color:#9ca3af;">— gọn, hợp cột phải trang chi tiết</span>
+        </div>
+
+        <div style="background:#fff;border:1px solid #e5e7eb;border-radius:15px;overflow:hidden;box-shadow:0 1px 2px rgba(16,24,40,.04);">
+          <div style="padding:18px 18px 14px;border-bottom:1px solid #f3f4f6;">
+            <div style="display:flex;align-items:center;gap:14px;">
+              <div style="width:64px;height:64px;border-radius:9999px;flex:0 0 auto;display:grid;place-items:center;background:{{ ringStyleA }};">
+                <div style="width:52px;height:52px;border-radius:9999px;background:#fff;display:grid;place-items:center;">
+                  <span style="font-size:19px;font-weight:800;color:{{ vA.fg }};line-height:1;">{{ vA.score }}<span style="font-size:11px;">%</span></span>
+                </div>
+              </div>
+              <div style="min-width:0;">
+                <div style="font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:#9ca3af;">Độ phù hợp</div>
+                <div style="font-size:19px;font-weight:800;color:{{ vA.fg }};line-height:1.2;margin-top:2px;">{{ vA.tier }}</div>
+              </div>
+            </div>
+          </div>
+
+          <div style="padding:14px 18px 4px;">
+            <div style="font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:#9ca3af;margin-bottom:8px;">Bạn đặt sản phẩm ở đâu?</div>
+            <div style="display:flex;background:#f3f4f6;border-radius:10px;padding:3px;gap:2px;">
+              <sc-for list="{{ scopes }}" as="s" hint-placeholder-count="3">
+                <button onClick="{{ s.pickA }}" style="{{ s.tabAStyle }}">{{ s.short }}</button>
+              </sc-for>
+            </div>
+            <div style="font-size:12px;color:#9ca3af;margin:8px 2px 2px;">{{ scopeAsub }}</div>
+          </div>
+
+          <div style="padding:8px 18px 6px;display:flex;flex-direction:column;gap:2px;">
+            <div style="display:flex;gap:12px;padding:12px 0;border-bottom:1px solid #f3f4f6;">
+              <div style="width:30px;height:30px;border-radius:9999px;flex:0 0 auto;display:grid;place-items:center;background:#eef1e9;color:#7d8f69;font-size:15px;">✓</div>
+              <div style="min-width:0;">
+                <div style="font-size:14px;font-weight:600;color:#1f2937;">Hợp với không gian này</div>
+                <div style="font-size:13px;color:#6b7280;line-height:1.5;margin-top:1px;">Bù mạnh hành <b style="color:#3b82f6;">Thủy</b> và <b style="color:#22c55e;">Mộc</b> mà phòng đang thiếu.</div>
+              </div>
+            </div>
+            <div style="display:flex;gap:12px;padding:12px 0;border-bottom:1px solid #f3f4f6;">
+              <div style="width:30px;height:30px;border-radius:9999px;flex:0 0 auto;display:grid;place-items:center;background:{{ vA.menhBg }};color:{{ vA.menhFg }};font-size:15px;">{{ vA.menhIcon }}</div>
+              <div style="min-width:0;">
+                <div style="font-size:14px;font-weight:600;color:#1f2937;">Hợp với bản mệnh của bạn</div>
+                <div style="font-size:13px;color:#6b7280;line-height:1.5;margin-top:1px;">{{ vA.menhLine }}</div>
+              </div>
+            </div>
+            <div style="display:flex;gap:12px;padding:12px 0;">
+              <div style="width:30px;height:30px;border-radius:9999px;flex:0 0 auto;display:grid;place-items:center;background:#f3f4f6;color:#6b7280;font-size:14px;">◑</div>
+              <div style="min-width:0;">
+                <div style="font-size:14px;font-weight:600;color:#1f2937;">Hướng đặt gợi ý</div>
+                <div style="font-size:13px;color:#6b7280;line-height:1.5;margin-top:1px;">Đặt ở <b style="color:#374151;">hướng Bắc</b> của phòng (thuộc Thủy) để kích hoạt tốt nhất.</div>
+              </div>
+            </div>
+          </div>
+
+          <div style="margin:6px 18px 18px;padding:12px 14px;border-radius:10px;background:{{ vA.noteBg }};">
+            <div style="font-size:13px;line-height:1.6;color:{{ vA.noteFg }};">{{ vA.line }}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ OPTION 1B — Radar Ngũ hành ============ -->
+      <div id="1b" style="width:400px; flex:0 0 auto;">
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
+          <span style="display:inline-flex;align-items:center;justify-content:center;min-width:30px;height:24px;padding:0 8px;border-radius:6px;background:#111827;color:#fff;font-size:12px;font-weight:700;">1b</span>
+          <span style="font-size:14px;font-weight:700;color:#374151;">Radar Ngũ hành</span>
+          <span style="font-size:12px;color:#9ca3af;">— trực quan, cảm giác phong thủy</span>
+        </div>
+
+        <div style="background:#fff;border:1px solid #e5e7eb;border-radius:15px;overflow:hidden;box-shadow:0 1px 2px rgba(16,24,40,.04);">
+          <div style="padding:18px 18px 6px;display:flex;align-items:center;justify-content:space-between;gap:10px;">
+            <div>
+              <div style="font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:#9ca3af;">Cân bằng Ngũ hành</div>
+              <div style="font-size:18px;font-weight:800;color:{{ vB.fg }};margin-top:2px;">{{ vB.tier }} · {{ vB.score }}%</div>
+            </div>
+            <div style="text-align:right;">
+              <div style="font-size:11px;color:#9ca3af;">Bản mệnh</div>
+              <div style="display:inline-flex;align-items:center;gap:5px;margin-top:3px;padding:3px 9px;border-radius:9999px;background:#fdecea;">
+                <span style="width:9px;height:9px;border-radius:9999px;background:#ef4444;"></span>
+                <span style="font-size:13px;font-weight:700;color:#ef4444;">Hỏa</span>
+              </div>
+            </div>
+          </div>
+
+          <div style="display:grid;place-items:center;padding:4px 0 2px;">
+            <svg width="248" height="230" viewBox="0 0 248 230">
+              <sc-for list="{{ radar.rings }}" as="g" hint-placeholder-count="3">
+                <polygon points="{{ g }}" fill="none" stroke="#eceee9" stroke-width="1"></polygon>
+              </sc-for>
+              <sc-for list="{{ radar.spokes }}" as="s" hint-placeholder-count="5">
+                <line x1="124" y1="112" x2="{{ s.x }}" y2="{{ s.y }}" stroke="#eceee9" stroke-width="1"></line>
+              </sc-for>
+              <polygon points="{{ radar.need }}" fill="none" stroke="#c4a86a" stroke-width="2" stroke-dasharray="4 3"></polygon>
+              <polygon points="{{ radar.product }}" fill="rgba(125,143,105,.22)" stroke="#7d8f69" stroke-width="2.5"></polygon>
+              <sc-for list="{{ radar.nodes }}" as="n" hint-placeholder-count="5">
+                <circle cx="{{ n.x }}" cy="{{ n.y }}" r="3.5" fill="{{ n.c }}"></circle>
+              </sc-for>
+              <sc-for list="{{ radar.labels }}" as="l" hint-placeholder-count="5">
+                <text x="{{ l.x }}" y="{{ l.y }}" fill="{{ l.c }}" font-size="12.5" font-weight="700" text-anchor="{{ l.anchor }}" dominant-baseline="middle" font-family="Inter">{{ l.vi }}</text>
+                <text x="{{ l.x }}" y="{{ l.sy }}" fill="{{ l.statusC }}" font-size="9.5" font-weight="600" text-anchor="{{ l.anchor }}" dominant-baseline="middle" font-family="Inter">{{ l.status }}</text>
+              </sc-for>
+            </svg>
+          </div>
+
+          <div style="display:flex;justify-content:center;gap:18px;padding:2px 0 12px;">
+            <div style="display:flex;align-items:center;gap:6px;"><span style="width:14px;height:10px;border-radius:2px;background:rgba(125,143,105,.35);border:1.5px solid #7d8f69;"></span><span style="font-size:12px;color:#6b7280;">Sản phẩm cấp</span></div>
+            <div style="display:flex;align-items:center;gap:6px;"><span style="width:14px;height:0;border-top:2px dashed #c4a86a;"></span><span style="font-size:12px;color:#6b7280;">Phòng đang cần</span></div>
+          </div>
+
+          <div style="padding:0 18px 14px;">
+            <div style="display:flex;background:#f3f4f6;border-radius:10px;padding:3px;gap:2px;">
+              <sc-for list="{{ scopes }}" as="s" hint-placeholder-count="3">
+                <button onClick="{{ s.pickB }}" style="{{ s.tabBStyle }}">{{ s.short }}</button>
+              </sc-for>
+            </div>
+            <div style="margin-top:12px;padding:12px 14px;border-radius:10px;background:{{ vB.noteBg }};">
+              <div style="font-size:13px;line-height:1.6;color:{{ vB.noteFg }};">{{ vB.line }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ OPTION 1C — Thanh bù đắp ============ -->
+      <div id="1c" style="width:400px; flex:0 0 auto;">
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
+          <span style="display:inline-flex;align-items:center;justify-content:center;min-width:30px;height:24px;padding:0 8px;border-radius:6px;background:#111827;color:#fff;font-size:12px;font-weight:700;">1c</span>
+          <span style="font-size:14px;font-weight:700;color:#374151;">Thanh bù đắp Ngũ hành</span>
+          <span style="font-size:12px;color:#9ca3af;">— giải thích “vì sao hợp”</span>
+        </div>
+
+        <div style="background:#fff;border:1px solid #e5e7eb;border-radius:15px;overflow:hidden;box-shadow:0 1px 2px rgba(16,24,40,.04);">
+          <div style="padding:18px 18px 12px;display:flex;align-items:center;gap:12px;">
+            <div style="width:44px;height:44px;border-radius:12px;flex:0 0 auto;display:grid;place-items:center;background:{{ vC.noteBg }};color:{{ vC.fg }};font-size:22px;font-weight:800;">{{ vC.badge }}</div>
+            <div>
+              <div style="font-size:18px;font-weight:800;color:{{ vC.fg }};line-height:1.2;">{{ vC.tier }} · {{ vC.score }}%</div>
+              <div style="font-size:12.5px;color:#9ca3af;margin-top:2px;">Mức bù mất cân bằng của phòng</div>
+            </div>
+          </div>
+
+          <div style="padding:2px 18px 6px;">
+            <div style="display:flex;justify-content:space-between;font-size:11px;font-weight:600;letter-spacing:.03em;text-transform:uppercase;color:#9ca3af;padding:0 2px 8px;">
+              <span>Hành</span><span>Phòng cần → Sản phẩm cấp</span>
+            </div>
+            <sc-for list="{{ bars }}" as="b" hint-placeholder-count="5">
+              <div style="display:flex;align-items:center;gap:10px;padding:6px 0;">
+                <div style="display:flex;align-items:center;gap:6px;width:56px;flex:0 0 auto;">
+                  <span style="width:9px;height:9px;border-radius:9999px;background:{{ b.c }};"></span>
+                  <span style="font-size:13px;font-weight:600;color:#374151;">{{ b.vi }}</span>
+                </div>
+                <div style="flex:1;min-width:0;">
+                  <div style="position:relative;height:9px;border-radius:9999px;background:#f0f1ee;overflow:hidden;">
+                    <div style="position:absolute;left:0;top:0;bottom:0;width:{{ b.needW }}%;background:{{ b.needBg }};"></div>
+                  </div>
+                  <div style="position:relative;height:9px;border-radius:9999px;background:#f0f1ee;overflow:hidden;margin-top:4px;">
+                    <div style="position:absolute;left:0;top:0;bottom:0;width:{{ b.prodW }}%;background:{{ b.c }};opacity:.85;"></div>
+                  </div>
+                </div>
+                <div style="width:74px;flex:0 0 auto;text-align:right;font-size:11.5px;font-weight:600;color:{{ b.tagFg }};">{{ b.tag }}</div>
+              </div>
+            </sc-for>
+          </div>
+
+          <div style="padding:8px 18px 14px;">
+            <div style="display:flex;background:#f3f4f6;border-radius:10px;padding:3px;gap:2px;">
+              <sc-for list="{{ scopes }}" as="s" hint-placeholder-count="3">
+                <button onClick="{{ s.pickC }}" style="{{ s.tabCStyle }}">{{ s.short }}</button>
+              </sc-for>
+            </div>
+            <div style="margin-top:12px;display:flex;gap:9px;align-items:flex-start;padding:12px 14px;border-radius:10px;background:{{ vC.noteBg }};">
+              <span style="font-size:15px;color:{{ vC.menhFg }};line-height:1.3;">{{ vC.menhIcon }}</span>
+              <div style="font-size:13px;line-height:1.6;color:{{ vC.noteFg }};">{{ vC.line }}</div>
+            </div>
+            <div style="margin-top:8px;display:flex;gap:8px;align-items:center;font-size:12.5px;color:#6b7280;padding:0 2px;">
+              <span style="color:#7d8f69;">◑</span> Gợi ý hướng đặt: <b style="color:#374151;">hướng Bắc</b>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+</div>
+<div style="width: 452px; flex: 0 0 auto; position: absolute; left: 292px; top: -790px">
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
+          <span style="display:inline-flex;align-items:center;justify-content:center;min-width:30px;height:24px;padding:0 8px;border-radius:6px;background:#111827;color:#fff;font-size:12px;font-weight:700;">2b</span>
+          <span style="font-size:14px;font-weight:700;color:#374151;">Bảng độ phù hợp Ngũ hành</span>
+          <span style="font-size:12px;color:#9ca3af;">— bản gộp cho trang chi tiết / modal</span>
+        </div>
+
+        <div style="background: #fff; border: 1px solid #e5e7eb; border-radius: 15px; overflow: hidden; box-shadow: 0 1px 3px rgba(16,24,40,.06); position: relative">
+
+          <!-- Header: score ring + tier + mệnh -->
+          <div style="padding: 18px 20px 16px; border-bottom: 1px solid #f3f4f6; display: flex; align-items: center; gap: 14px; position: relative">
+            <div style="width:66px;height:66px;border-radius:9999px;flex:0 0 auto;display:grid;place-items:center;background:{{ ringStyleM }};">
+              <div style="width:53px;height:53px;border-radius:9999px;background:#fff;display:grid;place-items:center;">
+                <span style="font-size:20px;font-weight:800;color:{{ vM.fg }};line-height:1;">{{ vM.score }}<span style="font-size:11px;">%</span></span>
+              </div>
+            </div>
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:#9ca3af;">Độ phù hợp</div>
+              <div style="font-size:20px;font-weight:800;color:{{ vM.fg }};line-height:1.2;margin-top:2px;">{{ vM.tier }}</div>
+            </div>
+            <div style="text-align:right;flex:0 0 auto;">
+              <div style="font-size:11px;color:#9ca3af;">Bản mệnh</div>
+              <div style="display:inline-flex;align-items:center;gap:5px;margin-top:3px;padding:3px 9px;border-radius:9999px;background:#fdecea;">
+                <span style="width:9px;height:9px;border-radius:9999px;background:#ef4444;"></span>
+                <span style="font-size:13px;font-weight:700;color:#ef4444;">Hỏa</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Scope switcher -->
+          <div style="padding:14px 20px 6px;">
+            <div style="font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:#9ca3af;margin-bottom:8px;">Bạn đặt sản phẩm ở đâu?</div>
+            <div style="display:flex;background:#f3f4f6;border-radius:10px;padding:3px;gap:2px;">
+              <sc-for list="{{ scopes }}" as="s" hint-placeholder-count="3">
+                <button onClick="{{ s.pickM }}" style="{{ s.tabMStyle }}">{{ s.short }}</button>
+              </sc-for>
+            </div>
+            <div style="font-size:12px;color:#9ca3af;margin:8px 2px 2px;">{{ scopeMsub }}</div>
+          </div>
+
+          <!-- Radar -->
+          <div style="display:grid;place-items:center;padding:6px 0 0;">
+            <svg width="256" height="234" viewBox="0 0 248 230">
+              <sc-for list="{{ radar.rings }}" as="g" hint-placeholder-count="3">
+                <polygon points="{{ g }}" fill="none" stroke="#eceee9" stroke-width="1"></polygon>
+              </sc-for>
+              <sc-for list="{{ radar.spokes }}" as="s" hint-placeholder-count="5">
+                <line x1="124" y1="112" x2="{{ s.x }}" y2="{{ s.y }}" stroke="#eceee9" stroke-width="1"></line>
+              </sc-for>
+              <polygon points="{{ radar.need }}" fill="none" stroke="#c4a86a" stroke-width="2" stroke-dasharray="4 3"></polygon>
+              <polygon points="{{ radar.product }}" fill="rgba(125,143,105,.22)" stroke="#7d8f69" stroke-width="2.5"></polygon>
+              <sc-for list="{{ radar.nodes }}" as="n" hint-placeholder-count="5">
+                <circle cx="{{ n.x }}" cy="{{ n.y }}" r="3.5" fill="{{ n.c }}"></circle>
+              </sc-for>
+              <sc-for list="{{ radar.labels }}" as="l" hint-placeholder-count="5">
+                <text x="{{ l.x }}" y="{{ l.y }}" fill="{{ l.c }}" font-size="12.5" font-weight="700" text-anchor="{{ l.anchor }}" dominant-baseline="middle" font-family="Inter">{{ l.vi }}</text>
+                <text x="{{ l.x }}" y="{{ l.sy }}" fill="{{ l.statusC }}" font-size="9.5" font-weight="600" text-anchor="{{ l.anchor }}" dominant-baseline="middle" font-family="Inter">{{ l.status }}</text>
+              </sc-for>
+            </svg>
+          </div>
+          <div style="display:flex;justify-content:center;gap:18px;padding:0 0 8px;">
+            <div style="display:flex;align-items:center;gap:6px;"><span style="width:14px;height:10px;border-radius:2px;background:rgba(125,143,105,.35);border:1.5px solid #7d8f69;"></span><span style="font-size:12px;color:#6b7280;">Sản phẩm cấp</span></div>
+            <div style="display:flex;align-items:center;gap:6px;"><span style="width:14px;height:0;border-top:2px dashed #c4a86a;"></span><span style="font-size:12px;color:#6b7280;">Phòng đang cần</span></div>
+          </div>
+
+          <!-- Lens rows -->
+          <div style="padding:8px 20px 18px;display:flex;flex-direction:column;">
+            <div style="display:flex;gap:12px;padding:12px 0;border-top:1px solid #f3f4f6;">
+              <div style="width:30px;height:30px;border-radius:9999px;flex:0 0 auto;display:grid;place-items:center;background:#eef1e9;color:#7d8f69;font-size:15px;">✓</div>
+              <div style="min-width:0;">
+                <div style="font-size:14px;font-weight:600;color:#1f2937;">Hợp với không gian này</div>
+                <div style="font-size:13px;color:#6b7280;line-height:1.5;margin-top:1px;">Bù mạnh hành <b style="color:#3b82f6;">Thủy</b> và <b style="color:#22c55e;">Mộc</b> mà phòng đang thiếu.</div>
+              </div>
+            </div>
+            <div style="display:flex;gap:12px;padding:12px 0;border-top:1px solid #f3f4f6;">
+              <div style="width:30px;height:30px;border-radius:9999px;flex:0 0 auto;display:grid;place-items:center;background:{{ vM.menhBg }};color:{{ vM.menhFg }};font-size:15px;">{{ vM.menhIcon }}</div>
+              <div style="min-width:0;">
+                <div style="font-size:14px;font-weight:600;color:#1f2937;">Hợp với bản mệnh của bạn</div>
+                <div style="font-size:13px;color:#6b7280;line-height:1.5;margin-top:1px;">{{ vM.menhLine }}</div>
+              </div>
+            </div>
+            <div style="display:flex;gap:12px;padding:12px 0;border-top:1px solid #f3f4f6;">
+              <div style="width:30px;height:30px;border-radius:9999px;flex:0 0 auto;display:grid;place-items:center;background:#f3f4f6;color:#6b7280;font-size:14px;">◑</div>
+              <div style="min-width:0;">
+                <div style="font-size:14px;font-weight:600;color:#1f2937;">Hướng đặt gợi ý</div>
+                <div style="font-size:13px;color:#6b7280;line-height:1.5;margin-top:1px;">Đặt ở <b style="color:#374151;">hướng Bắc</b> của phòng (thuộc Thủy) để kích hoạt tốt nhất.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div></body></html>

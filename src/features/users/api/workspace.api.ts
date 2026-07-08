@@ -5,6 +5,7 @@ import {
   Style,
   CreateWorkspaceDto,
   UpdateWorkspaceDto,
+  WorkspaceElementAnalysis,
 } from "../types/workspace";
 import type { ApiResponse } from "@/types/api";
 
@@ -45,6 +46,15 @@ export const deleteWorkspace = async (id: string): Promise<void> => {
 export const setDefaultWorkspace = async (id: string): Promise<Workspace> => {
   const response = await fetchHttpClient.patch<ApiResponse<Workspace>>(
     `/workspace/${id}/set-default`,
+  );
+  return response.data.data;
+};
+
+export const getWorkspaceElementAnalysis = async (
+  id: string,
+): Promise<WorkspaceElementAnalysis> => {
+  const response = await fetchHttpClient.get<ApiResponse<WorkspaceElementAnalysis>>(
+    `/workspace/${id}/element-analysis`,
   );
   return response.data.data;
 };
