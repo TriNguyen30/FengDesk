@@ -21,26 +21,18 @@ import {
   AlertTriangle,
 } from "lucide-react";
 
-// ── Ngũ hành không gian: full panel cho phòng mặc định, mini vector cho các phòng còn lại ──
+// ── Ngũ hành không gian: mọi workspace card đều hiện panel full 5 hành ──
 function WorkspaceElementSection({ workspace }: { workspace: Workspace }) {
   const { analysis, status } = useWorkspaceElementAnalysis(workspace.id);
 
-  if (workspace.isDefault) {
-    if (status === "pending") {
-      return <div className="mt-4 h-40 animate-pulse rounded-2xl border border-gray-100 bg-gray-50" />;
-    }
-    if (status === "error" || !analysis) return null;
-    return (
-      <div className="mt-4">
-        <ElementVectorFit analysis={analysis} variant="full" />
-      </div>
-    );
+  if (status === "pending") {
+    return <div className="mt-4 h-40 animate-pulse rounded-2xl border border-gray-100 bg-gray-50" />;
   }
+  if (status === "error" || !analysis) return null;
 
-  if (!analysis) return null;
   return (
     <div className="mt-4">
-      <ElementVectorFit analysis={analysis} variant="compact" />
+      <ElementVectorFit analysis={analysis} variant="full" />
     </div>
   );
 }
