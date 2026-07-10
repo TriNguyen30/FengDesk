@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Bot, Lock } from "lucide-react";
-import type { AiActivity, ChatMessage } from "@/features/chatbox/types/chatbox";
+import type { ChatMessage } from "@/features/chatbox/types/chatbox";
+import type { AiActivity } from "@/features/shared/ai-activity";
 import type { UploadFn } from "@/features/chatbox/hooks/useImageAttachments";
 import ChatInput from "./ChatInput";
 import ChatMessageList from "./ChatMessageList";

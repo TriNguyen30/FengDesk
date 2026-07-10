@@ -8,6 +8,7 @@ import {
   updateWorkspace,
   deleteWorkspace,
   setDefaultWorkspace,
+  getWorkspaceElementAnalysis,
 } from "../api/workspace.api";
 import type { CreateWorkspaceDto, UpdateWorkspaceDto } from "../types/workspace";
 
@@ -113,4 +114,16 @@ export function useSetDefaultWorkspace() {
       queryClient.invalidateQueries({ queryKey: ["workspace", id] });
     },
   });
+}
+
+export function useWorkspaceElementAnalysis(id?: string) {
+  const query = useQuery({
+    queryKey: ["workspace", id, "element-analysis"],
+    queryFn: () => {
+      if (!id) throw new Error("No ID provided");
+      return getWorkspaceElementAnalysis(id);
+    },
+    enabled: !!id,
+  });
+  return { analysis: query.data ?? null, status: query.status, query };
 }

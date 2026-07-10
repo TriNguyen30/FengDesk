@@ -1,11 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, Plus, Wifi, WifiOff, X } from "lucide-react";
-import type {
-  AiActivity,
-  Chatbox,
-  ChatConnectionStatus,
-  ChatMessage,
-} from "@/features/chatbox/types/chatbox";
+import type { Chatbox, ChatConnectionStatus, ChatMessage } from "@/features/chatbox/types/chatbox";
+import type { AiActivity } from "@/features/shared/ai-activity";
 import { getChatboxDisplayName } from "@/features/chatbox/utils/chatUtils";
 import type { UploadFn } from "@/features/chatbox/hooks/useImageAttachments";
 import ChatConversation from "./ChatConversation";

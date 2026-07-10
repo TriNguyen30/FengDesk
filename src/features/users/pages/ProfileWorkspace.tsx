@@ -3,6 +3,9 @@ import { getWorkspaces, deleteWorkspace, setDefaultWorkspace } from "../api/work
 import { Workspace } from "../types/workspace";
 import { toast } from "sonner";
 import WorkspaceModal from "../components/WorkspaceModal";
+import { useWorkspaceElementAnalysis } from "../hooks/useWorkspace";
+import { fromCm2 } from "../utils/deskArea";
+import ElementVectorFit from "@/features/recommendation/components/element-vector/ElementVectorFit";
 import {
   MapPinHouse,
   Briefcase,
@@ -16,7 +19,63 @@ import {
   Pencil,
   Trash,
   AlertTriangle,
+  Lightbulb,
 } from "lucide-react";
+
+// ── Vòng tròn % hồ sơ đã điền (fields optional có giá trị / tổng) ──
+function CompletenessRing({ percent }: { percent: number }) {
+  const size = 36;
+  const stroke = 4;
+  const radius = (size - stroke) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const offset = circumference * (1 - percent / 100);
+
+  return (
+    <div
+      className="relative flex h-9 w-9 shrink-0 items-center justify-center"
+      title={`Hồ sơ đã điền ${percent}%`}
+    >
+      <svg width={size} height={size} className="-rotate-90">
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          strokeWidth={stroke}
+          fill="none"
+          className="stroke-gray-100"
+        />
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          strokeWidth={stroke}
+          fill="none"
+          strokeDasharray={circumference}
+          strokeDashoffset={offset}
+          strokeLinecap="round"
+          className={percent >= 100 ? "stroke-primary" : "stroke-primary/60"}
+        />
+      </svg>
+      <span className="absolute text-[9px] font-semibold text-gray-600">{percent}%</span>
+    </div>
+  );
+}
+
+// ── Ngũ hành không gian: mọi workspace card đều hiện panel full 5 hành ──
+function WorkspaceElementSection({ workspace }: { workspace: Workspace }) {
+  const { analysis, status } = useWorkspaceElementAnalysis(workspace.id);
+
+  if (status === "pending") {
+    return <div className="mt-4 h-40 animate-pulse rounded-2xl border border-gray-100 bg-gray-50" />;
+  }
+  if (status === "error" || !analysis) return null;
+
+  return (
+    <div className="mt-4">
+      <ElementVectorFit analysis={analysis} variant="full" />
+    </div>
+  );
+}
 
 const fieldConfig = [
   { key: "locationType", label: "Vị trí", icon: MapPinHouse },
@@ -27,7 +86,7 @@ const fieldConfig = [
   { key: "roomFacingDirection", label: "Hướng phòng", icon: Compass },
   { key: "workPurpose", label: "Mục đích", icon: Briefcase },
   { key: "fengShuiElement", label: "Ngũ hành", icon: Wind },
-  { key: "deskArea", label: "Diện tích bàn (m²)", icon: Maximize2 },
+  { key: "deskArea", label: "Diện tích bàn", icon: Maximize2 },
 ] as const;
 
 // ── Confirm Dialog ──────────────────────────────────────────
@@ -180,14 +239,17 @@ export default function ProfileWorkspace() {
             >
               {/* Header */}
               <div className="mb-4 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="text-lg font-semibold text-gray-900">{workspace.name}</span>
-                  {workspace.isDefault && (
-                    <span className="flex items-center gap-1 rounded bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
-                      <Star size={10} />
-                      Mặc định
-                    </span>
-                  )}
+                <div className="flex items-center gap-3">
+                  <CompletenessRing percent={workspace.completenessPercent} />
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg font-semibold text-gray-900">{workspace.name}</span>
+                    {workspace.isDefault && (
+                      <span className="flex items-center gap-1 rounded bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
+                        <Star size={10} />
+                        Mặc định
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <button
@@ -223,8 +285,10 @@ export default function ProfileWorkspace() {
               {/* Info Grid */}
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {fieldConfig.map(({ key, label, icon: Icon }) => {
-                  const value = workspace[key as keyof Workspace];
-                  if (value === null || value === undefined) return null;
+                  const raw = workspace[key as keyof Workspace];
+                  if (raw === null || raw === undefined) return null;
+                  const value =
+                    key === "deskArea" ? `${fromCm2(Number(raw)).toFixed(2)} m²` : String(raw);
                   return (
                     <div
                       key={key}
@@ -237,14 +301,28 @@ export default function ProfileWorkspace() {
                         <p className="text-[11px] font-medium uppercase tracking-wide text-gray-400">
                           {label}
                         </p>
-                        <p className="truncate text-sm font-medium text-gray-800">
-                          {String(value)}
-                        </p>
+                        <p className="truncate text-sm font-medium text-gray-800">{value}</p>
                       </div>
                     </div>
                   );
                 })}
               </div>
+
+              {workspace.missingFieldHints.length > 0 && (
+                <div className="mt-3 rounded-lg bg-amber-50 px-3 py-2.5 text-xs text-amber-700">
+                  <p className="flex items-center gap-1.5 font-medium">
+                    <Lightbulb size={13} />
+                    Gợi ý bổ sung để tư vấn chính xác hơn
+                  </p>
+                  <ul className="mt-1 list-disc space-y-0.5 pl-5">
+                    {workspace.missingFieldHints.map((hint) => (
+                      <li key={hint}>{hint}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              <WorkspaceElementSection workspace={workspace} />
             </div>
           ))}
         </div>

@@ -7,7 +7,6 @@ export type {
   ChatParticipant,
   ChatConnectionStatus,
   MessageSenderType,
-  AiActivity,
 } from "./types/chatbox";
 export {
   openChatbox,

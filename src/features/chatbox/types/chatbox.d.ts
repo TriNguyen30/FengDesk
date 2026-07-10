@@ -59,11 +59,3 @@ export interface SendMessagePayload {
 }
 
 export type ChatConnectionStatus = "connecting" | "connected" | "disconnected" | "error";
-
-/** Trạng thái AI realtime (mảng ① — phát từ hub "aiStatus"). Khai báo sẵn để dùng sau. */
-export type AiActivityPhase = "thinking" | "calling_tool" | "writing" | "done";
-export interface AiActivity {
-  chatboxId: string;
-  phase: AiActivityPhase;
-  toolName?: string | null;
-}

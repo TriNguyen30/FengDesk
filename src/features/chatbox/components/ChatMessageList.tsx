@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef } from "react";
 import { MessageCircle } from "lucide-react";
-import type { AiActivity, ChatMessage } from "@/features/chatbox/types/chatbox";
+import type { ChatMessage } from "@/features/chatbox/types/chatbox";
+import { AiActivityIndicator, type AiActivity } from "@/features/shared/ai-activity";
 import ChatMessageBubble from "./ChatMessageBubble";
-import AiActivityIndicator from "./AiActivityIndicator";
 
 interface ChatMessageListProps {
   messages: ChatMessage[];
