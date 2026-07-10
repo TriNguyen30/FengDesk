@@ -12,8 +12,8 @@ export interface AiMessage {
 }
 
 function mapHistory(history: AiChatTurn[]): AiMessage[] {
-  return history.map((t, i) => ({
-    id: `h-${i}-${t.role}`,
+  return history.map((t) => ({
+    id: t.id,
     role: t.role === "AiBot" ? "ai" : t.role === "System" ? "system" : "user",
     content: t.content ?? "",
     images: t.images ?? [],
@@ -117,6 +117,30 @@ export function useAiChat(productId?: string) {
     [sending, productId],
   );
 
+  // Sửa & gửi lại 1 tin nhắn cũ của mình: BE soft-delete tin đó + mọi tin sau nó rồi trả lịch sử mới
+  // → thay thế toàn bộ (không append). Chặn khi đang sending để tránh chồng lượt.
+  const rewind = useCallback(
+    async (messageId: string, newText: string) => {
+      const t = newText.trim();
+      if (!t || sending) return;
+      setSending(true);
+      try {
+        const res = await chatApi.rewindAi(messageId, { newMessage: t });
+        if (res.data.isSuccess) {
+          setChatboxId(res.data.data.chatboxId);
+          setMessages(mapHistory(res.data.data.history));
+        } else {
+          toast.error(res.data.message || "Không sửa được tin nhắn.");
+        }
+      } catch {
+        toast.error("Không kết nối được trợ lý AI. Thử lại sau.");
+      } finally {
+        setSending(false);
+      }
+    },
+    [sending],
+  );
+
   // Upload 1 ảnh cho trang AI lớn: lượt đầu chưa có chatbox → ensure trước (endpoint upload cần chatboxId).
   // Chỉ trả link; composer gắn vào imageUrls rồi gửi cùng nội dung. signal để hủy khi quá chậm.
   const uploadImage = useCallback(
@@ -135,5 +159,5 @@ export function useAiChat(productId?: string) {
     [productId],
   );
 
-  return { messages, sending, activity, send, uploadImage, loadHistory, clearConversation };
+  return { messages, sending, activity, send, rewind, uploadImage, loadHistory, clearConversation };
 }

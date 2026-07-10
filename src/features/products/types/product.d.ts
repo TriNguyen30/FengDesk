@@ -119,7 +119,9 @@ export interface CreateProductRequest {
   images: CreateProductImageRequest[];
   categoryIds: string[];
   isActive?: boolean;
-  // Phong thủy (tùy chọn) — bỏ trống primaryElement = tạo chưa có phong thủy
+  // Đặc điểm sản phẩm (tùy chọn) — nguồn auto-calc vector ngũ hành, ưu tiên hơn primaryElement.
+  elementInputs?: { kind: import("./taxonomy").ElementInputKind; code: string }[];
+  // Phong thủy nâng cao (tùy chọn) — đường advanced/fallback. Bỏ trống primaryElement = tạo chưa có phong thủy.
   primaryElement?: string;
   secondaryElements?: string[];
   sizeClass?: string;

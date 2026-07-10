@@ -1,25 +1,33 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   ChevronLeft,
+  ChevronDown,
   Save,
   Trash2,
   RefreshCw,
   Image,
   Layers,
   Sparkles,
+  Palette,
   Info,
   DollarSign,
   Upload,
 } from "lucide-react";
 import { productApi } from "@/features/products/api/product.api";
-import { getAllShopRequest } from "@/features/shop/api/shop.api";
+import { getAllShopRequest, getShopRequestById } from "@/features/shop/api/shop.api";
 import { getCategoriesRequest } from "@/features/category/api/category.api";
 import { getVibes, getStyles } from "@/features/products/api/taxonomy.api";
 import type { Shop } from "@/features/shop/types/shop";
 import type { Category } from "@/features/category/types/category";
 import type { LookupItem } from "@/features/products/types/taxonomy";
-import { ProductFengShuiFields, type FengShuiValues } from "@/features/manager/components";
+import {
+  ProductElementSelectFields,
+  ProductVibeStyleFields,
+  type FengShuiValues,
+  ProductElementInputsFields,
+  type ElementInputValue,
+} from "@/features/manager/components";
 import { toast } from "sonner";
 import { uploadFile } from "@/services/upload.service";
 import ReactQuill from "react-quill-new";
@@ -27,16 +35,20 @@ import "react-quill-new/dist/quill.snow.css";
 
 export default function CreateProductPage() {
   const navigate = useNavigate();
+  // Mở từ trang shop (/seller/:storeId/products/new) → khóa luôn store, ẩn dropdown chọn shop
+  // (dropdown đó chỉ có ý nghĩa cho staff/manager thao tác ở /manager/products/new).
+  const { storeId: lockedStoreId } = useParams<{ storeId: string }>();
   const [submitting, setSubmitting] = useState(false);
 
   // Lists for dropdowns/checkboxes
   const [shops, setShops] = useState<Shop[]>([]);
+  const [lockedShopName, setLockedShopName] = useState("");
   const [categories, setCategories] = useState<Category[]>([]);
   const [vibeOptions, setVibeOptions] = useState<LookupItem[]>([]);
   const [styleOptions, setStyleOptions] = useState<LookupItem[]>([]);
 
   // Form states
-  const [gardenStoreId, setGardenStoreId] = useState("");
+  const [gardenStoreId, setGardenStoreId] = useState(lockedStoreId ?? "");
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [isActive, setIsActive] = useState(true);
@@ -66,9 +78,12 @@ export default function CreateProductPage() {
   const [manualUrl, setManualUrl] = useState("");
   const [showManualUrlInput, setShowManualUrlInput] = useState(false);
 
-  // Feng Shui state (gửi luôn trong payload tạo sản phẩm)
+  // Đặc điểm sản phẩm (vật liệu/màu/hình khối) — nguồn auto-calc vector ngũ hành, gửi luôn khi tạo.
+  const [elementInputs, setElementInputs] = useState<ElementInputValue[]>([]);
+
+  // Phong thủy nâng cao (tùy chọn, mặc định không chọn — ưu tiên đường Đặc điểm sản phẩm)
   const [fengShui, setFengShui] = useState<FengShuiValues>({
-    primaryElement: "Kim",
+    primaryElement: "",
     secondaryElements: [],
     sizeClass: "Medium",
     vibes: [],
@@ -80,12 +95,16 @@ export default function CreateProductPage() {
     const fetchOptions = async () => {
       try {
         const [shopsRes, categoriesRes, vibesRes, stylesRes] = await Promise.all([
-          getAllShopRequest(),
+          lockedStoreId ? getShopRequestById(lockedStoreId) : getAllShopRequest(),
           getCategoriesRequest(),
           getVibes(),
           getStyles(),
         ]);
-        if (shopsRes.isSuccess && shopsRes.data) {
+        if (lockedStoreId) {
+          if (shopsRes.isSuccess && shopsRes.data && !Array.isArray(shopsRes.data)) {
+            setLockedShopName(shopsRes.data.name);
+          }
+        } else if (shopsRes.isSuccess && shopsRes.data && Array.isArray(shopsRes.data)) {
           setShops(shopsRes.data);
           if (shopsRes.data.length > 0) {
             setGardenStoreId(shopsRes.data[0].id);
@@ -101,7 +120,7 @@ export default function CreateProductPage() {
       }
     };
     fetchOptions();
-  }, []);
+  }, [lockedStoreId]);
 
   // Set default SKU based on name if empty
   useEffect(() => {
@@ -237,8 +256,10 @@ export default function CreateProductPage() {
         images: validImages,
         categoryIds: selectedCategoryIds,
         isActive,
-        // Phong thủy gửi luôn khi tạo → sản phẩm thành ứng viên gợi ý ngay
-        primaryElement: fengShui.primaryElement,
+        // Đặc điểm sản phẩm → auto-calc vector ngũ hành (tầng 2), ưu tiên hơn primaryElement
+        elementInputs,
+        // Phong thủy nâng cao (tùy chọn)
+        primaryElement: fengShui.primaryElement || undefined,
         secondaryElements: fengShui.secondaryElements,
         sizeClass: fengShui.sizeClass,
         vibes: fengShui.vibes,
@@ -249,7 +270,12 @@ export default function CreateProductPage() {
 
       if (productRes.data.isSuccess && productRes.data.data) {
         toast.success("Đã tạo sản phẩm mới thành công");
-        navigate("/manager/products");
+        if (elementInputs.length === 0 && !fengShui.primaryElement) {
+          toast.warning(
+            "Sản phẩm chưa có dữ liệu phong thủy nên sẽ không xuất hiện trong gợi ý — bổ sung Đặc điểm sản phẩm nhé",
+          );
+        }
+        navigate(lockedStoreId ? `/stores/${lockedStoreId}` : "/manager/products");
       } else {
         toast.error(productRes.data.message || "Tạo sản phẩm thất bại");
       }
@@ -305,18 +331,24 @@ export default function CreateProductPage() {
 
               <div className="space-y-1.5">
                 <label className="text-sm font-semibold text-gray-700">Cửa hàng vườn *</label>
-                <select
-                  value={gardenStoreId}
-                  onChange={(e) => setGardenStoreId(e.target.value)}
-                  required
-                  className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-700 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/30"
-                >
-                  {shops.map((shop) => (
-                    <option key={shop.id} value={shop.id}>
-                      {shop.name}
-                    </option>
-                  ))}
-                </select>
+                {lockedStoreId ? (
+                  <div className="flex h-[42px] items-center rounded-xl border border-gray-100 bg-gray-50 px-3 text-sm font-medium text-gray-600">
+                    {lockedShopName || "Đang tải..."}
+                  </div>
+                ) : (
+                  <select
+                    value={gardenStoreId}
+                    onChange={(e) => setGardenStoreId(e.target.value)}
+                    required
+                    className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-700 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/30"
+                  >
+                    {shops.map((shop) => (
+                      <option key={shop.id} value={shop.id}>
+                        {shop.name}
+                      </option>
+                    ))}
+                  </select>
+                )}
               </div>
 
               <div className="space-y-1.5">
@@ -590,19 +622,44 @@ export default function CreateProductPage() {
 
         {/* Right Side (Categories/Tags & FengShui) */}
         <div className="space-y-6">
-          {/* Card 4: Feng Shui */}
+          {/* Card 4: Đặc điểm sản phẩm — vật liệu/màu/hình khối, nguồn auto-calc phong thủy */}
+          <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-100">
+            <ProductElementInputsFields value={elementInputs} onChange={setElementInputs} />
+          </div>
+
+          {/* Card 4b: Vibe / Style / Kích thước — độc lập với phong thủy nâng cao, luôn hiện */}
           <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-100 space-y-5">
             <div className="flex items-center gap-2 border-b border-gray-100 pb-3">
-              <Sparkles size={18} className="text-primary" />
-              <h2 className="text-base font-bold text-gray-950">Thuộc tính phong thủy</h2>
+              <Palette size={18} className="text-primary" />
+              <h2 className="text-base font-bold text-gray-950">Vibe, phong cách &amp; kích thước</h2>
             </div>
-            <ProductFengShuiFields
+            <ProductVibeStyleFields
               value={fengShui}
-              onChange={setFengShui}
+              onChange={(patch) => setFengShui({ ...fengShui, ...patch })}
               vibeOptions={vibeOptions}
               styleOptions={styleOptions}
             />
           </div>
+
+          {/* Card 4c: Phong thủy nâng cao — collapse, mặc định đóng */}
+          <details className="group rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-100">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-2 pb-3">
+              <span className="flex items-center gap-2">
+                <Sparkles size={18} className="text-primary" />
+                <h2 className="text-base font-bold text-gray-950">Phong thủy nâng cao</h2>
+              </span>
+              <ChevronDown size={16} className="text-gray-400 transition-transform group-open:rotate-180" />
+            </summary>
+            <p className="mb-4 text-xs text-gray-400 italic">
+              Chỉ dùng nếu bạn đã biết chính xác — thường không cần, hệ thống tự tính từ Đặc điểm sản phẩm.
+            </p>
+            <div className="border-t border-gray-100 pt-4">
+              <ProductElementSelectFields
+                value={fengShui}
+                onChange={(patch) => setFengShui({ ...fengShui, ...patch })}
+              />
+            </div>
+          </details>
 
           {/* Card 5: Categories */}
           <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-100 space-y-4">

@@ -20,6 +20,7 @@ export interface PagedMessages {
 
 /** Một dòng lịch sử hội thoại AI (role = "User" | "AiBot" | "System"). */
 export interface AiChatTurn {
+  id: string;
   role: string;
   content: string | null;
   images: string[];
@@ -38,6 +39,13 @@ export interface AiChatRequestPayload {
   productId?: string;
   model?: string;
   imageUrls?: string[];
+}
+
+/** Rewind: newMessage=undefined giữ nguyên nội dung cũ (regenerate); imageUrls=undefined giữ ảnh cũ. */
+export interface AiRewindPayload {
+  newMessage?: string;
+  imageUrls?: string[];
+  model?: string;
 }
 
 /**
@@ -104,6 +112,16 @@ export const chatApi = {
   /** Gửi tin cho trợ lý AI (trang AI lớn). Bỏ trống chatboxId ở lượt đầu → server tạo & trả về. */
   sendToAi: (payload: AiChatRequestPayload) =>
     fetchHttpClient.post<ApiResponse<AiChatResponse>>("/chat/ai/messages", payload),
+
+  /**
+   * Sửa & gửi lại một tin nhắn cũ của mình trong hội thoại AI riêng — tin đó và mọi tin sau nó
+   * bị thay thế bằng lịch sử mới. Chỉ áp dụng cho phòng riêng user↔AI.
+   */
+  rewindAi: (messageId: string, payload: AiRewindPayload) =>
+    fetchHttpClient.post<ApiResponse<AiChatResponse>>(
+      `/chat/ai/messages/${messageId}/rewind`,
+      payload,
+    ),
 
   /** Quyền chia sẻ thông tin của tôi cho nhân viên hỗ trợ trong phòng. */
   getConsent: (chatboxId: string) =>

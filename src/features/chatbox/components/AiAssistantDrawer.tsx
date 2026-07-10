@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
-import { Bot, ImagePlus, Loader2, Send, Sparkles, User, X } from "lucide-react";
-import { useAiChat } from "@/features/chatbox/hooks/useAiChat";
+import { Bot, ImagePlus, Loader2, Pencil, Send, Sparkles, User, X } from "lucide-react";
+import { useAiChat, type AiMessage } from "@/features/chatbox/hooks/useAiChat";
 import { useImageAttachments } from "@/features/chatbox/hooks/useImageAttachments";
 import { AiActivityIndicator } from "@/features/shared/ai-activity";
 import AttachmentPreviewRow from "./AttachmentPreviewRow";
@@ -26,12 +26,42 @@ interface AiAssistantDrawerProps {
  * Tông xanh brand. Chat thuần AI — không cần @AI. aiStatus realtime hiển thị trong khung.
  */
 export default function AiAssistantDrawer({ open, onClose, productId }: AiAssistantDrawerProps) {
-  const { messages, sending, activity, send, uploadImage, loadHistory, clearConversation } =
+  const { messages, sending, activity, send, rewind, uploadImage, loadHistory, clearConversation } =
     useAiChat(productId);
   const [draft, setDraft] = useState("");
   const att = useImageAttachments(uploadImage);
   const fileRef = useRef<HTMLInputElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+
+  // Rewind (sửa & gửi lại tin của mình): id tin đang sửa + nội dung nháp.
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editText, setEditText] = useState("");
+  const editingIndex = editingId ? messages.findIndex((m) => m.id === editingId) : -1;
+
+  const startEdit = (m: AiMessage) => {
+    setEditingId(m.id);
+    setEditText(m.content);
+  };
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditText("");
+  };
+  const submitEdit = () => {
+    const text = editText.trim();
+    if (!editingId || !text) return;
+    void rewind(editingId, text);
+    setEditingId(null);
+    setEditText("");
+  };
+  const handleEditKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      submitEdit();
+    } else if (e.key === "Escape") {
+      e.stopPropagation(); // đừng để Escape lan lên document listener và đóng luôn cả drawer
+      cancelEdit();
+    }
+  };
 
   // Mở khung → nạp lại hội thoại AI đã lưu (giữ hội thoại ở khung lớn sau reload).
   useEffect(() => {
@@ -52,7 +82,8 @@ export default function AiAssistantDrawer({ open, onClose, productId }: AiAssist
     return () => document.removeEventListener("keydown", onKey);
   }, [open, onClose]);
 
-  const canSend = (draft.trim().length > 0 || att.urls.length > 0) && !sending && !att.uploading;
+  const canSend =
+    (draft.trim().length > 0 || att.urls.length > 0) && !sending && !att.uploading && !editingId;
 
   const submit = () => {
     if (!canSend) return;
@@ -146,50 +177,97 @@ export default function AiAssistantDrawer({ open, onClose, productId }: AiAssist
             </div>
           ) : (
             <div className="flex flex-col gap-4">
-              {messages.map((m) =>
-                m.role === "system" ? null : (
+              {messages.map((m, idx) => {
+                if (m.role === "system") return null;
+                const isUser = m.role === "user";
+                const isEditingThis = editingId === m.id;
+                const isDimmed = editingIndex >= 0 && idx > editingIndex;
+                return (
                   <div
                     key={m.id}
-                    className={`flex gap-2.5 ${m.role === "user" ? "flex-row-reverse" : ""}`}
+                    className={`group flex items-start gap-2.5 transition-opacity duration-200 ${
+                      isUser ? "flex-row-reverse" : ""
+                    } ${isDimmed ? "pointer-events-none opacity-40" : ""}`}
                   >
                     <span
                       className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${
-                        m.role === "user"
-                          ? "bg-gray-200 text-gray-600"
-                          : "bg-primary/15 text-primary"
+                        isUser ? "bg-gray-200 text-gray-600" : "bg-primary/15 text-primary"
                       }`}
                     >
-                      {m.role === "user" ? <User size={16} /> : <Bot size={16} />}
+                      {isUser ? <User size={16} /> : <Bot size={16} />}
                     </span>
-                    <div
-                      className={`max-w-[80%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed ${
-                        m.role === "user"
-                          ? "rounded-tr-md bg-primary text-white"
-                          : "rounded-tl-md border border-gray-200 bg-white text-gray-800"
-                      }`}
-                    >
-                      {m.images.length > 0 && (
-                        <div className="mb-2 flex flex-wrap gap-1.5">
-                          {m.images.map((url) => (
-                            <img
-                              key={url}
-                              src={url}
-                              alt="Ảnh"
-                              className="max-h-40 rounded-lg border border-black/10 object-cover"
-                            />
-                          ))}
+
+                    {isEditingThis ? (
+                      <div className="w-full max-w-[80%] rounded-2xl border border-primary bg-white p-2 shadow-sm">
+                        <textarea
+                          value={editText}
+                          onChange={(e) => setEditText(e.target.value)}
+                          onKeyDown={handleEditKeyDown}
+                          rows={2}
+                          autoFocus
+                          className="max-h-32 w-full resize-none bg-transparent text-sm text-gray-800 outline-none"
+                        />
+                        <div className="mt-1 flex justify-end gap-1.5">
+                          <button
+                            type="button"
+                            onClick={cancelEdit}
+                            className="rounded-lg px-2.5 py-1 text-xs text-gray-500 transition-colors hover:bg-gray-100 cursor-pointer"
+                          >
+                            Hủy
+                          </button>
+                          <button
+                            type="button"
+                            onClick={submitEdit}
+                            disabled={!editText.trim()}
+                            className="rounded-lg bg-primary px-2.5 py-1 text-xs font-medium text-white transition-colors hover:bg-primary-dark disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
+                          >
+                            Gửi
+                          </button>
                         </div>
-                      )}
-                      {m.content &&
-                        (m.role === "ai" ? (
-                          <Markdown text={m.content} />
-                        ) : (
-                          <p className="whitespace-pre-wrap break-words">{m.content}</p>
-                        ))}
-                    </div>
+                      </div>
+                    ) : (
+                      <div
+                        className={`max-w-[80%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed ${
+                          isUser
+                            ? "rounded-tr-md bg-primary text-white"
+                            : "rounded-tl-md border border-gray-200 bg-white text-gray-800"
+                        }`}
+                      >
+                        {m.images.length > 0 && (
+                          <div className="mb-2 flex flex-wrap gap-1.5">
+                            {m.images.map((url) => (
+                              <img
+                                key={url}
+                                src={url}
+                                alt="Ảnh"
+                                className="max-h-40 rounded-lg border border-black/10 object-cover"
+                              />
+                            ))}
+                          </div>
+                        )}
+                        {m.content &&
+                          (m.role === "ai" ? (
+                            <Markdown text={m.content} />
+                          ) : (
+                            <p className="whitespace-pre-wrap break-words">{m.content}</p>
+                          ))}
+                      </div>
+                    )}
+
+                    {isUser && !isEditingThis && !sending && (
+                      <button
+                        type="button"
+                        onClick={() => startEdit(m)}
+                        className="flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center self-center rounded-full text-gray-400 opacity-0 transition-opacity hover:bg-gray-100 hover:text-primary group-hover:opacity-100"
+                        aria-label="Sửa & gửi lại"
+                        title="Sửa & gửi lại"
+                      >
+                        <Pencil size={14} />
+                      </button>
+                    )}
                   </div>
-                ),
-              )}
+                );
+              })}
               {activity && (
                 <div className="pl-10">
                   <AiActivityIndicator activity={activity} />

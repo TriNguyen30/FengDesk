@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Loader2 } from "lucide-react";
+import { Loader2, Pencil } from "lucide-react";
 import { useProductList } from "../hooks/useProducts";
 import { Product } from "../types/product";
 import { generateSlug } from "@/utils/string";
@@ -31,17 +31,16 @@ function formatPrice(price: number): string {
 interface ProductCardProps {
   product: Product;
   soldCount?: number;
+  /** Chỉ truyền khi người xem là chủ/co-owner của shop — hiện nút sửa nhanh ở góc thẻ. */
+  editHref?: string;
 }
 
-export default function ProductCard({ product, soldCount }: ProductCardProps) {
+export default function ProductCard({ product, soldCount, editHref }: ProductCardProps) {
   const elementLabel = product.primaryElement ? ELEMENT_LABELS[product.primaryElement] || product.primaryElement : null;
   const elementColor = product.primaryElement ? ELEMENT_COLORS[product.primaryElement] || "bg-primary" : "";
 
   return (
-    <Link
-      to={`/product/${generateSlug(product.name)}.${product.id}`}
-      className="group relative flex flex-col rounded-md bg-white border border-gray-100 overflow-hidden hover:shadow-md transition-shadow duration-200"
-    >
+    <div className="group relative flex flex-col rounded-md bg-white border border-gray-100 overflow-hidden hover:shadow-md transition-shadow duration-200">
       {/* Feng Shui Badge */}
       {elementLabel && (
         <div className={`absolute top-2 left-2 z-10 rounded-sm px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white shadow-sm ${elementColor}`}>
@@ -49,26 +48,44 @@ export default function ProductCard({ product, soldCount }: ProductCardProps) {
         </div>
       )}
 
-      {/* Square image */}
-      <div className="aspect-square w-full overflow-hidden bg-gray-50">
-        <img
-          src={product.primaryImageUrl}
-          alt={product.name}
-          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-        />
-      </div>
+      {/* Nút sửa nhanh (owner/co-owner) — sibling đè lên trên, không lồng trong Link chính bên dưới */}
+      {editHref && (
+        <Link
+          to={editHref}
+          title="Sửa sản phẩm"
+          className="absolute top-2 right-2 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-white/90 text-gray-600 shadow-sm hover:bg-primary hover:text-white transition-colors"
+        >
+          <Pencil size={12} />
+        </Link>
+      )}
 
-      {/* Info */}
-      <div className="flex flex-col gap-1.5 p-2">
-        <p className="line-clamp-2 text-xs leading-snug text-gray-800 min-h-[33px]">
-          {product.name}
-        </p>
+      <Link
+        to={`/product/${generateSlug(product.name)}.${product.id}`}
+        className="flex flex-col"
+      >
+        {/* Square image */}
+        <div className="aspect-square w-full overflow-hidden bg-gray-50">
+          <img
+            src={product.primaryImageUrl}
+            alt={product.name}
+            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+          />
+        </div>
 
-        <p className="text-sm font-medium text-[#ee4d2d]">{formatPrice(product.minPrice)}</p>
+        {/* Info */}
+        <div className="flex flex-col gap-1.5 p-2">
+          <p className="line-clamp-2 text-xs leading-snug text-gray-800 min-h-[33px]">
+            {product.name}
+          </p>
 
-        {soldCount !== undefined && <p className="text-[11px] text-gray-400">Đã bán {soldCount}</p>}
-      </div>
-    </Link>
+          <p className="text-sm font-medium text-[#ee4d2d]">{formatPrice(product.minPrice)}</p>
+
+          {soldCount !== undefined && (
+            <p className="text-[11px] text-gray-400">Đã bán {soldCount}</p>
+          )}
+        </div>
+      </Link>
+    </div>
   );
 }
 
