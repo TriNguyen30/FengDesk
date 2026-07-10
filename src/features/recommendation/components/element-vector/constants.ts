@@ -9,17 +9,25 @@ const ELEMENT_VI: Record<string, string> = {
   Tho: "Thổ",
 };
 
-const ELEMENT_COLOR: Record<string, string> = {
-  Moc: "#7d8f69", // sage (brand)
+export const ELEMENT_COLOR: Record<string, string> = {
+  Moc: "#6C914A", // sage (brand)
   Thuy: "#3b82f6", // blue
   Hoa: "#ef4444", // red
-  Tho: "#c4a86a", // earth gold
+  Tho: "#D9AD41", // earth gold
   Kim: "#9ca3af", // metal gray
 };
+
+// Chỉnh màu chấm radar và nhãn icon tại đây.
+// Nếu cần thay đổi màu dot và icon, sửa trực tiếp trong ELEMENT_COLOR.
+export const ELEMENT_DOT_COLOR = ELEMENT_COLOR;
 
 export const SURPLUS_COLOR = "#ef4444";
 export const SURPLUS_BG = "#fdecea";
 export const GAP_THRESHOLD = 0.05;
+
+// Tông màu chip trạng thái "cần bù"/"thừa" (đối lập với "ổn" — chip viền trơn).
+export const ATTENTION_BG = "#f6ead8";
+export const ATTENTION_TEXT = "#8a6a3f";
 
 export type GapStatus = "deficit" | "surplus" | "balanced";
 

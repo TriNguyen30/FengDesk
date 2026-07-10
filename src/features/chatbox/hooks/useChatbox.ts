@@ -4,6 +4,7 @@ import { useAppDispatch, useAppSelector } from "@/app/store";
 import { setAuthModal } from "@/features/auth/store/authSlice";
 import { chatApi } from "@/features/chatbox/api/chat.api";
 import { chatHub } from "@/features/chatbox/lib/chatHub";
+import { useAiActivity } from "@/features/shared/ai-activity";
 import {
   addMessage,
   bumpChatboxUnread,
@@ -12,7 +13,6 @@ import {
   openChatbox,
   selectActiveChatboxId,
   selectActiveMessages,
-  selectAiActivity,
   selectChatboxes,
   selectChatboxIsOpen,
   selectChatboxUnreadCount,
@@ -20,7 +20,6 @@ import {
   selectConnectionStatus,
   selectIsSending,
   setActiveChatbox,
-  setAiActivity,
   setChatboxes,
   setConnectionStatus,
   setIsSending,
@@ -29,7 +28,7 @@ import {
   toggleChatbox,
   upsertChatbox,
 } from "@/features/chatbox/store/chatboxSlice";
-import type { AiActivity, ChatMessageBroadcast } from "@/features/chatbox/types/chatbox";
+import type { ChatMessageBroadcast } from "@/features/chatbox/types/chatbox";
 
 export function useChatbox() {
   const dispatch = useAppDispatch();
@@ -42,7 +41,10 @@ export function useChatbox() {
   const connectionStatus = useAppSelector(selectConnectionStatus);
   const unreadCount = useAppSelector(selectChatboxUnreadCount);
   const isSending = useAppSelector(selectIsSending);
-  const aiActivity = useAppSelector(selectAiActivity);
+  // Trạng thái AI realtime chỉ của phòng đang mở (đóng/đổi phòng → tự leave group + reset).
+  const { activity: aiActivity } = useAiActivity(
+    activeChatboxId ? `chat-${activeChatboxId}` : null,
+  );
 
   const meId = user?.id;
   const activeRef = useRef(activeChatboxId);
@@ -100,11 +102,6 @@ export function useChatbox() {
         dispatch(bumpChatboxUnread(m.chatboxId));
       }
     };
-    const onAiStatus = (a: AiActivity) => {
-      if (activeRef.current === a.chatboxId) {
-        dispatch(setAiActivity(a.phase === "done" ? null : a));
-      }
-    };
     const onUserJoined = (p: { chatboxId: string; userId: string }) => {
       // Có người (nhân viên hỗ trợ) vừa vào phòng → nháy panel consent để khách lưu ý.
       if (p.userId !== meId) setConsentPulseRoomId(p.chatboxId);
@@ -116,7 +113,6 @@ export function useChatbox() {
         await chatHub.connect();
         if (cancelled) return;
         chatHub.on<ChatMessageBroadcast>("messageReceived", onMessage);
-        chatHub.on<AiActivity>("aiStatus", onAiStatus);
         chatHub.on<{ chatboxId: string; userId: string }>("userJoined", onUserJoined);
         chatHub.onReconnecting(() => dispatch(setConnectionStatus("connecting")));
         chatHub.onReconnected(() => dispatch(setConnectionStatus("connected")));
@@ -137,7 +133,6 @@ export function useChatbox() {
       cancelled = true;
       // Chỉ gỡ handler của widget; KHÔNG disconnect (kết nối dùng chung với trang AI).
       chatHub.off("messageReceived", onMessage as (...a: unknown[]) => void);
-      chatHub.off("aiStatus", onAiStatus as (...a: unknown[]) => void);
       chatHub.off("userJoined", onUserJoined as (...a: unknown[]) => void);
     };
   }, [meId, dispatch, refreshChatboxes]);

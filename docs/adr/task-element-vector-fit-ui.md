@@ -19,19 +19,22 @@ Mục "Độ phù hợp phong thủy với không gian của bạn" (TURN 5) là
 | Atom | Vai trò |
 |------|---------|
 | `ScoreBadge` | Vòng `%` + tier (chỉ dùng khi là *fit sản phẩm × phòng*) |
-| `ElementBars` | Dãy thanh 5 hành — prop `mode: "space" \| "fit" \| "aggregate"` |
-| `ElementRadar` | Radar ngũ hành (thu/mở) |
-| `InfoCardTrio` | 3 thẻ: Không gian · Hợp bản mệnh · Hướng đặt |
+| `ElementBars` | Dãy thanh 5 hành — prop `mode: "space" \| "fit" \| "aggregate"` (còn dùng ở compact/mini và ở fit sản phẩm, vị trí #1 full đã thay bằng `ElementTags` + `ElementRadarChart`) |
+| `ElementRadarChart` | Radar 5 trục ngũ hành — nét đứt không fill = `adjustedIdeal` (mức lý tưởng), nét liền fill 25% + dot màu hành = `current` (hiện tại). Domain mặc định 50%, tự giãn theo giá trị lớn nhất nếu có hành vượt 50% (xem `ElementRadarChart.tsx`) |
+| `ElementTags` | Dải chip 5 hành thay cho bars ở vị trí #1: dot màu + tên hành + trạng thái `↑ cần bù` / `↓ thừa` / `ổn` suy từ `gapStatus(gap)` |
+| `SpaceInsightList` | Danh sách gợi ý (icon + tiêu đề + mô tả) suy **thuần từ dữ liệu `element-analysis`** (không có bản mệnh/hướng đặt — data đó chỉ có ở fit sản phẩm × phòng) — dùng `InfoRow` chung với `InfoCardTrio` |
+| `InfoRow` | Icon tròn + tiêu đề + mô tả — 1 dòng dùng chung cho `InfoCardTrio` (fit sản phẩm) và `SpaceInsightList` (không gian thuần) |
+| `InfoCardTrio` | 3 thẻ: Không gian · Hợp bản mệnh · Hướng đặt — **chỉ dùng ở fit sản phẩm × phòng** (vị trí #3), có `menhLine`/`placementHint` từ `ProductFitResponse` mà `element-analysis` không có |
 | `SpaceTabs` | Dải tab chọn phòng (mỗi tab có `%`) + "＋ Thêm không gian" |
 | `EmptyState` | "Bạn chưa có không gian nào" |
-| `SummaryLine` | Câu kết "hành X trội — hợp phòng đang thiếu X" |
+| `SummaryLine` | Câu kết "hành X trội — hợp phòng đang thiếu X" (dùng ở fit sản phẩm, vị trí #3) |
 | `FitBadge` | Chip `%` siêu gọn |
 
 **Cắt phần nào → dùng ở đâu:**
 
 | # Vị trí | Lắp atom | Cắt bỏ | Data | `ElementBars.mode` |
 |---|---|---|---|---|
-| 1 ⭐ Trang Workspace | `ElementBars` + `ElementRadar`(tùy) + `SummaryLine` | ScoreBadge, InfoCardTrio, SpaceTabs | `element-analysis` | `space` |
+| 1 ⭐ Trang Workspace | `ElementTags` + `SpaceInsightList` + `ElementRadarChart` (grid 2 cột: trái = tags+list, phải = radar) | ScoreBadge, InfoCardTrio, SpaceTabs, `ElementBars` (bars ngang đã bỏ — tốn diện tích) | `element-analysis` | — |
 | 2 Workspace card (list ProfileWorkspace) | `ElementBars` mini **hoặc** `SummaryLine` gọn | phần còn lại | `element-analysis` | `space` (mini) |
 | 2b (Phase 2) Bộ chọn "phòng đang active" | `SummaryLine` compact + `FitBadge` | — | element-analysis | space (mini) |
 | 3 Chi tiết sản phẩm | **TOÀN BỘ**: ScoreBadge + ElementBars + InfoCardTrio + SpaceTabs + EmptyState + SummaryLine | — | fit sản phẩm × phòng | `fit` |
@@ -119,15 +122,20 @@ interface ElementVectorFitProps {
 }
 ```
 
-**Yêu cầu hiển thị (bản `full`):**
+**Yêu cầu hiển thị (bản `full`) — cập nhật sau refactor bỏ 5 thanh bar ngang:**
 - Tiêu đề: "Ngũ hành không gian của bạn".
-- Với mỗi hành (thứ tự Kim, Moc, Thuy, Hoa, Tho): tên hành (VI) + **thanh đôi** `ideal` (mờ, nền) và `current` (đậm, màu hành) để so sánh; nhãn `gap`:
-  - `gap > 0.05` → chip "Thiếu" (màu hành, nhấn).
-  - `gap < −0.05` → chip "Thừa" (đỏ nhạt).
-  - còn lại → "Cân bằng" (xám).
-- Dòng kết luận: "Phòng đang cần bổ sung **{dominantNeed VI}**".
+- Layout **grid 2 cột** (`grid-cols-1 lg:grid-cols-2`, stack dọc trên mobile):
+  - **Cột trái** — `ElementTags` (dải chip 5 hành, thứ tự Kim, Moc, Thuy, Hoa, Tho): dot màu hành + tên hành + trạng thái suy từ `gapStatus(gap)`:
+    - `gap > 0.05` (deficit) → "↑ cần bù", nền tan `#f6ead8`.
+    - `gap < −0.05` (surplus) → "↓ thừa", nền tan `#f6ead8` (cùng tông với deficit — cả hai đều là "cần chú ý", khác với "ổn").
+    - còn lại (balanced) → "ổn", nền trắng viền `#e5e7eb`.
+    Bên dưới là `SpaceInsightList` (3 dòng icon+tiêu đề+mô tả, suy **thuần từ dữ liệu sẵn có** — không bịa bản mệnh/hướng đặt):
+    1. "Hợp với không gian này" — liệt kê các hành đang thiếu (deficit).
+    2. "Đang dư trong phòng" — chỉ hiện khi có hành surplus.
+    3. "Ưu tiên bổ sung" — hành `dominantNeed`.
+  - **Cột phải** — `ElementRadarChart`: 5 trục theo `ELEMENT_ORDER`; nét đứt không fill (`adjustedIdeal`) = mức lý tưởng của phòng; nét liền fill 25% + dot màu hành (`current`) = trạng thái hiện tại. Domain trục bán kính mặc định `[0, 0.5]`, tự giãn lên `max(0.5, giá trị lớn nhất trong dữ liệu)` nếu có hành vượt 50% (vd hành nào current/ideal = 72% → domain giãn tới 0.72). **Lưu ý recharts**: phải set `type="number"` và `allowDecimals` trên `PolarRadiusAxis`, mặc định `allowDecimals: false` sẽ "nice" domain phân số lên `[0,1]` và làm sai lệch scale vẽ.
 
-**Bản `compact`:** 1 dòng — mini bars 5 hành + text "Thiếu {dominantNeed}". Không tiêu đề.
+**Bản `compact`:** không đổi — 1 dòng mini bars 5 hành (`ElementBars size="mini"`) + text "Thiếu {dominantNeed}". Không tiêu đề.
 
 **Map & màu (lấy từ thiết kế TURN 5):**
 
@@ -163,7 +171,7 @@ Mỗi card workspace (khi user có nhiều phòng) render `<ElementVectorFit ana
 ## 6. Acceptance
 - Không có workspace đang chọn → không render (không lỗi).
 - `status pending` → skeleton; `error` → ẩn gọn (không chặn trang).
-- Tổng bars không tràn, số làm tròn 2 chữ số khi hiện tooltip.
+- Giá trị hiển thị (tag/tooltip) làm tròn hợp lý; radar không tràn khung ở mọi kích thước viewport (đã test mobile/desktop qua `preview_resize`).
 - `pnpm type-check` + `pnpm lint` sạch.
 
 ## 7. Ngoài phạm vi

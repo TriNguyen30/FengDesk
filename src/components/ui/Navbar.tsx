@@ -322,7 +322,7 @@ export default function Navbar() {
         onSwitchToLogin={() => dispatch(setAuthModal("login"))}
       />
 
-      <AiAssistantDrawer open={aiOpen} onClose={() => setAiOpen(false)} />
+      <AiAssistantDrawer key={user?.id ?? "guest"} open={aiOpen} onClose={() => setAiOpen(false)} />
     </header>
   );
 }

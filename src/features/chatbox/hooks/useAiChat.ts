@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { chatApi, type AiChatTurn } from "@/features/chatbox/api/chat.api";
-import { chatHub } from "@/features/chatbox/lib/chatHub";
-import type { AiActivity, ChatMessage } from "@/features/chatbox/types/chatbox";
+import { useAiActivity } from "@/features/shared/ai-activity";
+import type { ChatMessage } from "@/features/chatbox/types/chatbox";
 
 export interface AiMessage {
   id: string;
@@ -35,7 +35,12 @@ export function useAiChat(productId?: string) {
   const [messages, setMessages] = useState<AiMessage[]>([]);
   const [chatboxId, setChatboxId] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
-  const [activity, setActivity] = useState<AiActivity | null>(null);
+
+  // Chỉ join group aiStatus khi đã biết chatboxId (lượt gửi đầu tiên chưa có phòng — xem fallback dưới).
+  const { activity: liveActivity } = useAiActivity(chatboxId ? `chat-${chatboxId}` : null);
+  // Lượt gửi đầu (chưa có chatboxId → chưa join được group) hoặc realtime chưa kịp phát: fallback "thinking"
+  // trong lúc đang chờ REST, để indicator không im lặng.
+  const activity = liveActivity ?? (sending ? { operationId: "pending", phase: "thinking" as const } : null);
 
   const chatboxRef = useRef<string | null>(null);
   useEffect(() => {
@@ -80,31 +85,6 @@ export function useAiChat(productId?: string) {
     loadedRef.current = false;
   }, []);
 
-  // Lắng nghe trạng thái AI realtime (best-effort).
-  useEffect(() => {
-    let cancelled = false;
-    const onStatus = (a: AiActivity) => {
-      if (a.chatboxId === chatboxRef.current) setActivity(a.phase === "done" ? null : a);
-    };
-    (async () => {
-      try {
-        await chatHub.connect();
-        if (!cancelled) chatHub.on<AiActivity>("aiStatus", onStatus);
-      } catch {
-        /* realtime hỏng không chặn chat (POST vẫn chạy) */
-      }
-    })();
-    return () => {
-      cancelled = true;
-      chatHub.off("aiStatus", onStatus as (...a: unknown[]) => void);
-    };
-  }, []);
-
-  // Biết chatboxId → join group để nhận aiStatus cho các lượt sau.
-  useEffect(() => {
-    if (chatboxId) void chatHub.joinChatbox(chatboxId).catch(() => {});
-  }, [chatboxId]);
-
   const send = useCallback(
     async (text: string, imageUrls?: string[]) => {
       const t = text.trim();
@@ -115,7 +95,6 @@ export function useAiChat(productId?: string) {
         { id: `u-${Date.now()}`, role: "user", content: t, images: imageUrls ?? [] },
       ]);
       setSending(true);
-      setActivity({ chatboxId: chatboxRef.current ?? "", phase: "thinking" });
       try {
         const res = await chatApi.sendToAi({
           message: t || undefined,
@@ -133,7 +112,6 @@ export function useAiChat(productId?: string) {
         toast.error("Không kết nối được trợ lý AI. Thử lại sau.");
       } finally {
         setSending(false);
-        setActivity(null);
       }
     },
     [sending, productId],

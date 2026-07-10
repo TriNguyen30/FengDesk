@@ -3,6 +3,9 @@ import type {
   WorkspaceElementAnalysis,
 } from "@/features/users/types/workspace";
 import ElementBars, { type ElementBarRow, type BarTone } from "./ElementBars";
+import ElementTags from "./ElementTags";
+import SpaceInsightList from "./SpaceInsightList";
+import ElementRadarChart from "./ElementRadarChart";
 import { ELEMENT_ORDER, elementColor, elementVi, gapStatus } from "./constants";
 
 /** Đảm bảo luôn có đủ 5 hành theo đúng thứ tự hiển thị, kể cả khi BE trả rỗng. */
@@ -44,14 +47,14 @@ interface ElementVectorFitProps {
 }
 
 export default function ElementVectorFit({ analysis, variant = "full" }: ElementVectorFitProps) {
-  const rows = toOrderedRows(analysis.elements).map(toBarRow);
+  const orderedRows = toOrderedRows(analysis.elements);
   const dominantVi = elementVi(analysis.dominantNeed);
   const dominantColor = elementColor(analysis.dominantNeed);
 
   if (variant === "compact") {
     return (
       <div className="flex items-center gap-3 rounded-lg border border-[#e5e7eb] bg-[#fafbf9] px-3 py-2">
-        <ElementBars rows={rows} size="mini" />
+        <ElementBars rows={orderedRows.map(toBarRow)} size="mini" />
         <span className="shrink-0 text-xs text-[#6b7280]">
           Thiếu <span style={{ color: dominantColor }} className="font-semibold">{dominantVi}</span>
         </span>
@@ -62,14 +65,13 @@ export default function ElementVectorFit({ analysis, variant = "full" }: Element
   return (
     <div className="rounded-2xl border border-[#e5e7eb] bg-[#fafbf9] p-5">
       <h3 className="mb-4 text-sm font-bold text-[#111827]">Ngũ hành không gian của bạn</h3>
-      <ElementBars rows={rows} />
-      <p className="mt-4 text-sm text-[#6b7280]">
-        Phòng đang cần bổ sung{" "}
-        <span className="font-semibold" style={{ color: dominantColor }}>
-          {dominantVi}
-        </span>
-        .
-      </p>
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:items-center">
+        <div className="flex flex-col gap-4">
+          <ElementTags rows={orderedRows} />
+          <SpaceInsightList rows={orderedRows} dominantNeed={analysis.dominantNeed} />
+        </div>
+        <ElementRadarChart rows={orderedRows} />
+      </div>
     </div>
   );
 }

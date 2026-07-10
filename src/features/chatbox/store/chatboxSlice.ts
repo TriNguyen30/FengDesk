@@ -1,11 +1,6 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 import { logout } from "@/features/auth/store/authSlice";
-import type {
-  AiActivity,
-  Chatbox,
-  ChatConnectionStatus,
-  ChatMessage,
-} from "@/features/chatbox/types/chatbox";
+import type { Chatbox, ChatConnectionStatus, ChatMessage } from "@/features/chatbox/types/chatbox";
 
 type ChatView = "list" | "conversation";
 
@@ -18,8 +13,6 @@ interface ChatboxState {
   messagesByRoom: Record<string, ChatMessage[]>;
   connectionStatus: ChatConnectionStatus;
   isSending: boolean;
-  /** Trạng thái AI realtime trong phòng đang mở (mảng ①). */
-  aiActivity: AiActivity | null;
 }
 
 const initialState: ChatboxState = {
@@ -30,7 +23,6 @@ const initialState: ChatboxState = {
   messagesByRoom: {},
   connectionStatus: "disconnected",
   isSending: false,
-  aiActivity: null,
 };
 
 function upsert(list: ChatMessage[], msg: ChatMessage): ChatMessage[] {
@@ -70,7 +62,6 @@ const chatboxSlice = createSlice({
     },
     setActiveChatbox(state, action: PayloadAction<string | null>) {
       state.activeChatboxId = action.payload;
-      state.aiActivity = null;
     },
     setChatboxes(state, action: PayloadAction<Chatbox[]>) {
       // Dedupe theo id: BE có thể trả phòng lặp (vd query include nhiều collection) → tránh trùng key ở ChatRoomList.
@@ -108,9 +99,6 @@ const chatboxSlice = createSlice({
     setIsSending(state, action: PayloadAction<boolean>) {
       state.isSending = action.payload;
     },
-    setAiActivity(state, action: PayloadAction<AiActivity | null>) {
-      state.aiActivity = action.payload;
-    },
     resetChatbox() {
       return initialState;
     },
@@ -136,7 +124,6 @@ export const {
   clearChatboxUnread,
   setConnectionStatus,
   setIsSending,
-  setAiActivity,
   resetChatbox,
 } = chatboxSlice.actions;
 
@@ -151,7 +138,6 @@ export const selectConnectionStatus = (s: RootLike) => s.chatbox.connectionStatu
 export const selectChatboxUnreadCount = (s: RootLike) =>
   s.chatbox.chatboxes.reduce((sum, c) => sum + (c.unreadCount ?? 0), 0);
 export const selectIsSending = (s: RootLike) => s.chatbox.isSending;
-export const selectAiActivity = (s: RootLike) => s.chatbox.aiActivity;
 export const selectActiveMessages = (s: RootLike) =>
   s.chatbox.activeChatboxId ? (s.chatbox.messagesByRoom[s.chatbox.activeChatboxId] ?? []) : [];
 

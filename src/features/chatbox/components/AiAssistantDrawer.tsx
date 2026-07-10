@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { Bot, ImagePlus, Loader2, Send, Sparkles, User, X } from "lucide-react";
 import { useAiChat } from "@/features/chatbox/hooks/useAiChat";
 import { useImageAttachments } from "@/features/chatbox/hooks/useImageAttachments";
-import AiActivityIndicator from "./AiActivityIndicator";
+import { AiActivityIndicator } from "@/features/shared/ai-activity";
 import AttachmentPreviewRow from "./AttachmentPreviewRow";
 import ConfirmDeleteButton from "./ConfirmDeleteButton";
 import Markdown from "./Markdown";
