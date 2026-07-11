@@ -196,16 +196,30 @@ body {
   padding-left: 0.5rem;
   color: #6b7280;
 }
+.fd-md {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
 .fd-md table {
   width: 100%;
+  max-width: 100%;
   border-collapse: collapse;
   margin: 0.25rem 0;
+  table-layout: fixed;
 }
 .fd-md th,
 .fd-md td {
   border: 1px solid #e5e7eb;
   padding: 0.25rem 0.4rem;
   text-align: left;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+.fd-md img {
+  display: block;
+  max-width: 100%;
+  height: auto;
 }
 
 /* =========================

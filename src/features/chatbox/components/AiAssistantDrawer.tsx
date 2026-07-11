@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type KeyboardEvent } from "react";
+import { Fragment, useEffect, useRef, useState, type KeyboardEvent, type MouseEvent } from "react";
 import { Bot, ImagePlus, Loader2, Pencil, Send, Sparkles, User, X } from "lucide-react";
 import { useAiChat, type AiMessage } from "@/features/chatbox/hooks/useAiChat";
 import { useImageAttachments } from "@/features/chatbox/hooks/useImageAttachments";
@@ -14,6 +14,20 @@ const SUGGESTIONS = [
   "Sản phẩm nào đang bán chạy?",
 ];
 
+const DEFAULT_DRAWER_WIDTH = 448;
+
+const getDrawerWidthLimits = (viewportWidth: number) => {
+  const minWidth = Math.min(viewportWidth, DEFAULT_DRAWER_WIDTH);
+  const maxWidth = Math.max(minWidth, Math.floor(viewportWidth * 0.5));
+  const midWidth = Math.round((minWidth + maxWidth) / 2);
+  return { minWidth, maxWidth, midWidth };
+};
+
+const clampDrawerWidth = (value: number, viewportWidth: number) => {
+  const { minWidth, maxWidth } = getDrawerWidthLimits(viewportWidth);
+  return Math.min(maxWidth, Math.max(minWidth, value));
+};
+
 interface AiAssistantDrawerProps {
   open: boolean;
   onClose: () => void;
@@ -26,12 +40,52 @@ interface AiAssistantDrawerProps {
  * Tông xanh brand. Chat thuần AI — không cần @AI. aiStatus realtime hiển thị trong khung.
  */
 export default function AiAssistantDrawer({ open, onClose, productId }: AiAssistantDrawerProps) {
-  const { messages, sending, activity, send, rewind, uploadImage, loadHistory, clearConversation } =
-    useAiChat(productId);
+  const {
+    messages,
+    sending,
+    activity,
+    narrations,
+    contextMessages,
+    send,
+    rewind,
+    uploadImage,
+    loadHistory,
+    clearConversation,
+  } = useAiChat(productId);
+
+  // Narration neo vào SAU tin user cuối (trước câu trả lời của lượt đó) — không nằm cuối danh sách,
+  // để khi câu trả lời cuối về thì thinking block vẫn đứng đúng thứ tự thời gian.
+  const lastUserIdx = (() => {
+    for (let i = messages.length - 1; i >= 0; i--) {
+      if (messages[i].role === "user") return i;
+    }
+    return -1;
+  })();
+
+  // Mốc "AI context limit": index tin CŨ NHẤT còn nằm trong cửa sổ nhớ gửi LLM.
+  // Chỉ vẽ khi có tin bị cắt (messages dài hơn cửa sổ); bỏ qua tin system (không render).
+  const contextBoundaryIdx = (() => {
+    if (contextMessages == null || messages.length <= contextMessages) return -1;
+    for (let i = messages.length - contextMessages; i < messages.length; i++) {
+      if (messages[i].role !== "system") return i;
+    }
+    return -1;
+  })();
   const [draft, setDraft] = useState("");
+  const [drawerWidth, setDrawerWidth] = useState(() => {
+    if (typeof window === "undefined") return DEFAULT_DRAWER_WIDTH;
+    return clampDrawerWidth(DEFAULT_DRAWER_WIDTH, window.innerWidth);
+  });
+  const [isResizing, setIsResizing] = useState(false);
+  const [isHoveringResizeHandle, setIsHoveringResizeHandle] = useState(false);
   const att = useImageAttachments(uploadImage);
   const fileRef = useRef<HTMLInputElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const pointerStartXRef = useRef<number | null>(null);
+  const resizeTargetWidthRef = useRef<number>(DEFAULT_DRAWER_WIDTH);
+  const resizeFrameRef = useRef<number | null>(null);
+  const clickStartRef = useRef<{ x: number; y: number } | null>(null);
+  const clickTriggeredRef = useRef(false);
 
   // Rewind (sửa & gửi lại tin của mình): id tin đang sửa + nội dung nháp.
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -70,7 +124,63 @@ export default function AiAssistantDrawer({ open, onClose, productId }: AiAssist
 
   useEffect(() => {
     if (open) bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, activity, open]);
+  }, [messages, activity, narrations, open]);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setDrawerWidth((prev) => clampDrawerWidth(prev, window.innerWidth));
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  useEffect(() => {
+    if (!isResizing) return;
+
+    const handlePointerMove = (event: globalThis.MouseEvent) => {
+      if (pointerStartXRef.current == null) return;
+      resizeTargetWidthRef.current = clampDrawerWidth(window.innerWidth - event.clientX, window.innerWidth);
+
+      if (resizeFrameRef.current != null) {
+        cancelAnimationFrame(resizeFrameRef.current);
+      }
+
+      resizeFrameRef.current = requestAnimationFrame(() => {
+        setDrawerWidth((prev) => {
+          const nextWidth = prev + (resizeTargetWidthRef.current - prev) * 0.22;
+          return clampDrawerWidth(nextWidth, window.innerWidth);
+        });
+      });
+    };
+
+    const handlePointerUp = () => {
+      if (resizeFrameRef.current != null) {
+        cancelAnimationFrame(resizeFrameRef.current);
+        resizeFrameRef.current = null;
+      }
+      setIsResizing(false);
+      pointerStartXRef.current = null;
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+    };
+
+    document.body.style.cursor = "ew-resize";
+    document.body.style.userSelect = "none";
+    window.addEventListener("mousemove", handlePointerMove);
+    window.addEventListener("mouseup", handlePointerUp);
+
+    return () => {
+      if (resizeFrameRef.current != null) {
+        cancelAnimationFrame(resizeFrameRef.current);
+        resizeFrameRef.current = null;
+      }
+      window.removeEventListener("mousemove", handlePointerMove);
+      window.removeEventListener("mouseup", handlePointerUp);
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+    };
+  }, [isResizing]);
 
   // ESC để đóng + khóa cuộn nền khi mở.
   useEffect(() => {
@@ -99,6 +209,53 @@ export default function AiAssistantDrawer({ open, onClose, productId }: AiAssist
     }
   };
 
+  const startResize = (event: MouseEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    clickTriggeredRef.current = false;
+    pointerStartXRef.current = event.clientX;
+    clickStartRef.current = { x: event.clientX, y: event.clientY };
+    setIsResizing(true);
+  };
+
+  const cycleDrawerWidth = () => {
+    if (typeof window === "undefined") return;
+
+    const { minWidth, maxWidth, midWidth } = getDrawerWidthLimits(window.innerWidth);
+    setDrawerWidth((currentWidth) => {
+      const current = Math.round(currentWidth);
+      if (current <= Math.round(minWidth + 2)) return midWidth;
+      if (Math.abs(current - midWidth) <= 8) return maxWidth;
+      return minWidth;
+    });
+  };
+
+  const handleDrawerMouseDown = (event: MouseEvent<HTMLElement>) => {
+    clickTriggeredRef.current = true;
+    clickStartRef.current = { x: event.clientX, y: event.clientY };
+  };
+
+  const handleDrawerClick = (event: MouseEvent<HTMLElement>) => {
+    const target = event.target as HTMLElement | null;
+    if (
+      target?.closest(
+        '[data-drawer-interaction="resize-handle"], button, input, textarea, select, a, [role="button"], [data-drawer-interaction="message-bubble"]'
+      )
+    ) {
+      return;
+    }
+
+    const start = clickStartRef.current;
+    if (!start) return;
+    const movedEnough = Math.hypot(event.clientX - start.x, event.clientY - start.y) > 8;
+    if (movedEnough || !clickTriggeredRef.current) {
+      clickTriggeredRef.current = false;
+      return;
+    }
+
+    clickTriggeredRef.current = false;
+    cycleDrawerWidth();
+  };
+
   const isEmpty = messages.length === 0;
 
   return (
@@ -117,10 +274,26 @@ export default function AiAssistantDrawer({ open, onClose, productId }: AiAssist
         role="dialog"
         aria-label="Trợ lý Phong Thủy"
         aria-hidden={!open}
-        className={`fixed right-0 top-0 z-50 flex h-dvh w-[min(100vw,28rem)] flex-col border-l-2 border-primary/40 bg-white shadow-2xl ring-1 ring-primary/10 transition-transform duration-300 ease-out ${
+        style={{
+          width: `${drawerWidth}px`,
+          transition: "width 300ms cubic-bezier(0, 0, 0.2, 1), translate 300ms cubic-bezier(0, 0, 0.2, 1), transform 300ms cubic-bezier(0, 0, 0.2, 1)",
+        }}
+        className={`fixed right-0 top-0 z-50 flex h-dvh flex-col border-l-2 border-primary/40 bg-white shadow-2xl ring-1 ring-primary/10 transition-transform duration-300 ease-out ${
           open ? "translate-x-0" : "translate-x-full"
         }`}
+        onMouseDown={handleDrawerMouseDown}
+        onClick={handleDrawerClick}
       >
+        <div
+          data-drawer-interaction="resize-handle"
+          className={`absolute left-0 top-0 h-full w-4 cursor-ew-resize touch-none transition-colors duration-200 ${
+            isResizing ? "bg-primary/10" : isHoveringResizeHandle ? "bg-primary/5" : "bg-transparent"
+          }`}
+          onMouseDown={startResize}
+          onMouseEnter={() => setIsHoveringResizeHandle(true)}
+          onMouseLeave={() => setIsHoveringResizeHandle(false)}
+          aria-hidden="true"
+        />
         {/* Header xanh brand */}
         <header className="flex items-center justify-between gap-2 bg-primary px-4 py-3 text-white">
           <div className="flex items-center gap-2">
@@ -183,8 +356,16 @@ export default function AiAssistantDrawer({ open, onClose, productId }: AiAssist
                 const isEditingThis = editingId === m.id;
                 const isDimmed = editingIndex >= 0 && idx > editingIndex;
                 return (
+                  <Fragment key={m.id}>
+                  {idx === contextBoundaryIdx && (
+                    <div className="flex items-center gap-2 py-2 text-[12px] font-medium tracking-wide text-primary/80 select-none">
+                      <span className="flex-1 border-t border-dashed border-primary/30" />
+                      AI Context limit here
+                      <span className="flex-1 border-t border-dashed border-primary/30" />
+                    </div>
+                  )}
                   <div
-                    key={m.id}
+                    data-drawer-interaction="message-bubble-wrapper"
                     className={`group flex items-start gap-2.5 transition-opacity duration-200 ${
                       isUser ? "flex-row-reverse" : ""
                     } ${isDimmed ? "pointer-events-none opacity-40" : ""}`}
@@ -198,7 +379,7 @@ export default function AiAssistantDrawer({ open, onClose, productId }: AiAssist
                     </span>
 
                     {isEditingThis ? (
-                      <div className="w-full max-w-[80%] rounded-2xl border border-primary bg-white p-2 shadow-sm">
+                      <div className="w-full max-w-[92%] rounded-2xl border border-primary bg-white p-2 shadow-sm">
                         <textarea
                           value={editText}
                           onChange={(e) => setEditText(e.target.value)}
@@ -227,7 +408,8 @@ export default function AiAssistantDrawer({ open, onClose, productId }: AiAssist
                       </div>
                     ) : (
                       <div
-                        className={`max-w-[80%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed ${
+                        data-drawer-interaction="message-bubble"
+                        className={`max-w-[92%] min-w-0 rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed ${
                           isUser
                             ? "rounded-tr-md bg-primary text-white"
                             : "rounded-tl-md border border-gray-200 bg-white text-gray-800"
@@ -266,6 +448,20 @@ export default function AiAssistantDrawer({ open, onClose, productId }: AiAssist
                       </button>
                     )}
                   </div>
+
+                  {/* Lời dẫn trung gian (narration) — ephemeral, không lưu DB: không bọc khung,
+                      chỉ 2 gạch trên/dưới, chữ mờ, giới hạn chiều cao + scroll. Neo sau tin user
+                      của lượt hiện tại → câu trả lời cuối về vẫn đứng đúng thứ tự thời gian. */}
+                  {idx === lastUserIdx && narrations.length > 0 && (
+                    <div className="pl-10">
+                      <div className="max-h-30 overflow-y-auto border-y border-gray-200 py-2 font-medium text-gray-500 opacity-90 [&_.fd-md]:text-xs [&_.fd-md]:text-gray-400">
+                        {narrations.map((n, i) => (
+                          <Markdown key={i} text={n} />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  </Fragment>
                 );
               })}
               {activity && (

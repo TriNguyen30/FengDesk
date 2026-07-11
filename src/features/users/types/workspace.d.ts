@@ -104,8 +104,23 @@ export interface ElementAnalysisRow {
   gap: number; // + = thiếu (cần bù), − = thừa
 }
 
+/** 1 dòng nhận định sinh ở BE (SpaceInsightBuilder) — Title/Text đã dựng sẵn, FE chỉ map icon theo Kind. */
+export interface SpaceInsightLine {
+  kind: "status" | "detail" | "action";
+  title: string;
+  text: string;
+}
+
+export interface SpaceInsights {
+  case: "Imbalanced" | "Balanced" | "Toxic";
+  lines: SpaceInsightLine[];
+}
+
 export interface WorkspaceElementAnalysis {
   workspaceProfileId: string;
   dominantNeed: string; // hành gap dương lớn nhất
   elements: ElementAnalysisRow[];
+  /** % phòng đúng chuẩn lý tưởng đã điều chỉnh theo mục đích + bản mệnh (0-100). */
+  compatibilityPercent: number;
+  insights: SpaceInsights;
 }

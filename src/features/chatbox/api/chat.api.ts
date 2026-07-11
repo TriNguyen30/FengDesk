@@ -48,6 +48,12 @@ export interface AiRewindPayload {
   model?: string;
 }
 
+/** Khớp BE AiChatConfigResponse — contextMessages = số TIN gần nhất được gửi cho LLM. */
+export interface AiChatConfig {
+  maxHistoryTurns: number;
+  contextMessages: number;
+}
+
 /**
  * Client REST cho chat người↔người (khớp ChatController, base URL đã gồm /api).
  * Realtime (nhận tin/đã đọc) đi qua SignalR hub — xem lib/chatHub.ts.
@@ -122,6 +128,9 @@ export const chatApi = {
       `/chat/ai/messages/${messageId}/rewind`,
       payload,
     ),
+
+  /** Cấu hình chat AI — cửa sổ nhớ (số tin) để FE vẽ mốc "AI context limit" trong khung chat. */
+  getAiConfig: () => fetchHttpClient.get<ApiResponse<AiChatConfig>>("/chat/ai/config"),
 
   /** Quyền chia sẻ thông tin của tôi cho nhân viên hỗ trợ trong phòng. */
   getConsent: (chatboxId: string) =>

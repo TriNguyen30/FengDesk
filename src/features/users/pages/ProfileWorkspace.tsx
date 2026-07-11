@@ -22,18 +22,20 @@ import {
   Lightbulb,
 } from "lucide-react";
 
-// ── Vòng tròn % hồ sơ đã điền (fields optional có giá trị / tổng) ──
-function CompletenessRing({ percent }: { percent: number }) {
+// ── Vòng tròn % tương thích ngũ hành (nguồn: element-analysis.compatibilityPercent) ──
+function CompatibilityRing({ percent, loading }: { percent: number | null; loading: boolean }) {
   const size = 36;
   const stroke = 4;
   const radius = (size - stroke) / 2;
   const circumference = 2 * Math.PI * radius;
-  const offset = circumference * (1 - percent / 100);
+  const pct = percent ?? 0;
+  const offset = circumference * (1 - pct / 100);
+  const toneClass = pct < 40 ? "stroke-red-500" : pct < 70 ? "stroke-amber-500" : "stroke-primary";
 
   return (
     <div
       className="relative flex h-9 w-9 shrink-0 items-center justify-center"
-      title={`Hồ sơ đã điền ${percent}%`}
+      title={loading ? "Đang tính tương thích ngũ hành…" : `Tương thích ngũ hành ${pct}%`}
     >
       <svg width={size} height={size} className="-rotate-90">
         <circle
@@ -44,19 +46,23 @@ function CompletenessRing({ percent }: { percent: number }) {
           fill="none"
           className="stroke-gray-100"
         />
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          strokeWidth={stroke}
-          fill="none"
-          strokeDasharray={circumference}
-          strokeDashoffset={offset}
-          strokeLinecap="round"
-          className={percent >= 100 ? "stroke-primary" : "stroke-primary/60"}
-        />
+        {!loading && (
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            strokeWidth={stroke}
+            fill="none"
+            strokeDasharray={circumference}
+            strokeDashoffset={offset}
+            strokeLinecap="round"
+            className={toneClass}
+          />
+        )}
       </svg>
-      <span className="absolute text-[9px] font-semibold text-gray-600">{percent}%</span>
+      <span className="absolute text-[9px] font-semibold text-gray-600">
+        {loading ? "…" : `${pct}%`}
+      </span>
     </div>
   );
 }
@@ -73,6 +79,108 @@ function WorkspaceElementSection({ workspace }: { workspace: Workspace }) {
   return (
     <div className="mt-4">
       <ElementVectorFit analysis={analysis} variant="full" />
+    </div>
+  );
+}
+
+interface WorkspaceCardProps {
+  workspace: Workspace;
+  onEdit: (workspace: Workspace) => void;
+  onDelete: (workspace: Workspace) => void;
+  onSetDefault: (workspace: Workspace) => void;
+}
+
+function WorkspaceCard({ workspace, onEdit, onDelete, onSetDefault }: WorkspaceCardProps) {
+  // Cùng queryKey với WorkspaceElementSection bên dưới → react-query dedupe, không tốn thêm request.
+  const { analysis, status } = useWorkspaceElementAnalysis(workspace.id);
+
+  return (
+    <div className="relative rounded-xl border border-gray-100 bg-white p-5 shadow-sm transition-shadow hover:shadow-md">
+      {/* Header */}
+      <div className="mb-4 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <CompatibilityRing
+            percent={analysis?.compatibilityPercent ?? null}
+            loading={status === "pending"}
+          />
+          <div className="flex items-center gap-2">
+            <span className="text-lg font-semibold text-gray-900">{workspace.name}</span>
+            {workspace.isDefault && (
+              <span className="flex items-center gap-1 rounded bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
+                <Star size={10} />
+                Mặc định
+              </span>
+            )}
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => onEdit(workspace)}
+            className="flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 hover:text-primary transition-colors cursor-pointer"
+          >
+            <Pencil size={14} />
+            Chỉnh sửa
+          </button>
+          <button
+            onClick={() => onDelete(workspace)}
+            className="flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-red-50 hover:text-red-500 hover:border-red-200 transition-colors cursor-pointer"
+          >
+            <Trash size={14} />
+            Xóa
+          </button>
+          <button
+            onClick={() => onSetDefault(workspace)}
+            disabled={workspace.isDefault}
+            className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors cursor-pointer
+            ${
+              workspace.isDefault
+                ? "border-primary/20 bg-primary/5 text-primary cursor-default"
+                : "border-gray-200 text-gray-600 hover:bg-primary/5 hover:text-primary hover:border-primary/30"
+            }`}
+          >
+            <Star size={14} />
+            {workspace.isDefault ? "Mặc định" : "Đặt mặc định"}
+          </button>
+        </div>
+      </div>
+
+      {/* Info Grid */}
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {fieldConfig.map(({ key, label, icon: Icon }) => {
+          const raw = workspace[key as keyof Workspace];
+          if (raw === null || raw === undefined) return null;
+          const value = key === "deskArea" ? `${fromCm2(Number(raw)).toFixed(2)} m²` : String(raw);
+          return (
+            <div key={key} className="flex items-center gap-3 rounded-lg bg-gray-50 px-3 py-2.5">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-white text-primary shadow-sm">
+                <Icon size={16} />
+              </div>
+              <div className="min-w-0">
+                <p className="text-[11px] font-medium uppercase tracking-wide text-gray-400">
+                  {label}
+                </p>
+                <p className="truncate text-sm font-medium text-gray-800">{value}</p>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {workspace.missingFieldHints.length > 0 && (
+        <div className="mt-3 rounded-lg bg-amber-50 px-3 py-2.5 text-xs text-amber-700">
+          <p className="flex items-center gap-1.5 font-medium">
+            <Lightbulb size={13} />
+            Gợi ý bổ sung để tư vấn chính xác hơn
+          </p>
+          <ul className="mt-1 list-disc space-y-0.5 pl-5">
+            {workspace.missingFieldHints.map((hint) => (
+              <li key={hint}>{hint}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      <WorkspaceElementSection workspace={workspace} />
     </div>
   );
 }
@@ -233,97 +341,13 @@ export default function ProfileWorkspace() {
       ) : (
         <div className="space-y-4">
           {workspaces.map((workspace) => (
-            <div
+            <WorkspaceCard
               key={workspace.id}
-              className="relative rounded-xl border border-gray-100 bg-white p-5 shadow-sm transition-shadow hover:shadow-md"
-            >
-              {/* Header */}
-              <div className="mb-4 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <CompletenessRing percent={workspace.completenessPercent} />
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg font-semibold text-gray-900">{workspace.name}</span>
-                    {workspace.isDefault && (
-                      <span className="flex items-center gap-1 rounded bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
-                        <Star size={10} />
-                        Mặc định
-                      </span>
-                    )}
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => handleOpenEdit(workspace)}
-                    className="flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 hover:text-primary transition-colors cursor-pointer"
-                  >
-                    <Pencil size={14} />
-                    Chỉnh sửa
-                  </button>
-                  <button
-                    onClick={() => setDeletingWorkspace(workspace)}
-                    className="flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-red-50 hover:text-red-500 hover:border-red-200 transition-colors cursor-pointer"
-                  >
-                    <Trash size={14} />
-                    Xóa
-                  </button>
-                  <button
-                    onClick={() => handleSetDefault(workspace)}
-                    disabled={workspace.isDefault}
-                    className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors cursor-pointer
-                    ${
-                      workspace.isDefault
-                        ? "border-primary/20 bg-primary/5 text-primary cursor-default"
-                        : "border-gray-200 text-gray-600 hover:bg-primary/5 hover:text-primary hover:border-primary/30"
-                    }`}
-                  >
-                    <Star size={14} />
-                    {workspace.isDefault ? "Mặc định" : "Đặt mặc định"}
-                  </button>
-                </div>
-              </div>
-
-              {/* Info Grid */}
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {fieldConfig.map(({ key, label, icon: Icon }) => {
-                  const raw = workspace[key as keyof Workspace];
-                  if (raw === null || raw === undefined) return null;
-                  const value =
-                    key === "deskArea" ? `${fromCm2(Number(raw)).toFixed(2)} m²` : String(raw);
-                  return (
-                    <div
-                      key={key}
-                      className="flex items-center gap-3 rounded-lg bg-gray-50 px-3 py-2.5"
-                    >
-                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-white text-primary shadow-sm">
-                        <Icon size={16} />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-[11px] font-medium uppercase tracking-wide text-gray-400">
-                          {label}
-                        </p>
-                        <p className="truncate text-sm font-medium text-gray-800">{value}</p>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {workspace.missingFieldHints.length > 0 && (
-                <div className="mt-3 rounded-lg bg-amber-50 px-3 py-2.5 text-xs text-amber-700">
-                  <p className="flex items-center gap-1.5 font-medium">
-                    <Lightbulb size={13} />
-                    Gợi ý bổ sung để tư vấn chính xác hơn
-                  </p>
-                  <ul className="mt-1 list-disc space-y-0.5 pl-5">
-                    {workspace.missingFieldHints.map((hint) => (
-                      <li key={hint}>{hint}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              <WorkspaceElementSection workspace={workspace} />
-            </div>
+              workspace={workspace}
+              onEdit={handleOpenEdit}
+              onDelete={setDeletingWorkspace}
+              onSetDefault={handleSetDefault}
+            />
           ))}
         </div>
       )}
