@@ -82,6 +82,22 @@ export default function AppRoutes() {
           }
         />
         <Route
+          path="/seller/:storeId/products/new"
+          element={
+            <ProtectedRoute>
+              <CreateProductPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/seller/:storeId/products/:id/edit"
+          element={
+            <ProtectedRoute>
+              <EditProductPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/become-seller"
           element={
             <ProtectedRoute>

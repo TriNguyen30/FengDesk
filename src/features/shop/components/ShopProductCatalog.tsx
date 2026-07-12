@@ -1,4 +1,5 @@
-import { Search, SearchX } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Plus, Search, SearchX } from "lucide-react";
 import ProductCard, { ProductCardSkeleton } from "@/features/products/components/ProductCard";
 import { Product } from "@/features/products/types/product";
 
@@ -8,6 +9,9 @@ interface ShopProductCatalogProps {
   totalCount: number;
   searchQuery: string;
   onSearchQueryChange: (query: string) => void;
+  /** Chỉ owner/co-owner (isShopMember) mới thấy nút thêm sản phẩm. */
+  shopId?: string;
+  isShopMember?: boolean;
 }
 
 export function ShopProductCatalog({
@@ -16,6 +20,8 @@ export function ShopProductCatalog({
   totalCount,
   searchQuery,
   onSearchQueryChange,
+  shopId,
+  isShopMember,
 }: ShopProductCatalogProps) {
   return (
     <section className="lg:col-span-3 space-y-6">
@@ -27,16 +33,28 @@ export function ShopProductCatalog({
           </p>
         </div>
 
-        {/* Inner Search Box */}
-        <div className="relative w-full sm:w-64 shrink-0">
-          <input
-            type="text"
-            placeholder="Tìm sản phẩm tại shop này..."
-            value={searchQuery}
-            onChange={(e) => onSearchQueryChange(e.target.value)}
-            className="w-full rounded-xl border border-gray-200 bg-white pl-9 pr-4 py-2.5 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary shadow-sm"
-          />
-          <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+        <div className="flex w-full items-center gap-2 sm:w-auto">
+          {/* Inner Search Box */}
+          <div className="relative w-full sm:w-64 shrink-0">
+            <input
+              type="text"
+              placeholder="Tìm sản phẩm tại shop này..."
+              value={searchQuery}
+              onChange={(e) => onSearchQueryChange(e.target.value)}
+              className="w-full rounded-xl border border-gray-200 bg-white pl-9 pr-4 py-2.5 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary shadow-sm"
+            />
+            <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+          </div>
+
+          {isShopMember && shopId && (
+            <Link
+              to={`/seller/${shopId}/products/new`}
+              className="flex shrink-0 items-center gap-1.5 rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-primary-dark transition-all cursor-pointer"
+            >
+              <Plus size={16} />
+              Thêm sản phẩm
+            </Link>
+          )}
         </div>
       </div>
 
@@ -50,7 +68,11 @@ export function ShopProductCatalog({
       ) : products.length > 0 ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
           {products.map((p) => (
-            <ProductCard key={p.id} product={p} />
+            <ProductCard
+              key={p.id}
+              product={p}
+              editHref={isShopMember && shopId ? `/seller/${shopId}/products/${p.id}/edit` : undefined}
+            />
           ))}
         </div>
       ) : (

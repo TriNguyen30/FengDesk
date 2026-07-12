@@ -11,18 +11,37 @@ export function useAiActivity(operationId: string | null) {
   // ngay trong render, KHÔNG phải trong effect, để tránh cascading render).
   const [trackedId, setTrackedId] = useState(operationId);
   const [activity, setActivity] = useState<AiActivity | null>(null);
+  // Lời dẫn trung gian (phase="narration") — dồn theo lượt, xóa khi done/error/đổi operation.
+  const [narrations, setNarrations] = useState<string[]>([]);
   if (operationId !== trackedId) {
     setTrackedId(operationId);
     setActivity(null);
+    setNarrations([]);
   }
 
   useEffect(() => {
     if (!operationId) return;
 
     let cancelled = false;
+    let turnActive = false; // đang trong 1 lượt xử lý AI (giữa phase đầu và done/error)
     const onStatus = (a: AiActivity) => {
       if (a.operationId !== operationId) return;
-      setActivity(a.phase === "done" || a.phase === "error" ? null : a);
+      if (a.phase === "narration") {
+        if (a.note) setNarrations((p) => [...p, a.note!]);
+        return; // không đè indicator phase hiện tại
+      }
+      if (a.phase === "done" || a.phase === "error") {
+        // Chỉ tắt indicator — GIỮ narrations hiển thị đến khi lượt mới bắt đầu / user reload.
+        turnActive = false;
+        setActivity(null);
+        return;
+      }
+      // Phase đầu tiên của một lượt MỚI → dọn narrations của lượt trước.
+      if (!turnActive) {
+        turnActive = true;
+        setNarrations([]);
+      }
+      setActivity(a);
     };
 
     (async () => {
@@ -42,5 +61,5 @@ export function useAiActivity(operationId: string | null) {
     };
   }, [operationId]);
 
-  return { activity, isActive: activity !== null };
+  return { activity, isActive: activity !== null, narrations };
 }

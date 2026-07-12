@@ -68,7 +68,7 @@ export default function ElementVectorFit({ analysis, variant = "full" }: Element
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:items-center">
         <div className="flex flex-col gap-4">
           <ElementTags rows={orderedRows} />
-          <SpaceInsightList rows={orderedRows} dominantNeed={analysis.dominantNeed} />
+          <SpaceInsightList insights={analysis.insights} />
         </div>
         <ElementRadarChart rows={orderedRows} />
       </div>

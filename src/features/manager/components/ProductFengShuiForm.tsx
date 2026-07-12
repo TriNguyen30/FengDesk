@@ -35,14 +35,15 @@ function toggle(list: string[], code: string): string[] {
   return list.includes(code) ? list.filter((c) => c !== code) : [...list, code];
 }
 
-/** Các trường thuộc tính phong thủy — dùng chung cho Create (nhúng) & Edit (kèm submit). */
-export function ProductFengShuiFields({
-  value,
-  onChange,
-  vibeOptions,
-  styleOptions,
-}: ProductFengShuiFieldsProps) {
-  const set = (patch: Partial<FengShuiValues>) => onChange({ ...value, ...patch });
+interface ElementSelectFieldsProps {
+  value: Pick<FengShuiValues, "primaryElement" | "secondaryElements">;
+  onChange: (next: Pick<FengShuiValues, "primaryElement" | "secondaryElements">) => void;
+}
+
+/** Hành chính/phụ — đường advanced/fallback (tầng 3), tách riêng để đặt trong khu "Phong thủy nâng cao". */
+export function ProductElementSelectFields({ value, onChange }: ElementSelectFieldsProps) {
+  const set = (patch: Partial<ElementSelectFieldsProps["value"]>) =>
+    onChange({ ...value, ...patch });
 
   return (
     <div className="space-y-5">
@@ -59,6 +60,7 @@ export function ProductFengShuiFields({
           }
           className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-700 focus:border-primary focus:outline-none"
         >
+          <option value="">-- Không chọn (dùng Đặc điểm sản phẩm) --</option>
           {FS_ELEMENTS.map((el) => (
             <option key={el.code} value={el.code}>
               {el.label}
@@ -90,7 +92,28 @@ export function ProductFengShuiFields({
           })}
         </div>
       </div>
+    </div>
+  );
+}
 
+interface VibeStyleFieldsProps {
+  value: Pick<FengShuiValues, "sizeClass" | "vibes" | "styles">;
+  onChange: (next: Pick<FengShuiValues, "sizeClass" | "vibes" | "styles">) => void;
+  vibeOptions: LookupItem[];
+  styleOptions: LookupItem[];
+}
+
+/** Kích thước / vibe / style — độc lập với phong thủy nâng cao, luôn hiện. */
+export function ProductVibeStyleFields({
+  value,
+  onChange,
+  vibeOptions,
+  styleOptions,
+}: VibeStyleFieldsProps) {
+  const set = (patch: Partial<VibeStyleFieldsProps["value"]>) => onChange({ ...value, ...patch });
+
+  return (
+    <div className="space-y-5">
       {/* Kích thước */}
       <div className="space-y-1.5 max-w-sm">
         <label className="text-sm font-semibold text-gray-700">Phân loại kích thước</label>
@@ -162,6 +185,30 @@ export function ProductFengShuiFields({
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+/**
+ * Toàn bộ trường thuộc tính phong thủy (hành + kích thước + vibe/style) gộp lại — dùng ở tab
+ * Edit (1 form, 1 nút lưu duy nhất gọi PUT /feng-shui). Ở Create, 2 khối trên được tách ra
+ * đặt ở 2 vị trí khác nhau trong trang thay vì gộp qua component này.
+ */
+export function ProductFengShuiFields({
+  value,
+  onChange,
+  vibeOptions,
+  styleOptions,
+}: ProductFengShuiFieldsProps) {
+  return (
+    <div className="space-y-5">
+      <ProductElementSelectFields value={value} onChange={(patch) => onChange({ ...value, ...patch })} />
+      <ProductVibeStyleFields
+        value={value}
+        onChange={(patch) => onChange({ ...value, ...patch })}
+        vibeOptions={vibeOptions}
+        styleOptions={styleOptions}
+      />
     </div>
   );
 }

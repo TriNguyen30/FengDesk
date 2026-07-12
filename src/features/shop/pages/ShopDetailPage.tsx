@@ -251,6 +251,8 @@ export default function ShopDetailPage() {
             totalCount={totalCount}
             searchQuery={searchQuery}
             onSearchQueryChange={setSearchQuery}
+            shopId={shop.id}
+            isShopMember={isShopMember}
           />
         </div>
       )}

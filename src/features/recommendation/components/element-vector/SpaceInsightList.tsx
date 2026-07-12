@@ -1,54 +1,45 @@
-import { Check, Minus, Target, type LucideIcon } from "lucide-react";
-import type { ElementAnalysisRow } from "@/features/users/types/workspace";
-import InfoRow from "./InfoRow";
-import { elementVi, gapStatus } from "./constants";
-
-function joinVi(elements: string[]): string {
-  return elements.map(elementVi).join(" và ");
-}
+import { Check, AlertTriangle, Info, Target, type LucideIcon } from "lucide-react";
+import type { SpaceInsights } from "@/features/users/types/workspace";
+import InfoRow, { type InfoRowTone } from "./InfoRow";
 
 interface SpaceInsightListProps {
-  rows: ElementAnalysisRow[];
-  dominantNeed: string;
+  insights: SpaceInsights;
 }
 
-/** Danh sách gợi ý suy trực tiếp từ vector ngũ hành của phòng (ideal/current/gap) — không có dữ liệu bản mệnh/hướng đặt ở mức phòng thuần. */
-export default function SpaceInsightList({ rows, dominantNeed }: SpaceInsightListProps) {
-  const deficit = rows.filter((r) => gapStatus(r.gap) === "deficit").map((r) => r.element);
-  const surplus = rows.filter((r) => gapStatus(r.gap) === "surplus").map((r) => r.element);
+// Toxic (xung khắc) = đỏ nhẹ, Imbalanced (lệch chuẩn) = vàng, Balanced (ổn) = xanh.
+const CASE_TONE: Record<SpaceInsights["case"], InfoRowTone> = {
+  Toxic: "danger",
+  Imbalanced: "warning",
+  Balanced: "success",
+};
 
-  const items: { icon: LucideIcon; title: string; desc: string }[] = [
-    deficit.length > 0
-      ? {
-          icon: Check,
-          title: "Hợp với không gian này",
-          desc: `Bù hành ${joinVi(deficit)} mà phòng đang thiếu.`,
-        }
-      : {
-          icon: Check,
-          title: "Ngũ hành đã cân bằng",
-          desc: "Phòng hiện không thiếu hành nào đáng kể.",
-        },
-  ];
-
-  if (surplus.length > 0) {
-    items.push({
-      icon: Minus,
-      title: "Đang dư trong phòng",
-      desc: `Hành ${joinVi(surplus)} hiện đang dư — hạn chế bổ sung thêm.`,
-    });
+function iconFor(kind: string, isBalanced: boolean): LucideIcon {
+  switch (kind) {
+    case "status":
+      return isBalanced ? Check : AlertTriangle;
+    case "detail":
+      return Info;
+    default:
+      return Target;
   }
+}
 
-  items.push({
-    icon: Target,
-    title: "Ưu tiên bổ sung",
-    desc: `Hành ${elementVi(dominantNeed)} đang thiếu nhiều nhất — nên ưu tiên khi chọn vật phẩm mới.`,
-  });
+/** Render 3 dòng nhận định (status/detail/action) đã sinh sẵn ở BE (SpaceInsightBuilder) — FE chỉ map icon + màu theo case. */
+export default function SpaceInsightList({ insights }: SpaceInsightListProps) {
+  const isBalanced = insights.case === "Balanced";
+  const tone = CASE_TONE[insights.case];
 
   return (
     <div className="flex flex-col">
-      {items.map((item, i) => (
-        <InfoRow key={item.title} icon={item.icon} title={item.title} desc={item.desc} first={i === 0} />
+      {insights.lines.map((line, i) => (
+        <InfoRow
+          key={line.kind}
+          icon={iconFor(line.kind, isBalanced)}
+          title={line.title}
+          desc={line.text}
+          first={i === 0}
+          tone={tone}
+        />
       ))}
     </div>
   );

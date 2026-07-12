@@ -37,8 +37,10 @@ const EMPTY_FENG_SHUI: FengShuiValues = {
 };
 
 export default function EditProductPage() {
-  const { id } = useParams<{ id: string }>();
+  // Mở từ /seller/:storeId/products/:id/edit (trang shop) → quay lại trang shop thay vì /manager/products.
+  const { id, storeId: lockedStoreId } = useParams<{ id: string; storeId?: string }>();
   const navigate = useNavigate();
+  const backTo = lockedStoreId ? `/stores/${lockedStoreId}` : "/manager/products";
 
   const [activeTab, setActiveTab] = useState<TabType>("basic");
   const [product, setProduct] = useState<ProductDetail | null>(null);
@@ -91,7 +93,7 @@ export default function EditProductPage() {
         });
       } else {
         toast.error("Không thể tải chi tiết sản phẩm");
-        navigate("/manager/products");
+        navigate(backTo);
       }
     } catch (err) {
       console.error(err);
@@ -99,7 +101,7 @@ export default function EditProductPage() {
     } finally {
       setLoading(false);
     }
-  }, [id, navigate]);
+  }, [id, navigate, backTo]);
 
   // Load product detail and global options
   useEffect(() => {
@@ -221,7 +223,7 @@ export default function EditProductPage() {
         <AlertCircle className="h-12 w-12 text-red-500" />
         <p className="text-base font-medium text-gray-800">Không tìm thấy sản phẩm</p>
         <button
-          onClick={() => navigate("/manager/products")}
+          onClick={() => navigate(backTo)}
           className="rounded-xl bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 cursor-pointer"
         >
           Quay lại danh sách
@@ -235,7 +237,7 @@ export default function EditProductPage() {
       {/* Header */}
       <div className="flex items-center gap-3">
         <button
-          onClick={() => navigate("/manager/products")}
+          onClick={() => navigate(backTo)}
           className="flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-500 hover:bg-gray-50 hover:text-gray-700 cursor-pointer transition-colors"
           title="Quay lại danh sách"
         >
