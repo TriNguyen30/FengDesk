@@ -49,20 +49,17 @@ export function ProductRelationsForm({
                 {cat.name}
               </label>
             ))}
+            <button
+              type="button"
+              onClick={onSubmit}
+              disabled={saving}
+              className="ml-auto flex items-center justify-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm mt-3 font-bold text-white shadow-md hover:bg-primary-dark active:scale-95 disabled:opacity-50 cursor-pointer"
+            >
+              {saving ? <RefreshCw size={16} className="animate-spin" /> : <Save size={16} />}
+              Lưu danh mục
+            </button>
           </div>
         )}
-      </div>
-
-      <div className="flex justify-end rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-100">
-        <button
-          type="button"
-          onClick={onSubmit}
-          disabled={saving}
-          className="flex items-center justify-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-white shadow-md hover:bg-primary-dark active:scale-95 disabled:opacity-50 cursor-pointer"
-        >
-          {saving ? <RefreshCw size={16} className="animate-spin" /> : <Save size={16} />}
-          Lưu danh mục
-        </button>
       </div>
     </div>
   );

@@ -43,11 +43,10 @@ export function StoreList({
                 <div
                   key={store.id}
                   onClick={() => onSelectStore(store)}
-                  className={`group relative flex flex-col p-4 rounded-xl border transition-all cursor-pointer ${
-                    isSelected
+                  className={`group relative flex flex-col p-4 rounded-xl border transition-all cursor-pointer ${isSelected
                       ? "border-primary bg-primary/5 ring-1 ring-primary"
                       : "border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50/50"
-                  }`}
+                    }`}
                 >
                   <div className="flex justify-between items-start">
                     <h4 className="font-bold text-gray-900 line-clamp-1">{store.name}</h4>

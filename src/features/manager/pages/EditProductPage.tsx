@@ -105,6 +105,7 @@ export default function EditProductPage() {
 
   // Load product detail and global options
   useEffect(() => {
+    window.scrollTo(0, 0);
     fetchProductDetail();
 
     const fetchOptions = async () => {
@@ -233,7 +234,7 @@ export default function EditProductPage() {
   }
 
   return (
-    <div className="space-y-6 max-w-5xl mx-auto pb-12">
+    <div className="space-y-6 max-w-5xl mx-auto pb-12 mt-5 px-4 md:px-0">
       {/* Header */}
       <div className="flex items-center gap-3">
         <button

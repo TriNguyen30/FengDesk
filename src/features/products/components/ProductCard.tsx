@@ -2,7 +2,6 @@ import { Link } from "react-router-dom";
 import { Loader2, Pencil } from "lucide-react";
 import { useProductList } from "../hooks/useProducts";
 import { Product } from "../types/product";
-import { generateSlug } from "@/utils/string";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -60,7 +59,7 @@ export default function ProductCard({ product, soldCount, editHref }: ProductCar
       )}
 
       <Link
-        to={`/product/${generateSlug(product.name)}.${product.id}`}
+        to={`/products/${product.id}`}
         className="flex flex-col"
       >
         {/* Square image */}
