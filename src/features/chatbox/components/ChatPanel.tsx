@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, Plus, Wifi, WifiOff, X } from "lucide-react";
 import type { Chatbox, ChatConnectionStatus, ChatMessage } from "@/features/chatbox/types/chatbox";
 import type { AiActivity } from "@/features/shared/ai-activity";
-import { getChatboxDisplayName } from "@/features/chatbox/utils/chatUtils";
+import { getChatboxDisplayName, getChatboxKindTag } from "@/features/chatbox/utils/chatUtils";
 import type { UploadFn } from "@/features/chatbox/hooks/useImageAttachments";
 import ChatConversation from "./ChatConversation";
 import ChatRoomList from "./ChatRoomList";
@@ -77,6 +77,7 @@ export default function ChatPanel({
 
   const isConversation = view === "conversation" && !!activeChatboxId;
   const title = isConversation && activeBox ? getChatboxDisplayName(activeBox, meId) : "Tin nhắn";
+  const kindTag = isConversation && activeBox ? getChatboxKindTag(activeBox) : null;
   // Panel consent chỉ hiện ở phòng hỗ trợ (khách là chủ phòng).
   const showConsent = isConversation && !!activeBox?.isSupport;
 
@@ -101,7 +102,14 @@ export default function ChatPanel({
             </button>
           )}
           <div className="min-w-0">
-            <h2 className="truncate text-sm font-bold">{title}</h2>
+            <div className="flex items-center gap-1.5">
+              <h2 className="truncate text-sm font-bold">{title}</h2>
+              {kindTag && (
+                <span className="shrink-0 rounded-full border border-white/30 bg-white/15 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-white/90">
+                  {kindTag.label}
+                </span>
+              )}
+            </div>
             <div className="mt-0.5 flex items-center gap-1.5 text-[11px] text-white/85">
               <StatusIcon size={12} />
               <span>{statusLabel}</span>

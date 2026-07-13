@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { getWorkspaces, deleteWorkspace, setDefaultWorkspace } from "../api/workspace.api";
 import { Workspace } from "../types/workspace";
 import { toast } from "sonner";
@@ -245,6 +246,7 @@ export default function ProfileWorkspace() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingWorkspace, setEditingWorkspace] = useState<Workspace | null>(null);
   const [deletingWorkspace, setDeletingWorkspace] = useState<Workspace | null>(null);
+  const queryClient = useQueryClient();
 
   const handleOpenCreate = () => {
     setEditingWorkspace(null);
@@ -358,7 +360,12 @@ export default function ProfileWorkspace() {
           setIsModalOpen(false);
           setEditingWorkspace(null);
         }}
-        onSuccess={fetchWorkspaces}
+        onSuccess={() => {
+          fetchWorkspaces();
+          // Radar/ngũ hành nằm ở React Query (key ["workspace", id, "element-analysis"]) — refetch danh
+          // sách (local state) KHÔNG đụng tới cache này. Phải invalidate để radar tính lại sau khi sửa.
+          queryClient.invalidateQueries({ queryKey: ["workspace"] });
+        }}
         workspace={editingWorkspace}
       />
     </div>

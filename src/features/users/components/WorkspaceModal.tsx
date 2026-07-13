@@ -1,11 +1,16 @@
 import { useEffect, useState } from "react";
 import { X } from "lucide-react";
 import { toast } from "sonner";
-import { isAxiosError } from "axios";
-import { getStyles, getWorkspaceTypes } from "../api/workspace.api";
-import { useParseWorkspace } from "../hooks/useParseWorkspace";
-import type { Style, Workspace, WorkspaceProfileDraft, WorkspaceType } from "../types/workspace";
+import { getElementInputVocabulary, getStyles, getWorkspaceTypes } from "../api/workspace.api";
+import { useWorkspaceIntake } from "../hooks/useWorkspaceIntake";
+import type {
+  ElementInputVocabulary,
+  Style,
+  Workspace,
+  WorkspaceType,
+} from "../types/workspace";
 import WorkspaceDescribeStep from "./WorkspaceDescribeStep";
+import WorkspaceIntakeProgress from "./WorkspaceIntakeProgress";
 import WorkspaceReviewForm from "./WorkspaceReviewForm";
 
 interface WorkspaceModalProps {
@@ -25,14 +30,15 @@ export default function WorkspaceModal({
 }: WorkspaceModalProps) {
   const isEditMode = !!workspace;
   const [step, setStep] = useState<Step>(isEditMode ? "review" : "describe");
-  const [draft, setDraft] = useState<WorkspaceProfileDraft | null>(null);
   const [sessionKey, setSessionKey] = useState<string | null>(null);
 
   const [workspaceTypes, setWorkspaceTypes] = useState<WorkspaceType[]>([]);
   const [styles, setStyles] = useState<Style[]>([]);
+  const [inputVocabulary, setInputVocabulary] = useState<ElementInputVocabulary | null>(null);
   const [loadingOptions, setLoadingOptions] = useState(false);
 
-  const parseWorkspace = useParseWorkspace();
+  // AI intake chạy nền: bấm phân tích → vào review ngay, draft về sau qua realtime (SignalR) tự prefill.
+  const intake = useWorkspaceIntake();
 
   // Mở modal (lần đầu hoặc đổi workspace đang sửa) → reset bước/draft ngay trong render — mẫu React
   // "adjusting state when a prop changes" (setState trong render, KHÔNG trong effect) tránh cascading render.
@@ -41,17 +47,27 @@ export default function WorkspaceModal({
     setSessionKey(currentKey);
     if (currentKey !== null) {
       setStep(isEditMode ? "review" : "describe");
-      setDraft(null);
-      parseWorkspace.reset();
+      intake.reset();
     }
   }
+
+  // AI báo lỗi giữa chừng → toast (banner tiến trình cũng hiện thông báo inline).
+  useEffect(() => {
+    if (intake.status === "failed" && step === "review" && intake.error)
+      toast.error(intake.error);
+  }, [intake.status, intake.error, step]);
 
   const fetchOptions = async () => {
     setLoadingOptions(true);
     try {
-      const [typesData, stylesData] = await Promise.all([getWorkspaceTypes(), getStyles()]);
+      const [typesData, stylesData, vocabData] = await Promise.all([
+        getWorkspaceTypes(),
+        getStyles(),
+        getElementInputVocabulary(),
+      ]);
       setWorkspaceTypes(typesData || []);
       setStyles(stylesData || []);
+      setInputVocabulary(vocabData || null);
     } catch (error) {
       console.error("Error fetching options", error);
       toast.error("Không thể tải danh sách tùy chọn");
@@ -71,23 +87,19 @@ export default function WorkspaceModal({
 
   if (!isOpen) return null;
 
-  const handleAnalyze = (description: string) => {
-    parseWorkspace.mutate(description, {
-      onSuccess: (result) => {
-        setDraft(result);
-        setStep("review");
-      },
-      onError: (error) => {
-        const message = isAxiosError<{ message?: string }>(error)
-          ? error.response?.data?.message
-          : undefined;
-        toast.error(message || "Trợ lý đang bận, bạn có thể điền form thủ công.");
-      },
-    });
+  const handleAnalyze = async (description: string, imageUrls?: string[], think?: boolean) => {
+    try {
+      await intake.start(description, imageUrls, think);
+      // Không chờ LLM — vào thẳng trang điền, banner tiến trình + draft sẽ tự về qua realtime.
+      setStep("review");
+    } catch {
+      // Lỗi ngay ở bước gửi yêu cầu (chưa vào được hàng đợi) → ở lại bước mô tả để user thử lại.
+      toast.error(intake.error || "Không bắt đầu được phân tích. Bạn có thể điền form thủ công.");
+    }
   };
 
   const handleSkip = () => {
-    setDraft(null);
+    intake.reset();
     setStep("review");
   };
 
@@ -114,24 +126,34 @@ export default function WorkspaceModal({
           <WorkspaceDescribeStep
             onAnalyze={handleAnalyze}
             onSkip={handleSkip}
-            isAnalyzing={parseWorkspace.isPending}
+            isAnalyzing={intake.status === "starting"}
           />
         ) : loadingOptions ? (
           <div className="flex h-40 items-center justify-center">
             <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
           </div>
         ) : (
-          <WorkspaceReviewForm
-            workspace={workspace}
-            draft={draft}
-            workspaceTypes={workspaceTypes}
-            styles={styles}
-            onSuccess={() => {
-              onSuccess();
-              onClose();
-            }}
-            onCancel={onClose}
-          />
+          <>
+            {!isEditMode && (
+              <WorkspaceIntakeProgress
+                operationId={intake.operationId}
+                status={intake.status}
+                error={intake.error}
+              />
+            )}
+            <WorkspaceReviewForm
+              workspace={workspace}
+              draft={intake.draft}
+              workspaceTypes={workspaceTypes}
+              styles={styles}
+              inputVocabulary={inputVocabulary}
+              onSuccess={() => {
+                onSuccess();
+                onClose();
+              }}
+              onCancel={onClose}
+            />
+          </>
         )}
       </div>
     </div>

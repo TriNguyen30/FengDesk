@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AlertTriangle, Sparkles } from "lucide-react";
@@ -14,13 +14,22 @@ import {
   compassDirections,
   workPurposes,
 } from "../schemas/workspace-schema";
-import type { Style, Workspace, WorkspaceProfileDraft, WorkspaceType } from "../types/workspace";
+import CurrentStateTagPicker from "./CurrentStateTagPicker";
+import type {
+  ElementInputVocabulary,
+  Style,
+  Workspace,
+  WorkspaceProfileDraft,
+  WorkspaceProfileInputDto,
+  WorkspaceType,
+} from "../types/workspace";
 
 interface WorkspaceReviewFormProps {
   workspace?: Workspace | null; // truyền vào = edit mode
   draft?: WorkspaceProfileDraft | null; // draft AI intake (chỉ có ở create mode)
   workspaceTypes: WorkspaceType[];
   styles: Style[];
+  inputVocabulary: ElementInputVocabulary | null;
   onSuccess: () => void;
   onCancel: () => void;
 }
@@ -48,7 +57,8 @@ function toFormValues(workspace?: Workspace | null, draft?: WorkspaceProfileDraf
     styleCode: draft?.styleCode ?? "",
     locationType: isLocationType(draft?.locationType) ? draft!.locationType! : "Home",
     workPurpose: isWorkPurpose(draft?.workPurpose) ? draft!.workPurpose! : "Office",
-    noDesk: false,
+    // AI xác nhận rõ "không có bàn" (vd bếp, phòng khách) → tự check sẵn; các trường hợp khác giữ mặc định bỏ trống.
+    noDesk: draft?.hasDesk === false,
     lighting: draft?.lighting ?? "",
     deskType: draft?.deskType ?? "",
     deskOrientation: draft?.deskOrientation ?? "",
@@ -71,6 +81,7 @@ export default function WorkspaceReviewForm({
   draft,
   workspaceTypes,
   styles,
+  inputVocabulary,
   onSuccess,
   onCancel,
 }: WorkspaceReviewFormProps) {
@@ -81,16 +92,60 @@ export default function WorkspaceReviewForm({
     handleSubmit,
     watch,
     reset,
-    formState: { errors, isSubmitting },
+    setValue,
+    formState: { errors, isSubmitting, dirtyFields },
   } = useForm<WorkspaceFormValues>({
     resolver: zodResolver(workspaceFormSchema),
     defaultValues: toFormValues(workspace, draft),
   });
 
-  // Đổi workspace/draft (vd mở lại modal) → nạp lại giá trị mặc định.
+  const [inputs, setInputs] = useState<WorkspaceProfileInputDto[]>(
+    () => draft?.inputs ?? workspace?.inputs ?? [],
+  );
+
   useEffect(() => {
-    reset(toFormValues(workspace, draft));
-  }, [workspace, draft, reset]);
+    // Edit mode: nạp lại toàn bộ theo workspace đang sửa.
+    if (workspace) {
+      reset(toFormValues(workspace, null));
+      setInputs(workspace.inputs ?? []);
+      return;
+    }
+    // Create mode chưa có draft (đang chờ AI chạy nền, hoặc user bấm bỏ qua) → giữ nguyên form user đang gõ.
+    if (!draft) return;
+
+    // Draft AI (async) về: CHỈ điền field AI nhận ra vào những ô USER CHƯA tự sửa — không đè công sức
+    // họ vừa nhập trong lúc chờ. dirtyFields = đúng những field user đã chạm vào.
+    const fill = (key: keyof WorkspaceFormValues, value: string | undefined | null) => {
+      if (!dirtyFields[key] && value != null && value !== "")
+        setValue(key, value, { shouldDirty: false, shouldValidate: false });
+    };
+    fill("name", draft.name);
+    if (isLocationType(draft.locationType)) fill("locationType", draft.locationType);
+    fill("workspaceTypeId", draft.workspaceTypeId);
+    fill("styleCode", draft.styleCode);
+    fill("lighting", draft.lighting);
+    fill("deskType", draft.deskType);
+    fill("deskOrientation", draft.deskOrientation);
+    fill("roomFacingDirection", draft.roomFacingDirection);
+    if (isWorkPurpose(draft.workPurpose)) fill("workPurpose", draft.workPurpose);
+    if (draft.deskArea != null) fill("deskArea", String(fromCm2(draft.deskArea)));
+    // AI xác nhận rõ "không có bàn" (bếp, phòng khách…) → tự tick, nếu user chưa động vào ô này.
+    if (draft.hasDesk === false && !dirtyFields.noDesk)
+      setValue("noDesk", true, { shouldDirty: false });
+
+    // inputs (hiện trạng phòng): GỘP thêm các tag AI nhận ra, tránh trùng — không xoá tag user đã chọn.
+    if (draft.inputs?.length) {
+      setInputs((prev) => {
+        const merged = [...prev];
+        for (const inp of draft.inputs) {
+          if (!merged.some((m) => m.inputKind === inp.inputKind && m.inputCode === inp.inputCode))
+            merged.push(inp);
+        }
+        return merged;
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [workspace, draft]);
 
   const noDesk = watch("noDesk");
 
@@ -123,7 +178,7 @@ export default function WorkspaceReviewForm({
       deskOrientation: values.noDesk ? undefined : values.deskOrientation || undefined,
       roomFacingDirection: values.roomFacingDirection || undefined,
       deskArea: values.noDesk || areaM2 === null ? undefined : toCm2(areaM2),
-      inputs: draft?.inputs,
+      inputs,
     };
 
     try {
@@ -255,8 +310,13 @@ export default function WorkspaceReviewForm({
             {...register("noDesk")}
             className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
           />
-          <label htmlFor="noDesk" className="text-sm text-gray-700 cursor-pointer">
+          <label htmlFor="noDesk" className="flex items-center gap-1 text-sm text-gray-700 cursor-pointer">
             Không gian này không có bàn làm việc
+            {draft?.hasDesk === false && (
+              <span title="AI nhận diện từ mô tả — hãy kiểm tra" className="text-primary">
+                <Sparkles size={12} />
+              </span>
+            )}
           </label>
         </div>
 
@@ -338,10 +398,19 @@ export default function WorkspaceReviewForm({
           Mở la bàn trên điện thoại, đứng quay mặt theo hướng nhìn của bàn/cửa để xác định hướng
           bàn/hướng phòng.
         </p>
+
+        <div className="mt-4 border-t border-gray-200 pt-4">
+          <CurrentStateTagPicker
+            vocabulary={inputVocabulary}
+            value={inputs}
+            onChange={setInputs}
+            aiFilled={!!draft?.inputs?.length}
+          />
+        </div>
       </div>
 
       {!isEditMode && (
-        <div className="mt-4 flex items-center gap-2 border-t border-gray-100 pt-4">
+        <div className="mt-4 flex items-center gap-2 border-t border-gray-200 pt-4">
           <input
             type="checkbox"
             id="isDefaultWorkspace"

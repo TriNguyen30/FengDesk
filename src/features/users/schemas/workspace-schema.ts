@@ -1,6 +1,16 @@
 import { z } from "zod";
 
-export const locationTypes = ["Home", "Office", "Cafe", "Studio", "Other"] as const;
+export const locationTypes = [
+  "Home",
+  "Office",
+  "Cafe",
+  "Studio",
+  "Coworking",
+  "School",
+  "Outdoor",
+  "Hotel",
+  "Other",
+] as const;
 export const lightingTypes = ["Natural", "Artificial", "Mixed", "Dim"] as const;
 export const deskTypes = ["Sitting", "Standing", "StandingSitting", "LShape", "Corner", "Other"] as const;
 export const compassDirections = [
@@ -19,6 +29,12 @@ export const workPurposes = [
   "Creative",
   "Reading",
   "Gaming",
+  "Cooking",
+  "Dining",
+  "Relaxation",
+  "Sleep",
+  "Childcare",
+  "Exercise",
   "Mixed",
   "Other",
 ] as const;

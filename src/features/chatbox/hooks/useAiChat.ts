@@ -30,6 +30,9 @@ function mapMessages(items: ChatMessage[]): AiMessage[] {
   }));
 }
 
+/** Số tin nạp mỗi trang (mặc định + mỗi lần kéo lên trên cùng nạp thêm bấy nhiêu). */
+const PAGE_SIZE = 20;
+
 /** Hội thoại với trợ lý AI (trang lớn). Đồng bộ qua REST; aiStatus realtime qua SignalR. */
 export function useAiChat(productId?: string) {
   const [messages, setMessages] = useState<AiMessage[]>([]);
@@ -37,6 +40,13 @@ export function useAiChat(productId?: string) {
   const [sending, setSending] = useState(false);
   // Cửa sổ nhớ (số tin) từ BE — để vẽ mốc "AI context limit". null = chưa nạp, không vẽ.
   const [contextMessages, setContextMessages] = useState<number | null>(null);
+
+  // Phân trang lịch sử: nạp PAGE_SIZE tin mới nhất, kéo lên đầu → nạp tiếp trang cũ hơn (prepend).
+  const [hasMore, setHasMore] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const pageRef = useRef(1);
+  const hasMoreRef = useRef(false);
+  const loadingMoreRef = useRef(false);
 
   // Chỉ join group aiStatus khi đã biết chatboxId (lượt gửi đầu tiên chưa có phòng — xem fallback dưới).
   const { activity: liveActivity, narrations } = useAiActivity(chatboxId ? `chat-${chatboxId}` : null);
@@ -72,12 +82,44 @@ export function useAiChat(productId?: string) {
       }
       const id = ensure.data.data.id;
       setChatboxId(id);
-      const res = await chatApi.getMessages(id);
-      if (res.data.isSuccess) setMessages(mapMessages(res.data.data.items));
+      const res = await chatApi.getMessages(id, 1, PAGE_SIZE);
+      if (res.data.isSuccess) {
+        setMessages(mapMessages(res.data.data.items));
+        pageRef.current = 1;
+        hasMoreRef.current = res.data.data.totalPages > 1;
+        setHasMore(hasMoreRef.current);
+      }
     } catch {
       loadedRef.current = false;
     }
   }, [productId]);
+
+  // Kéo lên đầu → nạp trang cũ hơn rồi PREPEND. Dedup theo id để an toàn nếu có tin trùng biên trang.
+  const loadMore = useCallback(async () => {
+    const id = chatboxRef.current;
+    if (!id || loadingMoreRef.current || !hasMoreRef.current) return;
+    loadingMoreRef.current = true;
+    setLoadingMore(true);
+    try {
+      const next = pageRef.current + 1;
+      const res = await chatApi.getMessages(id, next, PAGE_SIZE);
+      if (res.data.isSuccess) {
+        const older = mapMessages(res.data.data.items);
+        setMessages((prev) => {
+          const seen = new Set(prev.map((m) => m.id));
+          return [...older.filter((m) => !seen.has(m.id)), ...prev];
+        });
+        pageRef.current = next;
+        hasMoreRef.current = next < res.data.data.totalPages;
+        setHasMore(hasMoreRef.current);
+      }
+    } catch {
+      /* lỗi tạm — giữ nguyên, user kéo lại sẽ thử lại */
+    } finally {
+      loadingMoreRef.current = false;
+      setLoadingMore(false);
+    }
+  }, []);
 
   // Clear hội thoại (soft delete ở BE) rồi reset khung → lượt gửi sau tạo phòng AI mới.
   const clearConversation = useCallback(async () => {
@@ -92,6 +134,9 @@ export function useAiChat(productId?: string) {
     setChatboxId(null);
     setMessages([]);
     loadedRef.current = false;
+    pageRef.current = 1;
+    hasMoreRef.current = false;
+    setHasMore(false);
   }, []);
 
   const send = useCallback(
@@ -114,6 +159,10 @@ export function useAiChat(productId?: string) {
         if (res.data.isSuccess) {
           setChatboxId(res.data.data.chatboxId);
           setMessages(mapHistory(res.data.data.history));
+          // List vừa bị thay bằng cửa sổ gần nhất → cho phép kéo lên nạp lại lịch sử cũ hơn.
+          pageRef.current = 1;
+          hasMoreRef.current = true;
+          setHasMore(true);
         } else {
           toast.error(res.data.message || "Trợ lý AI không phản hồi.");
         }
@@ -132,12 +181,23 @@ export function useAiChat(productId?: string) {
     async (messageId: string, newText: string) => {
       const t = newText.trim();
       if (!t || sending) return;
+      // Optimistic: cắt ngay đuôi (tin sau điểm sửa) + hiển thị nội dung mới, để UI phản ánh liền
+      // thay vì chờ LLM (Ollama có thể chậm/lỗi). Server trả history chính thức thì replace lại.
+      setMessages((prev) => {
+        const idx = prev.findIndex((m) => m.id === messageId);
+        if (idx === -1) return prev;
+        return [...prev.slice(0, idx), { ...prev[idx], content: t }];
+      });
       setSending(true);
       try {
         const res = await chatApi.rewindAi(messageId, { newMessage: t });
         if (res.data.isSuccess) {
           setChatboxId(res.data.data.chatboxId);
           setMessages(mapHistory(res.data.data.history));
+          // List vừa bị thay bằng cửa sổ gần nhất → cho phép kéo lên nạp lại lịch sử cũ hơn.
+          pageRef.current = 1;
+          hasMoreRef.current = true;
+          setHasMore(true);
         } else {
           toast.error(res.data.message || "Không sửa được tin nhắn.");
         }
@@ -178,6 +238,9 @@ export function useAiChat(productId?: string) {
     rewind,
     uploadImage,
     loadHistory,
+    loadMore,
+    hasMore,
+    loadingMore,
     clearConversation,
   };
 }

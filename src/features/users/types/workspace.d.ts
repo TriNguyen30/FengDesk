@@ -20,6 +20,8 @@ export interface Workspace {
   completenessPercent: number;
   /** Gợi ý field nên bổ sung + lợi ích, vd "Thêm hướng cửa để nhận gợi ý vị trí đặt". */
   missingFieldHints: string[];
+  /** Màu/vật liệu/hình khối hiện trạng phòng đã lưu. */
+  inputs: WorkspaceProfileInputDto[];
 }
 
 export interface WorkspaceType {
@@ -36,10 +38,31 @@ export interface Style {
   sortOrder: number;
 }
 
-/** Một tín hiệu màu/vật liệu/hình khối (khớp element_input_map). */
+/** Một tín hiệu màu/vật liệu/hình khối/vật trang trí (khớp element_input_map). */
 export interface WorkspaceProfileInputDto {
-  inputKind: "Color" | "Material" | "Shape";
+  inputKind: "Color" | "Material" | "Shape" | "DecorItem";
   inputCode: string;
+}
+
+/**
+ * Từ vựng mã hợp lệ cho tag picker "hiện trạng phòng hiện tại" — mã đã là tiếng Anh, hiển thị thẳng.
+ * Riêng cho workspace — không dùng chung với vocabulary sản phẩm.
+ */
+export interface ElementInputVocabulary {
+  colors: string[];
+  materials: string[];
+  decorItems: string[];
+}
+
+export interface ElementContributionDto {
+  element: "Kim" | "Moc" | "Thuy" | "Hoa" | "Tho";
+  weight: number;
+}
+
+/** Kết quả AI phân loại 1 tag mới — đã chuẩn hóa (code sạch, weight clamp+normalize tổng=1). */
+export interface ClassifyElementInputResult {
+  code: string;
+  elements: ElementContributionDto[];
 }
 
 export interface CreateWorkspaceDto {
@@ -84,6 +107,8 @@ export interface WorkspaceProfileDraft {
   workspaceTypeId: string | null;
   styleCode: string | null;
   lighting: string | null;
+  /** true = có bàn làm việc, false = rõ ràng không có (vd bếp/phòng khách), null = không đủ căn cứ. */
+  hasDesk: boolean | null;
   deskType: string | null;
   deskOrientation: string | null;
   roomFacingDirection: string | null;

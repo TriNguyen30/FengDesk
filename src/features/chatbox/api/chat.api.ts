@@ -90,6 +90,24 @@ export const chatApi = {
   getOpenSupport: (page = 1, pageSize = 20) =>
     fetchHttpClient.get<ApiResponse<ChatboxListResponse>>("/chat/support/open", { page, pageSize }),
 
+  /** Khách: lấy/tạo phòng hỗ trợ với một shop cụ thể (nút "Nhắn tin" trên trang shop). */
+  startStoreSupport: (storeId: string) =>
+    fetchHttpClient.post<ApiResponse<Chatbox>>(`/chat/support/stores/${storeId}`),
+
+  /** [Vendor] Hàng đợi phòng hỗ trợ đang mở của store mình (chưa có vendor nào nhận). */
+  getOpenStoreSupport: (storeId: string, page = 1, pageSize = 20) =>
+    fetchHttpClient.get<ApiResponse<ChatboxListResponse>>(`/chat/support/stores/${storeId}/open`, {
+      page,
+      pageSize,
+    }),
+
+  /** [Vendor] Danh sách phòng của store mình đã nhận hỗ trợ. */
+  getMyStoreChatboxes: (storeId: string, page = 1, pageSize = 20) =>
+    fetchHttpClient.get<ApiResponse<ChatboxListResponse>>(`/chat/support/stores/${storeId}/mine`, {
+      page,
+      pageSize,
+    }),
+
   /** Thêm thành viên vào phòng (staff tự nhận hỗ trợ → truyền userId của chính mình; hoặc mời người khác). */
   addParticipant: (chatboxId: string, userId: string) =>
     fetchHttpClient.post<ApiResponse<null>>(`/chat/chatbox/${chatboxId}/participants`, { userId }),

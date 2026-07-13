@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ChevronLeft, MessagesSquare, Store, Truck, Users } from "lucide-react";
 import { toast } from "sonner";
@@ -6,10 +6,17 @@ import { useProductList } from "@/features/products/hooks/useProducts";
 import { getMyShopsRequest, getShopRequestById } from "@/features/shop/api/shop.api";
 import { Shop } from "@/features/shop/types/shop";
 import { useAppDispatch, useAppSelector } from "@/app/store";
-import { openChatbox } from "@/features/chatbox/store/chatboxSlice";
+import { chatApi, chatHub } from "@/features/chatbox";
+import {
+  openChatbox,
+  setActiveChatbox,
+  setMessages,
+  setView,
+  upsertChatbox,
+} from "@/features/chatbox/store/chatboxSlice";
 import { getRoles } from "@/lib/workspace";
 import {
-  ShopChatInboxMockup,
+  ShopChatInbox,
   ShopDeliveriesView,
   ShopHeader,
   ShopProductCatalog,
@@ -33,6 +40,9 @@ export default function ShopDetailPage() {
   // Cờ "user thuộc cửa hàng" — đúng cho owner + co-owner (qua /stores/mine).
   // Staff-only chưa detect được nếu không thêm endpoint BE.
   const [isMember, setIsMember] = useState(false);
+  // Guard chống double-click nút "Chat ngay": ref chặn đồng bộ, state để disable nút cho UX.
+  const openingChatRef = useRef(false);
+  const [isOpeningChat, setIsOpeningChat] = useState(false);
 
   const {
     products,
@@ -117,10 +127,36 @@ export default function ShopDetailPage() {
     }
   };
 
-  const handleChatWithShop = () => {
-    if (shop) {
+  // Không dùng useChatbox() ở đây — ChatWidget (AppLayout) đã mount hook đó toàn cục và tự giữ kết
+  // nối SignalR + subscription "messageReceived". Gọi thêm 1 instance nữa sẽ đăng ký trùng handler
+  // → mỗi tin nhắn cộng unread 2 lần. Thay vào đó dispatch thẳng vào state chung (widget đang lắng
+  // nghe Redux nên tự phản ứng: mark-as-read, v.v.) + gọi REST để nạp tin nhắn/join phòng.
+  const handleChatWithShop = async () => {
+    if (!shop) return;
+    if (openingChatRef.current) return; // đang mở phòng — chặn click trùng
+    openingChatRef.current = true;
+    setIsOpeningChat(true);
+    try {
+      const res = await chatApi.startStoreSupport(shop.id);
+      if (!res.data.isSuccess) {
+        toast.error(res.data.message || "Không mở được cuộc trò chuyện với cửa hàng.");
+        return;
+      }
+      const box = res.data.data;
+      dispatch(upsertChatbox(box));
+      dispatch(setActiveChatbox(box.id));
+      dispatch(setView("conversation"));
       dispatch(openChatbox());
-      toast.success(`Đã kết nối với hỗ trợ viên của ${shop.name}`);
+      void chatHub.joinChatbox(box.id).catch(() => {});
+      const msgRes = await chatApi.getMessages(box.id);
+      if (msgRes.data.isSuccess) {
+        dispatch(setMessages({ roomId: box.id, messages: [...msgRes.data.data.items].reverse() }));
+      }
+    } catch {
+      toast.error("Không mở được cuộc trò chuyện với cửa hàng.");
+    } finally {
+      openingChatRef.current = false;
+      setIsOpeningChat(false);
     }
   };
 
@@ -201,6 +237,7 @@ export default function ShopDetailPage() {
         shop={shop}
         totalProductsCount={totalCount}
         onChatClick={handleChatWithShop}
+        chatDisabled={isOpeningChat}
         onFollowClick={() => toast.success(`Đã theo dõi cửa hàng ${shop.name}`)}
         joinedTimeAgo={getJoinedTimeAgo(shop.createdAt)}
         isMember={isShopMember}
@@ -300,7 +337,7 @@ export default function ShopDetailPage() {
               Tổng hợp tin nhắn khách gửi đến cửa hàng, có panel xem nhanh thông tin khách.
             </p>
           </div>
-          <ShopChatInboxMockup />
+          <ShopChatInbox storeId={shop.id} />
         </div>
       )}
 
