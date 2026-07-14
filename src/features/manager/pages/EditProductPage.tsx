@@ -239,7 +239,7 @@ export default function EditProductPage() {
       <div className="flex items-center gap-3">
         <button
           onClick={() => navigate(backTo)}
-          className="flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-500 hover:bg-gray-50 hover:text-gray-700 cursor-pointer transition-colors"
+          className="flex h-9 w-9 items-center justify-center rounded-4xl hover:bg-gray-100 hover:text-gray-700 cursor-pointer transition-colors"
           title="Quay lại danh sách"
         >
           <ChevronLeft size={18} />
@@ -273,11 +273,10 @@ export default function EditProductPage() {
               <button
                 key={t.id}
                 onClick={() => setActiveTab(t.id)}
-                className={`flex items-center gap-2 border-b-2 py-3 px-1 text-sm font-semibold cursor-pointer transition-all ${
-                  isSelected
-                    ? "border-primary text-primary"
-                    : "border-transparent text-gray-550 hover:border-gray-300 hover:text-gray-700"
-                }`}
+                className={`flex items-center gap-2 border-b-2 py-3 px-1 text-sm font-semibold cursor-pointer transition-all ${isSelected
+                  ? "border-primary text-primary"
+                  : "border-transparent text-gray-550 hover:border-gray-300 hover:text-gray-700"
+                  }`}
               >
                 <t.icon size={16} />
                 {t.label}
