@@ -116,7 +116,9 @@ export class FetchHttpClient {
       const response = await axios.post(
         `${this.baseURL}/Auth/refresh`,
         { refreshToken },
-        { headers: { "Content-Type": "application/json" } },
+        // Timeout để refresh KHÔNG treo vô hạn — nếu treo, isRefreshing kẹt + hàng đợi không giải phóng
+        // → MỌI request sau kẹt theo, phải reload trang. 15s là quá đủ cho 1 call refresh.
+        { headers: { "Content-Type": "application/json" }, timeout: 15000 },
       );
 
       if (response.status !== HTTP_STATUS.OK || !response.data?.isSuccess) {

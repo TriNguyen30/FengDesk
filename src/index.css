@@ -64,20 +64,21 @@
 
 @utility custom-scrollbar {
   scrollbar-width: thin;
-  scrollbar-color: #ddd8d0 transparent;
+  scrollbar-color: var(--color-primary) transparent;
 
   &::-webkit-scrollbar {
     width: 6px;
+    height: 6px;
   }
   &::-webkit-scrollbar-track {
     background: transparent;
   }
   &::-webkit-scrollbar-thumb {
-    background-color: #ddd8d0;
+    background-color: var(--color-primary);
     border-radius: 9999px;
   }
   &::-webkit-scrollbar-thumb:hover {
-    background-color: #b8b1a7;
+    background-color: var(--color-primary-dark);
   }
 }
 
@@ -94,6 +95,31 @@ body {
   background-color: var(--color-neutral);
   color: var(--color-text-primary);
   overflow-x: clip;
+}
+
+/* Scrollbar THEO TÔNG THƯƠNG HIỆU cho toàn app (thay scrollbar mặc định của browser trông lạc tông).
+   Áp lên '*' để mọi vùng cuộn đều đồng bộ; các class .scrollbar-none / .custom-scrollbar vẫn override
+   được vì selector class có specificity cao hơn '*'. Thumb dùng primary-light, hover đậm thành primary. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-primary) transparent;
+}
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background-color: var(--color-primary);
+  border-radius: var(--radius-full);
+  /* viền trong suốt + clip content-box → thumb thon lại, có đệm hai bên cho thanh mảnh, tinh tế. */
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-primary-dark);
 }
 
 /* =========================
