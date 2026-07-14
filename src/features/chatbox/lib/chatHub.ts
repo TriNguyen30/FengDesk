@@ -19,6 +19,8 @@ type HubEvent =
   | "userJoined"
   | "userLeft"
   | "aiStatus"
+  | "workspaceIntakeResult"
+  | "workspaceIntakeFailed"
   | "error";
 
 /**
@@ -96,6 +98,18 @@ class ChatHubClient {
   async markChatboxRead(chatboxId: string): Promise<void> {
     if (this.connection?.state === HubConnectionState.Connected) {
       await this.connection.invoke("MarkChatboxRead", chatboxId);
+    }
+  }
+
+  /** Tham gia group nhận trạng thái AI realtime cho 1 operation (chat, workspace intake…). */
+  async joinAiOperation(operationId: string): Promise<void> {
+    await this.connect();
+    await this.connection?.invoke("JoinAiOperation", operationId);
+  }
+
+  async leaveAiOperation(operationId: string): Promise<void> {
+    if (this.connection?.state === HubConnectionState.Connected) {
+      await this.connection.invoke("LeaveAiOperation", operationId);
     }
   }
 

@@ -5,6 +5,8 @@ interface ShopHeaderProps {
   shop: Shop;
   totalProductsCount: number;
   onChatClick: () => void;
+  /** Đang mở phòng chat — disable nút để chặn double-click tạo phòng trùng. */
+  chatDisabled?: boolean;
   onFollowClick: () => void;
   joinedTimeAgo: string;
   /**
@@ -22,6 +24,7 @@ export function ShopHeader({
   shop,
   totalProductsCount,
   onChatClick,
+  chatDisabled = false,
   onFollowClick,
   joinedTimeAgo,
   isMember = false,
@@ -70,7 +73,8 @@ export function ShopHeader({
                 <>
                   <button
                     onClick={onChatClick}
-                    className="flex h-8 w-[140px] items-center justify-center gap-2 rounded-lg bg-emerald-600 text-xs font-semibold text-white transition hover:bg-emerald-700 active:scale-95 cursor-pointer"
+                    disabled={chatDisabled}
+                    className="flex h-8 w-[140px] items-center justify-center gap-2 rounded-lg bg-emerald-600 text-xs font-semibold text-white transition hover:bg-emerald-700 active:scale-95 cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     <MessageSquare size={15} />
                     <span className="whitespace-nowrap">Chat ngay</span>

@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import {
   ShoppingCart,
@@ -28,8 +28,17 @@ import { useCart } from "@/features/cart";
 import { getShopRequestById } from "@/features/shop/api/shop.api";
 import { Shop } from "@/features/shop/types/shop";
 import { ReviewSection } from "@/features/review";
-import { useAppDispatch } from "@/app/store";
-import { openChatbox } from "@/features/chatbox/store/chatboxSlice";
+import { useAppDispatch, useAppSelector } from "@/app/store";
+import { chatApi, chatHub } from "@/features/chatbox";
+import {
+  openChatbox,
+  setActiveChatbox,
+  setMessages,
+  setView,
+  upsertChatbox,
+} from "@/features/chatbox/store/chatboxSlice";
+import { setAuthModal } from "@/features/auth/store/authSlice";
+import ProductFitPanel from "@/features/recommendation/components/element-vector/ProductFitPanel";
 
 const ELEMENT_LABELS: Record<string, string> = {
   Kim: "Kim",
@@ -46,6 +55,11 @@ export default function ProductDetailPage() {
   const { addItem } = useCart();
   const { product, loading, failed } = useProductDetail(id);
   const dispatch = useAppDispatch();
+  const isAuthenticated = useAppSelector((s) => !!s.auth.token);
+
+  // Guard chống double-click: ref chặn đồng bộ (2 click cùng tick), state để disable nút cho UX.
+  const openingChatRef = useRef(false);
+  const [isOpeningChat, setIsOpeningChat] = useState(false);
 
   const [selectedItem, setSelectedItem] = useState<ProductItem | null>(null);
   const [activeImage, setActiveImage] = useState<string>("");
@@ -109,6 +123,42 @@ export default function ProductDetailPage() {
       } catch (error) {
         toast.error("Lỗi khi mua ngay");
       }
+    }
+  };
+
+  // Mở cuộc trò chuyện hỗ trợ với shop của sản phẩm. Không dùng useChatbox() ở đây — ChatWidget
+  // (AppLayout) đã mount hook đó toàn cục và tự giữ kết nối SignalR + subscription. Dispatch thẳng
+  // vào state chung rồi gọi REST để nạp tin nhắn / join phòng, mirror ShopDetailPage.
+  const handleChatWithShop = async () => {
+    if (!shop) return;
+    if (!isAuthenticated) {
+      dispatch(setAuthModal("login"));
+      return;
+    }
+    if (openingChatRef.current) return; // đang mở phòng — chặn click trùng
+    openingChatRef.current = true;
+    setIsOpeningChat(true);
+    try {
+      const res = await chatApi.startStoreSupport(shop.id);
+      if (!res.data.isSuccess) {
+        toast.error(res.data.message || "Không mở được cuộc trò chuyện với cửa hàng.");
+        return;
+      }
+      const box = res.data.data;
+      dispatch(upsertChatbox(box));
+      dispatch(setActiveChatbox(box.id));
+      dispatch(setView("conversation"));
+      dispatch(openChatbox());
+      void chatHub.joinChatbox(box.id).catch(() => {});
+      const msgRes = await chatApi.getMessages(box.id);
+      if (msgRes.data.isSuccess) {
+        dispatch(setMessages({ roomId: box.id, messages: [...msgRes.data.data.items].reverse() }));
+      }
+    } catch {
+      toast.error("Không mở được cuộc trò chuyện với cửa hàng.");
+    } finally {
+      openingChatRef.current = false;
+      setIsOpeningChat(false);
     }
   };
 
@@ -576,6 +626,9 @@ export default function ProductDetailPage() {
         </div>
       </div>
 
+      {/* ── Độ phù hợp phong thủy với không gian của bạn ─────────────────── */}
+      {product.primaryElement && <ProductFitSection productId={product.id} />}
+
       {/* ── Store Info ─────────────────────────────────────────────────── */}
       {shop && (
         <div className="mt-6 rounded-2xl bg-white shadow-sm ring-1 ring-gray-100 p-4 sm:p-6 flex flex-col md:flex-row items-start md:items-center gap-6">
@@ -592,11 +645,9 @@ export default function ProductDetailPage() {
               </h2>
               <div className="mt-3 flex gap-2">
                 <button
-                  onClick={() => {
-                    dispatch(openChatbox());
-                    toast.success(`Đã kết nối với hỗ trợ viên của ${shop.name}`);
-                  }}
-                  className="flex items-center gap-1.5 rounded-lg border border-primary px-3 py-1.5 text-xs font-semibold text-primary hover:bg-primary/5 transition-colors cursor-pointer"
+                  onClick={handleChatWithShop}
+                  disabled={isOpeningChat}
+                  className="flex items-center gap-1.5 rounded-lg border border-primary px-3 py-1.5 text-xs font-semibold text-primary hover:bg-primary/5 transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   <MessageSquare className="h-3.5 w-3.5" />
                   Chat ngay
@@ -806,6 +857,34 @@ export default function ProductDetailPage() {
           </div>
         )}
       </AnimatePresence>
+    </div>
+  );
+}
+
+function ProductFitSection({ productId }: { productId: string }) {
+  const dispatch = useAppDispatch();
+  const isAuthenticated = useAppSelector((s) => !!s.auth.token);
+
+  return (
+    <div className="mt-6 rounded-2xl bg-white shadow-sm ring-1 ring-gray-100 p-4 sm:p-6">
+      {isAuthenticated ? (
+        <ProductFitPanel productId={productId} />
+      ) : (
+        <div className="flex flex-col items-center gap-3 py-4 text-center">
+          <span className="text-sm font-bold text-gray-900">
+            Độ phù hợp phong thủy với không gian của bạn
+          </span>
+          <p className="max-w-md text-sm text-gray-500">
+            Đăng nhập để xem sản phẩm này hợp đến đâu với bản mệnh và Ngũ hành từng phòng của bạn.
+          </p>
+          <button
+            onClick={() => dispatch(setAuthModal("login"))}
+            className="cursor-pointer rounded-lg bg-primary px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary/90"
+          >
+            Đăng nhập
+          </button>
+        </div>
+      )}
     </div>
   );
 }

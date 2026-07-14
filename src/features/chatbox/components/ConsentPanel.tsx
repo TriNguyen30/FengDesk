@@ -69,10 +69,11 @@ export default function ConsentPanel({ chatboxId, pulse, onInteract }: ConsentPa
   };
 
   return (
-    <div className="group border-b border-gray-100 px-3 py-2">
+    <div className="group relative border-t border-b border-gray-200 px-3 py-2">
       <button
         type="button"
         onClick={headerClick}
+        aria-expanded={open}
         className="relative flex w-full items-center justify-between rounded-lg border border-gray-200 bg-gray-50 px-2.5 py-2 text-left transition-colors hover:bg-gray-100 cursor-pointer"
       >
         {/* Hiệu ứng nháy khi có nhân viên vừa vào — dừng (giãn tối đa, đứng yên) khi hover, mất khi bấm. */}
@@ -88,36 +89,44 @@ export default function ConsentPanel({ chatboxId, pulse, onInteract }: ConsentPa
         </span>
         <ChevronDown
           size={14}
-          className={`text-gray-400 transition-transform ${open ? "rotate-180" : ""}`}
+          className={`text-gray-400 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
         />
       </button>
 
-      {open && (
-        <div className="mt-1.5 space-y-1.5 px-1">
+      <div
+        className={`absolute left-3 right-3 top-full z-30 mt-2 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg transition-all duration-300 ease-out ${
+          open
+            ? "max-h-80 translate-y-0 opacity-100"
+            : "pointer-events-none max-h-0 -translate-y-1 opacity-0"
+        }`}
+      >
+        <div className="px-3 py-3">
           <p className="text-[10px] leading-relaxed text-gray-400">
             Nhân viên hỗ trợ có thể nhờ trợ lý AI xem các mục bạn cho phép dưới đây để tư vấn tốt
             hơn. Bạn có thể tắt bất cứ lúc nào.
           </p>
-          {SCOPES.map((s) => (
-            <label
-              key={s.key}
-              className="flex cursor-pointer items-start gap-2 rounded-lg px-1.5 py-1 hover:bg-gray-50"
-            >
-              <input
-                type="checkbox"
-                checked={consent[s.key]}
-                disabled={saving}
-                onChange={() => void toggle(s.key)}
-                className="mt-0.5 h-4 w-4 shrink-0 accent-primary"
-              />
-              <span className="min-w-0">
-                <span className="block text-xs font-medium text-gray-700">{s.label}</span>
-                <span className="block text-[10px] text-gray-400">{s.hint}</span>
-              </span>
-            </label>
-          ))}
+          <div className="mt-2 space-y-1.5">
+            {SCOPES.map((s) => (
+              <label
+                key={s.key}
+                className="flex cursor-pointer items-start gap-2 rounded-lg px-1.5 py-1 transition-colors hover:bg-gray-50"
+              >
+                <input
+                  type="checkbox"
+                  checked={consent[s.key]}
+                  disabled={saving}
+                  onChange={() => void toggle(s.key)}
+                  className="mt-0.5 h-4 w-4 shrink-0 accent-primary"
+                />
+                <span className="min-w-0">
+                  <span className="block text-xs font-medium text-gray-700">{s.label}</span>
+                  <span className="block text-[10px] text-gray-400">{s.hint}</span>
+                </span>
+              </label>
+            ))}
+          </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }

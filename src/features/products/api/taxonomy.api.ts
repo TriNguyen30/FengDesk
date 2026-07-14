@@ -1,6 +1,6 @@
 import fetchHttpClient from "@/lib/httpClient";
 import type { ApiResponse } from "@/types/api";
-import type { LookupItem } from "../types/taxonomy";
+import type { ElementInputCodes, LookupItem } from "../types/taxonomy";
 
 /** Ngũ hành (5 cố định: Kim/Moc/Thuy/Hoa/Tho). Public. */
 export const getElements = async () => {
@@ -17,5 +17,13 @@ export const getVibes = async () => {
 /** Style (phong cách), code động. Public. */
 export const getStyles = async () => {
   const { data } = await fetchHttpClient.get<ApiResponse<LookupItem[]>>("/styles");
+  return data;
+};
+
+/** Vocabulary Vật liệu/Màu/Hình khối cho form đặc điểm sản phẩm. Yêu cầu đăng nhập (mọi role). */
+export const getElementInputCodes = async () => {
+  const { data } = await fetchHttpClient.get<ApiResponse<ElementInputCodes[]>>(
+    "/catalog/element-input-codes",
+  );
   return data;
 };

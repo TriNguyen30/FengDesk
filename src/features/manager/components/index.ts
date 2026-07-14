@@ -8,3 +8,4 @@ export * from "./ProductVariantsSection";
 export * from "./ProductImagesSection";
 export * from "./ProductRelationsForm";
 export * from "./ProductFengShuiForm";
+export * from "./ProductElementInputsFields";

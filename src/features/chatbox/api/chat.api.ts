@@ -20,6 +20,7 @@ export interface PagedMessages {
 
 /** Một dòng lịch sử hội thoại AI (role = "User" | "AiBot" | "System"). */
 export interface AiChatTurn {
+  id: string;
   role: string;
   content: string | null;
   images: string[];
@@ -38,6 +39,19 @@ export interface AiChatRequestPayload {
   productId?: string;
   model?: string;
   imageUrls?: string[];
+}
+
+/** Rewind: newMessage=undefined giữ nguyên nội dung cũ (regenerate); imageUrls=undefined giữ ảnh cũ. */
+export interface AiRewindPayload {
+  newMessage?: string;
+  imageUrls?: string[];
+  model?: string;
+}
+
+/** Khớp BE AiChatConfigResponse — contextMessages = số TIN gần nhất được gửi cho LLM. */
+export interface AiChatConfig {
+  maxHistoryTurns: number;
+  contextMessages: number;
 }
 
 /**
@@ -76,6 +90,24 @@ export const chatApi = {
   getOpenSupport: (page = 1, pageSize = 20) =>
     fetchHttpClient.get<ApiResponse<ChatboxListResponse>>("/chat/support/open", { page, pageSize }),
 
+  /** Khách: lấy/tạo phòng hỗ trợ với một shop cụ thể (nút "Nhắn tin" trên trang shop). */
+  startStoreSupport: (storeId: string) =>
+    fetchHttpClient.post<ApiResponse<Chatbox>>(`/chat/support/stores/${storeId}`),
+
+  /** [Vendor] Hàng đợi phòng hỗ trợ đang mở của store mình (chưa có vendor nào nhận). */
+  getOpenStoreSupport: (storeId: string, page = 1, pageSize = 20) =>
+    fetchHttpClient.get<ApiResponse<ChatboxListResponse>>(`/chat/support/stores/${storeId}/open`, {
+      page,
+      pageSize,
+    }),
+
+  /** [Vendor] Danh sách phòng của store mình đã nhận hỗ trợ. */
+  getMyStoreChatboxes: (storeId: string, page = 1, pageSize = 20) =>
+    fetchHttpClient.get<ApiResponse<ChatboxListResponse>>(`/chat/support/stores/${storeId}/mine`, {
+      page,
+      pageSize,
+    }),
+
   /** Thêm thành viên vào phòng (staff tự nhận hỗ trợ → truyền userId của chính mình; hoặc mời người khác). */
   addParticipant: (chatboxId: string, userId: string) =>
     fetchHttpClient.post<ApiResponse<null>>(`/chat/chatbox/${chatboxId}/participants`, { userId }),
@@ -104,6 +136,19 @@ export const chatApi = {
   /** Gửi tin cho trợ lý AI (trang AI lớn). Bỏ trống chatboxId ở lượt đầu → server tạo & trả về. */
   sendToAi: (payload: AiChatRequestPayload) =>
     fetchHttpClient.post<ApiResponse<AiChatResponse>>("/chat/ai/messages", payload),
+
+  /**
+   * Sửa & gửi lại một tin nhắn cũ của mình trong hội thoại AI riêng — tin đó và mọi tin sau nó
+   * bị thay thế bằng lịch sử mới. Chỉ áp dụng cho phòng riêng user↔AI.
+   */
+  rewindAi: (messageId: string, payload: AiRewindPayload) =>
+    fetchHttpClient.post<ApiResponse<AiChatResponse>>(
+      `/chat/ai/messages/${messageId}/rewind`,
+      payload,
+    ),
+
+  /** Cấu hình chat AI — cửa sổ nhớ (số tin) để FE vẽ mốc "AI context limit" trong khung chat. */
+  getAiConfig: () => fetchHttpClient.get<ApiResponse<AiChatConfig>>("/chat/ai/config"),
 
   /** Quyền chia sẻ thông tin của tôi cho nhân viên hỗ trợ trong phòng. */
   getConsent: (chatboxId: string) =>

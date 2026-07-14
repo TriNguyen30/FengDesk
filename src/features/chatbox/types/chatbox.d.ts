@@ -2,7 +2,8 @@
 // Enum trả về dạng chuỗi (BE bật JsonStringEnumConverter).
 
 export type MessageSenderType = "User" | "AiBot" | "System";
-export type ParticipantType = "Customer" | "Staff" | "Manager" | "Admin" | "AiBot";
+/** Vendor = garden owner/staff trả lời trong phòng hỗ trợ của MỘT shop cụ thể (khác Staff/Manager/Admin nền tảng). */
+export type ParticipantType = "Customer" | "Staff" | "Manager" | "Admin" | "Vendor" | "AiBot";
 export type ParticipantRole = "Owner" | "Member";
 
 export interface ChatParticipant {
@@ -33,6 +34,8 @@ export interface Chatbox {
   title: string | null;
   createdByUserId: string;
   productId: string | null;
+  /** Store liên quan nếu phòng là hỗ trợ khách ↔ một shop cụ thể. Null = phòng hỗ trợ nền tảng chung. */
+  gardenStoreId: string | null;
   createdAt: string;
   updatedAt: string;
   participants: ChatParticipant[];
@@ -59,11 +62,3 @@ export interface SendMessagePayload {
 }
 
 export type ChatConnectionStatus = "connecting" | "connected" | "disconnected" | "error";
-
-/** Trạng thái AI realtime (mảng ① — phát từ hub "aiStatus"). Khai báo sẵn để dùng sau. */
-export type AiActivityPhase = "thinking" | "calling_tool" | "writing" | "done";
-export interface AiActivity {
-  chatboxId: string;
-  phase: AiActivityPhase;
-  toolName?: string | null;
-}

@@ -1,0 +1,32 @@
+{
+  "projectId": "62c5abc0-8408-48ca-8fb4-277eefa887cf",
+  "shape": "package",
+  "pkg": "fengshuigarden-web",
+  "globalName": "FengDeskUI",
+  "srcDir": "src/components/ui",
+  "tsconfig": ".design-sync/tsconfig.dssync.json",
+  "cssEntry": ".design-sync/mocks/compiled-tailwind.css",
+  "buildCmd": "pnpm run build && cp dist/assets/index-*.css .design-sync/mocks/compiled-tailwind.css",
+  "provider": {
+    "component": "DesignSyncProviders"
+  },
+  "readmeHeader": ".design-sync/conventions.md",
+  "extraEntries": ["./.design-sync/mocks/DesignSyncProviders.tsx"],
+  "dtsPropsFor": {
+    "Modal": "open: boolean; title?: string; onClose: () => void; children: React.ReactNode; size?: string;",
+    "Calendar": "value?: string; onChange: (value: string) => void; className?: string;",
+    "HeroSlider": "slides: { id: number; badge: string; title: string; highlight: string; desc1: string; desc2: string; image: string; primaryBtn: string; secondaryBtn: string; }[];",
+    "SearchBar": "placeholder?: string | string[]; onSearch?: (query: string) => void;"
+  },
+  "storyImports": {
+    "shim": ["/fengshuigarden-web/src/", "/fengshuigarden-web/.design-sync/mocks/"]
+  },
+  "libOverrides": {
+    "source-kit.mjs": "synth-entry writer used export * from, which drops this repo's export-default components from the bundle; fork adds export { default as Name } alongside it"
+  },
+  "overrides": {
+    "Modal": { "cardMode": "single", "primaryStory": "Default" },
+    "BackToTopButton": { "cardMode": "single", "viewport": "500x600" },
+    "Navbar": { "cardMode": "single", "primaryStory": "LoggedIn" }
+  }
+}

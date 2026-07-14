@@ -196,16 +196,30 @@ body {
   padding-left: 0.5rem;
   color: #6b7280;
 }
+.fd-md {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
 .fd-md table {
   width: 100%;
+  max-width: 100%;
   border-collapse: collapse;
   margin: 0.25rem 0;
+  table-layout: fixed;
 }
 .fd-md th,
 .fd-md td {
   border: 1px solid #e5e7eb;
   padding: 0.25rem 0.4rem;
   text-align: left;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+.fd-md img {
+  display: block;
+  max-width: 100%;
+  height: auto;
 }
 
 /* =========================
@@ -223,6 +237,26 @@ body {
 }
 .ai-badge-up {
   animation: ai-badge-up 0.2s ease-out;
+}
+
+/* =========================
+   Tag picker "hiện trạng không gian" — thanh loading khi AI đang phân loại tag mới
+========================= */
+@keyframes tag-progress-slide {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(350%);
+  }
+}
+.tag-progress-bar::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: 30%;
+  background: var(--color-primary);
+  animation: tag-progress-slide 1s ease-in-out infinite;
 }
 
 /* =========================
