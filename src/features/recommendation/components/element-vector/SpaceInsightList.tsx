@@ -1,4 +1,4 @@
-import { Check, AlertTriangle, Info, Target, type LucideIcon } from "lucide-react";
+import { Check, AlertTriangle, AlertCircle, Info, Target, type LucideIcon } from "lucide-react";
 import type { SpaceInsights } from "@/features/users/types/workspace";
 import InfoRow, { type InfoRowTone } from "./InfoRow";
 
@@ -6,17 +6,25 @@ interface SpaceInsightListProps {
   insights: SpaceInsights;
 }
 
-// Toxic (xung khắc) = đỏ nhẹ, Imbalanced (lệch chuẩn) = vàng, Balanced (ổn) = xanh.
+// Toxic (xung khắc) = vàng (cảnh báo, không phải đỏ-nguy hiểm), Imbalanced (lệch chuẩn) = xám
+// (mặc định, chưa tới mức cần cảnh báo), Balanced (ổn) = xanh.
 const CASE_TONE: Record<SpaceInsights["case"], InfoRowTone> = {
-  Toxic: "danger",
-  Imbalanced: "warning",
+  Toxic: "warning",
+  Imbalanced: "neutral",
   Balanced: "success",
 };
 
-function iconFor(kind: string, isBalanced: boolean): LucideIcon {
+// Icon riêng theo từng mức độ cho dòng "status" — tránh dùng chung tam giác cảnh báo cho mọi case.
+const STATUS_ICON: Record<SpaceInsights["case"], LucideIcon> = {
+  Toxic: AlertTriangle,
+  Imbalanced: AlertCircle,
+  Balanced: Check,
+};
+
+function iconFor(kind: string, caseType: SpaceInsights["case"]): LucideIcon {
   switch (kind) {
     case "status":
-      return isBalanced ? Check : AlertTriangle;
+      return STATUS_ICON[caseType];
     case "detail":
       return Info;
     default:
@@ -26,7 +34,6 @@ function iconFor(kind: string, isBalanced: boolean): LucideIcon {
 
 /** Render 3 dòng nhận định (status/detail/action) đã sinh sẵn ở BE (SpaceInsightBuilder) — FE chỉ map icon + màu theo case. */
 export default function SpaceInsightList({ insights }: SpaceInsightListProps) {
-  const isBalanced = insights.case === "Balanced";
   const tone = CASE_TONE[insights.case];
 
   return (
@@ -34,7 +41,7 @@ export default function SpaceInsightList({ insights }: SpaceInsightListProps) {
       {insights.lines.map((line, i) => (
         <InfoRow
           key={line.kind}
-          icon={iconFor(line.kind, isBalanced)}
+          icon={iconFor(line.kind, insights.case)}
           title={line.title}
           desc={line.text}
           first={i === 0}

@@ -3,6 +3,7 @@ import type {
   CreateOrders,
   CreateOrderResponse,
   CreateShipmentResponse,
+  GetDeliveryOrderDetailResponse,
   GetOrderDetailResponse,
   GetOrdersParams,
   GetOrdersResponse,
@@ -60,6 +61,13 @@ export const ordersApi = {
     return fetchHttpClient.post<ApiResponse<ShippingFeePreview>>(
       "/orders/shipping-fee-preview",
       payload,
+    );
+  },
+
+  /** Garden owner/staff: chi tiết đơn giao (sản phẩm + địa chỉ nhận) để đóng gói. */
+  getDeliveryDetail: (deliveryId: string) => {
+    return fetchHttpClient.get<GetDeliveryOrderDetailResponse>(
+      `/orders/deliveries/${deliveryId}/detail`,
     );
   },
 };

@@ -4,8 +4,14 @@ import ConfirmDeleteButton from "./ConfirmDeleteButton";
 import {
   formatMessageTime,
   getChatboxDisplayName,
+  getChatboxKindTag,
   getLastMessagePreview,
 } from "@/features/chatbox/utils/chatUtils";
+
+const KIND_TAG_CLASSES: Record<"store" | "support", string> = {
+  store: "bg-blue-100 text-blue-600",
+  support: "bg-violet-100 text-violet-600",
+};
 
 interface ChatRoomListProps {
   chatboxes: Chatbox[];
@@ -66,6 +72,16 @@ export default function ChatRoomList({
               <div className="flex items-center justify-between gap-2">
                 <p className="flex min-w-0 items-center gap-1.5 truncate text-sm font-semibold text-gray-800">
                   <span className="truncate">{getChatboxDisplayName(box, meId)}</span>
+                  {(() => {
+                    const kindTag = getChatboxKindTag(box);
+                    return kindTag ? (
+                      <span
+                        className={`shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide ${KIND_TAG_CLASSES[kindTag.tone]}`}
+                      >
+                        {kindTag.label}
+                      </span>
+                    ) : null;
+                  })()}
                   {box.isClosed && (
                     <span className="shrink-0 rounded-full bg-gray-200 px-1.5 py-0.5 text-[9px] font-medium text-gray-500">
                       đã đóng

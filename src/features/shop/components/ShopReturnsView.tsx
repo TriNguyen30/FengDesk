@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { returnApi } from "@/features/return/api/return.api";
 import type { ReturnItem, ReturnDetail } from "@/features/return/types/return.d.ts";
+import { DeliveryDetailModal } from "@/features/orders";
 import { formatOrderDate, formatVnd } from "@/features/orders/utils/orderUtils";
 
 const RETURN_STATUS_META: Record<string, { label: string; className: string }> = {
@@ -128,6 +129,9 @@ export default function ShopReturnsView({ storeId }: ShopReturnsViewProps) {
   const [detailModal, setDetailModal] = useState<DetailModalState>({ open: false, returnId: null });
   const [returnDetail, setReturnDetail] = useState<ReturnDetail | null>(null);
   const [loadingDetail, setLoadingDetail] = useState(false);
+
+  // Original order (delivery) detail modal — mở từ nút "Xem đơn gốc"
+  const [orderDetailDeliveryId, setOrderDetailDeliveryId] = useState<string | null>(null);
 
   const fetchReturns = useCallback(async (p: number) => {
     setLoading(true);
@@ -567,6 +571,16 @@ export default function ShopReturnsView({ storeId }: ShopReturnsViewProps) {
                     </p>
                   </div>
 
+                  {/* Xem đơn gốc — chi tiết sản phẩm/địa chỉ của đơn giao chứa yêu cầu trả này */}
+                  <button
+                    type="button"
+                    onClick={() => setOrderDetailDeliveryId(returnDetail.deliveryId)}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-gray-50 px-3 py-1.5 text-xs font-semibold text-gray-600 hover:bg-gray-100 transition-colors cursor-pointer"
+                  >
+                    <Package size={13} />
+                    Xem đơn gốc
+                  </button>
+
                   {/* Reason */}
                   <div className="rounded-xl border border-gray-100 p-4">
                     <p className="text-xs font-semibold text-gray-600 mb-1">Lý do</p>
@@ -962,6 +976,12 @@ export default function ShopReturnsView({ storeId }: ShopReturnsViewProps) {
           </div>
         </div>
       )}
+
+      <DeliveryDetailModal
+        deliveryId={orderDetailDeliveryId}
+        open={orderDetailDeliveryId !== null}
+        onClose={() => setOrderDetailDeliveryId(null)}
+      />
     </div>
   );
 }

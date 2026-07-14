@@ -5,13 +5,14 @@ interface AiActivityIndicatorProps {
   activity: AiActivity;
 }
 
-/** Không map nhãn tool sang tiếng Việt — hiện tên tool thô (vd "search_products"). */
+/** BE gửi kèm "note" thân thiện (vd "Đang chuẩn bị đơn hàng của bạn…") cho phase calling_tool —
+ * ưu tiên hiển thị note đó; nếu tool nào BE chưa map thì fallback về text mặc định (không lộ tên tool thô). */
 export default function AiActivityIndicator({ activity }: AiActivityIndicatorProps) {
-  const { phase, toolName } = activity;
+  const { phase, note } = activity;
 
   const { icon, label } = (() => {
     if (phase === "calling_tool") {
-      return { icon: <Wrench size={13} />, label: toolName ?? "Đang tra cứu dữ liệu…" };
+      return { icon: <Wrench size={13} />, label: note ?? "Đang tra cứu dữ liệu…" };
     }
     if (phase === "writing") {
       return { icon: <PenLine size={13} />, label: "Đang tạo kết quả…" };

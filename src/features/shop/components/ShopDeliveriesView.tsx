@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import {
   ChevronLeft,
   ChevronRight,
+  Eye,
   Loader2,
   Package,
   Search,
@@ -10,6 +11,7 @@ import {
   X,
 } from "lucide-react";
 import {
+  DeliveryDetailModal,
   useCreateDeliveryShipment,
   useStoreDeliveries,
   useUpdateOrderDeliveryStatus,
@@ -50,6 +52,7 @@ export function ShopDeliveriesView({ storeId }: ShopDeliveriesViewProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
   const [shippingId, setShippingId] = useState<string | null>(null);
+  const [detailDeliveryId, setDetailDeliveryId] = useState<string | null>(null);
 
   const { deliveries, pagination, listStatus } = useStoreDeliveries(storeId, {
     page,
@@ -179,7 +182,7 @@ export function ShopDeliveriesView({ storeId }: ShopDeliveriesViewProps) {
                 <th className="p-4 w-28">Phí ship</th>
                 <th className="p-4 w-40">Mã vận đơn</th>
                 <th className="p-4 w-36">Trạng thái</th>
-                <th className="p-4 w-44 text-right">Thao tác</th>
+                <th className="p-4 w-56 text-right">Thao tác</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -192,7 +195,11 @@ export function ShopDeliveriesView({ storeId }: ShopDeliveriesViewProps) {
                 const busyShip = shippingId === d.id;
 
                 return (
-                  <tr key={d.id} className="hover:bg-gray-50/30 transition-colors">
+                  <tr
+                    key={d.id}
+                    className="hover:bg-gray-50/30 transition-colors cursor-pointer"
+                    onClick={() => setDetailDeliveryId(d.id)}
+                  >
                     <td className="p-4 font-mono font-bold text-gray-900">#{d.id.substring(0, 8)}</td>
                     <td className="p-4 text-xs text-gray-500 whitespace-nowrap">
                       {formatOrderDate(d.createdAt)}
@@ -211,7 +218,10 @@ export function ShopDeliveriesView({ storeId }: ShopDeliveriesViewProps) {
                         {meta.label}
                       </span>
                     </td>
-                    <td className="p-4 text-right">
+                    <td
+                      className="p-4 text-right flex items-center justify-end gap-2"
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       {d.status === "Pending" && (
                         <button
                           onClick={() => handleConfirm(d)}
@@ -232,9 +242,14 @@ export function ShopDeliveriesView({ storeId }: ShopDeliveriesViewProps) {
                           Tạo đơn ship
                         </button>
                       )}
-                      {d.status !== "Pending" && d.status !== "Confirmed" && (
-                        <span className="text-xs text-gray-400">—</span>
-                      )}
+                      <button
+                        onClick={() => setDetailDeliveryId(d.id)}
+                        title="Xem chi tiết đơn giao"
+                        className="inline-flex items-center gap-1 rounded-lg border border-gray-200 bg-gray-50 px-2.5 py-1.5 text-xs font-semibold text-gray-600 hover:bg-gray-100 transition-colors cursor-pointer"
+                      >
+                        <Eye size={13} />
+                        Chi tiết
+                      </button>
                     </td>
                   </tr>
                 );
@@ -267,6 +282,12 @@ export function ShopDeliveriesView({ storeId }: ShopDeliveriesViewProps) {
           </div>
         </div>
       )}
+
+      <DeliveryDetailModal
+        deliveryId={detailDeliveryId}
+        open={detailDeliveryId !== null}
+        onClose={() => setDetailDeliveryId(null)}
+      />
     </div>
   );
 }

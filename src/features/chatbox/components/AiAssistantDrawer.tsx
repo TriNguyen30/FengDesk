@@ -1,4 +1,12 @@
-import { Fragment, useEffect, useRef, useState, type KeyboardEvent, type MouseEvent } from "react";
+import {
+  Fragment,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type KeyboardEvent,
+  type MouseEvent,
+} from "react";
 import { Bot, ImagePlus, Loader2, Pencil, Send, Sparkles, User, X } from "lucide-react";
 import { useAiChat, type AiMessage } from "@/features/chatbox/hooks/useAiChat";
 import { useImageAttachments } from "@/features/chatbox/hooks/useImageAttachments";
@@ -50,6 +58,9 @@ export default function AiAssistantDrawer({ open, onClose, productId }: AiAssist
     rewind,
     uploadImage,
     loadHistory,
+    loadMore,
+    hasMore,
+    loadingMore,
     clearConversation,
   } = useAiChat(productId);
 
@@ -81,6 +92,10 @@ export default function AiAssistantDrawer({ open, onClose, productId }: AiAssist
   const att = useImageAttachments(uploadImage);
   const fileRef = useRef<HTMLInputElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+  // Phân trang lịch sử: container cuộn + giữ vị trí cuộn khi prepend tin cũ (tránh nhảy).
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const prevScrollHeightRef = useRef(0);
+  const prependingRef = useRef(false);
   const pointerStartXRef = useRef<number | null>(null);
   const resizeTargetWidthRef = useRef<number>(DEFAULT_DRAWER_WIDTH);
   const resizeFrameRef = useRef<number | null>(null);
@@ -108,6 +123,9 @@ export default function AiAssistantDrawer({ open, onClose, productId }: AiAssist
     setEditText("");
   };
   const handleEditKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    // Đang gõ IME (tiếng Việt Telex/VNI…): Enter là để CHỐT từ, không phải để gửi. Bỏ qua — nếu
+    // xử lý ngay thì editText chưa nhận ký tự vừa compose → gửi nhầm nội dung cũ.
+    if (e.nativeEvent.isComposing) return;
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       submitEdit();
@@ -122,9 +140,36 @@ export default function AiAssistantDrawer({ open, onClose, productId }: AiAssist
     if (open) void loadHistory();
   }, [open, loadHistory]);
 
+  // Khôi phục vị trí cuộn sau khi prepend tin cũ (layout-effect chạy TRƯỚC effect cuộn-đáy, trước khi
+  // paint) → bù đúng phần chiều cao mới thêm ở trên, không reset cờ ở đây (để effect dưới biết mà bỏ cuộn đáy).
+  useLayoutEffect(() => {
+    if (!prependingRef.current) return;
+    const el = scrollRef.current;
+    if (el) el.scrollTop = el.scrollHeight - prevScrollHeightRef.current;
+  }, [messages]);
+
   useEffect(() => {
+    // Vừa prepend tin cũ (kéo lên) → giữ vị trí đang đọc, bỏ qua cuộn đáy đúng 1 lần rồi reset cờ.
+    if (prependingRef.current) {
+      prependingRef.current = false;
+      prevScrollHeightRef.current = 0;
+      return;
+    }
     if (open) bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, activity, narrations, open]);
+
+  // Trigger nạp tin cũ hơn (dùng chung cho scroll gần đỉnh + nút bấm). Ghi scrollHeight để bù vị trí.
+  const triggerLoadMore = () => {
+    const el = scrollRef.current;
+    if (!el || !hasMore || loadingMore) return;
+    prevScrollHeightRef.current = el.scrollHeight;
+    prependingRef.current = true;
+    void loadMore();
+  };
+
+  const handleMessagesScroll = () => {
+    if (scrollRef.current && scrollRef.current.scrollTop < 60) triggerLoadMore();
+  };
 
   useEffect(() => {
     const handleResize = () => {
@@ -203,6 +248,7 @@ export default function AiAssistantDrawer({ open, onClose, productId }: AiAssist
   };
 
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.nativeEvent.isComposing) return; // đang gõ IME → Enter để chốt từ, đừng gửi (xem handleEditKeyDown)
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       submit();
@@ -325,7 +371,11 @@ export default function AiAssistantDrawer({ open, onClose, productId }: AiAssist
         </header>
 
         {/* Khu hội thoại — nền nhẹ #f9fafb */}
-        <div className="scrollbar-none flex-1 overflow-y-auto bg-[#f9fafb] px-4 py-5">
+        <div
+          ref={scrollRef}
+          onScroll={handleMessagesScroll}
+          className="scrollbar-none flex-1 overflow-y-auto bg-[#f9fafb] px-4 py-5"
+        >
           {isEmpty ? (
             <div className="flex h-full flex-col items-center justify-center text-center">
               <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-linear-to-br from-primary to-primary-dark text-white shadow-lg shadow-primary/30">
@@ -350,6 +400,22 @@ export default function AiAssistantDrawer({ open, onClose, productId }: AiAssist
             </div>
           ) : (
             <div className="flex flex-col gap-4">
+              {/* Nạp lịch sử cũ hơn: tự động khi kéo lên đỉnh, kèm nút bấm dự phòng chắc chắn. */}
+              {hasMore && (
+                <div className="flex justify-center py-1">
+                  <button
+                    type="button"
+                    onClick={triggerLoadMore}
+                    disabled={loadingMore}
+                    className="flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3 py-1 text-xs font-medium text-gray-500 transition-colors hover:border-primary/40 hover:text-primary disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"
+                  >
+                    {loadingMore && (
+                      <span className="h-3 w-3 animate-spin rounded-full border-2 border-primary/40 border-t-transparent" />
+                    )}
+                    {loadingMore ? "Đang tải..." : "Tải tin nhắn cũ hơn"}
+                  </button>
+                </div>
+              )}
               {messages.map((m, idx) => {
                 if (m.role === "system") return null;
                 const isUser = m.role === "user";

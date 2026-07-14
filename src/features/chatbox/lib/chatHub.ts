@@ -19,6 +19,8 @@ type HubEvent =
   | "userJoined"
   | "userLeft"
   | "aiStatus"
+  | "workspaceIntakeResult"
+  | "workspaceIntakeFailed"
   | "error";
 
 /**

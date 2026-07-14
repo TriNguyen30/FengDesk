@@ -240,6 +240,26 @@ body {
 }
 
 /* =========================
+   Tag picker "hiện trạng không gian" — thanh loading khi AI đang phân loại tag mới
+========================= */
+@keyframes tag-progress-slide {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(350%);
+  }
+}
+.tag-progress-bar::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: 30%;
+  background: var(--color-primary);
+  animation: tag-progress-slide 1s ease-in-out infinite;
+}
+
+/* =========================
    Quill Content Styles
 ========================= */
 .quill-content > :first-child {

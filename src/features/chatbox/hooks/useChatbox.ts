@@ -241,6 +241,26 @@ export function useChatbox() {
     [dispatch, openRoom],
   );
 
+  // Khách bấm "Nhắn tin" trên trang một shop cụ thể — lấy/tạo phòng hỗ trợ riêng của shop đó rồi mở
+  // thẳng vào phòng (khác startSupport: phòng hỗ trợ nền tảng chung, không gắn shop nào).
+  const startStoreSupport = useCallback(
+    async (storeId: string) => {
+      try {
+        const res = await chatApi.startStoreSupport(storeId);
+        if (res.data.isSuccess) {
+          dispatch(upsertChatbox(res.data.data));
+          dispatch(openChatbox());
+          await openRoom(res.data.data.id);
+        } else {
+          toast.error(res.data.message || "Không mở được cuộc trò chuyện với cửa hàng.");
+        }
+      } catch {
+        toast.error("Không mở được cuộc trò chuyện với cửa hàng.");
+      }
+    },
+    [dispatch, openRoom],
+  );
+
   // Tạo/mở phòng hỗ trợ qua REST — KHÔNG phụ thuộc SignalR. forceNew=true → luôn tạo phòng mới.
   const startSupport = useCallback(
     async (forceNew = false) => {
@@ -324,6 +344,7 @@ export function useChatbox() {
     uploadImage,
     startDirectChat,
     startSupport,
+    startStoreSupport,
     newChat,
     deleteRoom,
     consentPulseRoomId,

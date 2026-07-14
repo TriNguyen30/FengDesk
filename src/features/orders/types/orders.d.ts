@@ -134,3 +134,41 @@ export interface DeliveryDetail {
 }
 
 export type CreateShipmentResponse = ApiResponse<DeliveryDetail>;
+
+/** Địa chỉ nhận — chỉ field vendor cần để đóng gói/in vận đơn. Tương ứng <c>DeliveryShippingAddressResponse</c> BE. */
+export interface DeliveryShippingAddress {
+  recipientName: string;
+  recipientPhone: string;
+  streetAddress: string;
+  fullAddressText: string;
+}
+
+/**
+ * Chi tiết một đơn giao — màn vendor (garden owner/staff) xem để đóng gói.
+ * Tương ứng <c>DeliveryOrderDetailResponse</c> BE (GET /orders/deliveries/{id}/detail).
+ * Chỉ chứa sản phẩm + thông tin thuộc đúng delivery này (không lộ hàng của store khác trong cùng order).
+ */
+export interface DeliveryOrderDetail {
+  id: string;
+  gardenStoreId: string;
+  storeName: string | null;
+  status: string;
+  shippingFee: number;
+  subtotal: number;
+  trackingCode: string | null;
+  shippingProvider: string | null;
+  shippedAt: string | null;
+  deliveredAt: string | null;
+  estimatedDeliveryDate: string | null;
+
+  orderId: string;
+  orderCreatedAt: string;
+  paymentMethod: string;
+  orderStatus: string;
+  orderNote: string | null;
+
+  items: OrderLineItem[];
+  shippingAddress: DeliveryShippingAddress;
+}
+
+export type GetDeliveryOrderDetailResponse = ApiResponse<DeliveryOrderDetail>;
