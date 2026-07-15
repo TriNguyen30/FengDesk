@@ -14,6 +14,8 @@ import { AiActivityIndicator } from "@/features/shared/ai-activity";
 import AttachmentPreviewRow from "./AttachmentPreviewRow";
 import ConfirmDeleteButton from "./ConfirmDeleteButton";
 import Markdown from "./Markdown";
+import PaymentAttachment from "./PaymentAttachment";
+import { extractPaymentBlock } from "@/features/chatbox/utils/paymentBlock";
 
 const SUGGESTIONS = [
   "Cây để bàn nào hợp mệnh Mộc?",
@@ -96,6 +98,10 @@ export default function AiAssistantDrawer({ open, onClose, productId }: AiAssist
   const scrollRef = useRef<HTMLDivElement>(null);
   const prevScrollHeightRef = useRef(0);
   const prependingRef = useRef(false);
+  // Đã hoàn tất cú nhảy xuống đáy đầu tiên sau khi mở chưa. Khi chưa: cuộn đáy phải là NHẢY TỨC THÌ
+  // (không smooth) và scroll-event bị bỏ qua — vì smooth animation đi ngang vùng scrollTop < 60 sẽ
+  // kích hoạt load-more, prepend tin cũ hủy animation giữa chừng → kẹt lơ lửng trước đáy.
+  const initialScrolledRef = useRef(false);
   const pointerStartXRef = useRef<number | null>(null);
   const resizeTargetWidthRef = useRef<number>(DEFAULT_DRAWER_WIDTH);
   const resizeFrameRef = useRef<number | null>(null);
@@ -137,7 +143,10 @@ export default function AiAssistantDrawer({ open, onClose, productId }: AiAssist
 
   // Mở khung → nạp lại hội thoại AI đã lưu (giữ hội thoại ở khung lớn sau reload).
   useEffect(() => {
-    if (open) void loadHistory();
+    if (open) {
+      initialScrolledRef.current = false; // mỗi lần mở lại → nhảy đáy tức thì 1 lần nữa
+      void loadHistory();
+    }
   }, [open, loadHistory]);
 
   // Khôi phục vị trí cuộn sau khi prepend tin cũ (layout-effect chạy TRƯỚC effect cuộn-đáy, trước khi
@@ -155,7 +164,14 @@ export default function AiAssistantDrawer({ open, onClose, productId }: AiAssist
       prevScrollHeightRef.current = 0;
       return;
     }
-    if (open) bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (!open) return;
+    if (!initialScrolledRef.current) {
+      // Lần đầu sau khi mở: nhảy thẳng xuống đáy (không animation — xem chú thích initialScrolledRef).
+      bottomRef.current?.scrollIntoView();
+      if (messages.length > 0) initialScrolledRef.current = true;
+      return;
+    }
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, activity, narrations, open]);
 
   // Trigger nạp tin cũ hơn (dùng chung cho scroll gần đỉnh + nút bấm). Ghi scrollHeight để bù vị trí.
@@ -168,6 +184,7 @@ export default function AiAssistantDrawer({ open, onClose, productId }: AiAssist
   };
 
   const handleMessagesScroll = () => {
+    if (!initialScrolledRef.current) return; // đang nhảy xuống đáy lúc mở — đừng nhầm là user kéo lên
     if (scrollRef.current && scrollRef.current.scrollTop < 60) triggerLoadMore();
   };
 
@@ -489,13 +506,30 @@ export default function AiAssistantDrawer({ open, onClose, productId }: AiAssist
                                 src={url}
                                 alt="Ảnh"
                                 className="max-h-40 rounded-lg border border-black/10 object-cover"
+                                onLoad={() => {
+                                  // Ảnh nạp xong mới biết chiều cao → danh sách dài ra SAU khi đã cuộn đáy.
+                                  // Nếu đang ở gần đáy thì neo lại đáy, không thì để yên (user đang đọc tin cũ).
+                                  const el = scrollRef.current;
+                                  if (el && el.scrollHeight - el.scrollTop - el.clientHeight < 200) {
+                                    bottomRef.current?.scrollIntoView();
+                                  }
+                                }}
                               />
                             ))}
                           </div>
                         )}
                         {m.content &&
                           (m.role === "ai" ? (
-                            <Markdown text={m.content} />
+                            (() => {
+                              // Tin AI có thể kèm block thanh toán (confirm_order) → tách render card riêng.
+                              const { text, payment } = extractPaymentBlock(m.content);
+                              return (
+                                <>
+                                  {text && <Markdown text={text} />}
+                                  {payment && <PaymentAttachment payment={payment} />}
+                                </>
+                              );
+                            })()
                           ) : (
                             <p className="whitespace-pre-wrap break-words">{m.content}</p>
                           ))}

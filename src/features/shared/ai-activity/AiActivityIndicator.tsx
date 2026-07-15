@@ -28,7 +28,7 @@ export default function AiActivityIndicator({ activity }: AiActivityIndicatorPro
     }
     return {
       icon: <Loader2 size={13} className="shrink-0 animate-spin" />,
-      label: "AI đang xử lý…",
+      label: "AI đang xử lý",
     };
   })();
 

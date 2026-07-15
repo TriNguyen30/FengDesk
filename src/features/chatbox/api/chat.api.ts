@@ -2,6 +2,10 @@ import fetchHttpClient from "@/lib/axios";
 import type { ApiResponse } from "@/types/api";
 import type { Chatbox, ChatMessage, SendMessagePayload } from "@/features/chatbox/types/chatbox";
 
+/** Timeout riêng cho request gọi LLM (chat có tool-loop có thể chạy 30-50s) — vượt xa timeout mặc định 30s.
+ *  Chỉ áp cho các call LLM nặng; các endpoint còn lại giữ mặc định. */
+export const AI_REQUEST_TIMEOUT_MS = 120_000;
+
 export interface ChatboxListResponse {
   items: Chatbox[];
   page: number;
@@ -135,7 +139,9 @@ export const chatApi = {
 
   /** Gửi tin cho trợ lý AI (trang AI lớn). Bỏ trống chatboxId ở lượt đầu → server tạo & trả về. */
   sendToAi: (payload: AiChatRequestPayload) =>
-    fetchHttpClient.post<ApiResponse<AiChatResponse>>("/chat/ai/messages", payload),
+    fetchHttpClient.post<ApiResponse<AiChatResponse>>("/chat/ai/messages", payload, {
+      timeout: AI_REQUEST_TIMEOUT_MS,
+    }),
 
   /**
    * Sửa & gửi lại một tin nhắn cũ của mình trong hội thoại AI riêng — tin đó và mọi tin sau nó
@@ -145,6 +151,7 @@ export const chatApi = {
     fetchHttpClient.post<ApiResponse<AiChatResponse>>(
       `/chat/ai/messages/${messageId}/rewind`,
       payload,
+      { timeout: AI_REQUEST_TIMEOUT_MS },
     ),
 
   /** Cấu hình chat AI — cửa sổ nhớ (số tin) để FE vẽ mốc "AI context limit" trong khung chat. */
