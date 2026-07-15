@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { ChevronLeft, Loader2, MapPin, ShoppingBag, CreditCard } from "lucide-react";
+import { ChevronLeft, Loader2, MapPin, ShoppingBag, CreditCard, Truck } from "lucide-react";
 import { toast } from "sonner";
 
 import { useCart } from "@/features/cart";
@@ -49,10 +49,12 @@ export default function CheckoutPage() {
     [checkoutItems],
   );
 
-  const { shippingFee, isLoading: feeLoading } = useShippingFeePreview(
+  const { shippingFee: rawShippingFee, isLoading: feeLoading } = useShippingFeePreview(
     selectedAddressId || undefined,
     previewItems,
   );
+
+  const shippingFee = subtotal >= 500000 ? 0 : rawShippingFee;
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -192,11 +194,10 @@ export default function CheckoutPage() {
                 {addresses.map((address) => (
                   <label
                     key={address.id}
-                    className={`flex cursor-pointer gap-3 rounded-xl border p-4 transition-colors ${
-                      selectedAddressId === address.id
-                        ? "border-primary bg-primary/5"
-                        : "border-gray-200 hover:border-primary/40"
-                    }`}
+                    className={`flex cursor-pointer gap-3 rounded-xl border p-4 transition-colors ${selectedAddressId === address.id
+                      ? "border-primary bg-primary/5"
+                      : "border-gray-200 hover:border-primary/40"
+                      }`}
                   >
                     <input
                       type="radio"
@@ -237,11 +238,10 @@ export default function CheckoutPage() {
               {PAYMENT_METHODS.map((method) => (
                 <label
                   key={method.value}
-                  className={`flex cursor-pointer items-center gap-3 rounded-xl border p-4 transition-colors ${
-                    paymentMethod === method.value
-                      ? "border-primary bg-primary/5"
-                      : "border-gray-200 hover:border-primary/40"
-                  }`}
+                  className={`flex cursor-pointer items-center gap-3 rounded-xl border p-4 transition-colors ${paymentMethod === method.value
+                    ? "border-primary bg-primary/5"
+                    : "border-gray-200 hover:border-primary/40"
+                    }`}
                 >
                   <input
                     type="radio"
@@ -305,7 +305,13 @@ export default function CheckoutPage() {
             <div className="flex justify-between text-gray-600">
               <span>Phí vận chuyển</span>
               <span className="font-semibold text-gray-900">
-                {feeLoading ? "Đang tính..." : formatVnd(shippingFee)}
+                {feeLoading ? (
+                  "Đang tính..."
+                ) : shippingFee === 0 && subtotal >= 500000 ? (
+                  <span className="text-green-600">Miễn phí</span>
+                ) : (
+                  formatVnd(shippingFee)
+                )}
               </span>
             </div>
             <div className="flex justify-between border-t border-gray-100 pt-3 text-base font-bold text-gray-900">
@@ -337,6 +343,13 @@ export default function CheckoutPage() {
               điều khoản mua hàng
             </Link>
           </p>
+
+          <div className="mt-5 flex items-center gap-3 rounded-xl border border-gray-100 p-3 text-sm text-gray-900 shadow-sm">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-gray-900 shrink-0 shadow-sm">
+              <Truck className="h-4 w-4" />
+            </div>
+            <span className="font-semibold leading-snug">Free Ship TP.Hồ Chí Minh cho hoá đơn từ 500.000đ</span>
+          </div>
         </aside>
       </div>
 

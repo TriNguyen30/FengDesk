@@ -92,6 +92,8 @@ export default function CreateProductPage() {
 
   // Fetch filter options
   useEffect(() => {
+    window.scrollTo(0, 0);
+
     const fetchOptions = async () => {
       try {
         const [shopsRes, categoriesRes, vibesRes, stylesRes] = await Promise.all([
@@ -288,12 +290,12 @@ export default function CreateProductPage() {
   };
 
   return (
-    <div className="space-y-6 max-w-5xl mx-auto pb-12">
+    <div className="space-y-6 max-w-5xl mx-auto pb-12 mt-5 px-4 md:px-0">
       {/* Header */}
       <div className="flex items-center gap-3">
         <button
           onClick={() => navigate(-1)}
-          className="flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-500 hover:bg-gray-50 hover:text-gray-700 cursor-pointer transition-colors"
+          className="flex h-9 w-9 items-center justify-center rounded-4xl hover:bg-gray-100 hover:text-gray-700 cursor-pointer transition-colors"
           title="Quay lại"
         >
           <ChevronLeft size={18} />
@@ -576,9 +578,8 @@ export default function CreateProductPage() {
                         <img
                           src={img.url}
                           alt="product preview"
-                          className={`max-h-full max-w-full object-contain transition-all ${
-                            img.uploading ? "blur-[2px] opacity-60" : ""
-                          }`}
+                          className={`max-h-full max-w-full object-contain transition-all ${img.uploading ? "blur-[2px] opacity-60" : ""
+                            }`}
                         />
 
                         {/* Loading Overlay */}
