@@ -6,7 +6,7 @@ import * as THREE from "three";
 
 const elements = [
   {
-    id: "metal",
+    id: "Kim",
     name: "Mệnh Kim",
     traits: "Quyết đoán & Tinh tế",
     color: "bg-slate-50",
@@ -21,7 +21,7 @@ const elements = [
       "https://i.ex-cdn.com/danviet.vn/files/content/2026/01/01/031026tai-voi-lai-cay-canh-a-0222.jpg",
   },
   {
-    id: "wood",
+    id: "Moc",
     name: "Mệnh Mộc",
     traits: "Sáng tạo & Linh hoạt",
     color: "bg-green-50",
@@ -36,7 +36,7 @@ const elements = [
       "https://i.ex-cdn.com/danviet.vn/files/content/2025/12/30/025751ngoc-bich-cay-canh-a2-0254.jpg",
   },
   {
-    id: "water",
+    id: "Thuy",
     name: "Mệnh Thủy",
     traits: "Thông thái & Thích nghi",
     color: "bg-blue-50",
@@ -51,7 +51,7 @@ const elements = [
       "https://tapchivietnamhuongsac.vn/stores/news_dataimages/2026/042026/06/09/capture20260406090848.jpg?rt=20260406090850",
   },
   {
-    id: "fire",
+    id: "Hoa",
     name: "Mệnh Hỏa",
     traits: "Nhiệt huyết & Đam mê",
     color: "bg-red-50",
@@ -66,7 +66,7 @@ const elements = [
       "https://i.ex-cdn.com/danviet.vn/files/content/2026/01/01/031026tai-voi-lai-cay-canh-a-0222.jpg",
   },
   {
-    id: "earth",
+    id: "Tho",
     name: "Mệnh Thổ",
     traits: "Kiên định & Đáng tin",
     color: "bg-amber-50",
@@ -83,7 +83,7 @@ const elements = [
 ];
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-type ElementType = "fire" | "water" | "wood" | "metal" | "earth";
+type ElementType = "Hoa" | "Thuy" | "Moc" | "Kim" | "Tho";
 
 interface Particle3D {
   active: boolean;
@@ -209,7 +209,7 @@ function createSharedAssets(): SharedAssets {
 // ─── Pooled scene objects (one real Object3D per particle slot, reused) ───────
 function createPooledObject(type: ElementType, shared: SharedAssets): THREE.Object3D {
   switch (type) {
-    case "fire": {
+    case "Hoa": {
       const mat = new THREE.SpriteMaterial({
         map: shared.glowTexture,
         color: new THREE.Color(),
@@ -222,7 +222,7 @@ function createPooledObject(type: ElementType, shared: SharedAssets): THREE.Obje
       return sprite;
     }
 
-    case "metal": {
+    case "Kim": {
       const group = new THREE.Group();
       const trailMat = new THREE.MeshBasicMaterial({
         color: 0xffffff,
@@ -245,7 +245,7 @@ function createPooledObject(type: ElementType, shared: SharedAssets): THREE.Obje
       return group;
     }
 
-    case "water": {
+    case "Thuy": {
       const mat = new THREE.MeshPhongMaterial({
         color: 0x3b82f6,
         transparent: true,
@@ -258,7 +258,7 @@ function createPooledObject(type: ElementType, shared: SharedAssets): THREE.Obje
       return mesh;
     }
 
-    case "wood": {
+    case "Moc": {
       const group = new THREE.Group();
       const mat = new THREE.MeshStandardMaterial({
         color: 0x4ade80,
@@ -273,7 +273,7 @@ function createPooledObject(type: ElementType, shared: SharedAssets): THREE.Obje
       return group;
     }
 
-    case "earth":
+    case "Tho":
     default: {
       const mat = new THREE.MeshStandardMaterial({
         color: 0xb45309,
@@ -319,11 +319,11 @@ function makeBlankParticle(obj: THREE.Object3D, type: ElementType): Particle3D {
 const HoverParticles = ({ type }: { type: ElementType }) => {
   const getIcon = () => {
     switch (type) {
-      case "wood": return <Leaf size={16} className="text-green-500/80 drop-shadow-sm" />;
-      case "water": return <Droplets size={16} className="text-blue-500/80 drop-shadow-sm" />;
-      case "fire": return <Flame size={16} className="text-red-500/80 drop-shadow-sm" />;
-      case "metal": return <Diamond size={16} className="text-slate-500/80 drop-shadow-sm" />;
-      case "earth": return <Mountain size={16} className="text-amber-600/80 drop-shadow-sm" />;
+      case "Moc": return <Leaf size={16} className="text-green-500/80 drop-shadow-sm" />;
+      case "Thuy": return <Droplets size={16} className="text-blue-500/80 drop-shadow-sm" />;
+      case "Hoa": return <Flame size={16} className="text-red-500/80 drop-shadow-sm" />;
+      case "Kim": return <Diamond size={16} className="text-slate-500/80 drop-shadow-sm" />;
+      case "Tho": return <Mountain size={16} className="text-amber-600/80 drop-shadow-sm" />;
       default: return null;
     }
   };
@@ -424,7 +424,7 @@ export function ElementCanvas({ elementId }: { elementId: string }) {
     const spawnDepth = () => rand(-18, 18);
 
     // ── particle pool (real Object3D instances, recycled instead of rebuilt) ──
-    const poolSize = type === "metal" ? 90 : type === "water" ? 110 : 70;
+    const poolSize = type === "Kim" ? 90 : type === "Thuy" ? 110 : 70;
     const pool: Particle3D[] = [];
     for (let i = 0; i < poolSize; i++) {
       const obj = createPooledObject(type, shared);
@@ -433,7 +433,7 @@ export function ElementCanvas({ elementId }: { elementId: string }) {
     }
 
     const ripplePool: Particle3D[] = [];
-    if (type === "water") {
+    if (type === "Thuy") {
       for (let i = 0; i < 30; i++) {
         const mat = new THREE.SpriteMaterial({
           map: shared.ringTexture,
@@ -444,7 +444,7 @@ export function ElementCanvas({ elementId }: { elementId: string }) {
         const sprite = new THREE.Sprite(mat);
         sprite.visible = false;
         scene.add(sprite);
-        ripplePool.push(makeBlankParticle(sprite, "water"));
+        ripplePool.push(makeBlankParticle(sprite, "Thuy"));
       }
     }
 
@@ -466,7 +466,7 @@ export function ElementCanvas({ elementId }: { elementId: string }) {
       p.obj.visible = true;
 
       switch (type) {
-        case "fire": {
+        case "Hoa": {
           const { x } = pxToWorld(rand(0.1, 0.9) * W() + rand(-20, 20), H(), p.z);
           p.x = x;
           p.y = pxToWorld(0, H(), p.z).y;
@@ -485,7 +485,7 @@ export function ElementCanvas({ elementId }: { elementId: string }) {
           p.phase = rand(0, Math.PI * 2);
           break;
         }
-        case "water": {
+        case "Thuy": {
           const { x } = pxToWorld(rand(0, W()), 0, p.z);
           p.x = x;
           p.y = pxToWorld(0, rand(-60, -10), p.z).y;
@@ -502,7 +502,7 @@ export function ElementCanvas({ elementId }: { elementId: string }) {
           p.lit = 65;
           break;
         }
-        case "wood": {
+        case "Moc": {
           const fromLeft = Math.random() > 0.5;
           const start = pxToWorld(
             fromLeft ? rand(-40, -10) : rand(W() + 10, W() + 40),
@@ -528,7 +528,7 @@ export function ElementCanvas({ elementId }: { elementId: string }) {
           p.angle.set(rand(0, Math.PI * 2), rand(0, Math.PI * 2), rand(0, Math.PI * 2));
           break;
         }
-        case "metal": {
+        case "Kim": {
           const { x, y } = pxToWorld(rand(0.2, 0.8) * W(), rand(0.2, 0.7) * H(), p.z);
           p.x = x;
           p.y = y;
@@ -548,7 +548,7 @@ export function ElementCanvas({ elementId }: { elementId: string }) {
           p.lit = rand(75, 95);
           break;
         }
-        case "earth":
+        case "Tho":
         default: {
           const { x } = pxToWorld(rand(0, W()), 0, p.z);
           p.x = x;
@@ -586,11 +586,11 @@ export function ElementCanvas({ elementId }: { elementId: string }) {
 
     // ── spawn cadence ──────────────────────────────────────────────────────
     const cadence: Record<ElementType, { rate: number; interval: number }> = {
-      fire: { rate: 3, interval: 2 },
-      water: { rate: 3, interval: 2 },
-      wood: { rate: 1, interval: 4 },
-      metal: { rate: 0, interval: 1 },
-      earth: { rate: 2, interval: 3 },
+      Hoa: { rate: 3, interval: 2 },
+      Thuy: { rate: 3, interval: 2 },
+      Moc: { rate: 1, interval: 4 },
+      Kim: { rate: 0, interval: 1 },
+      Tho: { rate: 2, interval: 3 },
     };
     const conf = cadence[type];
     let burstTimer = 0;
@@ -606,7 +606,7 @@ export function ElementCanvas({ elementId }: { elementId: string }) {
     const animate = () => {
       frame++;
 
-      if (type === "metal") {
+      if (type === "Kim") {
         burstTimer++;
         if (burstTimer % 50 === 0) {
           for (let i = 0; i < 16; i++) spawn();
@@ -625,28 +625,28 @@ export function ElementCanvas({ elementId }: { elementId: string }) {
         p.vy += p.ay;
         p.vz += p.az;
 
-        if (p.type === "fire") {
+        if (p.type === "Hoa") {
           p.vx += Math.sin(p.life * p.wobble + p.phase) * 0.05;
           p.vy += 0.015; // extra buoyancy as it rises
           p.size *= 0.993;
           p.hue = Math.min(55, p.hue + 0.3);
-        } else if (p.type === "wood") {
+        } else if (p.type === "Moc") {
           p.angle.x += p.spin.x;
           p.angle.y += p.spin.y;
           p.angle.z += p.spin.z;
           p.vy += Math.sin(p.life * 0.07) * 0.01;
           p.vx *= 0.998;
-        } else if (p.type === "metal") {
+        } else if (p.type === "Kim") {
           p.vx *= 0.96;
           p.vy *= 0.96;
           p.vz *= 0.96;
-        } else if (p.type === "earth") {
+        } else if (p.type === "Tho") {
           p.angle.x += p.spin.x;
           p.angle.y += p.spin.y;
           p.angle.z += p.spin.z;
           p.vx += Math.sin(p.life * p.wobble) * 0.012;
           p.vx *= 0.99;
-        } else if (p.type === "water") {
+        } else if (p.type === "Thuy") {
           p.vx *= 0.995;
         }
 
@@ -660,7 +660,7 @@ export function ElementCanvas({ elementId }: { elementId: string }) {
         else if (progress > 0.75) alpha = 1 - (progress - 0.75) / 0.25;
         alpha = Math.max(0, Math.min(1, alpha));
 
-        if (p.type === "water" && p.y <= groundY + p.size) {
+        if (p.type === "Thuy" && p.y <= groundY + p.size) {
           spawnRipple(p.x, groundY, p.z, p.hue);
           p.active = false;
           p.obj.visible = false;
@@ -674,21 +674,21 @@ export function ElementCanvas({ elementId }: { elementId: string }) {
 
         p.obj.position.set(p.x, p.y, p.z);
 
-        if (p.type === "fire") {
+        if (p.type === "Hoa") {
           const sprite = p.obj as THREE.Sprite;
           sprite.scale.set(p.size * 1.4, p.size * 2.0, 1);
           tmpColor.setHSL(((p.hue + progress * 15) % 360) / 360, p.sat / 100, p.lit / 100);
           const mat = sprite.material as THREE.SpriteMaterial;
           mat.color.copy(tmpColor);
           mat.opacity = alpha * 0.9;
-        } else if (p.type === "water") {
+        } else if (p.type === "Thuy") {
           const mesh = p.obj as THREE.Mesh;
           mesh.scale.setScalar(p.size);
           const mat = mesh.material as THREE.MeshPhongMaterial;
           mat.opacity = alpha * 0.85;
           tmpColor.setHSL(p.hue / 360, p.sat / 100, p.lit / 100);
           mat.color.copy(tmpColor);
-        } else if (p.type === "wood") {
+        } else if (p.type === "Moc") {
           const group = p.obj as THREE.Group;
           group.scale.setScalar(p.size);
           group.rotation.set(p.angle.x, p.angle.y, p.angle.z);
@@ -697,7 +697,7 @@ export function ElementCanvas({ elementId }: { elementId: string }) {
           mat.opacity = alpha * 0.92;
           tmpColor.setHSL(p.hue / 360, p.sat / 100, p.lit / 100);
           mat.color.copy(tmpColor);
-        } else if (p.type === "metal") {
+        } else if (p.type === "Kim") {
           const group = p.obj as THREE.Group;
           tmpVec.set(p.vx, p.vy, p.vz);
           const speed = tmpVec.length();
