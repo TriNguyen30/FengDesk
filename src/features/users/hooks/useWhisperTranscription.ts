@@ -59,7 +59,8 @@ export function useWhisperTranscription() {
     if (!recorder) return null; // không có bản ghi (BE tắt hoặc không xin được mic) → dùng text Web Speech
 
     const blob = await new Promise<Blob>((resolve) => {
-      recorder.onstop = () => resolve(new Blob(chunksRef.current, { type: recorder.mimeType || "audio/webm" }));
+      recorder.onstop = () =>
+        resolve(new Blob(chunksRef.current, { type: recorder.mimeType || "audio/webm" }));
       recorder.stop();
     });
     streamRef.current?.getTracks().forEach((t) => t.stop());
@@ -69,4 +70,29 @@ export function useWhisperTranscription() {
 
     setIsTranscribing(true);
     try {
-      const formData = new FormD
+      const formData = new FormData();
+      formData.append("file", blob, "recording.webm");
+      const res = await fetchHttpClient.post<ApiResponse<string>>("/workspace/transcriptions", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      const text = res.data?.data?.trim();
+      return text || null;
+    } catch {
+      return null; // Whisper down — fallback flow cũ (Web Speech)
+    } finally {
+      setIsTranscribing(false);
+    }
+  }, []);
+
+  /** Hủy ghi âm không gửi (unmount, đổi bước). */
+  const cancelRecording = useCallback(() => {
+    const recorder = recorderRef.current;
+    recorderRef.current = null;
+    if (recorder && recorder.state !== "inactive") recorder.stop();
+    streamRef.current?.getTracks().forEach((t) => t.stop());
+    streamRef.current = null;
+    chunksRef.current = [];
+  }, []);
+
+  return { isTranscribing, startRecording, stopAndTranscribe, cancelRecording };
+}

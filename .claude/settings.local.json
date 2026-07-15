@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm i *)",
+      "Bash(node -e \"const p=require\\('./package.json'\\); console.log\\(JSON.stringify\\({main:p.main, module:p.module, exports:p.exports, name:p.name},null,2\\)\\)\")"
+    ]
+  }
+}

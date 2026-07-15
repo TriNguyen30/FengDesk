@@ -29,8 +29,8 @@ export default function WorkspaceDescribeStep({
   const [deepThink, setDeepThink] = useState(false);
   const [speechLang, setSpeechLang] = useState<"vi-VN" | "en-US">("vi-VN");
   const { isSupported, isListening, start, stop } = useSpeechInput();
-  // Whisper (BE) chốt kết quả chính xác hơn, tự nhận diện vi/en/nói trộn. Web Speech vẫn chạy song song
-  // cho preview live + fallback khi Whisper down (giữ flow cũ).
+  // Whisper (BE) chốt chính xác hơn, tự nhận diện vi/en/nói trộn. Web Speech vẫn chạy song song cho
+  // preview live + fallback khi Whisper tắt/down (giữ flow cũ). Bật/tắt điều khiển từ BE (Speech:Enabled).
   const { isTranscribing, startRecording, stopAndTranscribe, cancelRecording } = useWhisperTranscription();
   const micLevel = useMicLevel();
   const att = useImageAttachments(uploadWorkspaceImage);
@@ -46,29 +46,25 @@ export default function WorkspaceDescribeStep({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isListening]);
 
-  // Hủy ghi âm Whisper nếu component unmount giữa chừng (đổi bước, đóng modal).
+  // Hủy ghi âm Whisper nếu component unmount giữa chừng.
   useEffect(() => cancelRecording, [cancelRecording]);
 
-  // Text preview live từ Web Speech trong lượt nói hiện tại — dùng làm fallback nếu Whisper lỗi.
+  // Text preview live từ Web Speech trong lượt nói — fallback nếu Whisper lỗi.
   const livePreviewRef = useRef("");
 
   const toggleMic = async () => {
     if (isListening) {
-      // Dừng: chốt bằng Whisper. Trong lúc chờ, giữ nguyên preview Web Speech (đỡ trống màn hình).
+      // Dừng: chốt bằng Whisper; nếu lỗi/tắt → giữ text Web Speech (flow cũ).
       stop();
       const base = voiceBaseRef.current;
       const whisperText = await stopAndTranscribe();
-      // Whisper OK → thay preview bằng bản chính xác; lỗi/null → giữ text Web Speech (flow cũ).
       const finalText = whisperText ?? livePreviewRef.current;
       if (finalText) setDescription(base ? `${base} ${finalText}` : finalText);
       return;
     }
-
     voiceBaseRef.current = description.trim();
     livePreviewRef.current = "";
-    // Ghi âm cho Whisper (fire-and-forget — thất bại thì Web Speech vẫn gánh).
     void startRecording();
-    // Web Speech: preview live trong lúc nói.
     start((text) => {
       // Lưu ý: KHÔNG tự stop() khi isFinal — isFinal chỉ nghĩa "câu này chốt xong", không phải
       // "user nói xong". Ở continuous mode, tự stop() ở đây sẽ cắt ngang phiên nghe liên tục
@@ -79,12 +75,10 @@ export default function WorkspaceDescribeStep({
     }, speechLang);
   };
 
-  // Mic khả dụng nếu browser có MediaRecorder (Whisper) HOẶC Web Speech. Rộng hơn isSupported cũ →
-  // Safari/Firefox (không có Web Speech) vẫn ghi âm gửi Whisper được.
+  const trimmed = description.trim();
+  // Mic khả dụng nếu có MediaRecorder (Whisper) HOẶC Web Speech → Safari/Firefox vẫn ghi âm gửi Whisper.
   const micAvailable =
     isSupported || (typeof window !== "undefined" && "MediaRecorder" in window && !!navigator.mediaDevices);
-
-  const trimmed = description.trim();
   // Có ảnh rồi thì mô tả chữ không bắt buộc — ảnh cũng là bằng chứng để AI phân tích.
   const canAnalyze =
     (trimmed.length >= MIN_LENGTH || att.urls.length > 0) &&
@@ -161,12 +155,11 @@ export default function WorkspaceDescribeStep({
               )}
             </button>
           )}
-          {/* Toggle ngôn ngữ chỉ ảnh hưởng preview Web Speech — Whisper tự nhận diện vi/en/nói trộn. */}
           {isSupported && !isListening && !isTranscribing && (
             <button
               type="button"
               onClick={() => setSpeechLang((l) => (l === "vi-VN" ? "en-US" : "vi-VN"))}
-              title="Ngôn ngữ preview khi đang nói (Whisper tự nhận diện, không cần chọn)"
+              title="Ngôn ngữ nhận diện giọng nói"
               className="flex h-8 w-8 items-center justify-center rounded-full border border-gray-300 text-[10px] font-semibold text-gray-500 transition-colors hover:border-primary hover:text-primary cursor-pointer"
             >
               {speechLang === "vi-VN" ? "VI" : "EN"}
@@ -185,6 +178,7 @@ export default function WorkspaceDescribeStep({
       </div>
 
       {/* Công tắc suy nghĩ kỹ — mặc định tắt (nhanh). Bật để model phân tích sâu hơn, đổi lại chậm hơn nhiều. */}
+      <div className="group relative mt-4">
         <label className="flex cursor-pointer items-start gap-2.5 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 transition-colors duration-200 group-hover:border-primary/40 group-hover:bg-gray-100">
           <input
             type="checkbox"
