@@ -1,0 +1,80 @@
+import { useCallback, useRef, useState } from "react";
+import fetchHttpClient from "@/lib/httpClient";
+import type { ApiResponse } from "@/types/api";
+
+/**
+ * Ghi âm bằng MediaRecorder → gửi BE /workspace/transcriptions (Whisper) → text.
+ * Whisper tự nhận diện tiếng Việt / Anh / nói trộn — không cần chọn ngôn ngữ.
+ * Dùng KẾT HỢP với useSpeechInput (Web Speech): Web Speech cho preview live + fallback khi
+ * Whisper lỗi/down (giữ flow cũ); Whisper cho kết quả chốt chính xác hơn.
+ */
+export function useWhisperTranscription() {
+  const [isTranscribing, setIsTranscribing] = useState(false);
+  const recorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+  const streamRef = useRef<MediaStream | null>(null);
+
+  /** Bắt đầu ghi âm. Trả false nếu không xin được mic (caller vẫn chạy Web Speech như cũ). */
+  const startRecording = useCallback(async (): Promise<boolean> => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      streamRef.current = stream;
+      chunksRef.current = [];
+      const mimeType = MediaRecorder.isTypeSupported("audio/webm") ? "audio/webm" : "";
+      const recorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) chunksRef.current.push(e.data);
+      };
+      recorder.start(1000); // gom chunk mỗi giây — không mất dữ liệu nếu stop đột ngột
+      recorderRef.current = recorder;
+      return true;
+    } catch {
+      return false; // không có mic / user từ chối — Web Speech (nếu có) vẫn tự chạy phần của nó
+    }
+  }, []);
+
+  /**
+   * Dừng ghi và gửi Whisper. Trả text chốt, hoặc null nếu lỗi (caller giữ text Web Speech làm fallback).
+   */
+  const stopAndTranscribe = useCallback(async (): Promise<string | null> => {
+    const recorder = recorderRef.current;
+    recorderRef.current = null;
+    if (!recorder) return null;
+
+    const blob = await new Promise<Blob>((resolve) => {
+      recorder.onstop = () => resolve(new Blob(chunksRef.current, { type: recorder.mimeType || "audio/webm" }));
+      recorder.stop();
+    });
+    streamRef.current?.getTracks().forEach((t) => t.stop());
+    streamRef.current = null;
+
+    if (blob.size < 1000) return null; // quá ngắn/rỗng — không đáng gửi
+
+    setIsTranscribing(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", blob, "recording.webm");
+      const res = await fetchHttpClient.post<ApiResponse<string>>("/workspace/transcriptions", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      const text = res.data?.data?.trim();
+      return text || null;
+    } catch {
+      return null; // Whisper down — fallback flow cũ (Web Speech)
+    } finally {
+      setIsTranscribing(false);
+    }
+  }, []);
+
+  /** Hủy ghi âm không gửi (unmount, đổi bước). */
+  const cancelRecording = useCallback(() => {
+    const recorder = recorderRef.current;
+    recorderRef.current = null;
+    if (recorder && recorder.state !== "inactive") recorder.stop();
+    streamRef.current?.getTracks().forEach((t) => t.stop());
+    streamRef.current = null;
+    chunksRef.current = [];
+  }, []);
+
+  return { isTranscribing, startRecording, stopAndTranscribe, cancelRecording };
+}
