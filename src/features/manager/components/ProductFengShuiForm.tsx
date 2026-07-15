@@ -202,7 +202,10 @@ export function ProductFengShuiFields({
 }: ProductFengShuiFieldsProps) {
   return (
     <div className="space-y-5">
-      <ProductElementSelectFields value={value} onChange={(patch) => onChange({ ...value, ...patch })} />
+      <ProductElementSelectFields
+        value={value}
+        onChange={(patch) => onChange({ ...value, ...patch })}
+      />
       <ProductVibeStyleFields
         value={value}
         onChange={(patch) => onChange({ ...value, ...patch })}

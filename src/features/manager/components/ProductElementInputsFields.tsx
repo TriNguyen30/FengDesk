@@ -12,7 +12,11 @@ interface ProductElementInputsFieldsProps {
   onChange: (next: ElementInputValue[]) => void;
 }
 
-function toggleInput(list: ElementInputValue[], kind: ElementInputKind, code: string): ElementInputValue[] {
+function toggleInput(
+  list: ElementInputValue[],
+  kind: ElementInputKind,
+  code: string,
+): ElementInputValue[] {
   const exists = list.some((i) => i.kind === kind && i.code === code);
   return exists
     ? list.filter((i) => !(i.kind === kind && i.code === code))
@@ -75,9 +79,27 @@ export function ProductElementInputsFields({ value, onChange }: ProductElementIn
         <Leaf size={18} className="text-primary" />
         <h2 className="text-base font-bold text-gray-950">Đặc điểm sản phẩm</h2>
       </div>
-      <ChipGroup label="Vật liệu" codes={materialCodes} kind="Material" value={value} onChange={onChange} />
-      <ChipGroup label="Màu chủ đạo" codes={colorCodes} kind="Color" value={value} onChange={onChange} />
-      <ChipGroup label="Hình khối" codes={shapeCodes} kind="Shape" value={value} onChange={onChange} />
+      <ChipGroup
+        label="Vật liệu"
+        codes={materialCodes}
+        kind="Material"
+        value={value}
+        onChange={onChange}
+      />
+      <ChipGroup
+        label="Màu chủ đạo"
+        codes={colorCodes}
+        kind="Color"
+        value={value}
+        onChange={onChange}
+      />
+      <ChipGroup
+        label="Hình khối"
+        codes={shapeCodes}
+        kind="Shape"
+        value={value}
+        onChange={onChange}
+      />
     </div>
   );
 }

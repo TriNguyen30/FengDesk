@@ -128,9 +128,9 @@ const NominatimProvider: GeocodingProvider = {
 
     // Fallback to display_name parsing if some components are missing
     if (data.display_name && (!province || !district || !ward)) {
-      const parts = data.display_name.split(",").map(p => p.trim());
-      const addressParts = parts.filter(p => p !== "Việt Nam" && !/^\d+$/.test(p));
-      
+      const parts = data.display_name.split(",").map((p) => p.trim());
+      const addressParts = parts.filter((p) => p !== "Việt Nam" && !/^\d+$/.test(p));
+
       if (!province && addressParts.length >= 1) {
         province = addressParts[addressParts.length - 1];
       }
@@ -140,7 +140,10 @@ const NominatimProvider: GeocodingProvider = {
         }
       }
       if (!ward && addressParts.length >= 3) {
-        if (addressParts[addressParts.length - 1] === province && addressParts[addressParts.length - 2] === district) {
+        if (
+          addressParts[addressParts.length - 1] === province &&
+          addressParts[addressParts.length - 2] === district
+        ) {
           ward = addressParts[addressParts.length - 3];
         }
       }
@@ -165,9 +168,7 @@ export interface ReverseGeocodeResult {
  * Uses Nominatim API. Restricts to Vietnam (countrycodes=vn).
  * Returns null if not found.
  */
-export async function geocodeLocation(
-  query: string,
-): Promise<{ lat: number; lng: number } | null> {
+export async function geocodeLocation(query: string): Promise<{ lat: number; lng: number } | null> {
   return NominatimProvider.geocode(query);
 }
 
@@ -197,18 +198,13 @@ export function findBestMatch<T extends { id: string; name: string }>(
   const normalizedTarget = normalizeVietnamese(target);
 
   // 1. Exact normalized match
-  const exact = items.find(
-    (item) => normalizeVietnamese(item.name) === normalizedTarget,
-  );
+  const exact = items.find((item) => normalizeVietnamese(item.name) === normalizedTarget);
   if (exact) return exact.id;
 
   // 2. Includes match
   const included = items.find((item) => {
     const normalizedName = normalizeVietnamese(item.name);
-    return (
-      normalizedName.includes(normalizedTarget) ||
-      normalizedTarget.includes(normalizedName)
-    );
+    return normalizedName.includes(normalizedTarget) || normalizedTarget.includes(normalizedName);
   });
   if (included) return included.id;
 

@@ -175,7 +175,9 @@ export function DeliveryDetailModal({ deliveryId, open, onClose }: DeliveryDetai
                 <div className="mt-3 grid gap-2 sm:grid-cols-[auto,1fr] sm:items-start">
                   <div className="flex items-center gap-2 rounded-lg border border-gray-100 bg-white/80 px-3 py-2">
                     <Phone className="h-3.5 w-3.5 text-gray-400" />
-                    <span className="text-sm text-gray-700">{detail.shippingAddress.recipientPhone}</span>
+                    <span className="text-sm text-gray-700">
+                      {detail.shippingAddress.recipientPhone}
+                    </span>
                   </div>
                   <div className="flex items-start gap-2 rounded-lg border border-gray-100 bg-white/80 px-3 py-2">
                     <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-gray-400" />
@@ -188,7 +190,9 @@ export function DeliveryDetailModal({ deliveryId, open, onClose }: DeliveryDetai
                 <div className="mt-3 rounded-xl border border-amber-100 bg-amber-50/40 p-3">
                   <div className="flex items-center gap-2">
                     <MessageSquareText className="h-4 w-4 text-amber-700" />
-                    <h4 className="text-sm font-semibold text-amber-800">Mô tả / ghi chú của khách hàng</h4>
+                    <h4 className="text-sm font-semibold text-amber-800">
+                      Mô tả / ghi chú của khách hàng
+                    </h4>
                   </div>
                   {detail.orderNote ? (
                     <p className="mt-2 text-sm leading-relaxed text-amber-700">
@@ -248,9 +252,7 @@ export function DeliveryDetailModal({ deliveryId, open, onClose }: DeliveryDetai
                   {detail.trackingCode && (
                     <div>
                       <p className="text-gray-400">Mã vận đơn</p>
-                      <p className="font-semibold text-gray-700 font-mono">
-                        {detail.trackingCode}
-                      </p>
+                      <p className="font-semibold text-gray-700 font-mono">{detail.trackingCode}</p>
                     </div>
                   )}
                   {detail.shippingProvider && (

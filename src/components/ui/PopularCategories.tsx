@@ -5,8 +5,8 @@ import type { Category } from "@/features/category/types/category";
 import dragonStatueIcon from "@/assets/icon/DragonStatue.png";
 import lampIcon from "@/assets/icon/Lamp.png";
 import plantPotIcon from "@/assets/icon/PlantPot.png";
-import crystalIcon from "@/assets/icon/Crystal.png"
-import agarwoodIcon from "@/assets/icon/TramHuong.png"
+import crystalIcon from "@/assets/icon/Crystal.png";
+import agarwoodIcon from "@/assets/icon/TramHuong.png";
 
 const CATEGORY_ICONS = [plantPotIcon, dragonStatueIcon, lampIcon];
 
@@ -19,7 +19,12 @@ const getIconForCategory = (name: string, index: number) => {
   if (lowerName.includes("đèn") || lowerName.includes("trang trí")) {
     return lampIcon;
   }
-  if (lowerName.includes("cây") || lowerName.includes("chậu") || lowerName.includes("thực vật") || lowerName.includes("hoa")) {
+  if (
+    lowerName.includes("cây") ||
+    lowerName.includes("chậu") ||
+    lowerName.includes("thực vật") ||
+    lowerName.includes("hoa")
+  ) {
     return plantPotIcon;
   }
   if (lowerName.includes("tinh thể") || lowerName.includes("đá phong thủy")) {

@@ -48,8 +48,9 @@ export function ShopProductCatalog({
             <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
           </div>
 
-          {isShopMember && shopId && (
-            canAddProduct ? (
+          {isShopMember &&
+            shopId &&
+            (canAddProduct ? (
               <Link
                 to={`/seller/${shopId}/products/new`}
                 className="flex shrink-0 items-center gap-1.5 rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-primary-dark transition-all cursor-pointer"
@@ -65,8 +66,7 @@ export function ShopProductCatalog({
                 <Plus size={16} />
                 Thêm sản phẩm
               </button>
-            )
-          )}
+            ))}
         </div>
       </div>
 
@@ -83,7 +83,9 @@ export function ShopProductCatalog({
             <ProductCard
               key={p.id}
               product={p}
-              editHref={isShopMember && shopId ? `/seller/${shopId}/products/${p.id}/edit` : undefined}
+              editHref={
+                isShopMember && shopId ? `/seller/${shopId}/products/${p.id}/edit` : undefined
+              }
             />
           ))}
         </div>

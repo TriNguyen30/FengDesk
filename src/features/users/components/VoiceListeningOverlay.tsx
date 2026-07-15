@@ -85,7 +85,7 @@ export default function VoiceListeningOverlay({ active, levels }: VoiceListening
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: .1, ease: "easeInOut", delay: 1 }}
+              transition={{ duration: 0.1, ease: "easeInOut", delay: 1 }}
             >
               {levels.map((lvl, i) => (
                 <div

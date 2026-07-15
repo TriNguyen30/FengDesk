@@ -99,7 +99,9 @@ export default function WorkspaceDescribeStep({
             type="button"
             onClick={() => fileRef.current?.click()}
             disabled={att.items.length >= MAX_IMAGES}
-            title={att.items.length >= MAX_IMAGES ? `Tối đa ${MAX_IMAGES} ảnh` : "Đính kèm ảnh phòng"}
+            title={
+              att.items.length >= MAX_IMAGES ? `Tối đa ${MAX_IMAGES} ảnh` : "Đính kèm ảnh phòng"
+            }
             className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary transition-colors hover:bg-primary/20 disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
           >
             <ImagePlus size={16} />
@@ -159,12 +161,14 @@ export default function WorkspaceDescribeStep({
           </span>
         </label>
 
-         <div className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-2 hidden w-64 -translate-x-1/2 rounded-lg border border-gray-200 bg-gray-100 px-3 py-2 text-xs leading-5 text-gray-600 shadow-sm opacity-0 transition-all duration-200 ease-out group-hover:block group-hover:translate-y-[-4px] group-hover:opacity-100">
+        <div className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-2 hidden w-64 -translate-x-1/2 rounded-lg border border-gray-200 bg-gray-100 px-3 py-2 text-xs leading-5 text-gray-600 shadow-sm opacity-0 transition-all duration-200 ease-out group-hover:block group-hover:translate-y-[-4px] group-hover:opacity-100">
           <div className="mb-1 flex items-center gap-1.5 font-medium text-gray-700">
             <Info size={12} className="shrink-0" />
             <span>Thông tin</span>
           </div>
-          <div>Phân tích sâu & chính xác hơn, nhưng chậm hơn đáng kể (có thể lâu gấp nhiều lần).</div>
+          <div>
+            Phân tích sâu & chính xác hơn, nhưng chậm hơn đáng kể (có thể lâu gấp nhiều lần).
+          </div>
         </div>
       </div>
 
@@ -183,7 +187,11 @@ export default function WorkspaceDescribeStep({
           className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-white hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50 transition-colors cursor-pointer"
         >
           <Sparkles size={16} />
-          {isAnalyzing ? "Đang phân tích..." : att.uploading ? "Đang tải ảnh..." : "Để AI điền giúp"}
+          {isAnalyzing
+            ? "Đang phân tích..."
+            : att.uploading
+              ? "Đang tải ảnh..."
+              : "Để AI điền giúp"}
         </button>
       </div>
     </div>

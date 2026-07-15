@@ -578,8 +578,9 @@ export default function CreateProductPage() {
                         <img
                           src={img.url}
                           alt="product preview"
-                          className={`max-h-full max-w-full object-contain transition-all ${img.uploading ? "blur-[2px] opacity-60" : ""
-                            }`}
+                          className={`max-h-full max-w-full object-contain transition-all ${
+                            img.uploading ? "blur-[2px] opacity-60" : ""
+                          }`}
                         />
 
                         {/* Loading Overlay */}
@@ -632,7 +633,9 @@ export default function CreateProductPage() {
           <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-100 space-y-5">
             <div className="flex items-center gap-2 border-b border-gray-100 pb-3">
               <Palette size={18} className="text-primary" />
-              <h2 className="text-base font-bold text-gray-950">Vibe, phong cách &amp; kích thước</h2>
+              <h2 className="text-base font-bold text-gray-950">
+                Vibe, phong cách &amp; kích thước
+              </h2>
             </div>
             <ProductVibeStyleFields
               value={fengShui}
@@ -649,10 +652,14 @@ export default function CreateProductPage() {
                 <Sparkles size={18} className="text-primary" />
                 <h2 className="text-base font-bold text-gray-950">Phong thủy nâng cao</h2>
               </span>
-              <ChevronDown size={16} className="text-gray-400 transition-transform group-open:rotate-180" />
+              <ChevronDown
+                size={16}
+                className="text-gray-400 transition-transform group-open:rotate-180"
+              />
             </summary>
             <p className="mb-4 text-xs text-gray-400 italic">
-              Chỉ dùng nếu bạn đã biết chính xác — thường không cần, hệ thống tự tính từ Đặc điểm sản phẩm.
+              Chỉ dùng nếu bạn đã biết chính xác — thường không cần, hệ thống tự tính từ Đặc điểm
+              sản phẩm.
             </p>
             <div className="border-t border-gray-100 pt-4">
               <ProductElementSelectFields

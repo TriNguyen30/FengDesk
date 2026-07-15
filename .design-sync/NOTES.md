@@ -30,7 +30,7 @@ The stock synth-entry writer emits `export * from <path>` for every file. `expor
 forwards a module's **default** export, and every component in `src/components/ui` is
 `export default function Name()` — so none of them would have reached
 `window.FengDeskUI.*` in the real functional bundle, even though `deriveComponentsFromSrc`
-correctly *discovers* their names. The fork adds `export { default as Name } from <path>`
+correctly _discovers_ their names. The fork adds `export { default as Name } from <path>`
 alongside the original `export *` line whenever a file's default-exported declaration name
 can be determined via regex. Declared in `cfg.libOverrides`.
 
@@ -92,9 +92,11 @@ identity with the outer `cfg.provider` wrap — symptom: `useNavigate()`/`useSel
 "must be used inside a Provider" even though `cfg.provider` is correctly configured).
 `cfg.storyImports.shim` is a documented, forkless override — checked BEFORE the node_modules
 rule — so `.design-sync/config.json` sets:
+
 ```json
 "storyImports": { "shim": ["/fengshuigarden-web/src/", "/fengshuigarden-web/.design-sync/mocks/"] }
 ```
+
 This is safe here because every preview only ever imports TOP-LEVEL exported components
 (never internal utility/slice files directly) — once the top-level import shims, esbuild
 never resolves that module's internals at all, so there's no risk of e.g. `authSlice.ts`
@@ -126,7 +128,7 @@ one shared synthetic module:**
    DIFFERENT images imported this way both resolve to the identical (broken) value. HeroSlider
    hit this: two hero images both rendered the same corrupted placeholder. **Fix: import repo
    assets via a RELATIVE path instead of `@/`** — e.g. `import hero from
-   "../../src/assets/hero.png"` from `.design-sync/previews/HeroSlider.tsx`. A relative
+"../../src/assets/hero.png"` from `.design-sync/previews/HeroSlider.tsx`. A relative
    import resolves directly against the preview file's own location, never touches the
    junction, and falls through to esbuild's normal `.png → dataurl` loader. Prefer relative
    imports for any non-component asset a future preview needs.

@@ -10,7 +10,12 @@ interface InfoCardTrioProps {
 }
 
 /** 3 dòng: Không gian · Hợp bản mệnh · Hướng đặt — chỉ dùng ở chế độ fit sản phẩm × phòng. */
-export default function InfoCardTrio({ spaceTitle, spaceLine, menhLine, placementLine }: InfoCardTrioProps) {
+export default function InfoCardTrio({
+  spaceTitle,
+  spaceLine,
+  menhLine,
+  placementLine,
+}: InfoCardTrioProps) {
   return (
     <div className="flex flex-col">
       <InfoRow icon={Home} title={spaceTitle} desc={spaceLine} first />

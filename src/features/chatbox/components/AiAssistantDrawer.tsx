@@ -7,7 +7,7 @@ import {
   type KeyboardEvent,
   type MouseEvent,
 } from "react";
-import { Bot, ImagePlus, Loader2, Pencil, Send, Sparkles, User, X } from "lucide-react";
+import { Bot, ImagePlus, Loader2, Pencil, Send, User, X } from "lucide-react";
 import { useAiChat, type AiMessage } from "@/features/chatbox/hooks/useAiChat";
 import { useImageAttachments } from "@/features/chatbox/hooks/useImageAttachments";
 import { AiActivityIndicator } from "@/features/shared/ai-activity";
@@ -185,7 +185,10 @@ export default function AiAssistantDrawer({ open, onClose, productId }: AiAssist
 
     const handlePointerMove = (event: globalThis.MouseEvent) => {
       if (pointerStartXRef.current == null) return;
-      resizeTargetWidthRef.current = clampDrawerWidth(window.innerWidth - event.clientX, window.innerWidth);
+      resizeTargetWidthRef.current = clampDrawerWidth(
+        window.innerWidth - event.clientX,
+        window.innerWidth,
+      );
 
       if (resizeFrameRef.current != null) {
         cancelAnimationFrame(resizeFrameRef.current);
@@ -284,7 +287,7 @@ export default function AiAssistantDrawer({ open, onClose, productId }: AiAssist
     const target = event.target as HTMLElement | null;
     if (
       target?.closest(
-        '[data-drawer-interaction="resize-handle"], button, input, textarea, select, a, [role="button"], [data-drawer-interaction="message-bubble"]'
+        '[data-drawer-interaction="resize-handle"], button, input, textarea, select, a, [role="button"], [data-drawer-interaction="message-bubble"]',
       )
     ) {
       return;
@@ -308,9 +311,8 @@ export default function AiAssistantDrawer({ open, onClose, productId }: AiAssist
     <>
       {/* Backdrop */}
       <div
-        className={`fixed inset-0 z-40 bg-gray-900/30 backdrop-blur-[1px] transition-opacity duration-300 ${
-          open ? "opacity-100" : "pointer-events-none opacity-0"
-        }`}
+        className={`fixed inset-0 z-40 bg-gray-900/30 backdrop-blur-[1px] transition-opacity duration-300 ${open ? "opacity-100" : "pointer-events-none opacity-0"
+          }`}
         onClick={onClose}
         aria-hidden
       />
@@ -322,19 +324,22 @@ export default function AiAssistantDrawer({ open, onClose, productId }: AiAssist
         aria-hidden={!open}
         style={{
           width: `${drawerWidth}px`,
-          transition: "width 300ms cubic-bezier(0, 0, 0.2, 1), translate 300ms cubic-bezier(0, 0, 0.2, 1), transform 300ms cubic-bezier(0, 0, 0.2, 1)",
+          transition:
+            "width 300ms cubic-bezier(0, 0, 0.2, 1), translate 300ms cubic-bezier(0, 0, 0.2, 1), transform 300ms cubic-bezier(0, 0, 0.2, 1)",
         }}
-        className={`fixed right-0 top-0 z-50 flex h-dvh flex-col border-l-2 border-primary/40 bg-white shadow-2xl ring-1 ring-primary/10 transition-transform duration-300 ease-out ${
-          open ? "translate-x-0" : "translate-x-full"
-        }`}
+        className={`fixed right-0 top-0 z-50 flex h-dvh flex-col border-l-2 border-primary/40 bg-white shadow-2xl ring-1 ring-primary/10 transition-transform duration-300 ease-out ${open ? "translate-x-0" : "translate-x-full"
+          }`}
         onMouseDown={handleDrawerMouseDown}
         onClick={handleDrawerClick}
       >
         <div
           data-drawer-interaction="resize-handle"
-          className={`absolute left-0 top-0 h-full w-4 cursor-ew-resize touch-none transition-colors duration-200 ${
-            isResizing ? "bg-primary/10" : isHoveringResizeHandle ? "bg-primary/5" : "bg-transparent"
-          }`}
+          className={`absolute left-0 top-0 h-full w-4 cursor-ew-resize touch-none transition-colors duration-200 ${isResizing
+            ? "bg-primary/10"
+            : isHoveringResizeHandle
+              ? "bg-primary/5"
+              : "bg-transparent"
+            }`}
           onMouseDown={startResize}
           onMouseEnter={() => setIsHoveringResizeHandle(true)}
           onMouseLeave={() => setIsHoveringResizeHandle(false)}
@@ -344,7 +349,7 @@ export default function AiAssistantDrawer({ open, onClose, productId }: AiAssist
         <header className="flex items-center justify-between gap-2 bg-primary px-4 py-3 text-white">
           <div className="flex items-center gap-2">
             <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/15">
-              <Sparkles size={18} />
+              <Bot size={18} />
             </span>
             <div>
               <h2 className="text-sm font-bold leading-tight">Trợ lý Phong Thủy</h2>
@@ -378,8 +383,12 @@ export default function AiAssistantDrawer({ open, onClose, productId }: AiAssist
         >
           {isEmpty ? (
             <div className="flex h-full flex-col items-center justify-center text-center">
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-linear-to-br from-primary to-primary-dark text-white shadow-lg shadow-primary/30">
-                <Sparkles size={26} />
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl p-2 bg-linear-to-br from-primary to-primary-dark text-white shadow-lg shadow-primary/30">
+                <img
+                  src="https://img.icons8.com/ink/96/FFFFFF/chatbot.png"
+                  alt="FengDesk AI"
+                  className="w-full h-full"
+                />
               </div>
               <h3 className="mt-4 text-lg font-bold text-gray-900">Trợ lý Phong Thủy FengDesk</h3>
               <p className="mt-2 max-w-xs text-xs leading-relaxed text-gray-500">
@@ -423,110 +432,107 @@ export default function AiAssistantDrawer({ open, onClose, productId }: AiAssist
                 const isDimmed = editingIndex >= 0 && idx > editingIndex;
                 return (
                   <Fragment key={m.id}>
-                  {idx === contextBoundaryIdx && (
-                    <div className="flex items-center gap-2 py-2 text-[12px] font-medium tracking-wide text-primary/80 select-none">
-                      <span className="flex-1 border-t border-dashed border-primary/30" />
-                      AI Context limit here
-                      <span className="flex-1 border-t border-dashed border-primary/30" />
-                    </div>
-                  )}
-                  <div
-                    data-drawer-interaction="message-bubble-wrapper"
-                    className={`group flex items-start gap-2.5 transition-opacity duration-200 ${
-                      isUser ? "flex-row-reverse" : ""
-                    } ${isDimmed ? "pointer-events-none opacity-40" : ""}`}
-                  >
-                    <span
-                      className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${
-                        isUser ? "bg-gray-200 text-gray-600" : "bg-primary/15 text-primary"
-                      }`}
-                    >
-                      {isUser ? <User size={16} /> : <Bot size={16} />}
-                    </span>
-
-                    {isEditingThis ? (
-                      <div className="w-full max-w-[92%] rounded-2xl border border-primary bg-white p-2 shadow-sm">
-                        <textarea
-                          value={editText}
-                          onChange={(e) => setEditText(e.target.value)}
-                          onKeyDown={handleEditKeyDown}
-                          rows={2}
-                          autoFocus
-                          className="max-h-32 w-full resize-none bg-transparent text-sm text-gray-800 outline-none"
-                        />
-                        <div className="mt-1 flex justify-end gap-1.5">
-                          <button
-                            type="button"
-                            onClick={cancelEdit}
-                            className="rounded-lg px-2.5 py-1 text-xs text-gray-500 transition-colors hover:bg-gray-100 cursor-pointer"
-                          >
-                            Hủy
-                          </button>
-                          <button
-                            type="button"
-                            onClick={submitEdit}
-                            disabled={!editText.trim()}
-                            className="rounded-lg bg-primary px-2.5 py-1 text-xs font-medium text-white transition-colors hover:bg-primary-dark disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
-                          >
-                            Gửi
-                          </button>
-                        </div>
+                    {idx === contextBoundaryIdx && (
+                      <div className="flex items-center gap-2 py-2 text-[12px] font-medium tracking-wide text-primary/80 select-none">
+                        <span className="flex-1 border-t border-dashed border-primary/30" />
+                        AI Context limit here
+                        <span className="flex-1 border-t border-dashed border-primary/30" />
                       </div>
-                    ) : (
-                      <div
-                        data-drawer-interaction="message-bubble"
-                        className={`max-w-[92%] min-w-0 rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed ${
-                          isUser
+                    )}
+                    <div
+                      data-drawer-interaction="message-bubble-wrapper"
+                      className={`group flex items-start gap-2.5 transition-opacity duration-200 ${isUser ? "flex-row-reverse" : ""
+                        } ${isDimmed ? "pointer-events-none opacity-40" : ""}`}
+                    >
+                      <span
+                        className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${isUser ? "bg-gray-200 text-gray-600" : "bg-primary/15 text-primary"
+                          }`}
+                      >
+                        {isUser ? <User size={16} /> : <Bot size={16} />}
+                      </span>
+
+                      {isEditingThis ? (
+                        <div className="w-full max-w-[92%] rounded-2xl border border-primary bg-white p-2 shadow-sm">
+                          <textarea
+                            value={editText}
+                            onChange={(e) => setEditText(e.target.value)}
+                            onKeyDown={handleEditKeyDown}
+                            rows={2}
+                            autoFocus
+                            className="max-h-32 w-full resize-none bg-transparent text-sm text-gray-800 outline-none"
+                          />
+                          <div className="mt-1 flex justify-end gap-1.5">
+                            <button
+                              type="button"
+                              onClick={cancelEdit}
+                              className="rounded-lg px-2.5 py-1 text-xs text-gray-500 transition-colors hover:bg-gray-100 cursor-pointer"
+                            >
+                              Hủy
+                            </button>
+                            <button
+                              type="button"
+                              onClick={submitEdit}
+                              disabled={!editText.trim()}
+                              className="rounded-lg bg-primary px-2.5 py-1 text-xs font-medium text-white transition-colors hover:bg-primary-dark disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
+                            >
+                              Gửi
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div
+                          data-drawer-interaction="message-bubble"
+                          className={`max-w-[92%] min-w-0 rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed ${isUser
                             ? "rounded-tr-md bg-primary text-white"
                             : "rounded-tl-md border border-gray-200 bg-white text-gray-800"
-                        }`}
-                      >
-                        {m.images.length > 0 && (
-                          <div className="mb-2 flex flex-wrap gap-1.5">
-                            {m.images.map((url) => (
-                              <img
-                                key={url}
-                                src={url}
-                                alt="Ảnh"
-                                className="max-h-40 rounded-lg border border-black/10 object-cover"
-                              />
+                            }`}
+                        >
+                          {m.images.length > 0 && (
+                            <div className="mb-2 flex flex-wrap gap-1.5">
+                              {m.images.map((url) => (
+                                <img
+                                  key={url}
+                                  src={url}
+                                  alt="Ảnh"
+                                  className="max-h-40 rounded-lg border border-black/10 object-cover"
+                                />
+                              ))}
+                            </div>
+                          )}
+                          {m.content &&
+                            (m.role === "ai" ? (
+                              <Markdown text={m.content} />
+                            ) : (
+                              <p className="whitespace-pre-wrap break-words">{m.content}</p>
                             ))}
-                          </div>
-                        )}
-                        {m.content &&
-                          (m.role === "ai" ? (
-                            <Markdown text={m.content} />
-                          ) : (
-                            <p className="whitespace-pre-wrap break-words">{m.content}</p>
-                          ))}
-                      </div>
-                    )}
+                        </div>
+                      )}
 
-                    {isUser && !isEditingThis && !sending && (
-                      <button
-                        type="button"
-                        onClick={() => startEdit(m)}
-                        className="flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center self-center rounded-full text-gray-400 opacity-0 transition-opacity hover:bg-gray-100 hover:text-primary group-hover:opacity-100"
-                        aria-label="Sửa & gửi lại"
-                        title="Sửa & gửi lại"
-                      >
-                        <Pencil size={14} />
-                      </button>
-                    )}
-                  </div>
+                      {isUser && !isEditingThis && !sending && (
+                        <button
+                          type="button"
+                          onClick={() => startEdit(m)}
+                          className="flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center self-center rounded-full text-gray-400 opacity-0 transition-opacity hover:bg-gray-100 hover:text-primary group-hover:opacity-100"
+                          aria-label="Sửa & gửi lại"
+                          title="Sửa & gửi lại"
+                        >
+                          <Pencil size={14} />
+                        </button>
+                      )}
+                    </div>
 
-                  {/* Lời dẫn trung gian (narration) — ephemeral, không lưu DB: không bọc khung,
+                    {/* Lời dẫn trung gian (narration) — ephemeral, không lưu DB: không bọc khung,
                       chỉ 2 gạch trên/dưới, chữ mờ, giới hạn chiều cao + scroll. Neo sau tin user
                       của lượt hiện tại → câu trả lời cuối về vẫn đứng đúng thứ tự thời gian. */}
-                  {idx === lastUserIdx && narrations.length > 0 && (
-                    <div className="pl-10">
-                      <div className="max-h-30 overflow-y-auto border-y border-gray-200 py-2 font-medium text-gray-500 opacity-90 [&_.fd-md]:text-xs [&_.fd-md]:text-gray-400">
-                        {narrations.map((n, i) => (
-                          <Markdown key={i} text={n} />
-                        ))}
+                    {idx === lastUserIdx && narrations.length > 0 && (
+                      <div className="pl-10">
+                        <div className="max-h-30 overflow-y-auto border-y border-gray-200 py-2 font-medium text-gray-500 opacity-90 [&_.fd-md]:text-xs [&_.fd-md]:text-gray-400">
+                          {narrations.map((n, i) => (
+                            <Markdown key={i} text={n} />
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
                   </Fragment>
                 );
               })}

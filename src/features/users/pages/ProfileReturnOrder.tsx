@@ -621,7 +621,7 @@ export default function ProfileReturnOrder() {
                             <p className="text-sm font-semibold text-gray-800">
                               {log.fromStatus
                                 ? `${RETURN_STATUS_META[log.fromStatus]?.label ?? log.fromStatus} → ${RETURN_STATUS_META[log.toStatus]?.label ?? log.toStatus}`
-                                : RETURN_STATUS_META[log.toStatus]?.label ?? log.toStatus}
+                                : (RETURN_STATUS_META[log.toStatus]?.label ?? log.toStatus)}
                             </p>
                             {log.note && <p className="text-xs text-gray-500 mt-0.5">{log.note}</p>}
                             <p className="text-xs text-gray-400 mt-0.5">

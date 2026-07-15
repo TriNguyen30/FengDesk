@@ -330,7 +330,11 @@ function SearchControl({ onChange }: { onChange: (lat: number, lng: number) => v
 }
 
 // Handles external zoom-to-location requests from parent
-function MapZoomToLocation({ zoomToLocation }: { zoomToLocation?: { lat: number; lng: number; zoom: number } | null }) {
+function MapZoomToLocation({
+  zoomToLocation,
+}: {
+  zoomToLocation?: { lat: number; lng: number; zoom: number } | null;
+}) {
   const map = useMap();
   const lastZoomRef = useRef<string>("");
 

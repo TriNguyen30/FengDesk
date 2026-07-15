@@ -319,12 +319,18 @@ function makeBlankParticle(obj: THREE.Object3D, type: ElementType): Particle3D {
 const HoverParticles = ({ type }: { type: ElementType }) => {
   const getIcon = () => {
     switch (type) {
-      case "Moc": return <Leaf size={16} className="text-green-500/80 drop-shadow-sm" />;
-      case "Thuy": return <Droplets size={16} className="text-blue-500/80 drop-shadow-sm" />;
-      case "Hoa": return <Flame size={16} className="text-red-500/80 drop-shadow-sm" />;
-      case "Kim": return <Diamond size={16} className="text-slate-500/80 drop-shadow-sm" />;
-      case "Tho": return <Mountain size={16} className="text-amber-600/80 drop-shadow-sm" />;
-      default: return null;
+      case "Moc":
+        return <Leaf size={16} className="text-green-500/80 drop-shadow-sm" />;
+      case "Thuy":
+        return <Droplets size={16} className="text-blue-500/80 drop-shadow-sm" />;
+      case "Hoa":
+        return <Flame size={16} className="text-red-500/80 drop-shadow-sm" />;
+      case "Kim":
+        return <Diamond size={16} className="text-slate-500/80 drop-shadow-sm" />;
+      case "Tho":
+        return <Mountain size={16} className="text-amber-600/80 drop-shadow-sm" />;
+      default:
+        return null;
     }
   };
 
@@ -363,7 +369,7 @@ const HoverParticles = ({ type }: { type: ElementType }) => {
             duration: p.duration,
             repeat: Infinity,
             delay: p.delay,
-            ease: "easeInOut"
+            ease: "easeInOut",
           }}
         >
           {getIcon()}
