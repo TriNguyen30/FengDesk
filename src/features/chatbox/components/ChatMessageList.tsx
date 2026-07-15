@@ -8,9 +8,10 @@ interface ChatMessageListProps {
   messages: ChatMessage[];
   meId?: string;
   aiActivity?: AiActivity | null;
+  showScrollbar?: boolean;
 }
 
-export default function ChatMessageList({ messages, meId, aiActivity }: ChatMessageListProps) {
+export default function ChatMessageList({ messages, meId, aiActivity, showScrollbar }: ChatMessageListProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
 
   // Chốt chặn cuối: loại trùng theo id ngay trước khi render. Dù state thượng nguồn lỡ chứa message
@@ -43,7 +44,11 @@ export default function ChatMessageList({ messages, meId, aiActivity }: ChatMess
   }
 
   return (
-    <div className="scrollbar-none flex flex-1 flex-col gap-3 overflow-y-auto bg-[#f9fafb] px-3 py-4">
+    <div 
+      className={`flex flex-1 flex-col gap-3 bg-[#f9fafb] px-3 py-4 ${
+        showScrollbar ? "overflow-y-scroll" : "overflow-y-auto scrollbar-none"
+      }`}
+    >
       {uniqueMessages.map((message) => (
         <ChatMessageBubble key={message.id} message={message} isOwn={message.senderId === meId} />
       ))}

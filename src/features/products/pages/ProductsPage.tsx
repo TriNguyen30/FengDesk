@@ -4,13 +4,32 @@ import { getCategoriesRequest } from "@/features/category/api/category.api";
 import type { Category } from "@/features/category/types/category";
 import ProductCard, { ProductCardSkeleton } from "@/features/products/components/ProductCard";
 import { useProductList } from "@/features/products/hooks/useProducts";
-import { SearchX, List, ChevronRight } from "lucide-react";
+import { SearchX, List, ChevronRight, Sparkles } from "lucide-react";
+
+const FS_ELEMENTS = [
+  { code: "Kim", label: "Kim (Kim loại)" },
+  { code: "Moc", label: "Mộc (Cây cối)" },
+  { code: "Thuy", label: "Thủy (Nước)" },
+  { code: "Hoa", label: "Hỏa (Lửa)" },
+  { code: "Tho", label: "Thổ (Đất)" },
+];
 
 export default function ProductsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const search = searchParams.get("search") || "";
   const categoryId = searchParams.get("categoryId") || "";
   const sort = searchParams.get("sort") || "default";
+  const element = searchParams.get("element") || "";
+
+  const handleElementSelect = (code: string) => {
+    const newParams = new URLSearchParams(searchParams);
+    if (code) {
+      newParams.set("element", code);
+    } else {
+      newParams.delete("element");
+    }
+    setSearchParams(newParams);
+  };
 
   const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newParams = new URLSearchParams(searchParams);
@@ -33,7 +52,12 @@ export default function ProductsPage() {
 
   const sortedProducts = useMemo(() => {
     if (!products) return [];
-    const arr = [...products];
+    let arr = [...products];
+
+    if (element) {
+      arr = arr.filter((p) => p.primaryElement === element);
+    }
+
     switch (sort) {
       case "name-asc":
         return arr.sort((a, b) => a.name.localeCompare(b.name));
@@ -46,7 +70,7 @@ export default function ProductsPage() {
       default:
         return arr;
     }
-  }, [products, sort]);
+  }, [products, sort, element]);
 
   useEffect(() => {
     async function fetchCategories() {
@@ -66,7 +90,7 @@ export default function ProductsPage() {
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
-  }, [search, categoryId]);
+  }, [search, categoryId, element]);
 
   const handleCategorySelect = (id: string) => {
     const newParams = new URLSearchParams(searchParams);
@@ -149,6 +173,47 @@ export default function ProductsPage() {
                 </>
               )}
             </div>
+
+            <div className="mt-8">
+              <h2 className="mb-4 flex items-center gap-2 font-medium text-gray-900">
+                <Sparkles className="h-4 w-4" />
+                Mệnh (Hành)
+              </h2>
+              <div className="flex flex-col gap-3 mt-2">
+                <label className="flex items-center gap-3 cursor-pointer group">
+                  <input
+                    type="checkbox"
+                    checked={!element}
+                    onChange={() => handleElementSelect("")}
+                    className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
+                  />
+                  <span
+                    className={`text-sm font-medium transition-colors ${!element ? "text-primary" : "text-gray-600 group-hover:text-gray-900"
+                      }`}
+                  >
+                    Tất cả các mệnh
+                  </span>
+                </label>
+                {FS_ELEMENTS.map((el) => (
+                  <label key={el.code} className="flex items-center gap-3 cursor-pointer group">
+                    <input
+                      type="checkbox"
+                      checked={element === el.code}
+                      onChange={() => handleElementSelect(element === el.code ? "" : el.code)}
+                      className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
+                    />
+                    <span
+                      className={`text-sm font-medium transition-colors ${element === el.code
+                        ? "text-primary"
+                        : "text-gray-600 group-hover:text-gray-900"
+                        }`}
+                    >
+                      {el.label}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </div>
           </div>
         </aside>
 
@@ -215,7 +280,7 @@ export default function ProductsPage() {
               <p className="mt-1 text-sm text-gray-500">
                 Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm.
               </p>
-              {(search || categoryId) && (
+              {(search || categoryId || element) && (
                 <button
                   onClick={() => setSearchParams({})}
                   className="mt-6 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-dark"

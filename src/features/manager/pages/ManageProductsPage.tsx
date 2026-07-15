@@ -295,7 +295,7 @@ export default function ManageProductsPage() {
                       <td className="whitespace-nowrap px-6 py-4 text-right">
                         <div className="flex justify-end gap-2">
                           <Link
-                            to={`/product/${generateSlug(product.name)}.${product.id}`}
+                            to={`/products/${product.id}`}
                             target="_blank"
                             title="Xem chi tiết (cửa hàng)"
                             className="inline-flex items-center justify-center p-2 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors cursor-pointer"

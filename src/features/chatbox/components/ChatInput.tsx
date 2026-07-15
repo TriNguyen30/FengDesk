@@ -114,13 +114,13 @@ export default function ChatInput({
           type="submit"
           disabled={!canSend}
           title={att.uploading ? "Đang tải ảnh, vui lòng đợi..." : undefined}
-          className="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-xl bg-primary text-white transition-colors hover:bg-primary-dark disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
+          className="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-4xl text-primary transition-colors hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
           aria-label="Gửi tin nhắn"
         >
           {isSending || att.uploading ? (
             <Loader2 size={18} className="animate-spin" />
           ) : (
-            <Send size={18} />
+            <Send size={18} className="rotate-45 translate-x-[-2px]" />
           )}
         </button>
       </div>

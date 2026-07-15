@@ -76,7 +76,7 @@ export function ShopChatInbox({ storeId }: ShopChatInboxProps) {
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:rounded-full">
           {/* Hàng đợi */}
           <div className="px-3 pt-3">
             <p className="flex items-center gap-1.5 px-1 pb-1.5 text-[11px] font-semibold uppercase tracking-wide text-amber-600">
@@ -168,7 +168,7 @@ export function ShopChatInbox({ storeId }: ShopChatInboxProps) {
               <h3 className="text-sm font-semibold text-gray-900">{customerName(active)}</h3>
               <p className="text-[11px] text-gray-400">Hộp thư shop · {active.id.slice(0, 8)}</p>
             </div>
-            <ChatMessageList messages={messages} meId={meId} />
+            <ChatMessageList messages={messages} meId={meId} showScrollbar />
             <ChatInput
               value={draft}
               onChange={setDraft}

@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, Plus, Wifi, WifiOff, X } from "lucide-react";
+import { useEffect, useMemo, useState, useRef } from "react";
+import { ArrowLeft, Plus, Wifi, WifiOff, X, Minus } from "lucide-react";
 import type { Chatbox, ChatConnectionStatus, ChatMessage } from "@/features/chatbox/types/chatbox";
 import type { AiActivity } from "@/features/shared/ai-activity";
 import { getChatboxDisplayName, getChatboxKindTag } from "@/features/chatbox/utils/chatUtils";
@@ -51,6 +51,18 @@ export default function ChatPanel({
 }: ChatPanelProps) {
   // @AI đang được gõ trong ô nhập → sáng viền KHUNG CHAT (thay cho hộp viền quanh ô nhập).
   const [composerAiActive, setComposerAiActive] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (panelRef.current && !panelRef.current.contains(e.target as Node)) {
+        setIsFocused(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -83,13 +95,19 @@ export default function ChatPanel({
 
   return (
     <div
+      ref={panelRef}
       role="dialog"
       aria-label="Tin nhắn FengDesk"
-      className={`flex h-[min(36rem,calc(100dvh-8rem))] w-[min(calc(100vw-1.5rem),24rem)] flex-col overflow-hidden rounded-t-2xl border-x border-t bg-white shadow-2xl transition-all sm:h-[min(38rem,calc(100dvh-8rem))] sm:w-96 ${
-        composerAiActive ? "border-primary ring-2 ring-primary/40" : "border-gray-200"
-      }`}
+      onClick={() => setIsFocused(true)}
+      onFocusCapture={() => setIsFocused(true)}
+      className={`flex h-[min(36rem,calc(100dvh-8rem))] w-[min(calc(100vw-1.5rem),24rem)] flex-col overflow-hidden rounded-t-2xl border-x border-t bg-white transition-all duration-200 sm:h-[min(38rem,calc(100dvh-8rem))] sm:w-96 ${composerAiActive
+          ? "border-primary ring-2 ring-primary/40 shadow-2xl"
+          : isFocused
+            ? "border-gray-300 shadow-2xl"
+            : "border-gray-200 shadow-md"
+        }`}
     >
-      <header className="flex items-center justify-between gap-2 border-b border-gray-100 bg-primary px-3 py-3 text-white">
+      <header className={`flex items-center justify-between gap-2 border-b border-gray-100 px-3 py-3 text-white transition-colors duration-200 ${isFocused ? "bg-primary" : "bg-primary/80"}`}>
         <div className="flex min-w-0 items-center gap-2">
           {isConversation && (
             <button
@@ -132,7 +150,17 @@ export default function ChatPanel({
             type="button"
             onClick={onClose}
             className="rounded-lg p-1.5 text-white/90 transition-colors hover:bg-white/15 cursor-pointer"
+            aria-label="Thu nhỏ"
+            title="Thu nhỏ"
+          >
+            <Minus size={18} />
+          </button>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-lg p-1.5 text-white/90 transition-colors hover:bg-white/15 cursor-pointer"
             aria-label="Đóng"
+            title="Đóng"
           >
             <X size={18} />
           </button>
