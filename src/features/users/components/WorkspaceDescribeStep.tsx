@@ -126,7 +126,9 @@ export default function WorkspaceDescribeStep({
             type="button"
             onClick={() => fileRef.current?.click()}
             disabled={att.items.length >= MAX_IMAGES}
-            title={att.items.length >= MAX_IMAGES ? `Tối đa ${MAX_IMAGES} ảnh` : "Đính kèm ảnh phòng"}
+            title={
+              att.items.length >= MAX_IMAGES ? `Tối đa ${MAX_IMAGES} ảnh` : "Đính kèm ảnh phòng"
+            }
             className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary transition-colors hover:bg-primary/20 disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
           >
             <ImagePlus size={16} />
@@ -183,5 +185,55 @@ export default function WorkspaceDescribeStep({
       </div>
 
       {/* Công tắc suy nghĩ kỹ — mặc định tắt (nhanh). Bật để model phân tích sâu hơn, đổi lại chậm hơn nhiều. */}
-      <div className="group relative mt-4">
-        <label className="flex cursor-pointer items-s
+        <label className="flex cursor-pointer items-start gap-2.5 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 transition-colors duration-200 group-hover:border-primary/40 group-hover:bg-gray-100">
+          <input
+            type="checkbox"
+            checked={deepThink}
+            onChange={(e) => setDeepThink(e.target.checked)}
+            disabled={isAnalyzing}
+            className="mt-0.5 h-4 w-4 shrink-0 cursor-pointer accent-primary disabled:cursor-not-allowed"
+          />
+          <span className="flex flex-col">
+            <span className="flex items-center gap-1.5 text-sm font-medium text-gray-800">
+              <Brain size={14} className="text-primary" />
+              Cho AI suy nghĩ kỹ hơn
+            </span>
+          </span>
+        </label>
+
+        <div className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-2 hidden w-64 -translate-x-1/2 rounded-lg border border-gray-200 bg-gray-100 px-3 py-2 text-xs leading-5 text-gray-600 shadow-sm opacity-0 transition-all duration-200 ease-out group-hover:block group-hover:translate-y-[-4px] group-hover:opacity-100">
+          <div className="mb-1 flex items-center gap-1.5 font-medium text-gray-700">
+            <Info size={12} className="shrink-0" />
+            <span>Thông tin</span>
+          </div>
+          <div>
+            Phân tích sâu & chính xác hơn, nhưng chậm hơn đáng kể (có thể lâu gấp nhiều lần).
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-4 flex gap-3">
+        <button
+          type="button"
+          onClick={onSkip}
+          className="flex-1 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
+        >
+          Bỏ qua, điền thủ công
+        </button>
+        <button
+          type="button"
+          onClick={() => onAnalyze(trimmed, att.urls.length > 0 ? att.urls : undefined, deepThink)}
+          disabled={!canAnalyze}
+          className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-white hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50 transition-colors cursor-pointer"
+        >
+          <Sparkles size={16} />
+          {isAnalyzing
+            ? "Đang phân tích..."
+            : att.uploading
+              ? "Đang tải ảnh..."
+              : "Để AI điền giúp"}
+        </button>
+      </div>
+    </div>
+  );
+}

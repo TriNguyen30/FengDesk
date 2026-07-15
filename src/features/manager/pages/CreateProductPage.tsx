@@ -92,6 +92,8 @@ export default function CreateProductPage() {
 
   // Fetch filter options
   useEffect(() => {
+    window.scrollTo(0, 0);
+
     const fetchOptions = async () => {
       try {
         const [shopsRes, categoriesRes, vibesRes, stylesRes] = await Promise.all([
@@ -288,12 +290,12 @@ export default function CreateProductPage() {
   };
 
   return (
-    <div className="space-y-6 max-w-5xl mx-auto pb-12">
+    <div className="space-y-6 max-w-5xl mx-auto pb-12 mt-5 px-4 md:px-0">
       {/* Header */}
       <div className="flex items-center gap-3">
         <button
           onClick={() => navigate(-1)}
-          className="flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-500 hover:bg-gray-50 hover:text-gray-700 cursor-pointer transition-colors"
+          className="flex h-9 w-9 items-center justify-center rounded-4xl hover:bg-gray-100 hover:text-gray-700 cursor-pointer transition-colors"
           title="Quay lại"
         >
           <ChevronLeft size={18} />
@@ -631,7 +633,9 @@ export default function CreateProductPage() {
           <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-100 space-y-5">
             <div className="flex items-center gap-2 border-b border-gray-100 pb-3">
               <Palette size={18} className="text-primary" />
-              <h2 className="text-base font-bold text-gray-950">Vibe, phong cách &amp; kích thước</h2>
+              <h2 className="text-base font-bold text-gray-950">
+                Vibe, phong cách &amp; kích thước
+              </h2>
             </div>
             <ProductVibeStyleFields
               value={fengShui}
@@ -648,10 +652,14 @@ export default function CreateProductPage() {
                 <Sparkles size={18} className="text-primary" />
                 <h2 className="text-base font-bold text-gray-950">Phong thủy nâng cao</h2>
               </span>
-              <ChevronDown size={16} className="text-gray-400 transition-transform group-open:rotate-180" />
+              <ChevronDown
+                size={16}
+                className="text-gray-400 transition-transform group-open:rotate-180"
+              />
             </summary>
             <p className="mb-4 text-xs text-gray-400 italic">
-              Chỉ dùng nếu bạn đã biết chính xác — thường không cần, hệ thống tự tính từ Đặc điểm sản phẩm.
+              Chỉ dùng nếu bạn đã biết chính xác — thường không cần, hệ thống tự tính từ Đặc điểm
+              sản phẩm.
             </p>
             <div className="border-t border-gray-100 pt-4">
               <ProductElementSelectFields

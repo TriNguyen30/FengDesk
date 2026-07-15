@@ -123,7 +123,9 @@ export function StoreModal({
         <div className="space-y-3 rounded-lg border border-gray-200 bg-gray-50 p-3">
           <div>
             <p className="text-sm font-semibold text-gray-900">Địa chỉ cửa hàng</p>
-            <p className="text-xs text-gray-500">Tỉnh/Thành, Quận/Huyện, Phường/Xã và bản đồ sẽ liên kết hai chiều.</p>
+            <p className="text-xs text-gray-500">
+              Tỉnh/Thành, Quận/Huyện, Phường/Xã và bản đồ sẽ liên kết hai chiều.
+            </p>
           </div>
           <AddressLocationFields
             streetAddress={addressForm.streetAddress}
@@ -139,7 +141,9 @@ export function StoreModal({
             onProvinceChange={onProvinceChange}
             onDistrictChange={onDistrictChange}
             onWardChange={onWardChange}
-            onStreetAddressChange={(value) => onAddressFormChange({ ...addressForm, streetAddress: value })}
+            onStreetAddressChange={(value) =>
+              onAddressFormChange({ ...addressForm, streetAddress: value })
+            }
             zoomToLocation={zoomToLocation}
             onMapLocationChange={onMapLocationChange}
             isReverseGeocoding={isReverseGeocoding}

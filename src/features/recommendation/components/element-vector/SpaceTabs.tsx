@@ -41,7 +41,9 @@ export default function SpaceTabs({ items, selectedId, onSelect, onAddNew }: Spa
             ) : (
               <span className="h-3 w-6 animate-pulse rounded bg-gray-200" />
             )}
-            <span className="max-w-[90px] overflow-hidden text-ellipsis text-gray-500">{item.name}</span>
+            <span className="max-w-[90px] overflow-hidden text-ellipsis text-gray-500">
+              {item.name}
+            </span>
           </button>
         );
       })}

@@ -34,7 +34,10 @@ export default function ElementBars({ rows, size = "default" }: ElementBarsProps
           >
             <div
               className="absolute inset-y-0 left-0 rounded-full"
-              style={{ width: widthPct(row.foreground), backgroundColor: elementColor(row.element) }}
+              style={{
+                width: widthPct(row.foreground),
+                backgroundColor: elementColor(row.element),
+              }}
             />
           </div>
         ))}
@@ -63,10 +66,19 @@ export default function ElementBars({ rows, size = "default" }: ElementBarsProps
             />
             <div
               className="absolute inset-y-0 left-0 rounded-full"
-              style={{ width: widthPct(row.foreground), backgroundColor: elementColor(row.element) }}
+              style={{
+                width: widthPct(row.foreground),
+                backgroundColor: elementColor(row.element),
+              }}
             />
           </div>
-          {row.badge && <BarBadge label={row.badge.label} tone={row.badge.tone} color={elementColor(row.element)} />}
+          {row.badge && (
+            <BarBadge
+              label={row.badge.label}
+              tone={row.badge.tone}
+              color={elementColor(row.element)}
+            />
+          )}
         </div>
       ))}
     </div>

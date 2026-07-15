@@ -304,9 +304,15 @@ body {
   font-weight: 700;
   color: var(--color-text-primary);
 }
-.quill-content h1 { font-size: 1.5rem; }
-.quill-content h2 { font-size: 1.25rem; }
-.quill-content h3 { font-size: 1.125rem; }
+.quill-content h1 {
+  font-size: 1.5rem;
+}
+.quill-content h2 {
+  font-size: 1.25rem;
+}
+.quill-content h3 {
+  font-size: 1.125rem;
+}
 .quill-content ul {
   margin: 0.5rem 0;
   padding-left: 1.5rem;

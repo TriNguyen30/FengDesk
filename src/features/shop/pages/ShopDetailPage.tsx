@@ -215,8 +215,8 @@ export default function ShopDetailPage() {
   // Vì thế chỉ cần isShopMember là hiện tab; nếu user không phải owner-thực-sự, BE sẽ trả 403 và toast hiện lỗi.
   const TABS: { value: ShopTab; label: string; icon: typeof Store; disabled?: boolean }[] = [
     { value: "products", label: "Sản phẩm", icon: Store },
-    { value: "deliveries", label: "Đơn giao", icon: Truck, disabled: roles.includes("Customer") },
-    { value: "returns", label: "Trả hàng", icon: Package, disabled: roles.includes("Customer") },
+    { value: "deliveries", label: "Đơn giao", icon: Truck },
+    { value: "returns", label: "Trả hàng", icon: Package },
     { value: "chat", label: "Tin nhắn", icon: MessagesSquare },
     { value: "staff", label: "Nhân viên", icon: Users, disabled: roles.includes("Customer") },
   ];
@@ -290,6 +290,7 @@ export default function ShopDetailPage() {
             onSearchQueryChange={setSearchQuery}
             shopId={shop.id}
             isShopMember={isShopMember}
+            canAddProduct={roles.includes("Manager") || roles.includes("GardenOwner")}
           />
         </div>
       )}

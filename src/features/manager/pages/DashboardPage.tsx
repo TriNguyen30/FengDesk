@@ -13,7 +13,7 @@ export default function DashboardPage() {
     activeUsersCount,
     chartData,
     recentOrders,
-    completedOrdersCount
+    completedOrdersCount,
   } = useMemo(() => {
     let totalRev = 0;
     let newOrders = 0;
@@ -26,7 +26,7 @@ export default function DashboardPage() {
 
     orders.forEach((o) => {
       uniqueUsers.add(o.customerId);
-      
+
       if (o.status === "Pending") {
         newOrders++;
       }
@@ -34,7 +34,7 @@ export default function DashboardPage() {
       if (o.status === "Completed") {
         completedOrders++;
         totalRev += o.totalAmount || 0;
-        
+
         const orderDate = new Date(o.createdAt);
         if (orderDate.getFullYear() === currentYear) {
           monthlyRevenue[orderDate.getMonth()] += o.totalAmount || 0;
@@ -42,7 +42,20 @@ export default function DashboardPage() {
       }
     });
 
-    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const months = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ];
     const chart = months.map((name, index) => ({
       name,
       total: monthlyRevenue[index],
@@ -64,28 +77,28 @@ export default function DashboardPage() {
       value: formatVnd(totalRevenue),
       icon: DollarSign,
       trend: "Từ đầu năm",
-      color: "bg-green-50 text-green-600"
+      color: "bg-green-50 text-green-600",
     },
     {
       title: "Đơn Hàng Mới",
       value: newOrdersCount.toString(),
       icon: ShoppingBag,
       trend: "Đang chờ xử lý",
-      color: "bg-blue-50 text-blue-600"
+      color: "bg-blue-50 text-blue-600",
     },
     {
       title: "Khách Hàng",
       value: activeUsersCount.toString(),
       icon: Users,
       trend: "Đã đặt hàng",
-      color: "bg-purple-50 text-purple-600"
+      color: "bg-purple-50 text-purple-600",
     },
     {
       title: "Đơn Hoàn Thành",
       value: completedOrdersCount.toString(),
       icon: Package,
       trend: "Đã giao thành công",
-      color: "bg-orange-50 text-orange-600"
+      color: "bg-orange-50 text-orange-600",
     },
   ];
 
@@ -112,7 +125,9 @@ export default function DashboardPage() {
                 <p className="text-sm font-medium text-gray-500">{stat.title}</p>
                 <h3 className="text-2xl font-bold text-gray-900 mt-1">{stat.value}</h3>
               </div>
-              <div className={`w-12 h-12 rounded-full flex items-center justify-center ${stat.color}`}>
+              <div
+                className={`w-12 h-12 rounded-full flex items-center justify-center ${stat.color}`}
+              >
                 <stat.icon size={24} />
               </div>
             </div>
@@ -179,9 +194,12 @@ export default function DashboardPage() {
                     label: order.status,
                     className: "bg-gray-100 text-gray-700 border-gray-200",
                   };
-                  
+
                   return (
-                    <div key={order.id} className="flex items-center justify-between p-3 rounded-xl border border-gray-100 hover:bg-gray-50 transition-colors">
+                    <div
+                      key={order.id}
+                      className="flex items-center justify-between p-3 rounded-xl border border-gray-100 hover:bg-gray-50 transition-colors"
+                    >
                       <div>
                         <p className="font-semibold text-sm text-gray-900 font-mono">
                           {order.orderCode ? `#${order.orderCode}` : `#${order.id.substring(0, 8)}`}
@@ -194,7 +212,9 @@ export default function DashboardPage() {
                         <p className="font-bold text-sm text-gray-900">
                           {formatVnd(order.totalAmount || 0)}
                         </p>
-                        <span className={`inline-block mt-1 px-2 py-0.5 text-[10px] font-semibold rounded-md border ${statusMeta.className}`}>
+                        <span
+                          className={`inline-block mt-1 px-2 py-0.5 text-[10px] font-semibold rounded-md border ${statusMeta.className}`}
+                        >
                           {statusMeta.label}
                         </span>
                       </div>

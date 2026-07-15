@@ -56,7 +56,10 @@ export default function ElementVectorFit({ analysis, variant = "full" }: Element
       <div className="flex items-center gap-3 rounded-lg border border-[#e5e7eb] bg-[#fafbf9] px-3 py-2">
         <ElementBars rows={orderedRows.map(toBarRow)} size="mini" />
         <span className="shrink-0 text-xs text-[#6b7280]">
-          Thiếu <span style={{ color: dominantColor }} className="font-semibold">{dominantVi}</span>
+          Thiếu{" "}
+          <span style={{ color: dominantColor }} className="font-semibold">
+            {dominantVi}
+          </span>
         </span>
       </div>
     );

@@ -25,7 +25,7 @@ export default function ManageCategoriesPage() {
   const [search, setSearch] = useState("");
 
   const { categories, loading } = useCategoryList();
-  
+
   const createCategoryMutation = useCreateCategory();
   const updateCategoryMutation = useUpdateCategory();
   const deleteCategoryMutation = useDeleteCategory();
@@ -48,7 +48,7 @@ export default function ManageCategoriesPage() {
   });
 
   const filteredCategories = categories.filter((cat) =>
-    cat.name.toLowerCase().includes(search.toLowerCase())
+    cat.name.toLowerCase().includes(search.toLowerCase()),
   );
 
   const handleResetFilters = () => {
@@ -316,9 +316,9 @@ export default function ManageCategoriesPage() {
       </Modal>
 
       {/* Create / Edit Modal */}
-      <Modal 
-        open={editModalOpen} 
-        title={editingCategory ? "Chỉnh sửa danh mục" : "Thêm danh mục mới"} 
+      <Modal
+        open={editModalOpen}
+        title={editingCategory ? "Chỉnh sửa danh mục" : "Thêm danh mục mới"}
         onClose={() => !isSubmitting && setEditModalOpen(false)}
       >
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -337,9 +337,7 @@ export default function ManageCategoriesPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Mô tả
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Mô tả</label>
             <textarea
               rows={3}
               value={formData.description}

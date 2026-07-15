@@ -3,12 +3,7 @@ import { X } from "lucide-react";
 import { toast } from "sonner";
 import { getElementInputVocabulary, getStyles, getWorkspaceTypes } from "../api/workspace.api";
 import { useWorkspaceIntake } from "../hooks/useWorkspaceIntake";
-import type {
-  ElementInputVocabulary,
-  Style,
-  Workspace,
-  WorkspaceType,
-} from "../types/workspace";
+import type { ElementInputVocabulary, Style, Workspace, WorkspaceType } from "../types/workspace";
 import WorkspaceDescribeStep from "./WorkspaceDescribeStep";
 import WorkspaceIntakeProgress from "./WorkspaceIntakeProgress";
 import WorkspaceReviewForm from "./WorkspaceReviewForm";
@@ -53,8 +48,7 @@ export default function WorkspaceModal({
 
   // AI báo lỗi giữa chừng → toast (banner tiến trình cũng hiện thông báo inline).
   useEffect(() => {
-    if (intake.status === "failed" && step === "review" && intake.error)
-      toast.error(intake.error);
+    if (intake.status === "failed" && step === "review" && intake.error) toast.error(intake.error);
   }, [intake.status, intake.error, step]);
 
   const fetchOptions = async () => {

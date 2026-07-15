@@ -63,9 +63,7 @@ export default function ProductFitPanel({ productId }: ProductFitPanelProps) {
       />
 
       <div className="rounded-b-2xl rounded-tr-2xl border border-[#e5e7eb] bg-white p-5 shadow-sm">
-        {fitStatus === "pending" && (
-          <div className="h-48 animate-pulse rounded-xl bg-gray-50" />
-        )}
+        {fitStatus === "pending" && <div className="h-48 animate-pulse rounded-xl bg-gray-50" />}
 
         {fitStatus === "error" && (
           <p className="text-sm text-gray-400">Không thể tải độ phù hợp cho không gian này.</p>

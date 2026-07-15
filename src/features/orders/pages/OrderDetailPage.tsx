@@ -346,12 +346,13 @@ export default function OrderDetailPage() {
         <div className="rounded-xl bg-white border border-gray-100 overflow-hidden">
           {/* Banner */}
           <div
-            className={`flex items-center justify-between px-5 py-4 border-b-2 ${order.status === "Cancelled" || order.status === "Expired"
+            className={`flex items-center justify-between px-5 py-4 border-b-2 ${
+              order.status === "Cancelled" || order.status === "Expired"
                 ? "bg-red-50 border-red-400"
                 : order.status === "Completed"
                   ? "bg-emerald-50 border-emerald-500"
                   : "bg-violet-50 border-primary"
-              }`}
+            }`}
           >
             <div className="flex items-center gap-3">
               {order.status === "Cancelled" || order.status === "Expired" ? (
@@ -363,12 +364,13 @@ export default function OrderDetailPage() {
               )}
               <div>
                 <p
-                  className={`font-semibold text-base leading-tight ${order.status === "Cancelled" || order.status === "Expired"
+                  className={`font-semibold text-base leading-tight ${
+                    order.status === "Cancelled" || order.status === "Expired"
                       ? "text-red-700"
                       : order.status === "Completed"
                         ? "text-emerald-700"
                         : "text-violet-800"
-                    }`}
+                  }`}
                 >
                   {statusMeta.label}
                 </p>
@@ -419,12 +421,13 @@ export default function OrderDetailPage() {
                     </div>
                     <div className="text-center px-1">
                       <p
-                        className={`text-xs font-semibold leading-tight ${step.isError
+                        className={`text-xs font-semibold leading-tight ${
+                          step.isError
                             ? "text-red-600"
                             : step.completed || isActive
                               ? "text-gray-900"
                               : "text-gray-400"
-                          }`}
+                        }`}
                       >
                         {step.label}
                       </p>
@@ -558,7 +561,10 @@ export default function OrderDetailPage() {
                       )}
                       {delivery.shippingProvider && (
                         <p className="text-xs text-gray-500 mt-0.5">
-                          Đơn vị vận chuyển : <span className="font-medium text-gray-700">{delivery.shippingProvider}</span>
+                          Đơn vị vận chuyển :{" "}
+                          <span className="font-medium text-gray-700">
+                            {delivery.shippingProvider}
+                          </span>
                         </p>
                       )}
                       {hasActiveReturn && (
@@ -661,7 +667,15 @@ export default function OrderDetailPage() {
             )}
 
             {/* Buy again */}
-            <button className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-primary text-white text-sm font-semibold py-2.5 hover:bg-primary/90 cursor-pointer transition-colors">
+            <button
+              onClick={() => {
+                if (order.items && order.items.length > 0) {
+                  const firstItem = order.items[0];
+                  navigate(`/products/${(firstItem as any).productId || firstItem.productItemId}`);
+                }
+              }}
+              className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-primary text-white text-sm font-semibold py-2.5 hover:bg-primary/90 cursor-pointer transition-colors"
+            >
               <ShoppingCart className="h-4 w-4" />
               Mua lại
             </button>
@@ -744,7 +758,8 @@ export default function OrderDetailPage() {
                   )}
                   {delivery.shippingProvider && (
                     <p className="text-xs text-gray-500 mt-0.5">
-                      ĐVVC: <span className="font-medium text-gray-700">{delivery.shippingProvider}</span>
+                      ĐVVC:{" "}
+                      <span className="font-medium text-gray-700">{delivery.shippingProvider}</span>
                     </p>
                   )}
                   <span className="mt-1.5 inline-flex items-center gap-1 text-xs font-semibold text-emerald-600">
@@ -894,10 +909,11 @@ export default function OrderDetailPage() {
                       key={opt.value}
                       type="button"
                       onClick={() => setReturnType(opt.value)}
-                      className={`rounded-lg border px-3 py-2.5 text-sm font-semibold transition-all cursor-pointer ${returnType === opt.value
+                      className={`rounded-lg border px-3 py-2.5 text-sm font-semibold transition-all cursor-pointer ${
+                        returnType === opt.value
                           ? "border-orange-400 bg-orange-50 text-orange-600"
                           : "border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50"
-                        }`}
+                      }`}
                     >
                       {opt.label}
                     </button>

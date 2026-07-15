@@ -1,14 +1,5 @@
 import React from "react";
-import {
-  MapPin,
-  Plus,
-  Info,
-  Users,
-  Shield,
-  UserMinus,
-  UserPlus,
-  RefreshCw,
-} from "lucide-react";
+import { MapPin, Plus, Info, Users, Shield, UserMinus, UserPlus, RefreshCw } from "lucide-react";
 import type { Shop, StoreAddress, StoreStaff } from "@/features/shop/types/shop";
 
 interface StoreDetailCardProps {

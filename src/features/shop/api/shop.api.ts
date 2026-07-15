@@ -99,10 +99,10 @@ export async function removeShopStaffRequest(id: string, assignmentId: string) {
 
 /** GET /api/users/search — BE yêu cầu tối thiểu 3 ký tự; trả field tối thiểu. */
 export async function searchUsersRequest(q: string, limit = 10) {
-  const { data } = await fetchHttpClient.get<ApiResponse<UserSearchItem[]>>(
-    `/users/search`,
-    { q, limit },
-  );
+  const { data } = await fetchHttpClient.get<ApiResponse<UserSearchItem[]>>(`/users/search`, {
+    q,
+    limit,
+  });
   return data;
 }
 
