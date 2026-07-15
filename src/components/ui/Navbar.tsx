@@ -1,4 +1,4 @@
-import { Truck, Package, User, LogOut, Sparkles, Store } from "lucide-react";
+import { Truck, Package, User, LogOut, Sparkles, Store, Bot } from "lucide-react";
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -210,7 +210,7 @@ export default function Navbar() {
                 className="flex min-w-[44px] flex-col items-center gap-0.5 rounded-lg px-1 py-1 text-gray-700 transition-colors hover:text-primary cursor-pointer"
                 aria-label="Trợ lý AI"
               >
-                <Sparkles size={22} strokeWidth={1.8} />
+                <Bot size={22} strokeWidth={1.8} />
                 <span className="hidden text-[10px] font-medium sm:block sm:text-xs">
                   Trợ lý AI
                 </span>

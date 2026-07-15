@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { ChevronLeft, Loader2, MapPin, ShoppingBag, CreditCard, Truck } from "lucide-react";
 import { toast } from "sonner";
@@ -20,7 +20,11 @@ export default function CheckoutPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const createOrderMutation = useCreateOrder();
-  const { items } = useCart();
+  const { items, cartStatus } = useCart();
+
+  // Cờ đánh dấu đơn hàng đã/đang được đặt, để tránh effect bên dưới
+  // redirect nhầm về /cart khi cart thay đổi sau khi đặt hàng thành công.
+  const isPlacingOrderRef = useRef(false);
 
   const selectedItemIds = (location.state as CheckoutLocationState)?.selectedItemIds ?? [];
 
@@ -61,11 +65,18 @@ export default function CheckoutPage() {
   }, []);
 
   useEffect(() => {
+    // If the cart is still loading, wait before redirecting
+    if (cartStatus === "loading") return;
+
+    // Nếu đơn hàng đang được đặt hoặc đã đặt xong (đang chuyển trang),
+    // bỏ qua để tránh redirect nhầm về /cart
+    if (isPlacingOrderRef.current) return;
+
     if (selectedItemIds.length === 0 || checkoutItems.length === 0) {
       toast.error("Vui lòng chọn sản phẩm để thanh toán");
       navigate("/cart", { replace: true });
     }
-  }, [selectedItemIds.length, checkoutItems.length, navigate]);
+  }, [selectedItemIds.length, checkoutItems.length, navigate, cartStatus]);
 
   useEffect(() => {
     async function loadAddresses() {
@@ -97,6 +108,7 @@ export default function CheckoutPage() {
       return;
     }
 
+    isPlacingOrderRef.current = true; // bật cờ trước khi gọi API
     setSubmitting(true);
     try {
       const result = await createOrderMutation.mutateAsync({
@@ -125,7 +137,6 @@ export default function CheckoutPage() {
           } catch {
             toast.error("Lỗi khi kết nối cổng thanh toán PayOS");
           }
-          // Fallback if payment generation failed
           navigate(`/profile/orders/${result.data.data.id}`, { replace: true });
           return;
         }
@@ -134,13 +145,24 @@ export default function CheckoutPage() {
         return;
       }
 
+      // Đặt hàng thất bại: tắt cờ lại để effect redirect hoạt động bình thường
+      isPlacingOrderRef.current = false;
       toast.error(result.data.message || "Không thể tạo đơn hàng");
     } catch {
+      isPlacingOrderRef.current = false;
       toast.error("Không thể tạo đơn hàng");
     } finally {
       setSubmitting(false);
     }
   };
+
+  if (cartStatus === "loading") {
+    return (
+      <div className="flex min-h-[50vh] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   if (checkoutItems.length === 0) {
     return null;
@@ -194,11 +216,10 @@ export default function CheckoutPage() {
                 {addresses.map((address) => (
                   <label
                     key={address.id}
-                    className={`flex cursor-pointer gap-3 rounded-xl border p-4 transition-colors ${
-                      selectedAddressId === address.id
-                        ? "border-primary bg-primary/5"
-                        : "border-gray-200 hover:border-primary/40"
-                    }`}
+                    className={`flex cursor-pointer gap-3 rounded-xl border p-4 transition-colors ${selectedAddressId === address.id
+                      ? "border-primary bg-primary/5"
+                      : "border-gray-200 hover:border-primary/40"
+                      }`}
                   >
                     <input
                       type="radio"
@@ -239,11 +260,10 @@ export default function CheckoutPage() {
               {PAYMENT_METHODS.map((method) => (
                 <label
                   key={method.value}
-                  className={`flex cursor-pointer items-center gap-3 rounded-xl border p-4 transition-colors ${
-                    paymentMethod === method.value
-                      ? "border-primary bg-primary/5"
-                      : "border-gray-200 hover:border-primary/40"
-                  }`}
+                  className={`flex cursor-pointer items-center gap-3 rounded-xl border p-4 transition-colors ${paymentMethod === method.value
+                    ? "border-primary bg-primary/5"
+                    : "border-gray-200 hover:border-primary/40"
+                    }`}
                 >
                   <input
                     type="radio"
@@ -276,7 +296,8 @@ export default function CheckoutPage() {
         </div>
 
         {/* Order summary */}
-        <aside className="h-fit rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-100 lg:sticky lg:top-24">
+        <div className="flex flex-col gap-4 h-fit lg:sticky lg:top-24">
+          <aside className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-100">
           <h2 className="mb-4 flex items-center gap-2 text-lg font-bold text-gray-900">
             <ShoppingBag className="h-5 w-5 text-primary" />
             Đơn hàng ({checkoutItems.length} sản phẩm)
@@ -345,16 +366,17 @@ export default function CheckoutPage() {
               điều khoản mua hàng
             </Link>
           </p>
+          </aside>
 
-          <div className="mt-5 flex items-center gap-3 rounded-xl border border-gray-100 p-3 text-sm text-gray-900 shadow-sm">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-gray-900 shrink-0 shadow-sm">
-              <Truck className="h-4 w-4" />
+          <div className="flex items-center gap-3 rounded-xl bg-white p-4 text-sm text-gray-900 shadow-sm ring-1 ring-gray-100">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary shrink-0 shadow-sm">
+              <Truck className="h-5 w-5" />
             </div>
             <span className="font-semibold leading-snug">
               Free Ship TP.Hồ Chí Minh cho hoá đơn từ 500.000đ
             </span>
           </div>
-        </aside>
+        </div>
       </div>
 
       <AddressModal

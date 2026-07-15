@@ -54,18 +54,17 @@ export default function ChatConversation({
         </div>
       ) : (
         <>
-          <div className="flex items-center justify-between border-t border-gray-100 px-3 pt-2">
-            <span className="text-[10px] text-gray-400">Cần tư vấn nhanh?</span>
+          <div className="flex items-center justify-between border-t border-gray-100 px-3 py-2">
+            <span className="text-[12px] text-gray-400">Cần tư vấn nhanh?</span>
             <button
               type="button"
               onClick={askAi}
               aria-pressed={aiOn}
               title={aiOn ? "Bấm lần nữa để tắt @AI" : "Thêm @AI để hỏi trợ lý"}
-              className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium transition-colors cursor-pointer ${
-                aiOn
+              className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium transition-colors cursor-pointer ${aiOn
                   ? "bg-primary text-white hover:bg-primary-dark"
                   : "bg-primary/10 text-primary hover:bg-primary/20"
-              }`}
+                }`}
             >
               <Bot size={13} />
               {aiOn ? "Đang hỏi AI" : "Hỏi trợ lý AI"}

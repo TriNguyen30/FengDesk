@@ -7,7 +7,7 @@ import {
   type KeyboardEvent,
   type MouseEvent,
 } from "react";
-import { Bot, ImagePlus, Loader2, Pencil, Send, Sparkles, User, X } from "lucide-react";
+import { Bot, ImagePlus, Loader2, Pencil, Send, User, X } from "lucide-react";
 import { useAiChat, type AiMessage } from "@/features/chatbox/hooks/useAiChat";
 import { useImageAttachments } from "@/features/chatbox/hooks/useImageAttachments";
 import { AiActivityIndicator } from "@/features/shared/ai-activity";
@@ -311,9 +311,8 @@ export default function AiAssistantDrawer({ open, onClose, productId }: AiAssist
     <>
       {/* Backdrop */}
       <div
-        className={`fixed inset-0 z-40 bg-gray-900/30 backdrop-blur-[1px] transition-opacity duration-300 ${
-          open ? "opacity-100" : "pointer-events-none opacity-0"
-        }`}
+        className={`fixed inset-0 z-40 bg-gray-900/30 backdrop-blur-[1px] transition-opacity duration-300 ${open ? "opacity-100" : "pointer-events-none opacity-0"
+          }`}
         onClick={onClose}
         aria-hidden
       />
@@ -328,21 +327,19 @@ export default function AiAssistantDrawer({ open, onClose, productId }: AiAssist
           transition:
             "width 300ms cubic-bezier(0, 0, 0.2, 1), translate 300ms cubic-bezier(0, 0, 0.2, 1), transform 300ms cubic-bezier(0, 0, 0.2, 1)",
         }}
-        className={`fixed right-0 top-0 z-50 flex h-dvh flex-col border-l-2 border-primary/40 bg-white shadow-2xl ring-1 ring-primary/10 transition-transform duration-300 ease-out ${
-          open ? "translate-x-0" : "translate-x-full"
-        }`}
+        className={`fixed right-0 top-0 z-50 flex h-dvh flex-col border-l-2 border-primary/40 bg-white shadow-2xl ring-1 ring-primary/10 transition-transform duration-300 ease-out ${open ? "translate-x-0" : "translate-x-full"
+          }`}
         onMouseDown={handleDrawerMouseDown}
         onClick={handleDrawerClick}
       >
         <div
           data-drawer-interaction="resize-handle"
-          className={`absolute left-0 top-0 h-full w-4 cursor-ew-resize touch-none transition-colors duration-200 ${
-            isResizing
-              ? "bg-primary/10"
-              : isHoveringResizeHandle
-                ? "bg-primary/5"
-                : "bg-transparent"
-          }`}
+          className={`absolute left-0 top-0 h-full w-4 cursor-ew-resize touch-none transition-colors duration-200 ${isResizing
+            ? "bg-primary/10"
+            : isHoveringResizeHandle
+              ? "bg-primary/5"
+              : "bg-transparent"
+            }`}
           onMouseDown={startResize}
           onMouseEnter={() => setIsHoveringResizeHandle(true)}
           onMouseLeave={() => setIsHoveringResizeHandle(false)}
@@ -352,7 +349,7 @@ export default function AiAssistantDrawer({ open, onClose, productId }: AiAssist
         <header className="flex items-center justify-between gap-2 bg-primary px-4 py-3 text-white">
           <div className="flex items-center gap-2">
             <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/15">
-              <Sparkles size={18} />
+              <Bot size={18} />
             </span>
             <div>
               <h2 className="text-sm font-bold leading-tight">Trợ lý Phong Thủy</h2>
@@ -386,8 +383,12 @@ export default function AiAssistantDrawer({ open, onClose, productId }: AiAssist
         >
           {isEmpty ? (
             <div className="flex h-full flex-col items-center justify-center text-center">
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-linear-to-br from-primary to-primary-dark text-white shadow-lg shadow-primary/30">
-                <Sparkles size={26} />
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl p-2 bg-linear-to-br from-primary to-primary-dark text-white shadow-lg shadow-primary/30">
+                <img
+                  src="https://img.icons8.com/ink/96/FFFFFF/chatbot.png"
+                  alt="FengDesk AI"
+                  className="w-full h-full"
+                />
               </div>
               <h3 className="mt-4 text-lg font-bold text-gray-900">Trợ lý Phong Thủy FengDesk</h3>
               <p className="mt-2 max-w-xs text-xs leading-relaxed text-gray-500">
@@ -440,14 +441,12 @@ export default function AiAssistantDrawer({ open, onClose, productId }: AiAssist
                     )}
                     <div
                       data-drawer-interaction="message-bubble-wrapper"
-                      className={`group flex items-start gap-2.5 transition-opacity duration-200 ${
-                        isUser ? "flex-row-reverse" : ""
-                      } ${isDimmed ? "pointer-events-none opacity-40" : ""}`}
+                      className={`group flex items-start gap-2.5 transition-opacity duration-200 ${isUser ? "flex-row-reverse" : ""
+                        } ${isDimmed ? "pointer-events-none opacity-40" : ""}`}
                     >
                       <span
-                        className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${
-                          isUser ? "bg-gray-200 text-gray-600" : "bg-primary/15 text-primary"
-                        }`}
+                        className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${isUser ? "bg-gray-200 text-gray-600" : "bg-primary/15 text-primary"
+                          }`}
                       >
                         {isUser ? <User size={16} /> : <Bot size={16} />}
                       </span>
@@ -483,11 +482,10 @@ export default function AiAssistantDrawer({ open, onClose, productId }: AiAssist
                       ) : (
                         <div
                           data-drawer-interaction="message-bubble"
-                          className={`max-w-[92%] min-w-0 rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed ${
-                            isUser
-                              ? "rounded-tr-md bg-primary text-white"
-                              : "rounded-tl-md border border-gray-200 bg-white text-gray-800"
-                          }`}
+                          className={`max-w-[92%] min-w-0 rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed ${isUser
+                            ? "rounded-tr-md bg-primary text-white"
+                            : "rounded-tl-md border border-gray-200 bg-white text-gray-800"
+                            }`}
                         >
                           {m.images.length > 0 && (
                             <div className="mb-2 flex flex-wrap gap-1.5">

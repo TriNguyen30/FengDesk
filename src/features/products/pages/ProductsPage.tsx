@@ -4,7 +4,7 @@ import { getCategoriesRequest } from "@/features/category/api/category.api";
 import type { Category } from "@/features/category/types/category";
 import ProductCard, { ProductCardSkeleton } from "@/features/products/components/ProductCard";
 import { useProductList } from "@/features/products/hooks/useProducts";
-import { SearchX, List, ChevronRight, Sparkles } from "lucide-react";
+import { SearchX, List, ChevronRight, Filter } from "lucide-react";
 
 const FS_ELEMENTS = [
   { code: "Kim", label: "Kim (Kim loại)" },
@@ -178,7 +178,7 @@ export default function ProductsPage() {
 
             <div className="mt-8">
               <h2 className="mb-4 flex items-center gap-2 font-medium text-gray-900">
-                <Sparkles className="h-4 w-4" />
+                <Filter className="h-4 w-4" />
                 Mệnh (Hành)
               </h2>
               <div className="flex flex-col gap-3 mt-2">
