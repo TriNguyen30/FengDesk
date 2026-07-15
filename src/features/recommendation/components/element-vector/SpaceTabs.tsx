@@ -29,7 +29,7 @@ export default function SpaceTabs({ items, selectedId, onSelect, onAddNew }: Spa
             className={`flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-t-xl border px-3 py-2 text-xs font-semibold transition-colors ${
               active
                 ? "border-[#e5e7eb] border-b-white bg-white"
-                : "border-transparent bg-transparent text-gray-500 hover:bg-gray-50"
+                : "border-transparent bg-transparent text-gray-500 hover:bg-gray-50 cursor-pointer"
             }`}
           >
             <span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: color }} />
@@ -49,7 +49,7 @@ export default function SpaceTabs({ items, selectedId, onSelect, onAddNew }: Spa
         <button
           type="button"
           onClick={onAddNew}
-          className="shrink-0 whitespace-nowrap rounded-t-xl border border-dashed border-[#cdd3c4] px-3 py-2 text-xs font-bold text-primary"
+          className="shrink-0 whitespace-nowrap rounded-t-xl border border-dashed border-[#cdd3c4] px-3 py-2 text-xs font-bold text-primary cursor-pointer"
         >
           + Thêm
         </button>

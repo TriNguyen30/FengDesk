@@ -58,13 +58,12 @@ export default function ChatMessageBubble({ message, isOwn }: ChatMessageBubbleP
 
         {aiText.trim() && (
           <div
-            className={`rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed shadow-sm ${
-              isOwn
+            className={`rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed shadow-sm ${isOwn
                 ? "rounded-br-md bg-primary text-white"
                 : isAi
                   ? "rounded-bl-md border border-primary/15 bg-primary/5 text-gray-800"
                   : "rounded-bl-md border border-gray-200 bg-white text-gray-800"
-            }`}
+              }`}
           >
             {isAi ? (
               <Markdown text={aiText} />
