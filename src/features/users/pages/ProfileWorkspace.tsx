@@ -73,7 +73,9 @@ function WorkspaceElementSection({ workspace }: { workspace: Workspace }) {
   const { analysis, status } = useWorkspaceElementAnalysis(workspace.id);
 
   if (status === "pending") {
-    return <div className="mt-4 h-40 animate-pulse rounded-2xl border border-gray-100 bg-gray-50" />;
+    return (
+      <div className="mt-4 h-40 animate-pulse rounded-2xl border border-gray-100 bg-gray-50" />
+    );
   }
   if (status === "error" || !analysis) return null;
 

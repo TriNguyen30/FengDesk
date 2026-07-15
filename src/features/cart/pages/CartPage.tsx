@@ -166,7 +166,9 @@ export default function CartPage() {
               <img src={EmptyCartImg} alt="Empty Cart" className="h-70 w-70 object-contain" />
             </div>
             <h2 className="text-xl font-bold text-gray-900">“Hổng” có gì trong giỏ hết</h2>
-            <p className="mt-2 text-sm text-gray-500">Về trang cửa hàng để chọn mua sản phẩm bạn nhé!!</p>
+            <p className="mt-2 text-sm text-gray-500">
+              Về trang cửa hàng để chọn mua sản phẩm bạn nhé!!
+            </p>
             <Link
               to="/products"
               className="mt-6 rounded-xl bg-primary px-8 py-3.5 text-sm font-bold text-white shadow-md transition-all hover:bg-primary-dark hover:shadow-lg active:scale-95 cursor-pointer"

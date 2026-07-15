@@ -9,8 +9,18 @@ interface CalendarProps {
 }
 
 const MONTHS = [
-  "Tháng 1", "Tháng 2", "Tháng 3", "Tháng 4", "Tháng 5", "Tháng 6",
-  "Tháng 7", "Tháng 8", "Tháng 9", "Tháng 10", "Tháng 11", "Tháng 12"
+  "Tháng 1",
+  "Tháng 2",
+  "Tháng 3",
+  "Tháng 4",
+  "Tháng 5",
+  "Tháng 6",
+  "Tháng 7",
+  "Tháng 8",
+  "Tháng 9",
+  "Tháng 10",
+  "Tháng 11",
+  "Tháng 12",
 ];
 
 const DAYS = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"];
@@ -23,9 +33,9 @@ export default function Calendar({ value, onChange, className }: CalendarProps) 
     }
     return new Date(); // Default to today
   });
-  
+
   const [view, setView] = useState<"days" | "months" | "years">("days");
-  
+
   // Update internal date if value changes from outside
   useEffect(() => {
     if (value) {
@@ -53,8 +63,8 @@ export default function Calendar({ value, onChange, className }: CalendarProps) 
   const handleSelectDay = (day: number) => {
     const selected = new Date(year, month, day);
     const y = selected.getFullYear();
-    const m = String(selected.getMonth() + 1).padStart(2, '0');
-    const d = String(selected.getDate()).padStart(2, '0');
+    const m = String(selected.getMonth() + 1).padStart(2, "0");
+    const d = String(selected.getDate()).padStart(2, "0");
     onChange(`${y}-${m}-${d}`);
   };
 
@@ -64,20 +74,30 @@ export default function Calendar({ value, onChange, className }: CalendarProps) 
   const renderDays = () => {
     const blanks = Array.from({ length: firstDayOfMonth }, (_, i) => i);
     const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
-    
+
     let selectedDay = -1;
     if (value) {
       const valDate = new Date(value);
-      if (!isNaN(valDate.getTime()) && valDate.getFullYear() === year && valDate.getMonth() === month) {
+      if (
+        !isNaN(valDate.getTime()) &&
+        valDate.getFullYear() === year &&
+        valDate.getMonth() === month
+      ) {
         selectedDay = valDate.getDate();
       }
     }
 
     return (
       <div className="grid grid-cols-7 gap-1 mt-2 text-center text-sm">
-        {DAYS.map(d => <div key={d} className="font-medium text-gray-500 py-1">{d}</div>)}
-        {blanks.map(b => <div key={`blank-${b}`} className="py-1" />)}
-        {days.map(d => {
+        {DAYS.map((d) => (
+          <div key={d} className="font-medium text-gray-500 py-1">
+            {d}
+          </div>
+        ))}
+        {blanks.map((b) => (
+          <div key={`blank-${b}`} className="py-1" />
+        ))}
+        {days.map((d) => {
           const isSelected = d === selectedDay;
           return (
             <button
@@ -86,12 +106,12 @@ export default function Calendar({ value, onChange, className }: CalendarProps) 
               onClick={() => handleSelectDay(d)}
               className={twMerge(
                 "h-8 w-8 rounded-full flex items-center justify-center mx-auto hover:bg-gray-100 transition-colors cursor-pointer",
-                isSelected && "bg-primary text-white hover:bg-primary-dark font-medium"
+                isSelected && "bg-primary text-white hover:bg-primary-dark font-medium",
               )}
             >
               {d}
             </button>
-          )
+          );
         })}
       </div>
     );
@@ -109,7 +129,7 @@ export default function Calendar({ value, onChange, className }: CalendarProps) 
           }}
           className={twMerge(
             "py-2 text-sm rounded-lg hover:bg-gray-100 transition-colors cursor-pointer",
-            month === i && "bg-primary/10 text-primary font-medium"
+            month === i && "bg-primary/10 text-primary font-medium",
           )}
         >
           {m}
@@ -132,7 +152,7 @@ export default function Calendar({ value, onChange, className }: CalendarProps) 
             }}
             className={twMerge(
               "py-2 text-sm rounded-lg hover:bg-gray-100 transition-colors cursor-pointer",
-              year === y && "bg-primary/10 text-primary font-medium"
+              year === y && "bg-primary/10 text-primary font-medium",
             )}
           >
             {y}
@@ -143,12 +163,21 @@ export default function Calendar({ value, onChange, className }: CalendarProps) 
   };
 
   return (
-    <div className={twMerge("w-[280px] bg-white border border-gray-200 rounded-xl p-3 shadow-sm", className)}>
+    <div
+      className={twMerge(
+        "w-[280px] bg-white border border-gray-200 rounded-xl p-3 shadow-sm",
+        className,
+      )}
+    >
       <div className="flex items-center justify-between mb-2">
-        <button type="button" onClick={handlePrev} className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-600 transition-colors cursor-pointer">
+        <button
+          type="button"
+          onClick={handlePrev}
+          className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-600 transition-colors cursor-pointer"
+        >
           <ChevronLeft size={18} />
         </button>
-        
+
         <button
           type="button"
           onClick={() => {
@@ -162,7 +191,11 @@ export default function Calendar({ value, onChange, className }: CalendarProps) 
           {view === "years" && `${yearPageStart} - ${yearPageStart + 11}`}
         </button>
 
-        <button type="button" onClick={handleNext} className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-600 transition-colors cursor-pointer">
+        <button
+          type="button"
+          onClick={handleNext}
+          className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-600 transition-colors cursor-pointer"
+        >
           <ChevronRight size={18} />
         </button>
       </div>

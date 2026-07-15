@@ -1,4 +1,12 @@
-import { UserCircle2, Mail, Phone, CalendarClock, Trash2, Clock3, CheckCircle2 } from "lucide-react";
+import {
+  UserCircle2,
+  Mail,
+  Phone,
+  CalendarClock,
+  Trash2,
+  Clock3,
+  CheckCircle2,
+} from "lucide-react";
 import type { InvitationStatus, StoreStaff } from "@/features/shop/types/shop";
 
 interface Props {
@@ -21,13 +29,7 @@ function formatDate(iso: string) {
   }
 }
 
-function StatusBadge({
-  status,
-  isActive,
-}: {
-  status?: InvitationStatus;
-  isActive?: boolean;
-}) {
+function StatusBadge({ status, isActive }: { status?: InvitationStatus; isActive?: boolean }) {
   if (isActive) {
     return (
       <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">

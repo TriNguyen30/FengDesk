@@ -35,14 +35,20 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ product, soldCount, editHref }: ProductCardProps) {
-  const elementLabel = product.primaryElement ? ELEMENT_LABELS[product.primaryElement] || product.primaryElement : null;
-  const elementColor = product.primaryElement ? ELEMENT_COLORS[product.primaryElement] || "bg-primary" : "";
+  const elementLabel = product.primaryElement
+    ? ELEMENT_LABELS[product.primaryElement] || product.primaryElement
+    : null;
+  const elementColor = product.primaryElement
+    ? ELEMENT_COLORS[product.primaryElement] || "bg-primary"
+    : "";
 
   return (
     <div className="group relative flex flex-col rounded-md bg-white border border-gray-100 overflow-hidden hover:shadow-md transition-shadow duration-200">
       {/* Feng Shui Badge */}
       {elementLabel && (
-        <div className={`absolute top-2 left-2 z-10 rounded-sm px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white shadow-sm ${elementColor}`}>
+        <div
+          className={`absolute top-2 left-2 z-10 rounded-sm px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white shadow-sm ${elementColor}`}
+        >
           Mệnh {elementLabel}
         </div>
       )}
@@ -58,10 +64,7 @@ export default function ProductCard({ product, soldCount, editHref }: ProductCar
         </Link>
       )}
 
-      <Link
-        to={`/products/${product.id}`}
-        className="flex flex-col"
-      >
+      <Link to={`/products/${product.id}`} className="flex flex-col">
         {/* Square image */}
         <div className="aspect-square w-full overflow-hidden bg-gray-50">
           <img

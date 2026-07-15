@@ -14,9 +14,17 @@ export default function RemoveStaffDialog({ storeId, target, onClose }: Props) {
   const remove = useRemoveShopStaff(storeId);
   const isPending = target?.status === "Pending";
   const title = isPending ? "Huỷ lời mời" : "Gỡ nhân viên";
-  const description = isPending
-    ? <>Huỷ lời mời gửi đến <strong>{target?.staffName || target?.staffEmail}</strong>? Họ sẽ không thể chấp nhận nữa.</>
-    : <>Sau khi gỡ, <strong>{target?.staffName || target?.staffEmail}</strong> sẽ mất quyền nhận đơn / ship cho cửa hàng này.</>;
+  const description = isPending ? (
+    <>
+      Huỷ lời mời gửi đến <strong>{target?.staffName || target?.staffEmail}</strong>? Họ sẽ không
+      thể chấp nhận nữa.
+    </>
+  ) : (
+    <>
+      Sau khi gỡ, <strong>{target?.staffName || target?.staffEmail}</strong> sẽ mất quyền nhận đơn /
+      ship cho cửa hàng này.
+    </>
+  );
   const confirmLabel = isPending ? "Huỷ lời mời" : "Xác nhận gỡ";
   const pendingLabel = isPending ? "Đang huỷ…" : "Đang gỡ…";
 
@@ -25,7 +33,9 @@ export default function RemoveStaffDialog({ storeId, target, onClose }: Props) {
     try {
       const res = await remove.mutateAsync(target.id);
       if (!res.isSuccess) {
-        toast.error(res.message || (isPending ? "Không thể huỷ lời mời." : "Không thể gỡ nhân viên."));
+        toast.error(
+          res.message || (isPending ? "Không thể huỷ lời mời." : "Không thể gỡ nhân viên."),
+        );
         return;
       }
       toast.success(res.message || (isPending ? "Đã huỷ lời mời." : "Đã gỡ nhân viên."));

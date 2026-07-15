@@ -55,7 +55,9 @@ export default function ProfileInfoPage() {
             {profile.fullName ? profile.fullName.charAt(0).toUpperCase() : "U"}
           </div>
           <div>
-            <h2 className="text-xl font-semibold text-gray-900">{profile.fullName || "Người dùng"}</h2>
+            <h2 className="text-xl font-semibold text-gray-900">
+              {profile.fullName || "Người dùng"}
+            </h2>
             <p className="text-sm text-gray-500">
               {profile.role === "Customer" ? "Khách hàng" : "Nhân viên"}
             </p>
@@ -85,7 +87,9 @@ export default function ProfileInfoPage() {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-gray-700">Số điện thoại</label>
+              <label className="mb-1.5 block text-sm font-medium text-gray-700">
+                Số điện thoại
+              </label>
               <input
                 type="text"
                 disabled
@@ -98,7 +102,13 @@ export default function ProfileInfoPage() {
               <input
                 type="text"
                 disabled
-                defaultValue={profile.gender === "Male" ? "Nam" : profile.gender === "Female" ? "Nữ" : "Chưa cập nhật"}
+                defaultValue={
+                  profile.gender === "Male"
+                    ? "Nam"
+                    : profile.gender === "Female"
+                      ? "Nữ"
+                      : "Chưa cập nhật"
+                }
                 className="block w-full rounded-lg border border-gray-300 bg-gray-50 px-4 py-2.5 text-sm text-gray-900 opacity-70 cursor-not-allowed"
               />
             </div>
@@ -110,22 +120,33 @@ export default function ProfileInfoPage() {
               <input
                 type="text"
                 disabled
-                defaultValue={profile.dateOfBirth ? new Date(profile.dateOfBirth).toLocaleDateString("vi-VN") : "Chưa cập nhật"}
+                defaultValue={
+                  profile.dateOfBirth
+                    ? new Date(profile.dateOfBirth).toLocaleDateString("vi-VN")
+                    : "Chưa cập nhật"
+                }
                 className="block w-full rounded-lg border border-gray-300 bg-gray-50 px-4 py-2.5 text-sm text-gray-900 opacity-70 cursor-not-allowed"
               />
             </div>
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-gray-700">Mệnh Phong Thuỷ</label>
+              <label className="mb-1.5 block text-sm font-medium text-gray-700">
+                Mệnh Phong Thuỷ
+              </label>
               <input
                 type="text"
                 disabled
                 defaultValue={
-                  profile.fengShui?.element === "Kim" ? "Kim" :
-                  profile.fengShui?.element === "Moc" ? "Mộc" :
-                  profile.fengShui?.element === "Thuy" ? "Thủy" :
-                  profile.fengShui?.element === "Hoa" ? "Hỏa" :
-                  profile.fengShui?.element === "Tho" ? "Thổ" :
-                  "Chưa cập nhật"
+                  profile.fengShui?.element === "Kim"
+                    ? "Kim"
+                    : profile.fengShui?.element === "Moc"
+                      ? "Mộc"
+                      : profile.fengShui?.element === "Thuy"
+                        ? "Thủy"
+                        : profile.fengShui?.element === "Hoa"
+                          ? "Hỏa"
+                          : profile.fengShui?.element === "Tho"
+                            ? "Thổ"
+                            : "Chưa cập nhật"
                 }
                 className="block w-full rounded-lg border border-gray-300 bg-gray-50 px-4 py-2.5 text-sm text-gray-900 opacity-70 cursor-not-allowed"
               />

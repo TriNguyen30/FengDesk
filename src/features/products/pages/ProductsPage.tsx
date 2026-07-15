@@ -146,8 +146,9 @@ export default function ProductsPage() {
                       className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
                     />
                     <span
-                      className={`text-sm font-medium transition-colors ${!categoryId ? "text-primary" : "text-gray-600 group-hover:text-gray-900"
-                        }`}
+                      className={`text-sm font-medium transition-colors ${
+                        !categoryId ? "text-primary" : "text-gray-600 group-hover:text-gray-900"
+                      }`}
                     >
                       Tất cả sản phẩm
                     </span>
@@ -161,10 +162,11 @@ export default function ProductsPage() {
                         className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
                       />
                       <span
-                        className={`text-sm font-medium transition-colors ${categoryId === cat.id
-                          ? "text-primary"
-                          : "text-gray-600 group-hover:text-gray-900"
-                          }`}
+                        className={`text-sm font-medium transition-colors ${
+                          categoryId === cat.id
+                            ? "text-primary"
+                            : "text-gray-600 group-hover:text-gray-900"
+                        }`}
                       >
                         {cat.name}
                       </span>
@@ -188,8 +190,9 @@ export default function ProductsPage() {
                     className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
                   />
                   <span
-                    className={`text-sm font-medium transition-colors ${!element ? "text-primary" : "text-gray-600 group-hover:text-gray-900"
-                      }`}
+                    className={`text-sm font-medium transition-colors ${
+                      !element ? "text-primary" : "text-gray-600 group-hover:text-gray-900"
+                    }`}
                   >
                     Tất cả các mệnh
                   </span>
@@ -203,10 +206,11 @@ export default function ProductsPage() {
                       className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
                     />
                     <span
-                      className={`text-sm font-medium transition-colors ${element === el.code
-                        ? "text-primary"
-                        : "text-gray-600 group-hover:text-gray-900"
-                        }`}
+                      className={`text-sm font-medium transition-colors ${
+                        element === el.code
+                          ? "text-primary"
+                          : "text-gray-600 group-hover:text-gray-900"
+                      }`}
                     >
                       {el.label}
                     </span>
@@ -225,7 +229,8 @@ export default function ProductsPage() {
                 <div className="h-6 w-48 rounded bg-gray-200 animate-pulse" />
               ) : (
                 <h1 className="text-lg font-medium text-gray-900">
-                  {selectedCategoryName ? selectedCategoryName : "Tất cả sản phẩm"} <span className="text-sm text-gray-600">({sortedProducts.length})</span>
+                  {selectedCategoryName ? selectedCategoryName : "Tất cả sản phẩm"}{" "}
+                  <span className="text-sm text-gray-600">({sortedProducts.length})</span>
                 </h1>
               )}
               {search && (

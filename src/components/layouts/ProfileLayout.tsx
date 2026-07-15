@@ -3,7 +3,6 @@ import { User, MapPin, Package, HousePlus, Bell, RefreshCw, Mail } from "lucide-
 import { useEffect } from "react";
 import { useMyStoreInvitations } from "@/features/shop/hooks/useShopStaff";
 
-
 export default function ProfileLayout() {
   // Load lời mời (nhẹ) để hiện badge số lượng bên cạnh menu; nếu 0 thì ẩn badge.
   const { invitations } = useMyStoreInvitations();
@@ -20,7 +19,12 @@ export default function ProfileLayout() {
     { name: "Không gian làm việc", path: "/profile/workspace", icon: HousePlus },
     { name: "Đơn hàng của tôi", path: "/profile/orders", icon: Package },
     { name: "Yêu cầu trả hàng", path: "/profile/returns", icon: RefreshCw },
-    { name: "Lời mời làm nhân viên", path: "/profile/invitations", icon: Mail, badge: pendingCount },
+    {
+      name: "Lời mời làm nhân viên",
+      path: "/profile/invitations",
+      icon: Mail,
+      badge: pendingCount,
+    },
     { name: "Thông báo", path: "/profile/notifications", icon: Bell },
   ];
 

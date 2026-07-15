@@ -34,7 +34,10 @@ interface WorkspaceReviewFormProps {
   onCancel: () => void;
 }
 
-function toFormValues(workspace?: Workspace | null, draft?: WorkspaceProfileDraft | null): WorkspaceFormValues {
+function toFormValues(
+  workspace?: Workspace | null,
+  draft?: WorkspaceProfileDraft | null,
+): WorkspaceFormValues {
   if (workspace) {
     return {
       name: workspace.name,
@@ -191,7 +194,9 @@ export default function WorkspaceReviewForm({
       }
       onSuccess();
     } catch (error) {
-      toast.error(isEditMode ? "Lỗi khi cập nhật không gian làm việc" : "Lỗi khi tạo không gian làm việc");
+      toast.error(
+        isEditMode ? "Lỗi khi cập nhật không gian làm việc" : "Lỗi khi tạo không gian làm việc",
+      );
       console.error(error);
     }
   });
@@ -249,7 +254,10 @@ export default function WorkspaceReviewForm({
 
         <div>
           {label("Loại không gian làm việc", "workspaceTypeId")}
-          <select {...register("workspaceTypeId")} className={fieldClass("workspaceTypeId", selectClass)}>
+          <select
+            {...register("workspaceTypeId")}
+            className={fieldClass("workspaceTypeId", selectClass)}
+          >
             <option value="">Chọn loại không gian</option>
             {workspaceTypes.map((wt) => (
               <option key={wt.id} value={wt.id}>
@@ -272,7 +280,9 @@ export default function WorkspaceReviewForm({
               </option>
             ))}
           </select>
-          {errors.styleCode && <p className="mt-1 text-xs text-danger">{errors.styleCode.message}</p>}
+          {errors.styleCode && (
+            <p className="mt-1 text-xs text-danger">{errors.styleCode.message}</p>
+          )}
         </div>
 
         <div>
@@ -310,7 +320,10 @@ export default function WorkspaceReviewForm({
             {...register("noDesk")}
             className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
           />
-          <label htmlFor="noDesk" className="flex items-center gap-1 text-sm text-gray-700 cursor-pointer">
+          <label
+            htmlFor="noDesk"
+            className="flex items-center gap-1 text-sm text-gray-700 cursor-pointer"
+          >
             Không gian này không có bàn làm việc
             {draft?.hasDesk === false && (
               <span title="AI nhận diện từ mô tả — hãy kiểm tra" className="text-primary">
@@ -360,7 +373,9 @@ export default function WorkspaceReviewForm({
               className={fieldClass("deskArea", inputClass)}
               placeholder="Chưa rõ"
             />
-            {errors.deskArea && <p className="mt-1 text-xs text-danger">{errors.deskArea.message}</p>}
+            {errors.deskArea && (
+              <p className="mt-1 text-xs text-danger">{errors.deskArea.message}</p>
+            )}
           </div>
 
           <div>
@@ -417,7 +432,10 @@ export default function WorkspaceReviewForm({
             {...register("isDefault")}
             className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
           />
-          <label htmlFor="isDefaultWorkspace" className="text-sm font-medium text-gray-700 cursor-pointer">
+          <label
+            htmlFor="isDefaultWorkspace"
+            className="text-sm font-medium text-gray-700 cursor-pointer"
+          >
             Đặt làm không gian mặc định
           </label>
         </div>

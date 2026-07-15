@@ -8,12 +8,12 @@ like any component:
 ```jsx
 const { DesignSyncProviders, Navbar, Footer } = window.FengDeskUI;
 
-ReactDOM.createRoot(document.getElementById('ds-root')).render(
+ReactDOM.createRoot(document.getElementById("ds-root")).render(
   <DesignSyncProviders>
     <Navbar />
     {/* page content */}
     <Footer />
-  </DesignSyncProviders>
+  </DesignSyncProviders>,
 );
 ```
 
@@ -29,14 +29,14 @@ appearance) — components are built with Tailwind utility classes reading this 
 design tokens. When composing your OWN layout glue around these components (wrappers,
 spacing, page grids), use the same utility classes and the same tokens so new UI matches:
 
-| Token (CSS custom property) | Utility classes it drives | Use for |
-|---|---|---|
-| `--color-primary` (#7d8f69) | `bg-primary`, `text-primary`, `border-primary` | brand green — primary actions, links, active states |
-| `--color-primary-dark` | `hover:bg-primary-dark`, `bg-primary-dark` | primary hover/pressed states |
-| `--color-secondary` (#a68a64) | `text-secondary` | brand tan — secondary accents |
-| `--color-danger` (#c62828) | `bg-danger`, `text-danger` | destructive actions, errors |
+| Token (CSS custom property)                     | Utility classes it drives                                | Use for                                                               |
+| ----------------------------------------------- | -------------------------------------------------------- | --------------------------------------------------------------------- |
+| `--color-primary` (#7d8f69)                     | `bg-primary`, `text-primary`, `border-primary`           | brand green — primary actions, links, active states                   |
+| `--color-primary-dark`                          | `hover:bg-primary-dark`, `bg-primary-dark`               | primary hover/pressed states                                          |
+| `--color-secondary` (#a68a64)                   | `text-secondary`                                         | brand tan — secondary accents                                         |
+| `--color-danger` (#c62828)                      | `bg-danger`, `text-danger`                               | destructive actions, errors                                           |
 | `--radius-sm/md/lg/full` (4px/10px/15px/9999px) | `rounded-sm`, `rounded-md`, `rounded-lg`, `rounded-full` | cards use `rounded-lg`/`rounded-xl`, pills/avatars use `rounded-full` |
-| `--font-sans` ("Inter") | default body font, no utility needed | all text |
+| `--font-sans` ("Inter")                         | default body font, no utility needed                     | all text                                                              |
 
 Neutrals and grays elsewhere in the existing components mostly use Tailwind's stock gray
 scale (`text-gray-500`, `border-gray-200`, `bg-gray-50`, etc.), not custom tokens — match
@@ -60,9 +60,7 @@ function Page({ children }) {
       <Navbar />
       <main className="mx-auto max-w-screen-xl px-4 py-6 sm:px-6 lg:px-10">
         <FeatureBar />
-        <div className="mt-6 rounded-xl border border-gray-200 bg-white p-4">
-          {children}
-        </div>
+        <div className="mt-6 rounded-xl border border-gray-200 bg-white p-4">{children}</div>
       </main>
       <Footer />
     </DesignSyncProviders>

@@ -1,6 +1,9 @@
 import { toast } from "sonner";
 import { Check, Loader2, Store as StoreIcon, UserCircle2, X } from "lucide-react";
-import { useAcceptStoreInvitation, useRejectStoreInvitation } from "@/features/shop/hooks/useShopStaff";
+import {
+  useAcceptStoreInvitation,
+  useRejectStoreInvitation,
+} from "@/features/shop/hooks/useShopStaff";
 import type { StoreInvitation } from "@/features/shop/types/shop";
 
 interface Props {
@@ -89,11 +92,7 @@ export default function InvitationCard({ invitation }: Props) {
             disabled={busy}
             className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"
           >
-            {reject.isPending ? (
-              <Loader2 size={14} className="animate-spin" />
-            ) : (
-              <X size={14} />
-            )}
+            {reject.isPending ? <Loader2 size={14} className="animate-spin" /> : <X size={14} />}
             Từ chối
           </button>
           <button

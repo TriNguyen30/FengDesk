@@ -14,11 +14,12 @@ interface CurrentStateTagPickerProps {
   aiFilled?: boolean;
 }
 
-const GROUPS: { kind: InputKind; label: string; codes: (v: ElementInputVocabulary) => string[] }[] = [
-  { kind: "Color", label: "Màu chủ đạo", codes: (v) => v.colors },
-  { kind: "Material", label: "Nội thất — chất liệu nội thất", codes: (v) => v.materials },
-  { kind: "DecorItem", label: "Vật trang trí", codes: (v) => v.decorItems },
-];
+const GROUPS: { kind: InputKind; label: string; codes: (v: ElementInputVocabulary) => string[] }[] =
+  [
+    { kind: "Color", label: "Màu chủ đạo", codes: (v) => v.colors },
+    { kind: "Material", label: "Nội thất — chất liệu nội thất", codes: (v) => v.materials },
+    { kind: "DecorItem", label: "Vật trang trí", codes: (v) => v.decorItems },
+  ];
 
 const chipClass = (selected: boolean) =>
   `rounded-full border px-2.5 py-1 text-xs transition-colors cursor-pointer ${
@@ -147,7 +148,9 @@ export default function CurrentStateTagPicker({
                     <input
                       type="text"
                       value={drafts[group.kind] ?? ""}
-                      onChange={(e) => setDrafts((prev) => ({ ...prev, [group.kind]: e.target.value }))}
+                      onChange={(e) =>
+                        setDrafts((prev) => ({ ...prev, [group.kind]: e.target.value }))
+                      }
                       onKeyDown={(e) => {
                         if (e.key === "Enter") {
                           e.preventDefault();

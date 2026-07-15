@@ -38,7 +38,7 @@ export default function PopUpSignUp({ open, onClose, onSwitchToLogin }: PopUpSig
   const [registrationToken, setRegistrationToken] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  
+
   const [showCalendar, setShowCalendar] = useState(false);
   const calendarRef = useRef<HTMLDivElement>(null);
 
@@ -304,7 +304,10 @@ export default function PopUpSignUp({ open, onClose, onSwitchToLogin }: PopUpSig
                     aria-describedby={
                       finalizeForm.formState.errors.dateOfBirth ? "signup-dob-error" : undefined
                     }
-                    className={inputClassName(Boolean(finalizeForm.formState.errors.dateOfBirth)) + " cursor-pointer bg-white"}
+                    className={
+                      inputClassName(Boolean(finalizeForm.formState.errors.dateOfBirth)) +
+                      " cursor-pointer bg-white"
+                    }
                     placeholder="DD/MM/YYYY"
                   />
                   {showCalendar && (

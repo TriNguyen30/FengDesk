@@ -11,8 +11,8 @@ export default function EmptyState({ onCreateWorkspace }: EmptyStateProps) {
       </div>
       <div className="text-base font-extrabold text-gray-900">Bạn chưa có không gian nào</div>
       <p className="max-w-[400px] text-sm leading-relaxed text-gray-500">
-        Thêm một không gian (phòng ngủ, phòng làm việc, phòng họp…) để xem sản phẩm này hợp đến đâu với{" "}
-        <b>bản mệnh</b> và <b>Ngũ hành từng phòng</b> của bạn.
+        Thêm một không gian (phòng ngủ, phòng làm việc, phòng họp…) để xem sản phẩm này hợp đến đâu
+        với <b>bản mệnh</b> và <b>Ngũ hành từng phòng</b> của bạn.
       </p>
       {onCreateWorkspace && (
         <button

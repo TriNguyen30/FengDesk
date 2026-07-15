@@ -194,10 +194,11 @@ export default function CheckoutPage() {
                 {addresses.map((address) => (
                   <label
                     key={address.id}
-                    className={`flex cursor-pointer gap-3 rounded-xl border p-4 transition-colors ${selectedAddressId === address.id
-                      ? "border-primary bg-primary/5"
-                      : "border-gray-200 hover:border-primary/40"
-                      }`}
+                    className={`flex cursor-pointer gap-3 rounded-xl border p-4 transition-colors ${
+                      selectedAddressId === address.id
+                        ? "border-primary bg-primary/5"
+                        : "border-gray-200 hover:border-primary/40"
+                    }`}
                   >
                     <input
                       type="radio"
@@ -238,10 +239,11 @@ export default function CheckoutPage() {
               {PAYMENT_METHODS.map((method) => (
                 <label
                   key={method.value}
-                  className={`flex cursor-pointer items-center gap-3 rounded-xl border p-4 transition-colors ${paymentMethod === method.value
-                    ? "border-primary bg-primary/5"
-                    : "border-gray-200 hover:border-primary/40"
-                    }`}
+                  className={`flex cursor-pointer items-center gap-3 rounded-xl border p-4 transition-colors ${
+                    paymentMethod === method.value
+                      ? "border-primary bg-primary/5"
+                      : "border-gray-200 hover:border-primary/40"
+                  }`}
                 >
                   <input
                     type="radio"
@@ -348,7 +350,9 @@ export default function CheckoutPage() {
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-gray-900 shrink-0 shadow-sm">
               <Truck className="h-4 w-4" />
             </div>
-            <span className="font-semibold leading-snug">Free Ship TP.Hồ Chí Minh cho hoá đơn từ 500.000đ</span>
+            <span className="font-semibold leading-snug">
+              Free Ship TP.Hồ Chí Minh cho hoá đơn từ 500.000đ
+            </span>
           </div>
         </aside>
       </div>
