@@ -18,6 +18,7 @@ import {
   RotateCcw,
   Maximize2,
   X,
+  Truck,
 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { toast } from "sonner";
@@ -148,7 +149,7 @@ export default function ProductDetailPage() {
       dispatch(setActiveChatbox(box.id));
       dispatch(setView("conversation"));
       dispatch(openChatbox());
-      void chatHub.joinChatbox(box.id).catch(() => {});
+      void chatHub.joinChatbox(box.id).catch(() => { });
       const msgRes = await chatApi.getMessages(box.id);
       if (msgRes.data.isSuccess) {
         dispatch(setMessages({ roomId: box.id, messages: [...msgRes.data.data.items].reverse() }));
@@ -422,8 +423,8 @@ export default function ProductDetailPage() {
                     key={img.id}
                     onClick={() => setActiveImage(img.url)}
                     className={`h-16 w-16 shrink-0 overflow-hidden rounded-lg border-2 bg-gray-50 transition-all cursor-pointer ${activeImage === img.url
-                        ? "border-primary"
-                        : "border-transparent hover:border-gray-300"
+                      ? "border-primary"
+                      : "border-transparent hover:border-gray-300"
                       }`}
                   >
                     <img src={img.url} alt="thumb" className="h-full w-full object-contain" />
@@ -502,8 +503,8 @@ export default function ProductDetailPage() {
                         key={item.id}
                         onClick={() => setSelectedItem(item)}
                         className={`relative flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-all focus:outline-none cursor-not-allowed ${isSelected
-                            ? "border-primary bg-primary/5 text-primary"
-                            : "border-gray-200 text-gray-600 hover:border-primary/40 hover:bg-gray-50 cursor-pointer"
+                          ? "border-primary bg-primary/5 text-primary"
+                          : "border-gray-200 text-gray-600 hover:border-primary/40 hover:bg-gray-50 cursor-pointer"
                           }`}
                       >
                         {item.name}
@@ -621,6 +622,16 @@ export default function ProductDetailPage() {
                 {outOfStock ? "Hết hàng" : "Mua ngay"}
               </button>
             </div>
+
+            {/* Promotional Banners */}
+            <div className="mt-5 space-y-2.5">
+              <div className="flex items-center gap-3 rounded-xl border border-green-100 p-3 text-sm text-green-700 shadow-sm transition-colors hover:bg-green-100/50">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-green-100 text-green-600 shrink-0 shadow-sm">
+                  <Truck className="h-4 w-4" />
+                </div>
+                <span className="font-semibold">Free Ship TP.Hồ Chí Minh cho hoá đơn từ 500.000đ</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -699,7 +710,7 @@ export default function ProductDetailPage() {
           <h2 className="text-lg font-bold text-gray-900 mb-4 pb-4 border-b border-gray-100">
             Mô tả sản phẩm
           </h2>
-          <div 
+          <div
             className="text-sm leading-relaxed text-gray-600 quill-content"
             dangerouslySetInnerHTML={{ __html: product.description.replace(/&nbsp;/g, " "), }}
           />
@@ -840,8 +851,8 @@ export default function ProductDetailPage() {
                       setPanOffset({ x: 0, y: 0 });
                     }}
                     className={`h-12 w-12 sm:h-16 sm:w-16 shrink-0 overflow-hidden rounded-lg border-2 bg-gray-900 transition-all ${lightboxIndex === idx
-                        ? "border-primary"
-                        : "border-transparent opacity-50 hover:opacity-100"
+                      ? "border-primary"
+                      : "border-transparent opacity-50 hover:opacity-100"
                       }`}
                   >
                     <img

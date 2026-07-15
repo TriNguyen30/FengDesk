@@ -147,7 +147,7 @@ export default function ShopDetailPage() {
       dispatch(setActiveChatbox(box.id));
       dispatch(setView("conversation"));
       dispatch(openChatbox());
-      void chatHub.joinChatbox(box.id).catch(() => {});
+      void chatHub.joinChatbox(box.id).catch(() => { });
       const msgRes = await chatApi.getMessages(box.id);
       if (msgRes.data.isSuccess) {
         dispatch(setMessages({ roomId: box.id, messages: [...msgRes.data.data.items].reverse() }));
@@ -215,8 +215,8 @@ export default function ShopDetailPage() {
   // Vì thế chỉ cần isShopMember là hiện tab; nếu user không phải owner-thực-sự, BE sẽ trả 403 và toast hiện lỗi.
   const TABS: { value: ShopTab; label: string; icon: typeof Store; disabled?: boolean }[] = [
     { value: "products", label: "Sản phẩm", icon: Store },
-    { value: "deliveries", label: "Đơn giao", icon: Truck, disabled: roles.includes("Customer") },
-    { value: "returns", label: "Trả hàng", icon: Package, disabled: roles.includes("Customer") },
+    { value: "deliveries", label: "Đơn giao", icon: Truck },
+    { value: "returns", label: "Trả hàng", icon: Package },
     { value: "chat", label: "Tin nhắn", icon: MessagesSquare },
     { value: "staff", label: "Nhân viên", icon: Users, disabled: roles.includes("Customer") },
   ];
@@ -255,15 +255,13 @@ export default function ShopDetailPage() {
                 key={tab.value}
                 onClick={() => !tab.disabled && setActiveTab(tab.value)}
                 disabled={tab.disabled}
-                className={`flex items-center gap-2 border-b-2 px-4 py-2.5 text-sm font-semibold transition-all ${
-                  tab.disabled
-                    ? "opacity-50 cursor-not-allowed border-transparent text-gray-400"
-                    : `cursor-pointer ${
-                        active
-                          ? "border-primary text-primary"
-                          : "border-transparent text-gray-500 hover:text-gray-800"
-                      }`
-                }`}
+                className={`flex items-center gap-2 border-b-2 px-4 py-2.5 text-sm font-semibold transition-all ${tab.disabled
+                  ? "opacity-50 cursor-not-allowed border-transparent text-gray-400"
+                  : `cursor-pointer ${active
+                    ? "border-primary text-primary"
+                    : "border-transparent text-gray-500 hover:text-gray-800"
+                  }`
+                  }`}
               >
                 <Icon size={15} />
                 {tab.label}
@@ -290,6 +288,7 @@ export default function ShopDetailPage() {
             onSearchQueryChange={setSearchQuery}
             shopId={shop.id}
             isShopMember={isShopMember}
+            canAddProduct={roles.includes("Manager") || roles.includes("GardenOwner")}
           />
         </div>
       )}

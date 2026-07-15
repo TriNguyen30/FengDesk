@@ -678,7 +678,15 @@ export default function OrderDetailPage() {
             )}
 
             {/* Buy again */}
-            <button className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-primary text-white text-sm font-semibold py-2.5 hover:bg-primary/90 cursor-pointer transition-colors">
+            <button
+              onClick={() => {
+                if (order.items && order.items.length > 0) {
+                  const firstItem = order.items[0];
+                  navigate(`/products/${(firstItem as any).productId || firstItem.productItemId}`);
+                }
+              }}
+              className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-primary text-white text-sm font-semibold py-2.5 hover:bg-primary/90 cursor-pointer transition-colors"
+            >
               <ShoppingCart className="h-4 w-4" />
               Mua lại
             </button>
