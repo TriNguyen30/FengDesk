@@ -9,6 +9,7 @@ import Modal from "@/components/ui/Modal";
 import { createReviewRequest } from "@/features/review/api/review.api";
 import { toast } from "sonner";
 import { ordersApi } from "../api/orders.api";
+import PaymentQrModal from "@/features/payment/components/PaymentQrModal";
 
 const TABS = [
   { label: "Tất cả", value: "" },
@@ -33,6 +34,8 @@ export default function OrdersPage() {
   const [reviewContent, setReviewContent] = useState("");
   const [selectedProductId, setSelectedProductId] = useState<string>("");
   const [submittingReview, setSubmittingReview] = useState(false);
+  // Đơn Pending/PayOS chưa trả tiền → mở modal QR + link thanh toán ngay từ danh sách.
+  const [payingOrderId, setPayingOrderId] = useState<string | null>(null);
 
   const { orders, listStatus, pagination } = useOrdersList({
     page: 1,
@@ -221,6 +224,17 @@ export default function OrdersPage() {
                   </div>
 
                   <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-3 w-full sm:w-auto">
+                    {order.status === "Pending" && order.paymentMethod === "PayOS" && (
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setPayingOrderId(order.id);
+                        }}
+                        className="flex-1 sm:flex-none rounded-lg bg-primary px-6 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-dark cursor-pointer"
+                      >
+                        Thanh Toán
+                      </button>
+                    )}
                     {order.status === "Completed" && (
                       <button
                         onClick={async (e) => {
@@ -275,6 +289,9 @@ export default function OrdersPage() {
           )}
         </div>
       )}
+
+      {/* Payment QR Modal */}
+      <PaymentQrModal orderId={payingOrderId} onClose={() => setPayingOrderId(null)} />
 
       {/* Review Modal */}
       <Modal

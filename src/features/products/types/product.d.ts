@@ -44,6 +44,8 @@ export interface GetProductsParams {
   categoryId?: string;
   tagId?: string;
   search?: string;
+  /** Hành phong thủy — khớp cả hành chính lẫn hành phụ của sản phẩm. */
+  element?: "Kim" | "Moc" | "Thuy" | "Hoa" | "Tho";
   page?: number;
   pageSize?: number;
 }

@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from "react";
-import { Brain, ImagePlus, Info, Mic, MicOff, Sparkles } from "lucide-react";
+import { Brain, ImagePlus, Info, Loader2, Mic, MicOff, Sparkles } from "lucide-react";
 import AttachmentPreviewRow from "@/features/chatbox/components/AttachmentPreviewRow";
 import { useImageAttachments } from "@/features/chatbox/hooks/useImageAttachments";
 import { uploadWorkspaceImage } from "../api/workspace.api";
 import { useMicLevel } from "../hooks/useMicLevel";
 import { useSpeechInput } from "../hooks/useSpeechInput";
+import { useWhisperTranscription } from "../hooks/useWhisperTranscription";
 import VoiceListeningOverlay from "./VoiceListeningOverlay";
 
 interface WorkspaceDescribeStepProps {
@@ -28,6 +29,9 @@ export default function WorkspaceDescribeStep({
   const [deepThink, setDeepThink] = useState(false);
   const [speechLang, setSpeechLang] = useState<"vi-VN" | "en-US">("vi-VN");
   const { isSupported, isListening, start, stop } = useSpeechInput();
+  // Whisper (BE) chốt chính xác hơn, tự nhận diện vi/en/nói trộn. Web Speech vẫn chạy song song cho
+  // preview live + fallback khi Whisper tắt/down (giữ flow cũ). Bật/tắt điều khiển từ BE (Speech:Enabled).
+  const { isTranscribing, startRecording, stopAndTranscribe, cancelRecording } = useWhisperTranscription();
   const micLevel = useMicLevel();
   const att = useImageAttachments(uploadWorkspaceImage);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -42,22 +46,39 @@ export default function WorkspaceDescribeStep({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isListening]);
 
-  const toggleMic = () => {
+  // Hủy ghi âm Whisper nếu component unmount giữa chừng.
+  useEffect(() => cancelRecording, [cancelRecording]);
+
+  // Text preview live từ Web Speech trong lượt nói — fallback nếu Whisper lỗi.
+  const livePreviewRef = useRef("");
+
+  const toggleMic = async () => {
     if (isListening) {
+      // Dừng: chốt bằng Whisper; nếu lỗi/tắt → giữ text Web Speech (flow cũ).
       stop();
+      const base = voiceBaseRef.current;
+      const whisperText = await stopAndTranscribe();
+      const finalText = whisperText ?? livePreviewRef.current;
+      if (finalText) setDescription(base ? `${base} ${finalText}` : finalText);
       return;
     }
     voiceBaseRef.current = description.trim();
+    livePreviewRef.current = "";
+    void startRecording();
     start((text) => {
       // Lưu ý: KHÔNG tự stop() khi isFinal — isFinal chỉ nghĩa "câu này chốt xong", không phải
       // "user nói xong". Ở continuous mode, tự stop() ở đây sẽ cắt ngang phiên nghe liên tục
       // ngay khi engine chốt câu đầu tiên (đây từng là nguyên nhân mic tự ngắt giữa chừng).
+      livePreviewRef.current = text;
       const base = voiceBaseRef.current;
       setDescription(base && text ? `${base} ${text}` : base || text);
     }, speechLang);
   };
 
   const trimmed = description.trim();
+  // Mic khả dụng nếu có MediaRecorder (Whisper) HOẶC Web Speech → Safari/Firefox vẫn ghi âm gửi Whisper.
+  const micAvailable =
+    isSupported || (typeof window !== "undefined" && "MediaRecorder" in window && !!navigator.mediaDevices);
   // Có ảnh rồi thì mô tả chữ không bắt buộc — ảnh cũng là bằng chứng để AI phân tích.
   const canAnalyze =
     (trimmed.length >= MIN_LENGTH || att.urls.length > 0) &&
@@ -106,22 +127,35 @@ export default function WorkspaceDescribeStep({
           >
             <ImagePlus size={16} />
           </button>
-          {isSupported && (
+          {micAvailable && (
             <button
               type="button"
               onClick={toggleMic}
+              disabled={isTranscribing}
               aria-pressed={isListening}
-              title={isListening ? "Đang nghe — bấm để dừng" : "Nói để mô tả"}
-              className={`flex h-8 w-8 items-center justify-center rounded-full transition-colors cursor-pointer ${
+              title={
+                isTranscribing
+                  ? "Đang chuyển giọng nói thành chữ..."
+                  : isListening
+                    ? "Đang nghe — bấm để dừng"
+                    : "Nói để mô tả"
+              }
+              className={`flex h-8 w-8 items-center justify-center rounded-full transition-colors cursor-pointer disabled:cursor-wait ${
                 isListening
                   ? "animate-pulse bg-red-500 text-white"
                   : "bg-primary/10 text-primary hover:bg-primary/20"
               }`}
             >
-              {isListening ? <MicOff size={16} /> : <Mic size={16} />}
+              {isTranscribing ? (
+                <Loader2 size={16} className="animate-spin" />
+              ) : isListening ? (
+                <MicOff size={16} />
+              ) : (
+                <Mic size={16} />
+              )}
             </button>
           )}
-          {isSupported && !isListening && (
+          {isSupported && !isListening && !isTranscribing && (
             <button
               type="button"
               onClick={() => setSpeechLang((l) => (l === "vi-VN" ? "en-US" : "vi-VN"))}
@@ -137,7 +171,7 @@ export default function WorkspaceDescribeStep({
       </div>
 
       <div className="mt-1 flex items-center justify-between text-xs text-gray-400">
-        <span>{isListening ? "Đang nghe..." : " "}</span>
+        <span>{isTranscribing ? "Đang chuyển thành chữ..." : isListening ? "Đang nghe..." : " "}</span>
         <span>
           {trimmed.length}/{MAX_LENGTH}
         </span>

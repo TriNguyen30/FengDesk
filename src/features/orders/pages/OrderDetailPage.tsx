@@ -22,7 +22,7 @@ import { toast } from "sonner";
 import Modal from "@/components/ui/Modal";
 import { useOrderDetail, useCancelOrder } from "../hooks/useOrders";
 import { formatOrderDate, formatVnd, getOrderStatusMeta } from "../utils/orderUtils";
-import { paymentApi } from "@/features/payment";
+import PaymentQrModal from "@/features/payment/components/PaymentQrModal";
 import { returnApi } from "@/features/return/api/return.api";
 import type {
   ReturnType,
@@ -213,22 +213,10 @@ export default function OrderDetailPage() {
     }
   };
 
-  const handlePayNow = async () => {
+  // Mở modal QR + link PayOS (thay vì redirect thẳng — user có thể quét QR bằng app ngân hàng).
+  const handlePayNow = () => {
     if (!order) return;
     setPaying(true);
-    try {
-      const paymentRes = await paymentApi.createPayment(order.id);
-      if (paymentRes.data.isSuccess && paymentRes.data.data.checkoutUrl) {
-        localStorage.setItem("pending_payment_order_id", order.id);
-        window.location.href = paymentRes.data.data.checkoutUrl;
-      } else {
-        toast.error(paymentRes.data.message || "Không thể tạo liên kết thanh toán");
-      }
-    } catch {
-      toast.error("Lỗi khi kết nối tới cổng thanh toán");
-    } finally {
-      setPaying(false);
-    }
   };
 
   if (detailStatus === "loading") {
@@ -660,15 +648,10 @@ export default function OrderDetailPage() {
             {order.paymentMethod === "PayOS" && order.status === "Pending" && (
               <button
                 onClick={handlePayNow}
-                disabled={paying}
-                className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-primary text-white text-sm font-semibold py-2.5 hover:bg-primary/90 disabled:opacity-60 cursor-pointer transition-colors"
+                className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-primary text-white text-sm font-semibold py-2.5 hover:bg-primary/90 cursor-pointer transition-colors"
               >
-                {paying ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <CreditCard className="h-4 w-4" />
-                )}
-                {paying ? "Đang xử lý..." : "Thanh toán ngay"}
+                <CreditCard className="h-4 w-4" />
+                Thanh toán ngay
               </button>
             )}
 
@@ -710,6 +693,12 @@ export default function OrderDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* ── Payment QR Modal ── */}
+      <PaymentQrModal
+        orderId={paying && order ? order.id : null}
+        onClose={() => setPaying(false)}
+      />
 
       {/* ── Cancel Modal ── */}
       <Modal

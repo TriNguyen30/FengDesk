@@ -2,6 +2,11 @@
 node_modules
 .pnpm-store/
 
+# Dự án dùng pnpm — chặn lockfile của npm/yarn lọt vào repo (gây cài lệch, thiếu dep).
+# Chỉ pnpm-lock.yaml được commit.
+package-lock.json
+yarn.lock
+
 # --- Build Outputs ---
 dist
 dist-ssr
@@ -44,14 +49,6 @@ coverage/
 # --- codegraph local index ---
 .codegraph/
 
-# --- Claude Code working dir ---
-.claude/
-.claude-code/
-.claudeignore
-
-# --- design-sync (claude.ai/design) ---
+# --- Claude Code working dir ---.claude/
 .ds-sync/
 ds-bundle/
-.design-sync/.cache/
-.design-sync/learnings/
-.design-sync/node_modules
