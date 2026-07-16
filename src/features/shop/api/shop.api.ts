@@ -11,6 +11,8 @@ import {
   AssignStaffDto,
   StoreInvitation,
   UserSearchItem,
+  StoreMembership,
+  StoreStatistics,
 } from "../types/shop";
 
 export async function getAllShopRequest() {
@@ -125,6 +127,22 @@ export async function acceptStoreInvitationRequest(assignmentId: string) {
 export async function rejectStoreInvitationRequest(assignmentId: string) {
   const { data } = await fetchHttpClient.post<ApiResponse<null>>(
     `/stores/staff/${assignmentId}/reject`,
+  );
+  return data;
+}
+
+/** Vai trò của user hiện tại với store — FE quyết định tab/quyền theo đây (owner vs staff). */
+export async function getStoreMembershipRequest(id: string) {
+  const { data } = await fetchHttpClient.get<ApiResponse<StoreMembership>>(
+    `/stores/${id}/membership`,
+  );
+  return data;
+}
+
+/** Thống kê dashboard vendor — BE chỉ cho owner/admin (staff 403). */
+export async function getStoreStatisticsRequest(id: string) {
+  const { data } = await fetchHttpClient.get<ApiResponse<StoreStatistics>>(
+    `/stores/${id}/statistics`,
   );
   return data;
 }

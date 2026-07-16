@@ -7,6 +7,7 @@ import AiAssistantDrawer from "@/features/chatbox/components/AiAssistantDrawer";
 import PopUpLogin from "@/features/auth/components/PopUpLogin";
 import PopUpSignUp from "@/features/auth/components/PopUpSignUp";
 import { CartDropDown, useCart } from "@/features/cart";
+import ThemeToggle from "@/components/ui/ThemeToggle";
 import { NotificationDropdown } from "@/features/notification";
 import WorkspaceSwitcher from "./WorkspaceSwitcher";
 import { useHasSellerWorkspaceAccess } from "@/features/shop/hooks/useShopStaff";
@@ -203,6 +204,8 @@ export default function Navbar() {
             {/* Icon group — always visible */}
             <div className="flex shrink-0 items-center gap-1 sm:gap-3">
               {user && <WorkspaceSwitcher />}
+
+              <ThemeToggle />
 
               <button
                 type="button"
