@@ -72,9 +72,7 @@ export default function LocationPickerMap({
         el.className = "custom-marker";
         el.innerHTML = getPinHtml();
 
-        markerRef.current = new vietmapgl.Marker({ element: el })
-          .setLngLat([lng, lat])
-          .addTo(map);
+        markerRef.current = new vietmapgl.Marker({ element: el }).setLngLat([lng, lat]).addTo(map);
       } else {
         markerRef.current.setLngLat([lng, lat]);
       }
@@ -189,26 +187,29 @@ export default function LocationPickerMap({
       style={
         isFullscreen
           ? {
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            zIndex: 9999,
-            backgroundColor: "white",
-            display: "flex",
-            flexDirection: "column",
-          }
+              position: "fixed",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              zIndex: 9999,
+              backgroundColor: "white",
+              display: "flex",
+              flexDirection: "column",
+            }
           : {
-            position: "relative",
-            height: 300,
-            borderRadius: 12,
-            overflow: "hidden",
-            border: "1px solid #e0e0e0",
-          }
+              position: "relative",
+              height: 300,
+              borderRadius: 12,
+              overflow: "hidden",
+              border: "1px solid #e0e0e0",
+            }
       }
     >
-      <div ref={mapContainerRef} style={{ flex: 1, height: "100%", width: "100%", cursor: "crosshair" }} />
+      <div
+        ref={mapContainerRef}
+        style={{ flex: 1, height: "100%", width: "100%", cursor: "crosshair" }}
+      />
 
       {/* Custom Search Bar */}
       <div
@@ -227,9 +228,25 @@ export default function LocationPickerMap({
         <div className="relative">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             {isSearching ? (
-              <svg className="animate-spin h-4 w-4 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              <svg
+                className="animate-spin h-4 w-4 text-primary"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                ></circle>
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
               </svg>
             ) : (
               <Search size={16} className="text-gray-400" />
@@ -312,11 +329,29 @@ export default function LocationPickerMap({
           title={isFullscreen ? "Thoát toàn màn hình" : "Toàn màn hình"}
         >
           {isFullscreen ? (
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5f6368" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#5f6368"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3" />
             </svg>
           ) : (
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5f6368" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#5f6368"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
             </svg>
           )}
@@ -331,13 +366,30 @@ export default function LocationPickerMap({
             border: "0.5px solid rgba(0,0,0,0.1)",
           }}
         >
-          <button type="button" onClick={handleZoomIn} style={zoomBtnStyle} title="Zoom in">+</button>
+          <button type="button" onClick={handleZoomIn} style={zoomBtnStyle} title="Zoom in">
+            +
+          </button>
           <div style={{ height: "0.5px", background: "#e0e0e0" }} />
-          <button type="button" onClick={handleZoomOut} style={{ ...zoomBtnStyle, fontSize: 24 }} title="Zoom out">−</button>
+          <button
+            type="button"
+            onClick={handleZoomOut}
+            style={{ ...zoomBtnStyle, fontSize: 24 }}
+            title="Zoom out"
+          >
+            −
+          </button>
         </div>
 
         <button type="button" onClick={handleLocate} style={locateBtnStyle} title="My location">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4285F4" strokeWidth="2.5" strokeLinecap="round">
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="#4285F4"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+          >
             <circle cx="12" cy="12" r="3" />
             <path d="M12 2v3M12 19v3M2 12h3M19 12h3" />
           </svg>

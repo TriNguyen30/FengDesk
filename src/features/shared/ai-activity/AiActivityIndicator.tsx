@@ -18,7 +18,10 @@ export default function AiActivityIndicator({ activity }: AiActivityIndicatorPro
       return { icon: <Brain size={13} className="shrink-0" />, label: note! };
     }
     if (phase === "calling_tool") {
-      return { icon: <Wrench size={13} className="shrink-0" />, label: note ?? "Đang tra cứu dữ liệu…" };
+      return {
+        icon: <Wrench size={13} className="shrink-0" />,
+        label: note ?? "Đang tra cứu dữ liệu…",
+      };
     }
     if (phase === "writing") {
       return { icon: <PenLine size={13} className="shrink-0" />, label: "Đang tạo kết quả…" };

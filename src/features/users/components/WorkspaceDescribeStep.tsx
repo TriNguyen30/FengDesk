@@ -31,7 +31,8 @@ export default function WorkspaceDescribeStep({
   const { isSupported, isListening, start, stop } = useSpeechInput();
   // Whisper (BE) chốt chính xác hơn, tự nhận diện vi/en/nói trộn. Web Speech vẫn chạy song song cho
   // preview live + fallback khi Whisper tắt/down (giữ flow cũ). Bật/tắt điều khiển từ BE (Speech:Enabled).
-  const { isTranscribing, startRecording, stopAndTranscribe, cancelRecording } = useWhisperTranscription();
+  const { isTranscribing, startRecording, stopAndTranscribe, cancelRecording } =
+    useWhisperTranscription();
   const micLevel = useMicLevel();
   const att = useImageAttachments(uploadWorkspaceImage);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -78,7 +79,8 @@ export default function WorkspaceDescribeStep({
   const trimmed = description.trim();
   // Mic khả dụng nếu có MediaRecorder (Whisper) HOẶC Web Speech → Safari/Firefox vẫn ghi âm gửi Whisper.
   const micAvailable =
-    isSupported || (typeof window !== "undefined" && "MediaRecorder" in window && !!navigator.mediaDevices);
+    isSupported ||
+    (typeof window !== "undefined" && "MediaRecorder" in window && !!navigator.mediaDevices);
   // Có ảnh rồi thì mô tả chữ không bắt buộc — ảnh cũng là bằng chứng để AI phân tích.
   const canAnalyze =
     (trimmed.length >= MIN_LENGTH || att.urls.length > 0) &&
@@ -171,7 +173,9 @@ export default function WorkspaceDescribeStep({
       </div>
 
       <div className="mt-1 flex items-center justify-between text-xs text-gray-400">
-        <span>{isTranscribing ? "Đang chuyển thành chữ..." : isListening ? "Đang nghe..." : " "}</span>
+        <span>
+          {isTranscribing ? "Đang chuyển thành chữ..." : isListening ? "Đang nghe..." : " "}
+        </span>
         <span>
           {trimmed.length}/{MAX_LENGTH}
         </span>

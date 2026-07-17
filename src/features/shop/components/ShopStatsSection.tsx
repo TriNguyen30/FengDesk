@@ -1,15 +1,7 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { BarChart3, Loader2, Package, Truck, Users, Wallet } from "lucide-react";
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
+import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { getStoreStatisticsRequest } from "../api/shop.api";
 import type { StoreStatistics } from "../types/shop";
 
@@ -26,7 +18,11 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 const formatVnd = (v: number) =>
-  new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND", maximumFractionDigits: 0 }).format(v);
+  new Intl.NumberFormat("vi-VN", {
+    style: "currency",
+    currency: "VND",
+    maximumFractionDigits: 0,
+  }).format(v);
 
 /** Đủ 6 tháng gần nhất (kể cả tháng 0 doanh thu) để chart không bị hụt cột. */
 function buildMonthlySeries(stats: StoreStatistics) {
@@ -138,7 +134,10 @@ export function ShopStatsSection({ storeId }: { storeId: string }) {
         {cards.map((c) => {
           const Icon = c.icon;
           return (
-            <div key={c.label} className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
+            <div
+              key={c.label}
+              className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm"
+            >
               <div className="flex items-center gap-2 text-gray-500">
                 <Icon size={15} className="text-primary" />
                 <span className="text-xs font-semibold uppercase tracking-wide">{c.label}</span>
@@ -169,7 +168,12 @@ export function ShopStatsSection({ storeId }: { storeId: string }) {
                   formatter={(value) => [formatVnd(Number(value)), "Doanh thu"]}
                   labelFormatter={(label) => `Tháng ${label}`}
                 />
-                <Bar dataKey="revenue" fill="var(--color-primary)" radius={[6, 6, 0, 0]} maxBarSize={48} />
+                <Bar
+                  dataKey="revenue"
+                  fill="var(--color-primary)"
+                  radius={[6, 6, 0, 0]}
+                  maxBarSize={48}
+                />
               </BarChart>
             </ResponsiveContainer>
           </div>
