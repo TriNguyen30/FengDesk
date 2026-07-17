@@ -18,11 +18,10 @@ export default function PaymentSuccessPage() {
   const [searchParams] = useSearchParams();
   const queryOrderCode = searchParams.get("orderCode");
 
-  const { paymentStatus, status, getPaymentStatus, simulatePaid } = usePayment();
+  const { paymentStatus, status, getPaymentStatus } = usePayment();
 
   const [orderId, setOrderId] = useState<string | null>(null);
   const [searchingOrder, setSearchingOrder] = useState(false);
-  const [simulating, setSimulating] = useState(false);
   const hasLoadedRef = useRef(false);
   const { currentOrder } = useOrderDetail(orderId || undefined);
 
@@ -68,26 +67,6 @@ export default function PaymentSuccessPage() {
     }
   }, [orderId, getPaymentStatus]);
 
-  // Developer simulation helper
-  const handleSimulatePaid = async () => {
-    if (!orderId) return;
-    setSimulating(true);
-    try {
-      const result = await simulatePaid(orderId).unwrap();
-      if (result.data.isSuccess) {
-        toast.success("Giả lập thanh toán thành công!");
-        // Reload payment state
-        getPaymentStatus(orderId);
-      } else {
-        toast.error(result.data.message || "Giả lập thất bại");
-      }
-    } catch {
-      toast.error("Lỗi khi giả lập thanh toán");
-    } finally {
-      setSimulating(false);
-    }
-  };
-
   // Loading indicator while resolving orderId or fetching details
   if (searchingOrder || status === "loading" || (!paymentStatus && status === "idle")) {
     return (
@@ -105,9 +84,6 @@ export default function PaymentSuccessPage() {
     if (val == null) return "0 ₫";
     return new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(val);
   };
-
-  // Check if development environment to display simulated payment option
-  const isDev = import.meta.env.DEV || import.meta.env.VITE_ENV !== "production";
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-12 sm:px-6 lg:py-16">
@@ -213,28 +189,6 @@ export default function PaymentSuccessPage() {
           </div>
         </div>
       </motion.div>
-
-      {/* Developer simulation banner for status syncing */}
-      {isDev && paymentStatus?.paymentStatus !== "Paid" && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="mt-6 rounded-xl border border-yellow-100 bg-yellow-50/50 p-4 text-sm text-yellow-800 flex items-center justify-between"
-        >
-          <div className="flex items-center gap-2">
-            <span className="font-semibold">Dev Mode:</span>
-            <span>Nếu trạng thái chưa cập nhật thành "Paid", bạn có thể kích hoạt giả lập.</span>
-          </div>
-          <button
-            onClick={handleSimulatePaid}
-            disabled={simulating}
-            className="rounded-lg bg-yellow-600 px-3 py-1.5 font-bold text-white shadow-sm hover:bg-yellow-700 disabled:bg-gray-300 transition cursor-pointer flex items-center gap-1 shrink-0 ml-2"
-          >
-            {simulating && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-            Xác nhận Đã trả
-          </button>
-        </motion.div>
-      )}
 
       {/* Navigation Buttons */}
       <motion.div

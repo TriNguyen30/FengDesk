@@ -216,10 +216,11 @@ export default function CheckoutPage() {
                 {addresses.map((address) => (
                   <label
                     key={address.id}
-                    className={`flex cursor-pointer gap-3 rounded-xl border p-4 transition-colors ${selectedAddressId === address.id
-                      ? "border-primary bg-primary/5"
-                      : "border-gray-200 hover:border-primary/40"
-                      }`}
+                    className={`flex cursor-pointer gap-3 rounded-xl border p-4 transition-colors ${
+                      selectedAddressId === address.id
+                        ? "border-primary bg-primary/5"
+                        : "border-gray-200 hover:border-primary/40"
+                    }`}
                   >
                     <input
                       type="radio"
@@ -260,10 +261,11 @@ export default function CheckoutPage() {
               {PAYMENT_METHODS.map((method) => (
                 <label
                   key={method.value}
-                  className={`flex cursor-pointer items-center gap-3 rounded-xl border p-4 transition-colors ${paymentMethod === method.value
-                    ? "border-primary bg-primary/5"
-                    : "border-gray-200 hover:border-primary/40"
-                    }`}
+                  className={`flex cursor-pointer items-center gap-3 rounded-xl border p-4 transition-colors ${
+                    paymentMethod === method.value
+                      ? "border-primary bg-primary/5"
+                      : "border-gray-200 hover:border-primary/40"
+                  }`}
                 >
                   <input
                     type="radio"
@@ -298,74 +300,74 @@ export default function CheckoutPage() {
         {/* Order summary */}
         <div className="flex flex-col gap-4 h-fit lg:sticky lg:top-24">
           <aside className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-100">
-          <h2 className="mb-4 flex items-center gap-2 text-lg font-bold text-gray-900">
-            <ShoppingBag className="h-5 w-5 text-primary" />
-            Đơn hàng ({checkoutItems.length} sản phẩm)
-          </h2>
+            <h2 className="mb-4 flex items-center gap-2 text-lg font-bold text-gray-900">
+              <ShoppingBag className="h-5 w-5 text-primary" />
+              Đơn hàng ({checkoutItems.length} sản phẩm)
+            </h2>
 
-          <ul className="mb-4 max-h-64 space-y-3 overflow-y-auto">
-            {checkoutItems.map((item) => (
-              <li key={item.id} className="flex justify-between gap-3 text-sm">
-                <div className="min-w-0 flex-1">
-                  <p className="line-clamp-2 font-medium text-gray-800">
-                    {item.productName}
-                    {item.variantName ? ` (${item.variantName})` : ""}
-                  </p>
-                  <p className="text-xs text-gray-500">x{item.quantity}</p>
-                </div>
-                <span className="shrink-0 font-semibold text-gray-900">
-                  {formatVnd(item.unitPrice * item.quantity)}
+            <ul className="mb-4 max-h-64 space-y-3 overflow-y-auto">
+              {checkoutItems.map((item) => (
+                <li key={item.id} className="flex justify-between gap-3 text-sm">
+                  <div className="min-w-0 flex-1">
+                    <p className="line-clamp-2 font-medium text-gray-800">
+                      {item.productName}
+                      {item.variantName ? ` (${item.variantName})` : ""}
+                    </p>
+                    <p className="text-xs text-gray-500">x{item.quantity}</p>
+                  </div>
+                  <span className="shrink-0 font-semibold text-gray-900">
+                    {formatVnd(item.unitPrice * item.quantity)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+
+            <div className="space-y-2 border-t border-dashed border-gray-200 pt-4 text-sm">
+              <div className="flex justify-between text-gray-600">
+                <span>Tạm tính ({totalQuantity} sản phẩm)</span>
+                <span className="font-semibold text-gray-900">{formatVnd(subtotal)}</span>
+              </div>
+              <div className="flex justify-between text-gray-600">
+                <span>Phí vận chuyển</span>
+                <span className="font-semibold text-gray-900">
+                  {feeLoading ? (
+                    "Đang tính..."
+                  ) : shippingFee === 0 && subtotal >= 500000 ? (
+                    <span className="text-green-600">Miễn phí</span>
+                  ) : (
+                    formatVnd(shippingFee)
+                  )}
                 </span>
-              </li>
-            ))}
-          </ul>
-
-          <div className="space-y-2 border-t border-dashed border-gray-200 pt-4 text-sm">
-            <div className="flex justify-between text-gray-600">
-              <span>Tạm tính ({totalQuantity} sản phẩm)</span>
-              <span className="font-semibold text-gray-900">{formatVnd(subtotal)}</span>
+              </div>
+              <div className="flex justify-between border-t border-gray-100 pt-3 text-base font-bold text-gray-900">
+                <span>Tổng cộng</span>
+                <span className="text-primary">
+                  {feeLoading ? "..." : formatVnd(subtotal + shippingFee)}
+                </span>
+              </div>
             </div>
-            <div className="flex justify-between text-gray-600">
-              <span>Phí vận chuyển</span>
-              <span className="font-semibold text-gray-900">
-                {feeLoading ? (
-                  "Đang tính..."
-                ) : shippingFee === 0 && subtotal >= 500000 ? (
-                  <span className="text-green-600">Miễn phí</span>
-                ) : (
-                  formatVnd(shippingFee)
-                )}
-              </span>
-            </div>
-            <div className="flex justify-between border-t border-gray-100 pt-3 text-base font-bold text-gray-900">
-              <span>Tổng cộng</span>
-              <span className="text-primary">
-                {feeLoading ? "..." : formatVnd(subtotal + shippingFee)}
-              </span>
-            </div>
-          </div>
 
-          <button
-            onClick={handlePlaceOrder}
-            disabled={submitting || !selectedAddressId || checkoutItems.length === 0}
-            className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3.5 text-base font-bold text-white shadow-md transition-all hover:bg-primary-dark active:scale-95 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:shadow-none cursor-pointer"
-          >
-            {submitting ? (
-              <>
-                <Loader2 className="h-5 w-5 animate-spin" />
-                Đang xử lý...
-              </>
-            ) : (
-              "Đặt hàng"
-            )}
-          </button>
+            <button
+              onClick={handlePlaceOrder}
+              disabled={submitting || !selectedAddressId || checkoutItems.length === 0}
+              className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3.5 text-base font-bold text-white shadow-md transition-all hover:bg-primary-dark active:scale-95 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:shadow-none cursor-pointer"
+            >
+              {submitting ? (
+                <>
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  Đang xử lý...
+                </>
+              ) : (
+                "Đặt hàng"
+              )}
+            </button>
 
-          <p className="mt-3 text-center text-xs text-gray-500">
-            Bằng việc đặt hàng, bạn đồng ý với{" "}
-            <Link to="/products" className="text-primary hover:underline">
-              điều khoản mua hàng
-            </Link>
-          </p>
+            <p className="mt-3 text-center text-xs text-gray-500">
+              Bằng việc đặt hàng, bạn đồng ý với{" "}
+              <Link to="/products" className="text-primary hover:underline">
+                điều khoản mua hàng
+              </Link>
+            </p>
           </aside>
 
           <div className="flex items-center gap-3 rounded-xl bg-white p-4 text-sm text-gray-900 shadow-sm ring-1 ring-gray-100">
