@@ -9,6 +9,7 @@ import {
   ElementInputVocabulary,
   ClassifyElementInputResult,
   WorkspaceProfileInputDto,
+  PurchasedItem,
 } from "../types/workspace";
 import type { ApiResponse } from "@/types/api";
 
@@ -60,6 +61,33 @@ export const getWorkspaceElementAnalysis = async (
     `/workspace/${id}/element-analysis`,
   );
   return response.data.data;
+};
+
+// ===== Đặt sản phẩm đã mua vào workspace (radar tính lúc đọc ở BE) =====
+
+/** Sản phẩm đã mua đủ điều kiện đặt phòng + đang đặt ở đâu. */
+export const getPurchasedItems = async (): Promise<PurchasedItem[]> => {
+  const response = await fetchHttpClient.get<ApiResponse<PurchasedItem[]>>(
+    "/workspace/placements/purchasable",
+  );
+  return response.data.data;
+};
+
+/** Đặt (hoặc chuyển từ phòng khác) 1 order item vào workspace. */
+export const placeProduct = async (workspaceId: string, orderItemId: string) => {
+  const response = await fetchHttpClient.put<ApiResponse<null>>(
+    `/workspace/${workspaceId}/placements`,
+    { orderItemId },
+  );
+  return response.data;
+};
+
+/** Gỡ 1 order item khỏi workspace. */
+export const removePlacement = async (workspaceId: string, orderItemId: string) => {
+  const response = await fetchHttpClient.delete<ApiResponse<null>>(
+    `/workspace/${workspaceId}/placements/${orderItemId}`,
+  );
+  return response.data;
 };
 
 export const getElementInputVocabulary = async (): Promise<ElementInputVocabulary> => {

@@ -9,7 +9,7 @@
   /* Fonts */
   --font-sans: "Inter", sans-serif;
 
-  /* Brand */
+  /* Brand — Sage Green (theme gốc) */
   --color-primary: #7d8f69;
   --color-primary-dark: #5f7050;
   --color-primary-light: #c8d7b0;
@@ -47,6 +47,78 @@
   --spacing-section-sm: clamp(0.4rem, 1.5vw, 0.8rem);
   --spacing-section-md: clamp(1rem, 2.5vw, 1.4rem);
   --spacing-section-lg: clamp(2rem, 4vw, 2.2rem);
+}
+
+/* =========================
+   Theme: Jade (china teal · jade green · gray)
+   ĐANG ẨN — không còn xuất hiện trong ThemeToggle, giữ lại token để
+   tham khảo. Kích hoạt thủ công bằng <html data-theme="jade"> nếu cần.
+========================= */
+
+:root[data-theme="jade"] {
+  /* Brand — teal ngọc bích */
+  --color-primary: #1f7a70;
+  --color-primary-dark: #14574f;
+  --color-primary-light: #b7ddd5;
+
+  /* Secondary — xám thanh lịch */
+  --color-secondary: #7d8a8e;
+  --color-secondary-dark: #556266;
+  --color-secondary-light: #ccd6d8;
+
+  /* Neutral — xám sáng pha lục */
+  --color-neutral: #f6f9f8;
+  --color-neutral-dark: #e2e9e7;
+
+  /* Text */
+  --color-text-primary: #22302d;
+  --color-text-secondary: #5d6b68;
+  --color-text-light: #f6f9f8;
+
+  /* Borders */
+  --color-border-light: #d3dcd9;
+  --color-border-dark: #a4b3af;
+
+  /* Semantic */
+  --color-success: #2e8b6a;
+  --color-warning: #b58b4d;
+  --color-danger: #c0392b;
+  --color-info: #3a7ca5;
+}
+
+/* =========================
+   Theme: Dark (sage green trên nền tối)
+   Kích hoạt bằng <html data-theme="dark"> qua nút ThemeToggle.
+========================= */
+
+:root[data-theme="dark"] {
+  /* Brand — sage sáng hơn để nổi trên nền tối */
+  --color-primary: #93a67e;
+  --color-primary-dark: #7d8f69;
+  --color-primary-light: #3a4433;
+
+  --color-secondary: #b59f7f;
+  --color-secondary-dark: #8f7a5c;
+  --color-secondary-light: #423a2e;
+
+  /* Neutral — nền tối ấm */
+  --color-neutral: #191c16;
+  --color-neutral-dark: #242821;
+
+  /* Text */
+  --color-text-primary: #e8ebe2;
+  --color-text-secondary: #a6ad9c;
+  --color-text-light: #fcfaf7;
+
+  /* Borders */
+  --color-border-light: #333a2e;
+  --color-border-dark: #49523f;
+
+  /* Semantic */
+  --color-success: #8fb07a;
+  --color-warning: #d1a25e;
+  --color-danger: #e57373;
+  --color-info: #7d99ab;
 }
 
 /* =========================
@@ -97,9 +169,7 @@ body {
   overflow-x: clip;
 }
 
-/* Scrollbar THEO TÔNG THƯƠNG HIỆU cho toàn app (thay scrollbar mặc định của browser trông lạc tông).
-   Áp lên '*' để mọi vùng cuộn đều đồng bộ; các class .scrollbar-none / .custom-scrollbar vẫn override
-   được vì selector class có specificity cao hơn '*'. Thumb dùng primary-light, hover đậm thành primary. */
+/* Scrollbar đồng bộ theo tone màu Jade Green mới */
 * {
   scrollbar-width: thin;
   scrollbar-color: var(--color-primary) transparent;
@@ -114,7 +184,6 @@ body {
 *::-webkit-scrollbar-thumb {
   background-color: var(--color-primary);
   border-radius: var(--radius-full);
-  /* viền trong suốt + clip content-box → thumb thon lại, có đệm hai bên cho thanh mảnh, tinh tế. */
   border: 2px solid transparent;
   background-clip: content-box;
 }
@@ -215,12 +284,12 @@ body {
 .fd-md hr {
   margin: 0.5rem 0;
   border: 0;
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid var(--color-border-light);
 }
 .fd-md blockquote {
-  border-left: 2px solid #e5e7eb;
+  border-left: 2px solid var(--color-primary-light);
   padding-left: 0.5rem;
-  color: #6b7280;
+  color: var(--color-text-secondary);
 }
 .fd-md {
   max-width: 100%;
@@ -235,7 +304,7 @@ body {
 }
 .fd-md th,
 .fd-md td {
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--color-border-light);
   padding: 0.25rem 0.4rem;
   text-align: left;
   white-space: normal;
@@ -249,7 +318,7 @@ body {
 }
 
 /* =========================
-   Badge "Đang gọi trợ lý AI" — hiệu ứng đẩy lên khi kích hoạt @AI
+   Badge "Đang gọi trợ lý AI" 
 ========================= */
 @keyframes ai-badge-up {
   from {
@@ -266,7 +335,7 @@ body {
 }
 
 /* =========================
-   Tag picker "hiện trạng không gian" — thanh loading khi AI đang phân loại tag mới
+   Tag picker "hiện trạng không gian"
 ========================= */
 @keyframes tag-progress-slide {
   0% {

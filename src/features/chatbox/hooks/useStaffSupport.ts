@@ -39,6 +39,7 @@ export function useStaffSupport() {
   const [status, setStatus] = useState<ChatConnectionStatus>("connecting");
   const [sending, setSending] = useState(false);
   const [claiming, setClaiming] = useState(false);
+  const [startingDirect, setStartingDirect] = useState(false);
 
   const activeRef = useRef(activeId);
   useEffect(() => {
@@ -143,6 +144,29 @@ export function useStaffSupport() {
     [myRooms],
   );
 
+  /** Staff chủ động tạo (hoặc mở lại) cuộc trò chuyện 1-1 với một khách hàng cụ thể. */
+  const startDirect = useCallback(
+    async (otherUserId: string) => {
+      if (startingDirect) return;
+      setStartingDirect(true);
+      try {
+        const res = await chatApi.getOrStartDirect(otherUserId);
+        if (!res.data.isSuccess) {
+          toast.error(res.data.message || "Không tạo được cuộc trò chuyện.");
+          return;
+        }
+        const box = res.data.data;
+        await refresh(); // đưa phòng mới vào danh sách "Đang hỗ trợ"
+        await openRoom(box.id);
+      } catch {
+        toast.error("Không tạo được cuộc trò chuyện.");
+      } finally {
+        setStartingDirect(false);
+      }
+    },
+    [startingDirect, refresh, openRoom],
+  );
+
   return {
     meId,
     queue,
@@ -152,10 +176,12 @@ export function useStaffSupport() {
     status,
     sending,
     claiming,
+    startingDirect,
     refresh,
     openRoom,
     claim,
     send,
     isMine,
+    startDirect,
   };
 }

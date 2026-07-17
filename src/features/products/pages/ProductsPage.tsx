@@ -4,6 +4,7 @@ import { getCategoriesRequest } from "@/features/category/api/category.api";
 import type { Category } from "@/features/category/types/category";
 import ProductCard, { ProductCardSkeleton } from "@/features/products/components/ProductCard";
 import { useProductList } from "@/features/products/hooks/useProducts";
+import type { GetProductsParams } from "@/features/products/types/product";
 import { SearchX, List, ChevronRight, Filter } from "lucide-react";
 
 const FS_ELEMENTS = [
@@ -44,19 +45,18 @@ export default function ProductsPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
 
+  // Filter hành đẩy xuống BE (?element=...) — lọc trên TOÀN BỘ catalog (khớp cả hành
+  // chính lẫn hành phụ qua product_elements), thay vì lọc client-side 1 trang như trước.
   const { products, loading } = useProductList({
     search: search || undefined,
     categoryId: categoryId || undefined,
+    element: (element || undefined) as GetProductsParams["element"],
     pageSize: 20,
   });
 
   const sortedProducts = useMemo(() => {
     if (!products) return [];
-    let arr = [...products];
-
-    if (element) {
-      arr = arr.filter((p) => p.primaryElement === element);
-    }
+    const arr = [...products];
 
     switch (sort) {
       case "name-asc":
@@ -70,7 +70,7 @@ export default function ProductsPage() {
       default:
         return arr;
     }
-  }, [products, sort, element]);
+  }, [products, sort]);
 
   useEffect(() => {
     async function fetchCategories() {

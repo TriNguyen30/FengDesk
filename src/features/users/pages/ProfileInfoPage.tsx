@@ -1,11 +1,15 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAppDispatch, useAppSelector } from "@/app/store";
 import { logout } from "@/features/auth/store/authSlice";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { logoutRequest, myProfileRequest } from "@/features/auth/api/auth.api";
+import {
+  logoutRequest,
+  myProfileRequest,
+  updateBirthTimeRequest,
+} from "@/features/auth/api/auth.api";
 import { clearSession } from "@/utils";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 export default function ProfileInfoPage() {
   const user = useAppSelector((state) => state.auth.user);
@@ -19,6 +23,36 @@ export default function ProfileInfoPage() {
   });
 
   const profile = profileResponse?.data || user;
+  const queryClient = useQueryClient();
+
+  // Giờ sinh — field DUY NHẤT sửa được ở màn này (phục vụ Tứ Trụ/Bát Tự trong chat AI).
+  const [birthTime, setBirthTime] = useState("");
+  const [savingBirthTime, setSavingBirthTime] = useState(false);
+  const savedBirthTime =
+    profileResponse?.data && "birthTime" in profileResponse.data
+      ? (profileResponse.data.birthTime?.slice(0, 5) ?? "")
+      : "";
+
+  useEffect(() => {
+    setBirthTime(savedBirthTime);
+  }, [savedBirthTime]);
+
+  const handleSaveBirthTime = async () => {
+    setSavingBirthTime(true);
+    try {
+      const res = await updateBirthTimeRequest(birthTime || null);
+      if (res.isSuccess) {
+        toast.success(res.message || "Đã cập nhật giờ sinh");
+        queryClient.invalidateQueries({ queryKey: ["myProfile"] });
+      } else {
+        toast.error(res.message || "Không cập nhật được giờ sinh");
+      }
+    } catch {
+      toast.error("Không cập nhật được giờ sinh");
+    } finally {
+      setSavingBirthTime(false);
+    }
+  };
 
   const handleLogout = async () => {
     try {
@@ -151,6 +185,33 @@ export default function ProfileInfoPage() {
                 className="block w-full rounded-lg border border-gray-300 bg-gray-50 px-4 py-2.5 text-sm text-gray-900 opacity-70 cursor-not-allowed"
               />
             </div>
+          </div>
+
+          {/* Giờ sinh — sửa được: trợ lý AI dùng để luận đủ Tứ Trụ/Bát Tự */}
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-gray-700">
+              Giờ sinh <span className="font-normal text-gray-400">(tùy chọn)</span>
+            </label>
+            <div className="flex gap-2">
+              <input
+                type="time"
+                value={birthTime}
+                onChange={(e) => setBirthTime(e.target.value)}
+                disabled={savingBirthTime}
+                className="block w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/20"
+              />
+              <button
+                type="button"
+                onClick={handleSaveBirthTime}
+                disabled={savingBirthTime || birthTime === savedBirthTime}
+                className="shrink-0 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-dark disabled:opacity-50 cursor-pointer"
+              >
+                {savingBirthTime ? "Đang lưu..." : "Lưu"}
+              </button>
+            </div>
+            <p className="mt-1 text-xs text-gray-400">
+              Thêm giờ sinh để trợ lý AI xem được Tứ Trụ / Bát Tự đầy đủ cho bạn.
+            </p>
           </div>
 
           <div className="pt-4 flex gap-3">
