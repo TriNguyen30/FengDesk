@@ -9,33 +9,33 @@
   /* Fonts */
   --font-sans: "Inter", sans-serif;
 
-  /* Brand */
-  --color-primary: #7d8f69;
-  --color-primary-dark: #5f7050;
-  --color-primary-light: #c8d7b0;
+  /* Brand (Chinese Jade Green & Deep Teal) */
+  --color-primary: #007852;       /* Chinese Jade Green - Màu chủ đạo */
+  --color-primary-dark: #005c3f;  /* Jade đậm khi hover/active */
+  --color-primary-light: #cce4dc; /* Jade nhạt cho nền highlight/badge */
 
-  --color-secondary: #a68a64;
-  --color-secondary-dark: #7a6245;
-  --color-secondary-light: #dcc4a0;
+  --color-secondary: #0a4d5c;     /* Deep Teal - Màu phụ trợ công nghệ */
+  --color-secondary-dark: #06333d;/* Teal đậm */
+  --color-secondary-light: #cee0e4;/* Teal nhạt */
 
-  /* Neutral */
-  --color-neutral: #fcfaf7;
-  --color-neutral-dark: #e7e2db;
+  /* Neutral (Cool Gray Palette) */
+  --color-neutral: #f4f6f8;       /* Nền chính - Xám mát siêu dịu mắt */
+  --color-neutral-dark: #e4e7eb;  /* Nền phụ / Khung phân vùng */
 
-  /* Text */
-  --color-text-primary: #2f312b;
-  --color-text-secondary: #666666;
-  --color-text-light: #fcfaf7;
+  /* Text (Charcoal Gray) */
+  --color-text-primary: #1a202c;   /* Chữ chính - Xám than đậm dễ đọc */
+  --color-text-secondary: #4a5568; /* Chữ phụ - Xám vừa */
+  --color-text-light: #ffffff;     /* Chữ trên nền tối */
 
   /* Borders */
-  --color-border-light: #ddd8d0;
-  --color-border-dark: #b8b1a7;
+  --color-border-light: #e2e8f0;
+  --color-border-dark: #cbd5e1;
 
-  /* Semantic */
-  --color-success: #6e8b5b;
-  --color-warning: #b58b4d;
-  --color-danger: #c62828;
-  --color-info: #5c6f7c;
+  /* Semantic (Được tinh chỉnh lại để hợp với tone lạnh mới) */
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
+  --color-info: #3b82f6;
 
   /* Radius */
   --radius-sm: 4px;
@@ -97,9 +97,7 @@ body {
   overflow-x: clip;
 }
 
-/* Scrollbar THEO TÔNG THƯƠNG HIỆU cho toàn app (thay scrollbar mặc định của browser trông lạc tông).
-   Áp lên '*' để mọi vùng cuộn đều đồng bộ; các class .scrollbar-none / .custom-scrollbar vẫn override
-   được vì selector class có specificity cao hơn '*'. Thumb dùng primary-light, hover đậm thành primary. */
+/* Scrollbar đồng bộ theo tone màu Jade Green mới */
 * {
   scrollbar-width: thin;
   scrollbar-color: var(--color-primary) transparent;
@@ -114,7 +112,6 @@ body {
 *::-webkit-scrollbar-thumb {
   background-color: var(--color-primary);
   border-radius: var(--radius-full);
-  /* viền trong suốt + clip content-box → thumb thon lại, có đệm hai bên cho thanh mảnh, tinh tế. */
   border: 2px solid transparent;
   background-clip: content-box;
 }
@@ -215,12 +212,12 @@ body {
 .fd-md hr {
   margin: 0.5rem 0;
   border: 0;
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid var(--color-border-light);
 }
 .fd-md blockquote {
-  border-left: 2px solid #e5e7eb;
+  border-left: 2px solid var(--color-primary-light);
   padding-left: 0.5rem;
-  color: #6b7280;
+  color: var(--color-text-secondary);
 }
 .fd-md {
   max-width: 100%;
@@ -235,7 +232,7 @@ body {
 }
 .fd-md th,
 .fd-md td {
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--color-border-light);
   padding: 0.25rem 0.4rem;
   text-align: left;
   white-space: normal;
@@ -249,7 +246,7 @@ body {
 }
 
 /* =========================
-   Badge "Đang gọi trợ lý AI" — hiệu ứng đẩy lên khi kích hoạt @AI
+   Badge "Đang gọi trợ lý AI" 
 ========================= */
 @keyframes ai-badge-up {
   from {
@@ -266,7 +263,7 @@ body {
 }
 
 /* =========================
-   Tag picker "hiện trạng không gian" — thanh loading khi AI đang phân loại tag mới
+   Tag picker "hiện trạng không gian"
 ========================= */
 @keyframes tag-progress-slide {
   0% {
