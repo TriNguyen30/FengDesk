@@ -73,7 +73,7 @@ export default function ElementVectorFit({ analysis, variant = "full" }: Element
           <ElementTags rows={orderedRows} />
           <SpaceInsightList insights={analysis.insights} />
         </div>
-        <ElementRadarChart rows={orderedRows} />
+        <ElementRadarChart rows={orderedRows} showPreview={analysis.hasPreview} />
       </div>
     </div>
   );
