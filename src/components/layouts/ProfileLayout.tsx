@@ -2,6 +2,7 @@ import { Outlet, NavLink } from "react-router-dom";
 import { User, MapPin, Package, HousePlus, Bell, RefreshCw, Mail } from "lucide-react";
 import { useEffect } from "react";
 import { useMyStoreInvitations } from "@/features/shop/hooks/useShopStaff";
+import ThemeToggle from "@/components/ui/ThemeToggle";
 
 export default function ProfileLayout() {
   // Load lời mời (nhẹ) để hiện badge số lượng bên cạnh menu; nếu 0 thì ẩn badge.
@@ -64,6 +65,7 @@ export default function ProfileLayout() {
                   </NavLink>
                 );
               })}
+              <ThemeToggle variant="sidebar" />
             </nav>
           </div>
         </aside>
