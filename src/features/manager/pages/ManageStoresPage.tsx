@@ -184,10 +184,12 @@ export default function ManageStoresPage() {
   // Districts based on province
   useEffect(() => {
     if (selectedProvinceId) {
+      // Snapshot: ref may be reset before this fetch resolves (race fix)
+      const fromMap = isMapTriggeredRef.current;
       getDistrictsByProvinceId(selectedProvinceId)
         .then((data) => {
           setDistricts(data || []);
-          if (!isMapTriggeredRef.current) {
+          if (!fromMap) {
             setSelectedDistrictId("");
             setWards([]);
             setSelectedWardId("");
@@ -205,10 +207,12 @@ export default function ManageStoresPage() {
   // Wards based on district
   useEffect(() => {
     if (selectedDistrictId) {
+      // Snapshot: ref may be reset before this fetch resolves (race fix)
+      const fromMap = isMapTriggeredRef.current;
       getWardsByDistrictId(selectedDistrictId)
         .then((data) => {
           setWards(data || []);
-          if (!isMapTriggeredRef.current) {
+          if (!fromMap) {
             setSelectedWardId("");
           }
         })
@@ -305,6 +309,11 @@ export default function ManageStoresPage() {
           isMapTriggeredRef.current = false;
           setIsReverseGeocoding(false);
           return;
+        }
+
+        // Auto-fill house number + street name from reverse geocoding
+        if (result.street) {
+          setAddressForm((prev) => ({ ...prev, streetAddress: result.street ?? "" }));
         }
 
         let currentProvinces = provinces;

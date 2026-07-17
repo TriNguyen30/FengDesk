@@ -13,7 +13,8 @@ interface Props {
 
 /**
  * "Vật phẩm trong phòng": sản phẩm đã mua đặt vào workspace này + dropdown đặt thêm từ lịch sử mua.
- * Đặt/gỡ/chuyển phòng → invalidate ["workspace"] → radar (element-analysis) tự tính lại và morph.
+ * Dropdown chỉ hiện món CHƯA đặt phòng nào (mỗi order item nằm tối đa 1 phòng — unique bên BE).
+ * Đặt/gỡ → invalidate ["workspace"] → radar (element-analysis) tự tính lại và morph.
  * Hàng chưa giao hiện badge "Đang giao — xem trước" (nằm ở lớp radar nét đứt).
  */
 export default function WorkspacePlacementSection({ workspaceId, placedProducts }: Props) {
@@ -52,19 +53,61 @@ export default function WorkspacePlacementSection({ workspaceId, placedProducts 
     onError: () => toast.error("Không gỡ được sản phẩm"),
   });
 
-  // Ứng viên để đặt: mọi món đã mua CHƯA nằm trong phòng này (nằm phòng khác → chọn = chuyển phòng).
-  const candidates = purchased.filter((i) => i.placedWorkspaceProfileId !== workspaceId);
+  // Ứng viên để đặt: chỉ những món CHƯA đặt ở bất kỳ phòng nào.
+  // Món đang nằm phòng khác không hiện — muốn chuyển phòng thì gỡ ở phòng cũ trước.
+  const candidates = purchased.filter((i) => !i.placedWorkspaceProfileId);
   const busy = placeMutation.isPending || removeMutation.isPending;
 
   return (
     <div className="mt-4 rounded-2xl border border-gray-100 bg-gray-50/60 p-4">
       <p className="mb-3 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-gray-500">
         <PackagePlus size={13} />
-        Vật phẩm trong phòng ({placedProducts.length})
+        Sản phẩm đã đặt ({placedProducts.length})
       </p>
 
-      {placedProducts.length > 0 && (
-        <ul className="mb-3 space-y-2">
+      <div className="flex flex-col gap-3 md:flex-row">
+        {/* Trái (1/3): chọn sản phẩm đã mua để đặt thêm */}
+        <div className="flex shrink-0 flex-col gap-2 md:w-1/3">
+          <select
+            value={selecting}
+            onChange={(e) => setSelecting(e.target.value)}
+            disabled={busy || isLoading}
+            className="w-full min-w-0 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs text-gray-700 focus:border-primary focus:outline-none"
+          >
+            <option value="">
+              {isLoading
+                ? "Đang tải sản phẩm đã mua..."
+                : candidates.length === 0
+                  ? "Không có sản phẩm đã mua để đặt"
+                  : "— Chọn sản phẩm đã mua để đặt vào phòng —"}
+            </option>
+            {candidates.map((i) => (
+              <option key={i.orderItemId} value={i.orderItemId}>
+                {i.productName}
+                {i.quantity > 1 ? ` ×${i.quantity}` : ""}
+                {!i.isDelivered ? " (đang giao)" : ""}
+              </option>
+            ))}
+          </select>
+          <button
+            type="button"
+            disabled={!selecting || busy}
+            onClick={() => placeMutation.mutate(selecting)}
+            className="flex items-center justify-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-primary-dark disabled:opacity-50 cursor-pointer"
+          >
+            {busy ? <Loader2 size={13} className="animate-spin" /> : <PackagePlus size={13} />}
+            Đặt vào
+          </button>
+          <p className="text-[11px] text-gray-400">
+            Đặt sản phẩm đã mua vào phòng để radar ngũ hành phản ánh không gian thực tế. Mỗi món chỉ
+            nằm ở một phòng — muốn chuyển phòng, hãy gỡ khỏi phòng cũ trước.
+          </p>
+        </div>
+
+        {/* Phải (2/3): danh sách vật phẩm đã đặt — cuộn khi dài */}
+        <div className="custom-scrollbar max-h-48 min-w-0 flex-1 overflow-y-auto md:w-2/3">
+          {placedProducts.length > 0 ? (
+        <ul className="space-y-2">
           {placedProducts.map((p) => (
             <li
               key={p.placementId}
@@ -84,7 +127,7 @@ export default function WorkspacePlacementSection({ workspaceId, placedProducts 
                 {!p.isDelivered && (
                   <p className="flex items-center gap-1 text-[11px] font-medium text-amber-600">
                     <Truck size={11} />
-                    Đang giao — hiển thị dạng xem trước
+                    Đang giao - hiển thị dạng xem trước
                   </p>
                 )}
               </div>
@@ -100,44 +143,13 @@ export default function WorkspacePlacementSection({ workspaceId, placedProducts 
             </li>
           ))}
         </ul>
-      )}
-
-      <div className="flex gap-2">
-        <select
-          value={selecting}
-          onChange={(e) => setSelecting(e.target.value)}
-          disabled={busy || isLoading}
-          className="min-w-0 flex-1 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs text-gray-700 focus:border-primary focus:outline-none"
-        >
-          <option value="">
-            {isLoading
-              ? "Đang tải sản phẩm đã mua..."
-              : candidates.length === 0
-                ? "Không có sản phẩm đã mua để đặt"
-                : "— Chọn sản phẩm đã mua để đặt vào phòng —"}
-          </option>
-          {candidates.map((i) => (
-            <option key={i.orderItemId} value={i.orderItemId}>
-              {i.productName}
-              {!i.isDelivered ? " (đang giao)" : ""}
-              {i.placedWorkspaceName ? ` — đang ở "${i.placedWorkspaceName}"` : ""}
-            </option>
-          ))}
-        </select>
-        <button
-          type="button"
-          disabled={!selecting || busy}
-          onClick={() => placeMutation.mutate(selecting)}
-          className="flex shrink-0 items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-primary-dark disabled:opacity-50 cursor-pointer"
-        >
-          {busy ? <Loader2 size={13} className="animate-spin" /> : <PackagePlus size={13} />}
-          Đặt vào
-        </button>
+          ) : (
+            <div className="flex h-full min-h-16 items-center justify-center rounded-lg border border-dashed border-gray-200 bg-white/60 px-3 py-4 text-xs text-gray-400">
+              Chưa có vật phẩm nào trong phòng
+            </div>
+          )}
+        </div>
       </div>
-      <p className="mt-2 text-[11px] text-gray-400">
-        Đặt sản phẩm đã mua vào phòng để radar ngũ hành phản ánh không gian thực tế. Chọn món đang ở
-        phòng khác sẽ chuyển nó sang phòng này.
-      </p>
     </div>
   );
 }

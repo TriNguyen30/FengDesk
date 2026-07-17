@@ -1,7 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import vietmapgl from "@vietmap/vietmap-gl-js/dist/vietmap-gl.js";
 import "@vietmap/vietmap-gl-js/dist/vietmap-gl.css";
-import { VIETMAP_API_KEY } from "@/config/env";
+import { VIETMAP_TILEMAP_KEY } from "@/config/env";
+import {
+  vietmapAutocomplete,
+  getPlaceCoordinates,
+  type VietMapSearchResult,
+} from "../api/geocoding";
 import { Search } from "lucide-react";
 
 interface LocationPickerMapProps {
@@ -25,13 +30,7 @@ export default function LocationPickerMap({
 
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  interface SearchResult {
-    lat: string;
-    lon: string;
-    display_name: string;
-  }
-
-  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  const [searchResults, setSearchResults] = useState<VietMapSearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -43,7 +42,7 @@ export default function LocationPickerMap({
 
     const map = new vietmapgl.Map({
       container: mapContainerRef.current,
-      style: `https://maps.vietmap.vn/api/maps/light/styles.json?apikey=${VIETMAP_API_KEY}`,
+      style: `https://maps.vietmap.vn/api/maps/light/styles.json?apikey=${VIETMAP_TILEMAP_KEY}`,
       center: initialCenter,
       zoom: 13,
       pitch: 0,
@@ -146,8 +145,10 @@ export default function LocationPickerMap({
     setIsSearching(true);
     searchTimeoutRef.current = setTimeout(async () => {
       try {
-        const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(val)}`);
-        const data = await res.json();
+        // Prioritize results near the current map center
+        const center = mapRef.current?.getCenter();
+        const focus = center ? { lat: center.lat, lng: center.lng } : undefined;
+        const data = await vietmapAutocomplete(val, focus);
         setSearchResults(data);
       } catch (error) {
         console.error("Search error", error);
@@ -157,12 +158,13 @@ export default function LocationPickerMap({
     }, 500);
   };
 
-  const handleSelectResult = (result: SearchResult) => {
-    const lat = parseFloat(result.lat);
-    const lng = parseFloat(result.lon);
+  const handleSelectResult = async (result: VietMapSearchResult) => {
+    const coords = await getPlaceCoordinates(result.ref_id);
+    if (!coords) return;
+    const { lat, lng } = coords;
 
     onChange(lat, lng);
-    setSearchQuery(result.display_name);
+    setSearchQuery(result.display);
     setSearchResults([]);
 
     if (mapRef.current) {
@@ -249,10 +251,10 @@ export default function LocationPickerMap({
                 key={i}
                 className="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 text-gray-700 truncate"
                 onClick={() => handleSelectResult(result)}
-                title={result.display_name}
+                title={result.display}
                 type="button"
               >
-                {result.display_name}
+                {result.display}
               </button>
             ))}
           </div>

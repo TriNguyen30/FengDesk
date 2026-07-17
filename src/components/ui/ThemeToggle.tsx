@@ -1,19 +1,22 @@
-import { Palette } from "lucide-react";
+import { Moon, Sun } from "lucide-react";
 import { useCallback, useSyncExternalStore } from "react";
 
 /**
- * Nút chuyển theme màu: default (sage green) ↔ jade (china teal / jade green / gray).
+ * Nút chuyển theme: default (sage green, nền sáng) ↔ dark (sage green, nền tối).
  * Theme lưu ở localStorage("fd-theme") và gắn qua <html data-theme="...">.
  * Token màu của từng theme khai báo trong src/index.css.
+ * (Theme "jade" cũ đã ẩn — giá trị localStorage cũ tự fallback về default.)
  */
 
 const STORAGE_KEY = "fd-theme";
-export type ThemeName = "default" | "jade";
+export type ThemeName = "default" | "dark";
 
 let listeners: Array<() => void> = [];
 
 function getTheme(): ThemeName {
-  return (localStorage.getItem(STORAGE_KEY) as ThemeName) || "default";
+  const stored = localStorage.getItem(STORAGE_KEY);
+  // Fallback về "default" với giá trị cũ/không hợp lệ (vd: "jade")
+  return stored === "dark" ? "dark" : "default";
 }
 
 /** Gắn theme vào <html>. Gọi 1 lần lúc khởi động app (main.tsx) để không bị nháy màu. */
@@ -38,10 +41,11 @@ function subscribe(listener: () => void) {
 
 export default function ThemeToggle({ variant = "default" }: { variant?: "default" | "sidebar" }) {
   const theme = useSyncExternalStore(subscribe, getTheme);
+  const isDark = theme === "dark";
 
   const toggle = useCallback(() => {
-    setTheme(theme === "jade" ? "default" : "jade");
-  }, [theme]);
+    setTheme(isDark ? "default" : "dark");
+  }, [isDark]);
 
   if (variant === "sidebar") {
     return (
@@ -50,16 +54,16 @@ export default function ThemeToggle({ variant = "default" }: { variant?: "defaul
         onClick={toggle}
         className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors text-gray-600 hover:bg-gray-50 hover:text-gray-900 cursor-pointer"
       >
-        <Palette size={18} />
-        <span className="flex-1 text-left">Giao diện</span>
+        {isDark ? <Moon size={18} /> : <Sun size={18} />}
+        <span className="flex-1 text-left">Chế độ tối</span>
         <div
           className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200 ease-in-out ${
-            theme === "jade" ? "bg-primary" : "bg-gray-200"
+            isDark ? "bg-primary" : "bg-gray-200"
           }`}
         >
           <span
             className={`inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-              theme === "jade" ? "translate-x-4.5" : "translate-x-0.5"
+              isDark ? "translate-x-4.5" : "translate-x-0.5"
             }`}
           />
         </div>
@@ -72,12 +76,12 @@ export default function ThemeToggle({ variant = "default" }: { variant?: "defaul
       type="button"
       onClick={toggle}
       className="flex min-w-[44px] flex-col items-center gap-0.5 rounded-lg px-1 py-1 text-gray-700 transition-colors hover:text-primary cursor-pointer"
-      aria-label={theme === "jade" ? "Đổi về theme mặc định" : "Đổi sang theme ngọc bích"}
-      title={theme === "jade" ? "Theme: Ngọc bích" : "Theme: Mặc định"}
+      aria-label={isDark ? "Đổi về chế độ sáng" : "Đổi sang chế độ tối"}
+      title={isDark ? "Chế độ: Tối" : "Chế độ: Sáng"}
     >
-      <Palette size={22} strokeWidth={1.8} />
+      {isDark ? <Moon size={22} strokeWidth={1.8} /> : <Sun size={22} strokeWidth={1.8} />}
       <span className="hidden text-[10px] font-medium sm:block sm:text-xs">
-        {theme === "jade" ? "Ngọc bích" : "Giao diện"}
+        {isDark ? "Tối" : "Sáng"}
       </span>
     </button>
   );

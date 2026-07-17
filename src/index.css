@@ -9,33 +9,33 @@
   /* Fonts */
   --font-sans: "Inter", sans-serif;
 
-  /* Brand (Chinese Jade Green & Deep Teal) */
-  --color-primary: #007852;       /* Chinese Jade Green - Màu chủ đạo */
-  --color-primary-dark: #005c3f;  /* Jade đậm khi hover/active */
-  --color-primary-light: #cce4dc; /* Jade nhạt cho nền highlight/badge */
+  /* Brand — Sage Green (theme gốc) */
+  --color-primary: #7d8f69;
+  --color-primary-dark: #5f7050;
+  --color-primary-light: #c8d7b0;
 
-  --color-secondary: #0a4d5c;     /* Deep Teal - Màu phụ trợ công nghệ */
-  --color-secondary-dark: #06333d;/* Teal đậm */
-  --color-secondary-light: #cee0e4;/* Teal nhạt */
+  --color-secondary: #a68a64;
+  --color-secondary-dark: #7a6245;
+  --color-secondary-light: #dcc4a0;
 
-  /* Neutral (Cool Gray Palette) */
-  --color-neutral: #f4f6f8;       /* Nền chính - Xám mát siêu dịu mắt */
-  --color-neutral-dark: #e4e7eb;  /* Nền phụ / Khung phân vùng */
+  /* Neutral */
+  --color-neutral: #fcfaf7;
+  --color-neutral-dark: #e7e2db;
 
-  /* Text (Charcoal Gray) */
-  --color-text-primary: #1a202c;   /* Chữ chính - Xám than đậm dễ đọc */
-  --color-text-secondary: #4a5568; /* Chữ phụ - Xám vừa */
-  --color-text-light: #ffffff;     /* Chữ trên nền tối */
+  /* Text */
+  --color-text-primary: #2f312b;
+  --color-text-secondary: #666666;
+  --color-text-light: #fcfaf7;
 
   /* Borders */
-  --color-border-light: #e2e8f0;
-  --color-border-dark: #cbd5e1;
+  --color-border-light: #ddd8d0;
+  --color-border-dark: #b8b1a7;
 
-  /* Semantic (Được tinh chỉnh lại để hợp với tone lạnh mới) */
-  --color-success: #10b981;
-  --color-warning: #f59e0b;
-  --color-danger: #ef4444;
-  --color-info: #3b82f6;
+  /* Semantic */
+  --color-success: #6e8b5b;
+  --color-warning: #b58b4d;
+  --color-danger: #c62828;
+  --color-info: #5c6f7c;
 
   /* Radius */
   --radius-sm: 4px;
@@ -51,8 +51,8 @@
 
 /* =========================
    Theme: Jade (china teal · jade green · gray)
-   Kích hoạt bằng <html data-theme="jade">. Chỉ override token màu —
-   mọi utility (bg-primary, text-primary…) tự ăn theo vì compile ra var().
+   ĐANG ẨN — không còn xuất hiện trong ThemeToggle, giữ lại token để
+   tham khảo. Kích hoạt thủ công bằng <html data-theme="jade"> nếu cần.
 ========================= */
 
 :root[data-theme="jade"] {
@@ -84,6 +84,41 @@
   --color-warning: #b58b4d;
   --color-danger: #c0392b;
   --color-info: #3a7ca5;
+}
+
+/* =========================
+   Theme: Dark (sage green trên nền tối)
+   Kích hoạt bằng <html data-theme="dark"> qua nút ThemeToggle.
+========================= */
+
+:root[data-theme="dark"] {
+  /* Brand — sage sáng hơn để nổi trên nền tối */
+  --color-primary: #93a67e;
+  --color-primary-dark: #7d8f69;
+  --color-primary-light: #3a4433;
+
+  --color-secondary: #b59f7f;
+  --color-secondary-dark: #8f7a5c;
+  --color-secondary-light: #423a2e;
+
+  /* Neutral — nền tối ấm */
+  --color-neutral: #191c16;
+  --color-neutral-dark: #242821;
+
+  /* Text */
+  --color-text-primary: #e8ebe2;
+  --color-text-secondary: #a6ad9c;
+  --color-text-light: #fcfaf7;
+
+  /* Borders */
+  --color-border-light: #333a2e;
+  --color-border-dark: #49523f;
+
+  /* Semantic */
+  --color-success: #8fb07a;
+  --color-warning: #d1a25e;
+  --color-danger: #e57373;
+  --color-info: #7d99ab;
 }
 
 /* =========================
