@@ -301,7 +301,8 @@ export function useChatbox() {
           dispatch(setView("list"));
         }
         await refreshChatboxes();
-        toast.success("Đã xóa hội thoại.");
+        // BE trả message theo vai trò: Owner → "Đã xóa...", người được mời/join → "Đã rời...".
+        toast.success(res.data.message || "Đã xóa hội thoại.");
       } catch {
         toast.error("Không xóa được hội thoại.");
       }

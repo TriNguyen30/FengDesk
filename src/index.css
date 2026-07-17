@@ -50,6 +50,43 @@
 }
 
 /* =========================
+   Theme: Jade (china teal · jade green · gray)
+   Kích hoạt bằng <html data-theme="jade">. Chỉ override token màu —
+   mọi utility (bg-primary, text-primary…) tự ăn theo vì compile ra var().
+========================= */
+
+:root[data-theme="jade"] {
+  /* Brand — teal ngọc bích */
+  --color-primary: #1f7a70;
+  --color-primary-dark: #14574f;
+  --color-primary-light: #b7ddd5;
+
+  /* Secondary — xám thanh lịch */
+  --color-secondary: #7d8a8e;
+  --color-secondary-dark: #556266;
+  --color-secondary-light: #ccd6d8;
+
+  /* Neutral — xám sáng pha lục */
+  --color-neutral: #f6f9f8;
+  --color-neutral-dark: #e2e9e7;
+
+  /* Text */
+  --color-text-primary: #22302d;
+  --color-text-secondary: #5d6b68;
+  --color-text-light: #f6f9f8;
+
+  /* Borders */
+  --color-border-light: #d3dcd9;
+  --color-border-dark: #a4b3af;
+
+  /* Semantic */
+  --color-success: #2e8b6a;
+  --color-warning: #b58b4d;
+  --color-danger: #c0392b;
+  --color-info: #3a7ca5;
+}
+
+/* =========================
    Custom Utilities
 ========================= */
 

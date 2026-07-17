@@ -48,6 +48,14 @@ export async function myProfileRequest() {
   const { data } = await fetchHttpClient.get<ApiResponse<MyProfile>>("/Auth/me");
   return data;
 }
+
+/** Cập nhật giờ sinh (HH:mm, null để xóa) — dùng cho Tứ Trụ/Bát Tự. */
+export async function updateBirthTimeRequest(birthTime: string | null) {
+  const { data } = await fetchHttpClient.put<ApiResponse<MyProfile>>("/Auth/me/birth-time", {
+    birthTime,
+  });
+  return data;
+}
 export async function logoutRequest(payload: LogoutPayload) {
   const { data } = await fetchHttpClient.post<ApiResponse<null>>("/Auth/logout", payload);
   return data;

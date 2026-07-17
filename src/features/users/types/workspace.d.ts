@@ -127,6 +127,9 @@ export interface ElementAnalysisRow {
   adjustedIdeal: number;
   current: number;
   gap: number; // + = thiếu (cần bù), − = thừa
+  /** Current NẾU tính cả sản phẩm đã mua chưa giao tới (= current khi không có preview). */
+  previewCurrent: number;
+  previewGap: number;
 }
 
 /** 1 dòng nhận định sinh ở BE (SpaceInsightBuilder) — Title/Text đã dựng sẵn, FE chỉ map icon theo Kind. */
@@ -148,4 +151,35 @@ export interface WorkspaceElementAnalysis {
   /** % phòng đúng chuẩn lý tưởng đã điều chỉnh theo mục đích + bản mệnh (0-100). */
   compatibilityPercent: number;
   insights: SpaceInsights;
+  /** true khi có sản phẩm CHƯA GIAO đặt trong phòng → radar vẽ thêm lớp preview nét đứt. */
+  hasPreview: boolean;
+  previewCompatibilityPercent: number;
+  placedProducts: PlacedProduct[];
+}
+
+/** Sản phẩm đã mua đang đặt trong phòng (trả kèm element-analysis). */
+export interface PlacedProduct {
+  placementId: string;
+  orderItemId: string;
+  productId: string;
+  productName: string;
+  productImage?: string | null;
+  deliveryStatus: string;
+  /** false = hàng đang giao → chỉ nằm trong lớp radar preview. */
+  isDelivered: boolean;
+  /** Phiếu đóng góp vào vector phòng (scale theo DecorItem code). */
+  voteWeight: number;
+}
+
+/** Sản phẩm đã mua đủ điều kiện đặt phòng (GET /workspace/placements/purchasable). */
+export interface PurchasedItem {
+  orderItemId: string;
+  productId: string;
+  productName: string;
+  productImage?: string | null;
+  quantity: number;
+  deliveryStatus: string;
+  isDelivered: boolean;
+  placedWorkspaceProfileId?: string | null;
+  placedWorkspaceName?: string | null;
 }

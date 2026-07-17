@@ -1,10 +1,23 @@
 import { useState } from "react";
-import { Headphones, Inbox, MessageCircle, RefreshCw, Wifi, WifiOff } from "lucide-react";
+import {
+  Headphones,
+  Inbox,
+  Loader2,
+  MessageCircle,
+  MessageSquarePlus,
+  RefreshCw,
+  Wifi,
+  WifiOff,
+  X,
+} from "lucide-react";
 import { useStaffSupport } from "@/features/chatbox/hooks/useStaffSupport";
 import ChatMessageList from "@/features/chatbox/components/ChatMessageList";
 import ChatInput from "@/features/chatbox/components/ChatInput";
 import { formatMessageTime, getLastMessagePreview } from "@/features/chatbox/utils/chatUtils";
 import type { Chatbox } from "@/features/chatbox/types/chatbox";
+// Dùng lại combobox search user của flow mời nhân viên store (GET /users/search).
+import UserSearchCombobox from "@/features/shop/components/UserSearchCombobox";
+import type { UserSearchItem } from "@/features/shop/types/shop";
 
 function customerName(box: Chatbox): string {
   const last = box.lastMessage;
@@ -22,12 +35,24 @@ export default function StaffSupportPage() {
     status,
     sending,
     claiming,
+    startingDirect,
     refresh,
     openRoom,
     claim,
     send,
+    startDirect,
   } = useStaffSupport();
   const [draft, setDraft] = useState("");
+  // Panel "Tạo cuộc trò chuyện" — search khách hàng rồi mở phòng 1-1.
+  const [composeOpen, setComposeOpen] = useState(false);
+  const [composeUser, setComposeUser] = useState<UserSearchItem | null>(null);
+
+  const handleStartDirect = async () => {
+    if (!composeUser) return;
+    await startDirect(composeUser.id);
+    setComposeUser(null);
+    setComposeOpen(false);
+  };
 
   const active = [...myRooms, ...queue].find((r) => r.id === activeId) ?? null;
 
@@ -66,6 +91,59 @@ export default function StaffSupportPage() {
           >
             <RefreshCw size={16} />
           </button>
+        </div>
+
+        {/* Tạo cuộc trò chuyện với khách hàng cụ thể */}
+        <div className="border-b border-gray-100 px-3 py-2.5">
+          {composeOpen ? (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">
+                  Tạo cuộc trò chuyện
+                </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setComposeOpen(false);
+                    setComposeUser(null);
+                  }}
+                  className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600 cursor-pointer"
+                  aria-label="Đóng"
+                >
+                  <X size={14} />
+                </button>
+              </div>
+              <UserSearchCombobox
+                value={composeUser}
+                onChange={setComposeUser}
+                disabledUserIds={meId ? { [meId]: "Bạn" } : {}}
+                disabled={startingDirect}
+                autoFocus
+              />
+              <button
+                type="button"
+                disabled={!composeUser || startingDirect}
+                onClick={() => void handleStartDirect()}
+                className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-primary-dark disabled:opacity-50 cursor-pointer"
+              >
+                {startingDirect ? (
+                  <Loader2 size={13} className="animate-spin" />
+                ) : (
+                  <MessageSquarePlus size={13} />
+                )}
+                Bắt đầu trò chuyện
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setComposeOpen(true)}
+              className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-primary/40 px-3 py-2 text-xs font-semibold text-primary transition-colors hover:bg-primary/5 cursor-pointer"
+            >
+              <MessageSquarePlus size={14} />
+              Tạo cuộc trò chuyện với khách hàng
+            </button>
+          )}
         </div>
 
         <div className="flex-1 overflow-y-auto">
