@@ -4,6 +4,9 @@ export interface ElementAnalysisRow {
   adjustedIdeal: number;
   current: number;
   gap: number; // + = thiếu (cần bù), − = thừa
+  /** Current NẾU thêm sản phẩm này vào phòng (BE tính bằng engine — cùng thang với current). */
+  previewCurrent: number;
+  previewGap: number;
 }
 
 export interface ProductElementRow {

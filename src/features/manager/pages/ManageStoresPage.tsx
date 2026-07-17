@@ -330,6 +330,8 @@ export default function ManageStoresPage() {
           setDistricts(districtData || []);
 
           const matchedDistrictId = findBestMatch(districtData || [], result.district);
+          if (!matchedDistrictId)
+            console.warn("[Geocode] Không khớp được quận/huyện:", result.district);
           if (matchedDistrictId) {
             setSelectedDistrictId(matchedDistrictId);
 
@@ -337,6 +339,8 @@ export default function ManageStoresPage() {
             setWards(wardData || []);
 
             const matchedWardId = findBestMatch(wardData || [], result.ward);
+            if (!matchedWardId)
+              console.warn("[Geocode] Không khớp được phường:", result.ward, "— DB có", (wardData || []).length, "phường");
             if (matchedWardId) {
               setSelectedWardId(matchedWardId);
               setAddressForm((prev) => ({ ...prev, wardId: matchedWardId }));

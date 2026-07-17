@@ -10,6 +10,37 @@ import { VIETMAP_API_KEY } from "@/config/env";
 
 const VIETMAP_BASE = "https://maps.vietmap.vn/api";
 
+// ── Cache (giảm số call VietMap — quota theo ngày) ──────────────────────────
+// Geocode theo tên tỉnh/quận/phường và reverse theo tọa độ lặp lại rất nhiều
+// trong 1 phiên; cache in-memory + sessionStorage để không đốt quota vô ích.
+
+const CACHE_PREFIX = "vm-cache:";
+const memoryCache = new Map<string, unknown>();
+
+function cacheGet<T>(key: string): T | undefined {
+  if (memoryCache.has(key)) return memoryCache.get(key) as T;
+  try {
+    const raw = sessionStorage.getItem(CACHE_PREFIX + key);
+    if (raw !== null) {
+      const val = JSON.parse(raw) as T;
+      memoryCache.set(key, val);
+      return val;
+    }
+  } catch {
+    /* sessionStorage không khả dụng — chỉ dùng memory */
+  }
+  return undefined;
+}
+
+function cacheSet(key: string, value: unknown): void {
+  memoryCache.set(key, value);
+  try {
+    sessionStorage.setItem(CACHE_PREFIX + key, JSON.stringify(value));
+  } catch {
+    /* đầy quota storage — bỏ qua */
+  }
+}
+
 // ── Vietnamese text helpers ─────────────────────────────────────────────────
 
 const ADMINISTRATIVE_PREFIXES = [
@@ -92,20 +123,34 @@ interface GeocodingProvider {
 
 const VietMapProvider: GeocodingProvider = {
   async geocode(query: string) {
+    const cacheKey = `geo:${query}`;
+    const cached = cacheGet<{ lat: number; lng: number } | null>(cacheKey);
+    if (cached !== undefined) return cached;
+
     // VietMap search/v3 returns ref_id only; place/v3 resolves coordinates.
     const results = await vietmapSearch(query);
-    if (!results.length) return null;
+    if (!results.length) return null; // không cache lỗi/quota — thử lại lần sau
 
     const place = await vietmapPlace(results[0].ref_id);
     if (!place) return null;
 
-    return { lat: place.lat, lng: place.lng };
+    const coords = { lat: place.lat, lng: place.lng };
+    cacheSet(cacheKey, coords);
+    return coords;
   },
 
   async reverse(lat: number, lng: number) {
+    // Làm tròn ~1m để tăng cache hit khi click quanh cùng 1 điểm
+    const cacheKey = `rev:${lat.toFixed(5)},${lng.toFixed(5)}`;
+    const cached = cacheGet<ReverseGeocodeResult>(cacheKey);
+    if (cached !== undefined) return cached;
+
     const url = `${VIETMAP_BASE}/reverse/v3?apikey=${VIETMAP_API_KEY}&lat=${lat}&lng=${lng}`;
     const res = await fetch(url);
-    if (!res.ok) return null;
+    if (!res.ok) {
+      if (res.status === 429) console.warn("[VietMap] Hết quota ngày (429) — reverse geocode tạm không khả dụng.");
+      return null;
+    }
 
     const data: VietMapSearchResult[] = await res.json();
     if (!data.length) return null;
@@ -118,7 +163,9 @@ const VietMapProvider: GeocodingProvider = {
     if (!province && !district && !ward) return null;
 
     // `name` holds house number + street (e.g. "948 Trường Chinh")
-    return { province, district, ward, street: first.name || "" };
+    const result = { province, district, ward, street: first.name || "" };
+    cacheSet(cacheKey, result);
+    return result;
   },
 };
 
@@ -174,10 +221,19 @@ export async function getPlaceCoordinates(
 }
 
 async function vietmapPlace(refId: string): Promise<VietMapPlaceResult | null> {
+  const cacheKey = `place:${refId}`;
+  const cached = cacheGet<VietMapPlaceResult>(cacheKey);
+  if (cached !== undefined) return cached;
+
   const url = `${VIETMAP_BASE}/place/v3?apikey=${VIETMAP_API_KEY}&refid=${encodeURIComponent(refId)}`;
   const res = await fetch(url);
-  if (!res.ok) return null;
-  return res.json();
+  if (!res.ok) {
+    if (res.status === 429) console.warn("[VietMap] Hết quota ngày (429) — place lookup tạm không khả dụng.");
+    return null;
+  }
+  const data: VietMapPlaceResult = await res.json();
+  cacheSet(cacheKey, data);
+  return data;
 }
 
 /**
