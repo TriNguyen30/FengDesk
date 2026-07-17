@@ -107,42 +107,42 @@ export default function WorkspacePlacementSection({ workspaceId, placedProducts 
         {/* Phải (2/3): danh sách vật phẩm đã đặt — cuộn khi dài */}
         <div className="custom-scrollbar max-h-48 min-w-0 flex-1 overflow-y-auto md:w-2/3">
           {placedProducts.length > 0 ? (
-        <ul className="space-y-2">
-          {placedProducts.map((p) => (
-            <li
-              key={p.placementId}
-              className="flex items-center gap-3 rounded-lg bg-white px-3 py-2 shadow-sm"
-            >
-              {p.productImage ? (
-                <img
-                  src={p.productImage}
-                  alt={p.productName}
-                  className="h-8 w-8 shrink-0 rounded-md object-cover"
-                />
-              ) : (
-                <div className="h-8 w-8 shrink-0 rounded-md bg-gray-100" />
-              )}
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium text-gray-800">{p.productName}</p>
-                {!p.isDelivered && (
-                  <p className="flex items-center gap-1 text-[11px] font-medium text-amber-600">
-                    <Truck size={11} />
-                    Đang giao - hiển thị dạng xem trước
-                  </p>
-                )}
-              </div>
-              <button
-                type="button"
-                disabled={busy}
-                onClick={() => removeMutation.mutate(p.orderItemId)}
-                className="shrink-0 rounded-md p-1.5 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-500 disabled:opacity-50 cursor-pointer"
-                title="Gỡ khỏi phòng"
-              >
-                <PackageX size={15} />
-              </button>
-            </li>
-          ))}
-        </ul>
+            <ul className="space-y-2">
+              {placedProducts.map((p) => (
+                <li
+                  key={p.placementId}
+                  className="flex items-center gap-3 rounded-lg bg-white px-3 py-2 shadow-sm"
+                >
+                  {p.productImage ? (
+                    <img
+                      src={p.productImage}
+                      alt={p.productName}
+                      className="h-8 w-8 shrink-0 rounded-md object-cover"
+                    />
+                  ) : (
+                    <div className="h-8 w-8 shrink-0 rounded-md bg-gray-100" />
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium text-gray-800">{p.productName}</p>
+                    {!p.isDelivered && (
+                      <p className="flex items-center gap-1 text-[11px] font-medium text-amber-600">
+                        <Truck size={11} />
+                        Đang giao - hiển thị dạng xem trước
+                      </p>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={() => removeMutation.mutate(p.orderItemId)}
+                    className="shrink-0 rounded-md p-1.5 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-500 disabled:opacity-50 cursor-pointer"
+                    title="Gỡ khỏi phòng"
+                  >
+                    <PackageX size={15} />
+                  </button>
+                </li>
+              ))}
+            </ul>
           ) : (
             <div className="flex h-full min-h-16 items-center justify-center rounded-lg border border-dashed border-gray-200 bg-white/60 px-3 py-4 text-xs text-gray-400">
               Chưa có vật phẩm nào trong phòng

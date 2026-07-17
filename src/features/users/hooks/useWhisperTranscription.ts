@@ -38,7 +38,9 @@ export function useWhisperTranscription() {
       streamRef.current = stream;
       chunksRef.current = [];
       const mimeType = MediaRecorder.isTypeSupported("audio/webm") ? "audio/webm" : "";
-      const recorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
+      const recorder = mimeType
+        ? new MediaRecorder(stream, { mimeType })
+        : new MediaRecorder(stream);
       recorder.ondataavailable = (e) => {
         if (e.data.size > 0) chunksRef.current.push(e.data);
       };
@@ -72,9 +74,13 @@ export function useWhisperTranscription() {
     try {
       const formData = new FormData();
       formData.append("file", blob, "recording.webm");
-      const res = await fetchHttpClient.post<ApiResponse<string>>("/workspace/transcriptions", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      const res = await fetchHttpClient.post<ApiResponse<string>>(
+        "/workspace/transcriptions",
+        formData,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        },
+      );
       const text = res.data?.data?.trim();
       return text || null;
     } catch {

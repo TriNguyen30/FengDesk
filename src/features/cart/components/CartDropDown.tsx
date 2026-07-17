@@ -186,7 +186,11 @@ export default function CartDropDown() {
           aria-label={`Giỏ hàng, ${itemCount} sản phẩm`}
         >
           <div className="relative flex size-[22px] items-center justify-center">
-            <ShoppingCart size={20} strokeWidth={1.8} className={itemCount > 0 ? "text-gray-900" : ""} />
+            <ShoppingCart
+              size={20}
+              strokeWidth={1.8}
+              className={itemCount > 0 ? "text-gray-900" : ""}
+            />
             {itemCount > 0 && (
               <span className="absolute -right-1 -top-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-bold text-white shadow-sm ring-1 ring-white animate-pulse-slow tabular-nums">
                 {itemCount > 99 ? "99+" : itemCount}
@@ -202,8 +206,9 @@ export default function CartDropDown() {
               id="navbar-cart-panel"
               role="dialog"
               aria-label="Giỏ hàng"
-              className={`w-[min(calc(100vw-1.5rem),22rem)] overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xl sm:w-96 ${closing ? "cart-dropdown-exit" : "cart-dropdown-enter"
-                }`}
+              className={`w-[min(calc(100vw-1.5rem),22rem)] overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xl sm:w-96 ${
+                closing ? "cart-dropdown-exit" : "cart-dropdown-enter"
+              }`}
             >
               <div className="flex items-center justify-between border-b border-gray-100 px-3 py-2.5">
                 <h2 className="text-sm font-bold text-gray-900">

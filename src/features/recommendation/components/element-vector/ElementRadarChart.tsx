@@ -91,7 +91,9 @@ export default function ElementRadarChart({ rows, showPreview = false }: Element
   };
 
   // Mặc định phóng to đến 45%; nếu có hành vượt 45% thì scale theo giá trị lớn nhất đó.
-  const maxValue = Math.max(...data.flatMap((d) => [d.ideal, d.current, showPreview ? d.preview : 0]));
+  const maxValue = Math.max(
+    ...data.flatMap((d) => [d.ideal, d.current, showPreview ? d.preview : 0]),
+  );
   const domainMax = Math.max(0.45, maxValue);
 
   //tooltip offset để tooltip không bị che bởi chuột nhưng đang lỗi vl

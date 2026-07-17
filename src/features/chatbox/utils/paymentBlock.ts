@@ -14,7 +14,10 @@ export interface PaymentBlock {
 const PAYMENT_RE = /\n*@@payment:(\{[\s\S]*?\})@@/;
 
 /** Tách block thanh toán (nếu có) khỏi nội dung tin nhắn. Parse lỗi → coi như không có block. */
-export function extractPaymentBlock(content: string): { text: string; payment: PaymentBlock | null } {
+export function extractPaymentBlock(content: string): {
+  text: string;
+  payment: PaymentBlock | null;
+} {
   const m = content.match(PAYMENT_RE);
   if (!m) return { text: content, payment: null };
   try {
