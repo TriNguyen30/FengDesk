@@ -258,6 +258,8 @@ export default function AddressModal({ isOpen, onClose, onSuccess, address }: Ad
           setDistricts(districtData || []);
 
           const matchedDistrictId = findBestMatch(districtData || [], result.district);
+          if (!matchedDistrictId)
+            console.warn("[Geocode] Không khớp được quận/huyện:", result.district);
           if (matchedDistrictId) {
             setSelectedDistrictId(matchedDistrictId);
 
@@ -266,6 +268,8 @@ export default function AddressModal({ isOpen, onClose, onSuccess, address }: Ad
             setWards(wardData || []);
 
             const matchedWardId = findBestMatch(wardData || [], result.ward);
+            if (!matchedWardId)
+              console.warn("[Geocode] Không khớp được phường:", result.ward, "— DB có", (wardData || []).length, "phường");
             if (matchedWardId) {
               setSelectedWardId(matchedWardId);
               setFormData((prev) => ({ ...prev, wardId: matchedWardId }));
