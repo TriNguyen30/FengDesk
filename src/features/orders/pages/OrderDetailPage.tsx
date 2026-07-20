@@ -17,6 +17,7 @@ import {
   ShoppingCart,
   FileText,
   StickyNote,
+  Upload,
 } from "lucide-react";
 import { toast } from "sonner";
 import Modal from "@/components/ui/Modal";
@@ -24,6 +25,7 @@ import { useOrderDetail, useCancelOrder } from "../hooks/useOrders";
 import { formatOrderDate, formatVnd, getOrderStatusMeta } from "../utils/orderUtils";
 import { paymentApi } from "@/features/payment";
 import { returnApi } from "@/features/return/api/return.api";
+import { uploadFile } from "@/services/upload.service";
 import type {
   ReturnType,
   ReturnReason,
@@ -39,12 +41,10 @@ const RETURN_TYPE_OPTIONS: { value: ReturnType; label: string }[] = [
 ];
 
 const REASON_OPTIONS: { value: ReturnReason; label: string }[] = [
-  { value: "Defective", label: "Sản phẩm bị lỗi" },
+  { value: "PlantHealth", label: "Tình trạng cây trồng/Sản phẩm lỗi" },
   { value: "WrongItem", label: "Sai sản phẩm" },
+  { value: "DamagedPackage", label: "Hư hỏng trong vận chuyển" },
   { value: "NotAsDescribed", label: "Không đúng mô tả" },
-  { value: "DamagedInTransit", label: "Hư hỏng trong vận chuyển" },
-  { value: "ChangedMind", label: "Đổi ý" },
-  { value: "Other", label: "Lý do khác" },
 ];
 
 const DELIVERY_STATUS_LABEL: Record<string, { label: string; pillClass: string }> = {
@@ -101,8 +101,10 @@ export default function OrderDetailPage() {
     items: [],
   });
   const [returnType, setReturnType] = useState<ReturnType>("Refund");
-  const [returnReason, setReturnReason] = useState<ReturnReason>("Defective");
+  const [returnReason, setReturnReason] = useState<ReturnReason>("PlantHealth");
   const [reasonDetail, setReasonDetail] = useState("");
+  const [imageUrls, setImageUrls] = useState<string[]>([]);
+  const [uploadingImage, setUploadingImage] = useState(false);
   const [bankAccountName, setBankAccountName] = useState("");
   const [bankAccountNumber, setBankAccountNumber] = useState("");
   const [bankName, setBankName] = useState("");
@@ -112,8 +114,9 @@ export default function OrderDetailPage() {
 
   const openReturnModal = (deliveryId: string, items: OrderLineItem[]) => {
     setReturnType("Refund");
-    setReturnReason("Defective");
+    setReturnReason("PlantHealth");
     setReasonDetail("");
+    setImageUrls([]);
     setBankAccountName("");
     setBankAccountNumber("");
     setBankName("");
@@ -160,6 +163,35 @@ export default function OrderDetailPage() {
     });
   };
 
+  const handleUploadImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files) return;
+    const filesArray = Array.from(e.target.files);
+    
+    setUploadingImage(true);
+    try {
+      const newUrls: string[] = [];
+      for (const file of filesArray) {
+        if (imageUrls.length + newUrls.length >= 3) break;
+        const res = await uploadFile(file);
+        const uploadedUrl = (res.data as any)?.data || (res.data as any)?.url || res.data;
+        if (uploadedUrl && typeof uploadedUrl === "string") {
+          newUrls.push(uploadedUrl);
+        }
+      }
+      if (newUrls.length > 0) {
+        setImageUrls(prev => [...prev, ...newUrls].slice(0, 3));
+      }
+    } catch (err) {
+      toast.error("Tải ảnh lên thất bại");
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  const removeImage = (index: number) => {
+    setImageUrls(prev => prev.filter((_, i) => i !== index));
+  };
+
   const handleSubmitReturn = async () => {
     if (!returnModal.deliveryId) return;
     const checkedItems = Object.values(selectedItems);
@@ -179,6 +211,7 @@ export default function OrderDetailPage() {
         reason: returnReason,
         reasonDetail: reasonDetail || null,
         items,
+        imageUrls: imageUrls.length > 0 ? imageUrls : null,
         ...(returnType === "Refund" && {
           bankAccountName: bankAccountName || null,
           bankAccountNumber: bankAccountNumber || null,
@@ -946,6 +979,47 @@ export default function OrderDetailPage() {
                   rows={3}
                   className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-700 placeholder-gray-400 focus:border-orange-400 focus:outline-none focus:ring-1 focus:ring-orange-200 transition-all resize-none"
                 />
+              </div>
+
+              {/* Images */}
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1.5">
+                  Hình ảnh minh chứng (tối đa 3 ảnh) <span className="text-red-500">*</span>
+                </label>
+                <div className="flex flex-wrap gap-3">
+                  {imageUrls.map((url, idx) => (
+                    <div key={idx} className="relative h-20 w-20 rounded-lg border border-gray-200 overflow-hidden group">
+                      <img src={url} alt="Minh chứng" className="h-full w-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => removeImage(idx)}
+                        className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+                  ))}
+                  {imageUrls.length < 3 && (
+                    <label className="flex h-20 w-20 cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border-2 border-dashed border-gray-200 bg-gray-50 text-gray-500 hover:bg-gray-100 hover:text-orange-500 hover:border-orange-200 transition-colors">
+                      {uploadingImage ? (
+                        <Loader2 className="h-5 w-5 animate-spin" />
+                      ) : (
+                        <>
+                          <Upload className="h-5 w-5" />
+                          <span className="text-[10px] font-medium">Thêm ảnh</span>
+                        </>
+                      )}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        className="hidden"
+                        onChange={handleUploadImage}
+                        disabled={uploadingImage}
+                      />
+                    </label>
+                  )}
+                </div>
               </div>
 
               {/* Bank info */}

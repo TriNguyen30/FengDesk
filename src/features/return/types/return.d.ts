@@ -78,12 +78,10 @@ export interface ReturnQueryParams {
 
 export type ReturnType = "Refund" | "Exchange";
 export type ReturnReason =
-  | "Defective"
+  | "PlantHealth"
   | "WrongItem"
-  | "NotAsDescribed"
-  | "DamagedInTransit"
-  | "ChangedMind"
-  | "Other";
+  | "DamagedPackage"
+  | "NotAsDescribed";
 
 export interface CreateReturnItemRequest {
   orderItemId: string;
