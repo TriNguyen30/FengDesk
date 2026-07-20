@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { ChevronLeft, Loader2, MapPin, ShoppingBag, CreditCard } from "lucide-react";
+import { ChevronLeft, Loader2, MapPin, ShoppingBag, CreditCard, Truck } from "lucide-react";
 import { toast } from "sonner";
 
 import { useCart } from "@/features/cart";
@@ -20,7 +20,11 @@ export default function CheckoutPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const createOrderMutation = useCreateOrder();
-  const { items } = useCart();
+  const { items, cartStatus } = useCart();
+
+  // Cờ đánh dấu đơn hàng đã/đang được đặt, để tránh effect bên dưới
+  // redirect nhầm về /cart khi cart thay đổi sau khi đặt hàng thành công.
+  const isPlacingOrderRef = useRef(false);
 
   const selectedItemIds = (location.state as CheckoutLocationState)?.selectedItemIds ?? [];
 
@@ -49,21 +53,30 @@ export default function CheckoutPage() {
     [checkoutItems],
   );
 
-  const { shippingFee, isLoading: feeLoading } = useShippingFeePreview(
+  const { shippingFee: rawShippingFee, isLoading: feeLoading } = useShippingFeePreview(
     selectedAddressId || undefined,
     previewItems,
   );
+
+  const shippingFee = subtotal >= 500000 ? 0 : rawShippingFee;
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
 
   useEffect(() => {
+    // If the cart is still loading, wait before redirecting
+    if (cartStatus === "loading") return;
+
+    // Nếu đơn hàng đang được đặt hoặc đã đặt xong (đang chuyển trang),
+    // bỏ qua để tránh redirect nhầm về /cart
+    if (isPlacingOrderRef.current) return;
+
     if (selectedItemIds.length === 0 || checkoutItems.length === 0) {
       toast.error("Vui lòng chọn sản phẩm để thanh toán");
       navigate("/cart", { replace: true });
     }
-  }, [selectedItemIds.length, checkoutItems.length, navigate]);
+  }, [selectedItemIds.length, checkoutItems.length, navigate, cartStatus]);
 
   useEffect(() => {
     async function loadAddresses() {
@@ -95,6 +108,7 @@ export default function CheckoutPage() {
       return;
     }
 
+    isPlacingOrderRef.current = true; // bật cờ trước khi gọi API
     setSubmitting(true);
     try {
       const result = await createOrderMutation.mutateAsync({
@@ -123,7 +137,6 @@ export default function CheckoutPage() {
           } catch {
             toast.error("Lỗi khi kết nối cổng thanh toán PayOS");
           }
-          // Fallback if payment generation failed
           navigate(`/profile/orders/${result.data.data.id}`, { replace: true });
           return;
         }
@@ -132,13 +145,24 @@ export default function CheckoutPage() {
         return;
       }
 
+      // Đặt hàng thất bại: tắt cờ lại để effect redirect hoạt động bình thường
+      isPlacingOrderRef.current = false;
       toast.error(result.data.message || "Không thể tạo đơn hàng");
     } catch {
+      isPlacingOrderRef.current = false;
       toast.error("Không thể tạo đơn hàng");
     } finally {
       setSubmitting(false);
     }
   };
+
+  if (cartStatus === "loading") {
+    return (
+      <div className="flex min-h-[50vh] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   if (checkoutItems.length === 0) {
     return null;
@@ -274,70 +298,87 @@ export default function CheckoutPage() {
         </div>
 
         {/* Order summary */}
-        <aside className="h-fit rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-100 lg:sticky lg:top-24">
-          <h2 className="mb-4 flex items-center gap-2 text-lg font-bold text-gray-900">
-            <ShoppingBag className="h-5 w-5 text-primary" />
-            Đơn hàng ({checkoutItems.length} sản phẩm)
-          </h2>
+        <div className="flex flex-col gap-4 h-fit lg:sticky lg:top-24">
+          <aside className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-100">
+            <h2 className="mb-4 flex items-center gap-2 text-lg font-bold text-gray-900">
+              <ShoppingBag className="h-5 w-5 text-primary" />
+              Đơn hàng ({checkoutItems.length} sản phẩm)
+            </h2>
 
-          <ul className="mb-4 max-h-64 space-y-3 overflow-y-auto">
-            {checkoutItems.map((item) => (
-              <li key={item.id} className="flex justify-between gap-3 text-sm">
-                <div className="min-w-0 flex-1">
-                  <p className="line-clamp-2 font-medium text-gray-800">
-                    {item.productName}
-                    {item.variantName ? ` (${item.variantName})` : ""}
-                  </p>
-                  <p className="text-xs text-gray-500">x{item.quantity}</p>
-                </div>
-                <span className="shrink-0 font-semibold text-gray-900">
-                  {formatVnd(item.unitPrice * item.quantity)}
+            <ul className="mb-4 max-h-64 space-y-3 overflow-y-auto">
+              {checkoutItems.map((item) => (
+                <li key={item.id} className="flex justify-between gap-3 text-sm">
+                  <div className="min-w-0 flex-1">
+                    <p className="line-clamp-2 font-medium text-gray-800">
+                      {item.productName}
+                      {item.variantName ? ` (${item.variantName})` : ""}
+                    </p>
+                    <p className="text-xs text-gray-500">x{item.quantity}</p>
+                  </div>
+                  <span className="shrink-0 font-semibold text-gray-900">
+                    {formatVnd(item.unitPrice * item.quantity)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+
+            <div className="space-y-2 border-t border-dashed border-gray-200 pt-4 text-sm">
+              <div className="flex justify-between text-gray-600">
+                <span>Tạm tính ({totalQuantity} sản phẩm)</span>
+                <span className="font-semibold text-gray-900">{formatVnd(subtotal)}</span>
+              </div>
+              <div className="flex justify-between text-gray-600">
+                <span>Phí vận chuyển</span>
+                <span className="font-semibold text-gray-900">
+                  {feeLoading ? (
+                    "Đang tính..."
+                  ) : shippingFee === 0 && subtotal >= 500000 ? (
+                    <span className="text-green-600">Miễn phí</span>
+                  ) : (
+                    formatVnd(shippingFee)
+                  )}
                 </span>
-              </li>
-            ))}
-          </ul>
+              </div>
+              <div className="flex justify-between border-t border-gray-100 pt-3 text-base font-bold text-gray-900">
+                <span>Tổng cộng</span>
+                <span className="text-primary">
+                  {feeLoading ? "..." : formatVnd(subtotal + shippingFee)}
+                </span>
+              </div>
+            </div>
 
-          <div className="space-y-2 border-t border-dashed border-gray-200 pt-4 text-sm">
-            <div className="flex justify-between text-gray-600">
-              <span>Tạm tính ({totalQuantity} sản phẩm)</span>
-              <span className="font-semibold text-gray-900">{formatVnd(subtotal)}</span>
+            <button
+              onClick={handlePlaceOrder}
+              disabled={submitting || !selectedAddressId || checkoutItems.length === 0}
+              className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3.5 text-base font-bold text-white shadow-md transition-all hover:bg-primary-dark active:scale-95 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:shadow-none cursor-pointer"
+            >
+              {submitting ? (
+                <>
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  Đang xử lý...
+                </>
+              ) : (
+                "Đặt hàng"
+              )}
+            </button>
+
+            <p className="mt-3 text-center text-xs text-gray-500">
+              Bằng việc đặt hàng, bạn đồng ý với{" "}
+              <Link to="/products" className="text-primary hover:underline">
+                điều khoản mua hàng
+              </Link>
+            </p>
+          </aside>
+
+          <div className="flex items-center gap-3 rounded-xl bg-white p-4 text-sm text-gray-900 shadow-sm ring-1 ring-gray-100">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary shrink-0 shadow-sm">
+              <Truck className="h-5 w-5" />
             </div>
-            <div className="flex justify-between text-gray-600">
-              <span>Phí vận chuyển</span>
-              <span className="font-semibold text-gray-900">
-                {feeLoading ? "Đang tính..." : formatVnd(shippingFee)}
-              </span>
-            </div>
-            <div className="flex justify-between border-t border-gray-100 pt-3 text-base font-bold text-gray-900">
-              <span>Tổng cộng</span>
-              <span className="text-primary">
-                {feeLoading ? "..." : formatVnd(subtotal + shippingFee)}
-              </span>
-            </div>
+            <span className="font-semibold leading-snug">
+              Free Ship TP.Hồ Chí Minh cho hoá đơn từ 500.000đ
+            </span>
           </div>
-
-          <button
-            onClick={handlePlaceOrder}
-            disabled={submitting || !selectedAddressId || checkoutItems.length === 0}
-            className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3.5 text-base font-bold text-white shadow-md transition-all hover:bg-primary-dark active:scale-95 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:shadow-none cursor-pointer"
-          >
-            {submitting ? (
-              <>
-                <Loader2 className="h-5 w-5 animate-spin" />
-                Đang xử lý...
-              </>
-            ) : (
-              "Đặt hàng"
-            )}
-          </button>
-
-          <p className="mt-3 text-center text-xs text-gray-500">
-            Bằng việc đặt hàng, bạn đồng ý với{" "}
-            <Link to="/products" className="text-primary hover:underline">
-              điều khoản mua hàng
-            </Link>
-          </p>
-        </aside>
+        </div>
       </div>
 
       <AddressModal

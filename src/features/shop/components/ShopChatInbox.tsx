@@ -184,7 +184,8 @@ export function ShopChatInbox({ storeId }: ShopChatInboxProps) {
             </div>
             <p className="text-sm font-semibold text-gray-800">Chọn một cuộc trò chuyện</p>
             <p className="max-w-xs text-xs leading-relaxed text-gray-500">
-              Nhận một khách đang chờ ở hàng đợi, hoặc mở một cuộc trò chuyện bạn đang hỗ trợ để trả lời.
+              Nhận một khách đang chờ ở hàng đợi, hoặc mở một cuộc trò chuyện bạn đang hỗ trợ để trả
+              lời.
             </p>
           </div>
         )}

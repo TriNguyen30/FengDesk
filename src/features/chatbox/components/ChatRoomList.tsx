@@ -113,7 +113,12 @@ export default function ChatRoomList({
           {!box.isClosed && (
             <ConfirmDeleteButton
               onConfirm={() => onDeleteRoom(box.id)}
-              label="Xóa hội thoại"
+              // Owner xóa phòng (soft-delete); người được mời/join chỉ RỜI phòng (gỡ participant, BE xử lý).
+              label={
+                box.participants?.some((p) => p.userId === meId && p.role === "Owner")
+                  ? "Xóa hội thoại"
+                  : "Rời phòng"
+              }
               className="ml-1"
             />
           )}

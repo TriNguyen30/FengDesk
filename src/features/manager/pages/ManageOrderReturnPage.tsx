@@ -46,16 +46,37 @@ const REASON_LABEL: Record<string, string> = {
 };
 
 const RETURN_STATUS_META: Record<string, { label: string; className: string }> = {
-  Requested: { label: "Yêu cầu mới", className: "bg-amber-50 text-amber-600 border border-amber-200" },
-  Approved: { label: "Đã duyệt", className: "bg-indigo-50 text-indigo-600 border border-indigo-200" },
+  Requested: {
+    label: "Yêu cầu mới",
+    className: "bg-amber-50 text-amber-600 border border-amber-200",
+  },
+  Approved: {
+    label: "Đã duyệt",
+    className: "bg-indigo-50 text-indigo-600 border border-indigo-200",
+  },
   Rejected: { label: "Đã từ chối", className: "bg-red-50 text-red-500 border border-red-200" },
   Processing: { label: "Đang xử lý", className: "bg-blue-50 text-blue-600 border border-blue-200" },
-  Completed: { label: "Hoàn tất", className: "bg-emerald-50 text-emerald-600 border border-emerald-200" },
+  Completed: {
+    label: "Hoàn tất",
+    className: "bg-emerald-50 text-emerald-600 border border-emerald-200",
+  },
   Cancelled: { label: "Đã hủy", className: "bg-gray-100 text-gray-500 border border-gray-200" },
-  ReturnInTransit: { label: "Đang chuyển về", className: "bg-sky-50 text-sky-600 border border-sky-200" },
-  ItemReceived: { label: "Đã nhận hàng", className: "bg-teal-50 text-teal-600 border border-teal-200" },
-  Refunding: { label: "Đang hoàn tiền", className: "bg-violet-50 text-violet-600 border border-violet-200" },
-  Exchanging: { label: "Đang đổi hàng", className: "bg-purple-50 text-purple-600 border border-purple-200" },
+  ReturnInTransit: {
+    label: "Đang chuyển về",
+    className: "bg-sky-50 text-sky-600 border border-sky-200",
+  },
+  ItemReceived: {
+    label: "Đã nhận hàng",
+    className: "bg-teal-50 text-teal-600 border border-teal-200",
+  },
+  Refunding: {
+    label: "Đang hoàn tiền",
+    className: "bg-violet-50 text-violet-600 border border-violet-200",
+  },
+  Exchanging: {
+    label: "Đang đổi hàng",
+    className: "bg-purple-50 text-purple-600 border border-purple-200",
+  },
 };
 
 // ── Approve confirm modal state ──────────────────────────────────────────────
@@ -113,17 +134,26 @@ export default function ManageOrderReturnPage() {
   const [rejecting, setRejecting] = useState(false);
 
   // Receive modal
-  const [receiveModal, setReceiveModal] = useState<ReceiveModalState>({ open: false, returnId: null });
+  const [receiveModal, setReceiveModal] = useState<ReceiveModalState>({
+    open: false,
+    returnId: null,
+  });
   const [receiving, setReceiving] = useState(false);
 
   // Resolve modal
-  const [resolveModal, setResolveModal] = useState<ResolveModalState>({ open: false, returnId: null });
+  const [resolveModal, setResolveModal] = useState<ResolveModalState>({
+    open: false,
+    returnId: null,
+  });
   const [resolveRestock, setResolveRestock] = useState(true);
   const [resolveNote, setResolveNote] = useState("");
   const [resolving, setResolving] = useState(false);
 
   // Complete Refund modal
-  const [completeRefundModal, setCompleteRefundModal] = useState<CompleteRefundModalState>({ open: false, returnId: null });
+  const [completeRefundModal, setCompleteRefundModal] = useState<CompleteRefundModalState>({
+    open: false,
+    returnId: null,
+  });
   const [completingRefund, setCompletingRefund] = useState(false);
 
   // Detail modal
@@ -644,7 +674,7 @@ export default function ManageOrderReturnPage() {
                             <p className="text-sm font-semibold text-gray-800">
                               {log.fromStatus
                                 ? `${RETURN_STATUS_META[log.fromStatus]?.label ?? log.fromStatus} → ${RETURN_STATUS_META[log.toStatus]?.label ?? log.toStatus}`
-                                : RETURN_STATUS_META[log.toStatus]?.label ?? log.toStatus}
+                                : (RETURN_STATUS_META[log.toStatus]?.label ?? log.toStatus)}
                             </p>
                             {log.note && <p className="text-xs text-gray-500 mt-0.5">{log.note}</p>}
                             <p className="text-xs text-gray-400 mt-0.5">
@@ -850,7 +880,8 @@ export default function ManageOrderReturnPage() {
               <div>
                 <h3 className="text-base font-bold text-gray-900">Xác nhận nhận hàng?</h3>
                 <p className="mt-1 text-sm text-gray-500">
-                  Bạn xác nhận đã nhận được hàng trả từ khách? Trạng thái sẽ chuyển sang "Đã nhận hàng".
+                  Bạn xác nhận đã nhận được hàng trả từ khách? Trạng thái sẽ chuyển sang "Đã nhận
+                  hàng".
                 </p>
               </div>
             </div>

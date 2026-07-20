@@ -11,7 +11,12 @@ interface ChatMessageListProps {
   showScrollbar?: boolean;
 }
 
-export default function ChatMessageList({ messages, meId, aiActivity, showScrollbar }: ChatMessageListProps) {
+export default function ChatMessageList({
+  messages,
+  meId,
+  aiActivity,
+  showScrollbar,
+}: ChatMessageListProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
 
   // Chốt chặn cuối: loại trùng theo id ngay trước khi render. Dù state thượng nguồn lỡ chứa message
@@ -44,7 +49,7 @@ export default function ChatMessageList({ messages, meId, aiActivity, showScroll
   }
 
   return (
-    <div 
+    <div
       className={`flex flex-1 flex-col gap-3 bg-[#f9fafb] px-3 py-4 ${
         showScrollbar ? "overflow-y-scroll" : "overflow-y-auto scrollbar-none"
       }`}

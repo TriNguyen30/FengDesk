@@ -101,10 +101,7 @@ export function useCancelOrder() {
   });
 }
 
-export function useShippingFeePreview(
-  shippingAddressId: string | undefined,
-  items: OrdersItem[],
-) {
+export function useShippingFeePreview(shippingAddressId: string | undefined, items: OrdersItem[]) {
   const query = useQuery({
     queryKey: ["shipping-fee-preview", shippingAddressId, items],
     enabled: Boolean(shippingAddressId) && items.length > 0,

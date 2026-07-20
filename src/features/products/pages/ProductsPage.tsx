@@ -4,7 +4,8 @@ import { getCategoriesRequest } from "@/features/category/api/category.api";
 import type { Category } from "@/features/category/types/category";
 import ProductCard, { ProductCardSkeleton } from "@/features/products/components/ProductCard";
 import { useProductList } from "@/features/products/hooks/useProducts";
-import { SearchX, List, ChevronRight, Sparkles } from "lucide-react";
+import type { GetProductsParams } from "@/features/products/types/product";
+import { SearchX, List, ChevronRight, Filter } from "lucide-react";
 
 const FS_ELEMENTS = [
   { code: "Kim", label: "Kim (Kim loại)" },
@@ -44,19 +45,18 @@ export default function ProductsPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
 
+  // Filter hành đẩy xuống BE (?element=...) — lọc trên TOÀN BỘ catalog (khớp cả hành
+  // chính lẫn hành phụ qua product_elements), thay vì lọc client-side 1 trang như trước.
   const { products, loading } = useProductList({
     search: search || undefined,
     categoryId: categoryId || undefined,
+    element: (element || undefined) as GetProductsParams["element"],
     pageSize: 20,
   });
 
   const sortedProducts = useMemo(() => {
     if (!products) return [];
-    let arr = [...products];
-
-    if (element) {
-      arr = arr.filter((p) => p.primaryElement === element);
-    }
+    const arr = [...products];
 
     switch (sort) {
       case "name-asc":
@@ -70,7 +70,7 @@ export default function ProductsPage() {
       default:
         return arr;
     }
-  }, [products, sort, element]);
+  }, [products, sort]);
 
   useEffect(() => {
     async function fetchCategories() {
@@ -146,8 +146,9 @@ export default function ProductsPage() {
                       className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
                     />
                     <span
-                      className={`text-sm font-medium transition-colors ${!categoryId ? "text-primary" : "text-gray-600 group-hover:text-gray-900"
-                        }`}
+                      className={`text-sm font-medium transition-colors ${
+                        !categoryId ? "text-primary" : "text-gray-600 group-hover:text-gray-900"
+                      }`}
                     >
                       Tất cả sản phẩm
                     </span>
@@ -161,10 +162,11 @@ export default function ProductsPage() {
                         className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
                       />
                       <span
-                        className={`text-sm font-medium transition-colors ${categoryId === cat.id
-                          ? "text-primary"
-                          : "text-gray-600 group-hover:text-gray-900"
-                          }`}
+                        className={`text-sm font-medium transition-colors ${
+                          categoryId === cat.id
+                            ? "text-primary"
+                            : "text-gray-600 group-hover:text-gray-900"
+                        }`}
                       >
                         {cat.name}
                       </span>
@@ -176,7 +178,7 @@ export default function ProductsPage() {
 
             <div className="mt-8">
               <h2 className="mb-4 flex items-center gap-2 font-medium text-gray-900">
-                <Sparkles className="h-4 w-4" />
+                <Filter className="h-4 w-4" />
                 Mệnh (Hành)
               </h2>
               <div className="flex flex-col gap-3 mt-2">
@@ -188,8 +190,9 @@ export default function ProductsPage() {
                     className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
                   />
                   <span
-                    className={`text-sm font-medium transition-colors ${!element ? "text-primary" : "text-gray-600 group-hover:text-gray-900"
-                      }`}
+                    className={`text-sm font-medium transition-colors ${
+                      !element ? "text-primary" : "text-gray-600 group-hover:text-gray-900"
+                    }`}
                   >
                     Tất cả các mệnh
                   </span>
@@ -203,10 +206,11 @@ export default function ProductsPage() {
                       className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
                     />
                     <span
-                      className={`text-sm font-medium transition-colors ${element === el.code
-                        ? "text-primary"
-                        : "text-gray-600 group-hover:text-gray-900"
-                        }`}
+                      className={`text-sm font-medium transition-colors ${
+                        element === el.code
+                          ? "text-primary"
+                          : "text-gray-600 group-hover:text-gray-900"
+                      }`}
                     >
                       {el.label}
                     </span>
@@ -225,7 +229,8 @@ export default function ProductsPage() {
                 <div className="h-6 w-48 rounded bg-gray-200 animate-pulse" />
               ) : (
                 <h1 className="text-lg font-medium text-gray-900">
-                  {selectedCategoryName ? selectedCategoryName : "Tất cả sản phẩm"} <span className="text-sm text-gray-600">({sortedProducts.length})</span>
+                  {selectedCategoryName ? selectedCategoryName : "Tất cả sản phẩm"}{" "}
+                  <span className="text-sm text-gray-600">({sortedProducts.length})</span>
                 </h1>
               )}
               {search && (

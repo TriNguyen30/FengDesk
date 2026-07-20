@@ -64,7 +64,8 @@ export default function InviteStaffModal({ open, storeId, existingStaff, onClose
             disabled={assign.isPending}
           />
           <p className="mt-2 text-xs text-gray-500">
-            Người được mời sẽ nhận thông báo; họ cần đồng ý mới có quyền nhận đơn / ship cho cửa hàng.
+            Người được mời sẽ nhận thông báo; họ cần đồng ý mới có quyền nhận đơn / ship cho cửa
+            hàng.
           </p>
         </div>
 

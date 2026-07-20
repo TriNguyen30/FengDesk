@@ -162,23 +162,42 @@ export default function CartDropDown() {
           animation: cart-dropdown-out 0.15s ease-in both;
           transform-origin: top right;
         }
+        @keyframes pulse-slow {
+          0%, 100% {
+            transform: scale(1);
+            opacity: 1;
+          }
+          50% {
+            transform: scale(1.15);
+            opacity: 0.9;
+          }
+        }
+        .animate-pulse-slow {
+          animation: pulse-slow 2s infinite ease-in-out;
+        }
       `}</style>
 
       <div ref={rootRef} className="relative group" onMouseEnter={open_} onMouseLeave={close}>
         <a
           href="/cart"
           onClick={(e) => handleNavigate(e, "/cart")}
-          className="relative flex min-w-[44px] flex-col items-center gap-0.5 rounded-lg px-1 py-1 text-gray-700 transition-colors hover:text-primary active:bg-gray-100 cursor-pointer"
+          className="flex min-w-[44px] flex-col items-center gap-0.5 rounded-lg px-1 py-1 text-gray-700 transition-colors hover:text-primary active:bg-gray-100 cursor-pointer relative"
           aria-haspopup="true"
           aria-label={`Giỏ hàng, ${itemCount} sản phẩm`}
         >
-          <ShoppingCart size={22} strokeWidth={1.8} />
+          <div className="relative flex size-[22px] items-center justify-center">
+            <ShoppingCart
+              size={20}
+              strokeWidth={1.8}
+              className={itemCount > 0 ? "text-gray-900" : ""}
+            />
+            {itemCount > 0 && (
+              <span className="absolute -right-1 -top-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-bold text-white shadow-sm ring-1 ring-white animate-pulse-slow tabular-nums">
+                {itemCount > 99 ? "99+" : itemCount}
+              </span>
+            )}
+          </div>
           <span className="hidden text-[10px] font-medium sm:block sm:text-xs">Giỏ hàng</span>
-          {itemCount > 0 && (
-            <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-0.5 text-[10px] font-bold text-white tabular-nums">
-              {itemCount > 99 ? "99+" : itemCount}
-            </span>
-          )}
         </a>
 
         {open && (

@@ -1,10 +1,10 @@
 import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ChevronLeft, MessagesSquare, Store, Truck, Users, Package } from "lucide-react";
+import { BarChart3, ChevronLeft, MessagesSquare, Store, Truck, Users, Package } from "lucide-react";
 import { toast } from "sonner";
 import { useProductList } from "@/features/products/hooks/useProducts";
-import { getMyShopsRequest, getShopRequestById } from "@/features/shop/api/shop.api";
-import { Shop } from "@/features/shop/types/shop";
+import { getShopRequestById, getStoreMembershipRequest } from "@/features/shop/api/shop.api";
+import { Shop, StoreMembership } from "@/features/shop/types/shop";
 import { useAppDispatch, useAppSelector } from "@/app/store";
 import { chatApi, chatHub } from "@/features/chatbox";
 import {
@@ -14,7 +14,6 @@ import {
   setView,
   upsertChatbox,
 } from "@/features/chatbox/store/chatboxSlice";
-import { getRoles } from "@/lib/workspace";
 import {
   ShopChatInbox,
   ShopDeliveriesView,
@@ -22,10 +21,11 @@ import {
   ShopProductCatalog,
   ShopSidebar,
   ShopStaffSection,
+  ShopStatsSection,
 } from "../components";
 import ShopReturnsView from "../components/ShopReturnsView";
 
-type ShopTab = "products" | "deliveries" | "returns" | "chat";
+type ShopTab = "products" | "stats" | "deliveries" | "returns" | "chat" | "staff";
 
 export default function ShopDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -37,9 +37,9 @@ export default function ShopDetailPage() {
   const [loadingShop, setLoadingShop] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState<ShopTab>("products");
-  // Cờ "user thuộc cửa hàng" — đúng cho owner + co-owner (qua /stores/mine).
-  // Staff-only chưa detect được nếu không thêm endpoint BE.
-  const [isMember, setIsMember] = useState(false);
+  // Vai trò của user với store từ BE /stores/{id}/membership — nguồn sự thật duy nhất
+  // (owner chính / đồng sở hữu / garden staff Accepted / admin). Null = khách.
+  const [membership, setMembership] = useState<StoreMembership | null>(null);
   // Guard chống double-click nút "Chat ngay": ref chặn đồng bộ, state để disable nút cho UX.
   const openingChatRef = useRef(false);
   const [isOpeningChat, setIsOpeningChat] = useState(false);
@@ -78,22 +78,20 @@ export default function ShopDetailPage() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [id]);
 
-  // Detect co-ownership: gọi /stores/mine (rẻ — chỉ vài shop). Chưa cover staff-only.
+  // Membership per-store từ BE — cover cả staff-only (khác /stores/mine trước đây).
   useEffect(() => {
     if (!id || !currentUser?.id) {
-      setIsMember(false);
+      setMembership(null);
       return;
     }
     let active = true;
-    getMyShopsRequest()
+    getStoreMembershipRequest(id)
       .then((res) => {
         if (!active) return;
-        if (res.isSuccess && res.data) {
-          setIsMember(res.data.some((s) => s.id === id));
-        }
+        setMembership(res.isSuccess && res.data ? res.data : null);
       })
       .catch(() => {
-        if (active) setIsMember(false);
+        if (active) setMembership(null);
       });
     return () => {
       active = false;
@@ -198,12 +196,12 @@ export default function ShopDetailPage() {
     );
   }
 
-  // isOwner = chủ chính (truyền vào ShopSidebar để cho sửa hồ sơ — quyết định BE: chỉ owner-chính được PUT /stores/{id}).
-  // isMember = owner | co-owner | (sau này: staff) — quyết định ẩn nút "Theo dõi" + bật tab owner.
-  const isOwner = !!currentUser?.id && currentUser.id === shop.ownerUserId;
-  const isShopMember = isOwner || isMember;
-  const roles = getRoles(currentUser);
-  const canEditShopProfile = roles.includes("GardenOwner") && !roles.includes("Staff");
+  // Phân quyền theo membership per-store (KHÔNG theo role global):
+  // - Owner (chính/đồng sở hữu) / Admin: full quyền — sửa hồ sơ, xem thống kê + nhân viên.
+  // - Garden staff (Accepted): chỉ xử lý đơn giao / trả hàng / tin nhắn.
+  const isOwnerView = !!membership && (membership.isOwner || membership.isAdmin);
+  const isShopMember = !!membership?.canManage;
+  const canEditShopProfile = isOwnerView;
   const shopAddressText =
     typeof shop.address === "object" && shop.address
       ? (shop.address as any).streetAddress || "Đang cập nhật"
@@ -211,14 +209,14 @@ export default function ShopDetailPage() {
         ? shop.address
         : "Đang cập nhật";
 
-  // BE gate mỗi tab bằng IsOwnerOrAdmin — cả owner-chính lẫn co-owner (đều nằm trong /stores/mine) đều pass.
-  // Vì thế chỉ cần isShopMember là hiện tab; nếu user không phải owner-thực-sự, BE sẽ trả 403 và toast hiện lỗi.
-  const TABS: { value: ShopTab; label: string; icon: typeof Store; disabled?: boolean }[] = [
+  // Tab hiện theo vai trò per-store: staff KHÔNG thấy "Thống kê" + "Nhân viên" (BE cũng chặn 403).
+  const TABS: { value: ShopTab; label: string; icon: typeof Store; hidden?: boolean }[] = [
     { value: "products", label: "Sản phẩm", icon: Store },
-    { value: "deliveries", label: "Đơn giao", icon: Truck, disabled: roles.includes("Customer") },
-    { value: "returns", label: "Trả hàng", icon: Package, disabled: roles.includes("Customer") },
+    { value: "stats", label: "Thống kê", icon: BarChart3, hidden: !isOwnerView },
+    { value: "deliveries", label: "Đơn giao", icon: Truck },
+    { value: "returns", label: "Trả hàng", icon: Package },
     { value: "chat", label: "Tin nhắn", icon: MessagesSquare },
-    { value: "staff", label: "Nhân viên", icon: Users, disabled: roles.includes("Customer") },
+    { value: "staff", label: "Nhân viên", icon: Users, hidden: !isOwnerView },
   ];
 
   return (
@@ -247,22 +245,17 @@ export default function ShopDetailPage() {
       {/* Owner-only tabs */}
       {isShopMember && (
         <div className="mb-6 flex flex-wrap gap-1.5 border-b border-gray-100">
-          {TABS.map((tab) => {
+          {TABS.filter((tab) => !tab.hidden).map((tab) => {
             const Icon = tab.icon;
             const active = tab.value === activeTab;
             return (
               <button
                 key={tab.value}
-                onClick={() => !tab.disabled && setActiveTab(tab.value)}
-                disabled={tab.disabled}
-                className={`flex items-center gap-2 border-b-2 px-4 py-2.5 text-sm font-semibold transition-all ${
-                  tab.disabled
-                    ? "opacity-50 cursor-not-allowed border-transparent text-gray-400"
-                    : `cursor-pointer ${
-                        active
-                          ? "border-primary text-primary"
-                          : "border-transparent text-gray-500 hover:text-gray-800"
-                      }`
+                onClick={() => setActiveTab(tab.value)}
+                className={`flex items-center gap-2 border-b-2 px-4 py-2.5 text-sm font-semibold transition-all cursor-pointer ${
+                  active
+                    ? "border-primary text-primary"
+                    : "border-transparent text-gray-500 hover:text-gray-800"
                 }`}
               >
                 <Icon size={15} />
@@ -290,6 +283,7 @@ export default function ShopDetailPage() {
             onSearchQueryChange={setSearchQuery}
             shopId={shop.id}
             isShopMember={isShopMember}
+            canAddProduct={isOwnerView}
           />
         </div>
       )}
@@ -346,7 +340,9 @@ export default function ShopDetailPage() {
         </div>
       )}
 
-      {activeTab === "staff" && isShopMember && shop.id && <ShopStaffSection storeId={shop.id} />}
+      {activeTab === "stats" && isOwnerView && shop.id && <ShopStatsSection storeId={shop.id} />}
+
+      {activeTab === "staff" && isOwnerView && shop.id && <ShopStaffSection storeId={shop.id} />}
     </div>
   );
 }

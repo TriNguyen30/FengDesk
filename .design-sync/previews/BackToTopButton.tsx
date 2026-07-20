@@ -16,8 +16,8 @@ export function Visible() {
   return (
     <div style={{ minHeight: 1600, position: "relative" }}>
       <p style={{ padding: 16, color: "#6b7280", fontSize: 13 }}>
-        Nút "Cuộn lên đầu trang" chỉ hiện khi người dùng đã cuộn xuống hơn 300px — card này mô
-        phỏng trạng thái đó bằng cách cuộn xuống ngay khi tải.
+        Nút "Cuộn lên đầu trang" chỉ hiện khi người dùng đã cuộn xuống hơn 300px — card này mô phỏng
+        trạng thái đó bằng cách cuộn xuống ngay khi tải.
       </p>
       <ScrollDown />
       <BackToTopButton />

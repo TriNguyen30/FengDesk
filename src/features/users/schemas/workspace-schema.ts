@@ -12,7 +12,14 @@ export const locationTypes = [
   "Other",
 ] as const;
 export const lightingTypes = ["Natural", "Artificial", "Mixed", "Dim"] as const;
-export const deskTypes = ["Sitting", "Standing", "StandingSitting", "LShape", "Corner", "Other"] as const;
+export const deskTypes = [
+  "Sitting",
+  "Standing",
+  "StandingSitting",
+  "LShape",
+  "Corner",
+  "Other",
+] as const;
 export const compassDirections = [
   "North",
   "Northeast",

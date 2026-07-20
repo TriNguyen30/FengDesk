@@ -12,6 +12,7 @@ interface ShopProductCatalogProps {
   /** Chỉ owner/co-owner (isShopMember) mới thấy nút thêm sản phẩm. */
   shopId?: string;
   isShopMember?: boolean;
+  canAddProduct?: boolean;
 }
 
 export function ShopProductCatalog({
@@ -22,6 +23,7 @@ export function ShopProductCatalog({
   onSearchQueryChange,
   shopId,
   isShopMember,
+  canAddProduct = false,
 }: ShopProductCatalogProps) {
   return (
     <section className="lg:col-span-3 space-y-6">
@@ -46,15 +48,25 @@ export function ShopProductCatalog({
             <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
           </div>
 
-          {isShopMember && shopId && (
-            <Link
-              to={`/seller/${shopId}/products/new`}
-              className="flex shrink-0 items-center gap-1.5 rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-primary-dark transition-all cursor-pointer"
-            >
-              <Plus size={16} />
-              Thêm sản phẩm
-            </Link>
-          )}
+          {isShopMember &&
+            shopId &&
+            (canAddProduct ? (
+              <Link
+                to={`/seller/${shopId}/products/new`}
+                className="flex shrink-0 items-center gap-1.5 rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-primary-dark transition-all cursor-pointer"
+              >
+                <Plus size={16} />
+                Thêm sản phẩm
+              </Link>
+            ) : (
+              <button
+                disabled
+                className="flex shrink-0 items-center gap-1.5 rounded-xl bg-gray-300 px-4 py-2.5 text-sm font-bold text-white shadow-sm cursor-not-allowed opacity-60"
+              >
+                <Plus size={16} />
+                Thêm sản phẩm
+              </button>
+            ))}
         </div>
       </div>
 
@@ -71,7 +83,9 @@ export function ShopProductCatalog({
             <ProductCard
               key={p.id}
               product={p}
-              editHref={isShopMember && shopId ? `/seller/${shopId}/products/${p.id}/edit` : undefined}
+              editHref={
+                isShopMember && shopId ? `/seller/${shopId}/products/${p.id}/edit` : undefined
+              }
             />
           ))}
         </div>

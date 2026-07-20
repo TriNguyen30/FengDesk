@@ -29,7 +29,9 @@ export function getChatboxDisplayName(box: Chatbox, meId?: string): string {
 }
 
 /** Nhãn loại phòng cạnh tên: phòng gắn 1 shop → "Store", phòng hỗ trợ nền tảng → "Support". */
-export function getChatboxKindTag(box: Chatbox): { label: string; tone: "store" | "support" } | null {
+export function getChatboxKindTag(
+  box: Chatbox,
+): { label: string; tone: "store" | "support" } | null {
   if (box.gardenStoreId) return { label: "Store", tone: "store" };
   if (box.isSupport) return { label: "Support", tone: "support" };
   return null;

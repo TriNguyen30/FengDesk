@@ -23,10 +23,13 @@ const DEFAULT_PLACEHOLDERS = [
   "Tìm cây phong thủy theo mệnh...",
   "Cây cảnh để bàn làm việc...",
   "Tìm kiếm vật phẩm may mắn...",
-  "Cây quà tặng ý nghĩa..."
+  "Cây quà tặng ý nghĩa...",
 ];
 
-export default function SearchBar({ placeholder = DEFAULT_PLACEHOLDERS, onSearch }: SearchBarProps) {
+export default function SearchBar({
+  placeholder = DEFAULT_PLACEHOLDERS,
+  onSearch,
+}: SearchBarProps) {
   const { keyword, setKeyword } = useSearch();
   const listId = useId();
   const rootRef = useRef<HTMLDivElement>(null);
@@ -38,7 +41,7 @@ export default function SearchBar({ placeholder = DEFAULT_PLACEHOLDERS, onSearch
   const showPanel = open && suggestions.length > 0;
 
   const [typedPlaceholder, setTypedPlaceholder] = useState(
-    typeof placeholder === "string" ? placeholder : ""
+    typeof placeholder === "string" ? placeholder : "",
   );
 
   useEffect(() => {

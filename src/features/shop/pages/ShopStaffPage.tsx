@@ -45,9 +45,7 @@ export default function ShopStaffPage() {
           <h1 className="text-xl font-bold tracking-tight text-gray-900">
             Nhân viên {shop ? `— ${shop.name}` : ""}
           </h1>
-          <p className="text-sm text-gray-500">
-            Mời người dùng và quản lý phân công cho cửa hàng.
-          </p>
+          <p className="text-sm text-gray-500">Mời người dùng và quản lý phân công cho cửa hàng.</p>
         </div>
       </div>
 

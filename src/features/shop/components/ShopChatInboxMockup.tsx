@@ -77,7 +77,13 @@ const MOCK_CONVERSATIONS: MockConversation[] = [
     online: false,
     messages: [
       { id: "m1", from: "customer", text: "Mai shop gửi giúp mình được không?", time: "Hôm qua" },
-      { id: "m2", from: "shop", text: "Mình gửi sau 16h hôm nay nhé ❤️", time: "08:02", read: true },
+      {
+        id: "m2",
+        from: "shop",
+        text: "Mình gửi sau 16h hôm nay nhé ❤️",
+        time: "08:02",
+        read: true,
+      },
     ],
   },
   {
@@ -91,7 +97,12 @@ const MOCK_CONVERSATIONS: MockConversation[] = [
     online: false,
     productHint: "Combo chậu sứ phong thuỷ",
     messages: [
-      { id: "m1", from: "customer", text: "Có giảm thêm cho đơn 3 chậu không shop?", time: "06:21" },
+      {
+        id: "m1",
+        from: "customer",
+        text: "Có giảm thêm cho đơn 3 chậu không shop?",
+        time: "06:21",
+      },
     ],
   },
   {
@@ -237,10 +248,16 @@ export function ShopChatInboxMockup() {
 
           <footer className="border-t border-gray-100 bg-white px-3 py-2.5">
             <div className="flex items-center gap-2">
-              <button disabled className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-50 cursor-not-allowed">
+              <button
+                disabled
+                className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-50 cursor-not-allowed"
+              >
                 <Paperclip size={16} />
               </button>
-              <button disabled className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-50 cursor-not-allowed">
+              <button
+                disabled
+                className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-50 cursor-not-allowed"
+              >
                 <ImageIcon size={16} />
               </button>
               <input
@@ -248,7 +265,10 @@ export function ShopChatInboxMockup() {
                 placeholder="Tính năng đang phát triển..."
                 className="flex-1 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-500 placeholder-gray-400 focus:outline-none cursor-not-allowed"
               />
-              <button disabled className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-50 cursor-not-allowed">
+              <button
+                disabled
+                className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-50 cursor-not-allowed"
+              >
                 <Smile size={16} />
               </button>
               <button
@@ -265,7 +285,9 @@ export function ShopChatInboxMockup() {
         {/* ── Customer side panel ── */}
         <aside className="hidden border-l border-gray-100 lg:flex lg:flex-col">
           <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
-            <p className="text-xs font-bold uppercase tracking-wider text-gray-500">Thông tin khách</p>
+            <p className="text-xs font-bold uppercase tracking-wider text-gray-500">
+              Thông tin khách
+            </p>
             <Info size={14} className="text-gray-400" />
           </div>
           <div className="space-y-4 overflow-y-auto p-4 text-sm">
@@ -311,7 +333,8 @@ export function ShopChatInboxMockup() {
               </div>
             )}
             <div className="rounded-xl border border-dashed border-gray-200 p-3 text-center text-[11px] text-gray-400">
-              Khi hoàn thiện, panel này sẽ hiện đơn hàng gần đây, sản phẩm khách xem, ghi chú nội bộ.
+              Khi hoàn thiện, panel này sẽ hiện đơn hàng gần đây, sản phẩm khách xem, ghi chú nội
+              bộ.
             </div>
           </div>
         </aside>

@@ -18,6 +18,7 @@ import {
   RotateCcw,
   Maximize2,
   X,
+  Truck,
 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { toast } from "sonner";
@@ -395,9 +396,9 @@ export default function ProductDetailPage() {
                     style={
                       isHovering
                         ? {
-                          transformOrigin: `${zoomPos.x}% ${zoomPos.y}%`,
-                          transform: "scale(2.2)",
-                        }
+                            transformOrigin: `${zoomPos.x}% ${zoomPos.y}%`,
+                            transform: "scale(2.2)",
+                          }
                         : undefined
                     }
                     className="h-full w-full object-contain transition-transform duration-100 ease-out"
@@ -421,10 +422,11 @@ export default function ProductDetailPage() {
                   <button
                     key={img.id}
                     onClick={() => setActiveImage(img.url)}
-                    className={`h-16 w-16 shrink-0 overflow-hidden rounded-lg border-2 bg-gray-50 transition-all cursor-pointer ${activeImage === img.url
+                    className={`h-16 w-16 shrink-0 overflow-hidden rounded-lg border-2 bg-gray-50 transition-all cursor-pointer ${
+                      activeImage === img.url
                         ? "border-primary"
                         : "border-transparent hover:border-gray-300"
-                      }`}
+                    }`}
                   >
                     <img src={img.url} alt="thumb" className="h-full w-full object-contain" />
                   </button>
@@ -469,7 +471,10 @@ export default function ProductDetailPage() {
                 {selectedItem?.sku && (
                   <>
                     <span className="hidden sm:block h-3 w-px bg-gray-300"></span>
-                    <p>Mã sản phẩm: <span className="font-medium text-gray-600">{selectedItem.sku}</span></p>
+                    <p>
+                      Mã sản phẩm:{" "}
+                      <span className="font-medium text-gray-600">{selectedItem.sku}</span>
+                    </p>
                   </>
                 )}
               </div>
@@ -501,10 +506,11 @@ export default function ProductDetailPage() {
                       <button
                         key={item.id}
                         onClick={() => setSelectedItem(item)}
-                        className={`relative flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-all focus:outline-none cursor-not-allowed ${isSelected
+                        className={`relative flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-all focus:outline-none cursor-not-allowed ${
+                          isSelected
                             ? "border-primary bg-primary/5 text-primary"
                             : "border-gray-200 text-gray-600 hover:border-primary/40 hover:bg-gray-50 cursor-pointer"
-                          }`}
+                        }`}
                       >
                         {item.name}
                         <span className="text-xs opacity-60">
@@ -556,11 +562,11 @@ export default function ProductDetailPage() {
                 {(selectedItem.lengthCm > 0 ||
                   selectedItem.widthCm > 0 ||
                   selectedItem.heightCm > 0) && (
-                    <span className="rounded-md  border border-gray-200 px-2.5 py-1 text-xs font-medium text-gray-500">
-                      Kích thước: {selectedItem.lengthCm}x{selectedItem.widthCm}x
-                      {selectedItem.heightCm} cm
-                    </span>
-                  )}
+                  <span className="rounded-md  border border-gray-200 px-2.5 py-1 text-xs font-medium text-gray-500">
+                    Kích thước: {selectedItem.lengthCm}x{selectedItem.widthCm}x
+                    {selectedItem.heightCm} cm
+                  </span>
+                )}
               </div>
             )}
 
@@ -594,7 +600,9 @@ export default function ProductDetailPage() {
                   />
                   <button
                     onClick={() =>
-                      setQuantity((q) => (selectedItem ? Math.min(selectedItem.stock, q + 1) : q + 1))
+                      setQuantity((q) =>
+                        selectedItem ? Math.min(selectedItem.stock, q + 1) : q + 1,
+                      )
                     }
                     disabled={(selectedItem && quantity >= selectedItem.stock) || outOfStock}
                     className="flex h-full flex-1 items-center justify-center rounded-md text-gray-600 hover:bg-gray-100 disabled:opacity-50 transition-colors cursor-pointer"
@@ -620,6 +628,18 @@ export default function ProductDetailPage() {
               >
                 {outOfStock ? "Hết hàng" : "Mua ngay"}
               </button>
+            </div>
+
+            {/* Promotional Banners */}
+            <div className="space-y-2.5">
+              <div className="flex items-center gap-3 rounded-xl border border-green-100 p-3 text-sm text-green-700 shadow-sm transition-colors hover:bg-green-100/50">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-green-100 text-green-600 shrink-0 shadow-sm">
+                  <Truck className="h-4 w-4" />
+                </div>
+                <span className="font-semibold">
+                  Free Ship TP.Hồ Chí Minh cho hoá đơn từ 500.000đ
+                </span>
+              </div>
             </div>
           </div>
         </div>
@@ -699,9 +719,9 @@ export default function ProductDetailPage() {
           <h2 className="text-lg font-bold text-gray-900 mb-4 pb-4 border-b border-gray-100">
             Mô tả sản phẩm
           </h2>
-          <div 
+          <div
             className="text-sm leading-relaxed text-gray-600 quill-content"
-            dangerouslySetInnerHTML={{ __html: product.description.replace(/&nbsp;/g, " "), }}
+            dangerouslySetInnerHTML={{ __html: product.description.replace(/&nbsp;/g, " ") }}
           />
         </div>
       )}
@@ -839,10 +859,11 @@ export default function ProductDetailPage() {
                       setScale(1);
                       setPanOffset({ x: 0, y: 0 });
                     }}
-                    className={`h-12 w-12 sm:h-16 sm:w-16 shrink-0 overflow-hidden rounded-lg border-2 bg-gray-900 transition-all ${lightboxIndex === idx
+                    className={`h-12 w-12 sm:h-16 sm:w-16 shrink-0 overflow-hidden rounded-lg border-2 bg-gray-900 transition-all ${
+                      lightboxIndex === idx
                         ? "border-primary"
                         : "border-transparent opacity-50 hover:opacity-100"
-                      }`}
+                    }`}
                   >
                     <img
                       src={img.url}

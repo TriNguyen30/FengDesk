@@ -54,8 +54,8 @@ export default function ChatConversation({
         </div>
       ) : (
         <>
-          <div className="flex items-center justify-between border-t border-gray-100 px-3 pt-2">
-            <span className="text-[10px] text-gray-400">Cần tư vấn nhanh?</span>
+          <div className="flex items-center justify-between border-t border-gray-100 px-3 py-2">
+            <span className="text-[12px] text-gray-400">Cần tư vấn nhanh?</span>
             <button
               type="button"
               onClick={askAi}

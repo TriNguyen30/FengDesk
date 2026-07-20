@@ -123,3 +123,30 @@ export interface UserSearchItem {
   email: string;
   phone?: string | null;
 }
+
+/** GET /stores/{id}/membership — vai trò của user hiện tại với store (nguồn sự thật cho tab/quyền FE). */
+export interface StoreMembership {
+  isPrimaryOwner: boolean;
+  isOwner: boolean;
+  isStaff: boolean;
+  isAdmin: boolean;
+  canManage: boolean;
+}
+
+/** GET /stores/{id}/statistics — chỉ owner/admin. */
+export interface StoreStatistics {
+  totalRevenue: number;
+  totalShippingFee: number;
+  totalDeliveries: number;
+  deliveriesByStatus: Record<string, number>;
+  productCount: number;
+  staffCount: number;
+  revenueByMonth: MonthlyRevenuePoint[];
+}
+
+export interface MonthlyRevenuePoint {
+  year: number;
+  month: number;
+  revenue: number;
+  deliveredCount: number;
+}

@@ -11,6 +11,7 @@ import {
   selectCartItems,
   selectCartItemCount,
   selectCartSubtotal,
+  selectCartStatus,
 } from "@/features/cart/store/cartSlice";
 import { setAuthModal } from "@/features/auth/store/authSlice";
 import type { AddCartItemParams, UpdateCartItemParams } from "@/features/cart/types/cart";
@@ -23,6 +24,7 @@ export function useCart() {
   const items = useAppSelector(selectCartItems);
   const itemCount = useAppSelector(selectCartItemCount);
   const subtotal = useAppSelector(selectCartSubtotal);
+  const cartStatus = useAppSelector(selectCartStatus);
 
   const getCart = useCallback(() => dispatch(fetchCart()), [dispatch]);
 
@@ -63,5 +65,6 @@ export function useCart() {
     setQuantity,
     clearCart,
     deleteAll,
+    cartStatus,
   };
 }

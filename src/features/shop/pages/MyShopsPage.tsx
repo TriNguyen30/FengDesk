@@ -95,7 +95,9 @@ export default function MyShopsPage() {
           </span>
           <div>
             <h1 className="text-xl font-bold tracking-tight text-gray-900">Cửa hàng của tôi</h1>
-            <p className="text-sm text-gray-500">Bạn đang có {storeCards.length} cửa hàng để truy cập.</p>
+            <p className="text-sm text-gray-500">
+              Bạn đang có {storeCards.length} cửa hàng để truy cập.
+            </p>
           </div>
         </div>
         <button

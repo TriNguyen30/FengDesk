@@ -7,6 +7,7 @@ import WorkspaceModal from "../components/WorkspaceModal";
 import { useWorkspaceElementAnalysis } from "../hooks/useWorkspace";
 import { fromCm2 } from "../utils/deskArea";
 import ElementVectorFit from "@/features/recommendation/components/element-vector/ElementVectorFit";
+import WorkspacePlacementSection from "../components/WorkspacePlacementSection";
 import {
   MapPinHouse,
   Briefcase,
@@ -73,13 +74,20 @@ function WorkspaceElementSection({ workspace }: { workspace: Workspace }) {
   const { analysis, status } = useWorkspaceElementAnalysis(workspace.id);
 
   if (status === "pending") {
-    return <div className="mt-4 h-40 animate-pulse rounded-2xl border border-gray-100 bg-gray-50" />;
+    return (
+      <div className="mt-4 h-40 animate-pulse rounded-2xl border border-gray-100 bg-gray-50" />
+    );
   }
   if (status === "error" || !analysis) return null;
 
   return (
     <div className="mt-4">
       <ElementVectorFit analysis={analysis} variant="full" />
+      {/* Đặt sản phẩm đã mua vào phòng — radar ở trên tự morph khi đặt/gỡ (invalidate ["workspace"]). */}
+      <WorkspacePlacementSection
+        workspaceId={workspace.id}
+        placedProducts={analysis.placedProducts ?? []}
+      />
     </div>
   );
 }

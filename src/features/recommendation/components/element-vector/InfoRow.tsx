@@ -19,10 +19,18 @@ interface InfoRowProps {
 }
 
 /** Icon tròn + tiêu đề + mô tả — 1 dòng dùng chung cho InfoCardTrio (fit sản phẩm) và SpaceInsightList (không gian thuần). */
-export default function InfoRow({ icon: Icon, title, desc, first = false, tone = "neutral" }: InfoRowProps) {
+export default function InfoRow({
+  icon: Icon,
+  title,
+  desc,
+  first = false,
+  tone = "neutral",
+}: InfoRowProps) {
   return (
     <div className={`flex gap-3 py-3 ${first ? "" : "border-t border-gray-200"}`}>
-      <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${TONE_CLASSES[tone]}`}>
+      <div
+        className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${TONE_CLASSES[tone]}`}
+      >
         <Icon size={14} />
       </div>
       <div className="min-w-0">

@@ -13,15 +13,22 @@ import { elementColor, elementVi } from "./constants";
 
 interface ElementRadarChartProps {
   rows: ElementAnalysisRow[];
+  /** true → vẽ thêm lớp "xem trước" (sản phẩm đã mua đang giao tới) bằng nét đứt màu primary. */
+  showPreview?: boolean;
 }
 
-/** Radar 5 trục ngũ hành: nét đứt không fill = mức lý tưởng của phòng, nét liền có fill = trạng thái hiện tại. */
-export default function ElementRadarChart({ rows }: ElementRadarChartProps) {
+/**
+ * Radar 5 trục ngũ hành: nét đứt xám = mức lý tưởng, nét liền có fill = hiện tại,
+ * nét đứt primary (khi showPreview) = phòng SẼ trông thế nào khi hàng đang giao được đặt vào.
+ * Animation bật để radar "morph" mượt khi đặt/gỡ/chuyển sản phẩm giữa các phòng.
+ */
+export default function ElementRadarChart({ rows, showPreview = false }: ElementRadarChartProps) {
   const data = rows.map((row) => ({
     element: row.element,
     label: elementVi(row.element),
     ideal: Math.max(0, Math.min(1, row.adjustedIdeal)),
     current: Math.max(0, Math.min(1, row.current)),
+    preview: Math.max(0, Math.min(1, row.previewCurrent ?? row.current)),
   }));
 
   const labelToElement = Object.fromEntries(data.map((d) => [d.label, d.element]));
@@ -84,7 +91,9 @@ export default function ElementRadarChart({ rows }: ElementRadarChartProps) {
   };
 
   // Mặc định phóng to đến 45%; nếu có hành vượt 45% thì scale theo giá trị lớn nhất đó.
-  const maxValue = Math.max(...data.flatMap((d) => [d.ideal, d.current]));
+  const maxValue = Math.max(
+    ...data.flatMap((d) => [d.ideal, d.current, showPreview ? d.preview : 0]),
+  );
   const domainMax = Math.max(0.45, maxValue);
 
   //tooltip offset để tooltip không bị che bởi chuột nhưng đang lỗi vl
@@ -258,8 +267,26 @@ export default function ElementRadarChart({ rows }: ElementRadarChartProps) {
                 />
               );
             }}
-            isAnimationActive={false}
+            // Bật animation: đặt/gỡ/chuyển sản phẩm giữa phòng → hình radar morph mượt.
+            isAnimationActive
+            animationDuration={600}
+            animationEasing="ease-out"
           />
+          {showPreview && (
+            <Radar
+              name="Xem trước (hàng đang giao)"
+              dataKey="preview"
+              stroke="var(--color-primary-dark)"
+              strokeDasharray="6 4"
+              strokeWidth={2}
+              fill="var(--color-primary)"
+              fillOpacity={0.08}
+              dot={false}
+              isAnimationActive
+              animationDuration={600}
+              animationEasing="ease-out"
+            />
+          )}
           <Tooltip
             content={<RadarTooltip />}
             offset={tooltipOffset}
@@ -278,6 +305,12 @@ export default function ElementRadarChart({ rows }: ElementRadarChartProps) {
           <span className="inline-block h-2.5 w-2.5 rounded-full bg-[#7d8f69]/70" />
           Hiện tại
         </span>
+        {showPreview && (
+          <span className="flex items-center gap-1.5">
+            <span className="inline-block h-0 w-4 border-t-2 border-dashed border-primary" />
+            Xem trước
+          </span>
+        )}
       </div>
     </div>
   );

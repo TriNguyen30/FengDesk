@@ -32,6 +32,8 @@ export interface MyProfile {
   role?: string;
   roles?: string[];
   dateOfBirth?: string;
+  /** Giờ sinh "HH:mm:ss" — cần cho Tứ Trụ/Bát Tự đầy đủ. Null/undefined nếu chưa khai. */
+  birthTime?: string | null;
   gender?: string;
   fengShui?: FengShui;
 }

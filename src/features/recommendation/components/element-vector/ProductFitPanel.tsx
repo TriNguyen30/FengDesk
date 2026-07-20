@@ -3,13 +3,15 @@ import { useNavigate } from "react-router-dom";
 import { useWorkspaces } from "@/features/users/hooks/useWorkspace";
 import { useProductFitAcrossWorkspaces } from "../../hooks/useProductFit";
 import type { ElementAnalysisRow, ProductFitResponse } from "../../types/recommendation";
+import type { ElementAnalysisRow as RadarRow } from "@/features/users/types/workspace";
 import ScoreBadge from "./ScoreBadge";
 import ElementBars, { type ElementBarRow } from "./ElementBars";
+import ElementRadarChart from "./ElementRadarChart";
 import InfoCardTrio from "./InfoCardTrio";
 import SpaceTabs from "./SpaceTabs";
 import EmptyState from "./EmptyState";
 import SummaryLine from "./SummaryLine";
-import { GAP_THRESHOLD, scorePercent } from "./constants";
+import { ELEMENT_ORDER, GAP_THRESHOLD, scorePercent } from "./constants";
 
 interface ProductFitPanelProps {
   productId: string;
@@ -63,9 +65,7 @@ export default function ProductFitPanel({ productId }: ProductFitPanelProps) {
       />
 
       <div className="rounded-b-2xl rounded-tr-2xl border border-[#e5e7eb] bg-white p-5 shadow-sm">
-        {fitStatus === "pending" && (
-          <div className="h-48 animate-pulse rounded-xl bg-gray-50" />
-        )}
+        {fitStatus === "pending" && <div className="h-48 animate-pulse rounded-xl bg-gray-50" />}
 
         {fitStatus === "error" && (
           <p className="text-sm text-gray-400">Không thể tải độ phù hợp cho không gian này.</p>
@@ -81,7 +81,17 @@ export default function ProductFitPanel({ productId }: ProductFitPanelProps) {
               </div>
             </div>
 
-            <ElementBars rows={toFitBarRows(fit)} />
+            {/* Radar (trái) cho thấy phòng SẼ ra sao khi thêm sản phẩm này (nét đứt = xem trước);
+                thanh ngũ hành (phải) giữ chi tiết bù/thừa từng hành — tận dụng chiều ngang. */}
+            <div className="grid gap-4 md:grid-cols-2 md:items-center">
+              <div className="min-w-0">
+                <ElementRadarChart rows={toRadarRows(fit)} showPreview />
+                <p className="mt-1 text-center text-[11px] text-gray-400">
+                  Nét đứt = ngũ hành phòng sau khi thêm sản phẩm này
+                </p>
+              </div>
+              <ElementBars rows={toFitBarRows(fit)} />
+            </div>
 
             {fit.cautionFacts.length > 0 && (
               <div className="rounded-lg bg-[#fdecea] px-3 py-2 text-xs text-[#b3261e]">
@@ -110,19 +120,43 @@ export default function ProductFitPanel({ productId }: ProductFitPanelProps) {
   );
 }
 
+/**
+ * Map product-fit → hàng radar theo ĐÚNG thứ tự ELEMENT_ORDER (khớp radar workspace, tránh lệch trục).
+ * previewCurrent do BE tính bằng chính engine (BuildCurrentWithProducts) — cùng thang & cùng cơ chế
+ * "phiếu" với previewCurrent của workspace, nên radar khớp scale với card workspace.
+ */
+function toRadarRows(fit: ProductFitResponse): RadarRow[] {
+  const gapByElement = new Map(fit.gap.map((r) => [r.element, r]));
+  return ELEMENT_ORDER.map((el) => {
+    const g = gapByElement.get(el);
+    return {
+      element: el,
+      ideal: g?.ideal ?? 0,
+      adjustedIdeal: g?.adjustedIdeal ?? 0,
+      current: g?.current ?? 0,
+      gap: g?.gap ?? 0,
+      previewCurrent: g?.previewCurrent ?? g?.current ?? 0,
+      previewGap: g?.previewGap ?? 0,
+    };
+  });
+}
+
+/** Bars fit — cùng thứ tự ELEMENT_ORDER với radar. */
 function toFitBarRows(fit: ProductFitResponse): ElementBarRow[] {
+  const gapByElement = new Map(fit.gap.map((r) => [r.element, r]));
   const productByElement = new Map(fit.productVector.map((p) => [p.element, p.value]));
-  return fit.gap.map((row) => {
-    const productValue = productByElement.get(row.element) ?? 0;
-    const needed = Math.max(row.gap, 0);
+  return ELEMENT_ORDER.map((el) => {
+    const gap = gapByElement.get(el)?.gap ?? 0;
+    const productValue = productByElement.get(el) ?? 0;
+    const needed = Math.max(gap, 0);
     let badge: ElementBarRow["badge"];
-    if (row.gap > GAP_THRESHOLD && productValue > 0) {
+    if (gap > GAP_THRESHOLD && productValue > 0) {
       badge = { label: "Bù tốt", tone: "positive" };
-    } else if (row.gap < -GAP_THRESHOLD && productValue > 0) {
+    } else if (gap < -GAP_THRESHOLD && productValue > 0) {
       badge = { label: "Thêm thừa", tone: "negative" };
     }
     return {
-      element: row.element,
+      element: el,
       background: needed,
       foreground: productValue,
       tooltip: `Phòng cần: ${needed.toFixed(2)} · Sản phẩm cấp: ${productValue.toFixed(2)}`,

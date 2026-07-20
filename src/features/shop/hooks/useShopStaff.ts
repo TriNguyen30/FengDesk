@@ -10,7 +10,10 @@ import {
 } from "@/features/shop/api/shop.api";
 import type { AssignStaffDto } from "@/features/shop/types/shop";
 import { useAppDispatch } from "@/app/store";
-import { fetchNotifications, fetchUnreadCount } from "@/features/notification/store/notificationSlice";
+import {
+  fetchNotifications,
+  fetchUnreadCount,
+} from "@/features/notification/store/notificationSlice";
 
 const STAFF_KEY = (storeId: string) => ["shop-staff", storeId] as const;
 const MY_INVITATIONS_KEY = ["my-store-invitations"] as const;

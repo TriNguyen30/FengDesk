@@ -2,6 +2,8 @@ import type { ChatMessage } from "@/features/chatbox/types/chatbox";
 import { formatMessageTime } from "@/features/chatbox/utils/chatUtils";
 import { Bot, User } from "lucide-react";
 import Markdown from "./Markdown";
+import PaymentAttachment from "./PaymentAttachment";
+import { extractPaymentBlock } from "@/features/chatbox/utils/paymentBlock";
 
 interface ChatMessageBubbleProps {
   message: ChatMessage;
@@ -11,6 +13,10 @@ interface ChatMessageBubbleProps {
 export default function ChatMessageBubble({ message, isOwn }: ChatMessageBubbleProps) {
   const isAi = message.senderType === "AiBot";
   const isSystem = message.senderType === "System";
+  // Tin AI có thể kèm block thanh toán (confirm_order) — tách ra render card riêng dưới bubble.
+  const { text: aiText, payment } = isAi
+    ? extractPaymentBlock(message.content ?? "")
+    : { text: message.content ?? "", payment: null };
 
   if (isSystem) {
     return (
@@ -50,22 +56,25 @@ export default function ChatMessageBubble({ message, isOwn }: ChatMessageBubbleP
           </div>
         )}
 
-        {message.content?.trim() && (
+        {aiText.trim() && (
           <div
-            className={`rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed shadow-sm ${isOwn
+            className={`rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed shadow-sm ${
+              isOwn
                 ? "rounded-br-md bg-primary text-white"
                 : isAi
                   ? "rounded-bl-md border border-primary/15 bg-primary/5 text-gray-800"
                   : "rounded-bl-md border border-gray-200 bg-white text-gray-800"
-              }`}
+            }`}
           >
             {isAi ? (
-              <Markdown text={message.content} />
+              <Markdown text={aiText} />
             ) : (
-              <p className="whitespace-pre-wrap break-words">{message.content}</p>
+              <p className="whitespace-pre-wrap break-words">{aiText}</p>
             )}
           </div>
         )}
+
+        {payment && <PaymentAttachment payment={payment} />}
 
         <span className="px-1 text-[10px] text-gray-400 tabular-nums">
           {formatMessageTime(message.createdAt)}

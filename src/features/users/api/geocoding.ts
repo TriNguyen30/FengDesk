@@ -1,17 +1,45 @@
 // ---------------------------------------------------------------------------
-// Geocoding utilities – OpenStreetMap Nominatim provider
+// Geocoding utilities – VietMap provider (https://maps.vietmap.vn)
 //
 // The public API (geocodeLocation, reverseGeocode, etc.) is provider-agnostic.
-// To swap providers, replace the `NominatimProvider` implementation and update
+// To swap providers, replace the `VietMapProvider` implementation and update
 // the thin delegation inside each exported function.
 // ---------------------------------------------------------------------------
 
-const NOMINATIM_BASE = "https://nominatim.openstreetmap.org";
+import { VIETMAP_API_KEY } from "@/config/env";
 
-const NOMINATIM_HEADERS: HeadersInit = {
-  "Accept-Language": "vi",
-  "User-Agent": "FengDeskAI/1.0",
-};
+const VIETMAP_BASE = "https://maps.vietmap.vn/api";
+
+// ── Cache (giảm số call VietMap — quota theo ngày) ──────────────────────────
+// Geocode theo tên tỉnh/quận/phường và reverse theo tọa độ lặp lại rất nhiều
+// trong 1 phiên; cache in-memory + sessionStorage để không đốt quota vô ích.
+
+const CACHE_PREFIX = "vm-cache:";
+const memoryCache = new Map<string, unknown>();
+
+function cacheGet<T>(key: string): T | undefined {
+  if (memoryCache.has(key)) return memoryCache.get(key) as T;
+  try {
+    const raw = sessionStorage.getItem(CACHE_PREFIX + key);
+    if (raw !== null) {
+      const val = JSON.parse(raw) as T;
+      memoryCache.set(key, val);
+      return val;
+    }
+  } catch {
+    /* sessionStorage không khả dụng — chỉ dùng memory */
+  }
+  return undefined;
+}
+
+function cacheSet(key: string, value: unknown): void {
+  memoryCache.set(key, value);
+  try {
+    sessionStorage.setItem(CACHE_PREFIX + key, JSON.stringify(value));
+  } catch {
+    /* đầy quota storage — bỏ qua */
+  }
+}
 
 // ── Vietnamese text helpers ─────────────────────────────────────────────────
 
@@ -49,6 +77,41 @@ function stripPrefixes(value: string): string {
   return value;
 }
 
+// ── VietMap API types ───────────────────────────────────────────────────────
+
+/** boundaries[].type: 0 = province/city, 1 = district, 2 = ward */
+interface VietMapBoundary {
+  type: 0 | 1 | 2;
+  id: number;
+  name: string;
+  prefix: string;
+  full_name: string;
+}
+
+export interface VietMapSearchResult {
+  ref_id: string;
+  address: string;
+  name: string;
+  display: string;
+  boundaries: VietMapBoundary[];
+}
+
+interface VietMapPlaceResult {
+  lat: number;
+  lng: number;
+  display: string;
+  name: string;
+  hs_num: string;
+  street: string;
+  city: string;
+  district: string;
+  ward: string;
+}
+
+function boundaryByType(boundaries: VietMapBoundary[], type: 0 | 1 | 2): string {
+  return boundaries.find((b) => b.type === type)?.full_name ?? "";
+}
+
 // ── Provider abstraction ────────────────────────────────────────────────────
 
 interface GeocodingProvider {
@@ -56,99 +119,53 @@ interface GeocodingProvider {
   reverse(lat: number, lng: number): Promise<ReverseGeocodeResult | null>;
 }
 
-// ── Nominatim provider implementation ───────────────────────────────────────
+// ── VietMap provider implementation ─────────────────────────────────────────
 
-interface NominatimSearchResult {
-  lat: string;
-  lon: string;
-}
-
-interface NominatimAddress {
-  state?: string;
-  province?: string;
-  city?: string;
-  city_district?: string;
-  county?: string;
-  town?: string;
-  suburb?: string;
-  village?: string;
-  quarter?: string;
-  neighbourhood?: string;
-}
-
-interface NominatimReverseResult {
-  display_name?: string;
-  address?: NominatimAddress & {
-    "ISO3166-2-lvl4"?: string;
-  };
-}
-
-const ISO_PROVINCE_MAP: Record<string, string> = {
-  "VN-SG": "Thành phố Hồ Chí Minh",
-  "VN-HN": "Hà Nội",
-  "VN-DN": "Thành phố Đà Nẵng",
-  "VN-HP": "Thành phố Hải Phòng",
-  "VN-CT": "Thành phố Cần Thơ",
-};
-
-const NominatimProvider: GeocodingProvider = {
+const VietMapProvider: GeocodingProvider = {
   async geocode(query: string) {
-    const url = `${NOMINATIM_BASE}/search?format=json&countrycodes=vn&limit=1&q=${encodeURIComponent(query)}`;
-    const res = await fetch(url, { headers: NOMINATIM_HEADERS });
+    const cacheKey = `geo:${query}`;
+    const cached = cacheGet<{ lat: number; lng: number } | null>(cacheKey);
+    if (cached !== undefined) return cached;
 
-    if (!res.ok) return null;
+    // VietMap search/v3 returns ref_id only; place/v3 resolves coordinates.
+    const results = await vietmapSearch(query);
+    if (!results.length) return null; // không cache lỗi/quota — thử lại lần sau
 
-    const data: NominatimSearchResult[] = await res.json();
-    if (!data.length) return null;
+    const place = await vietmapPlace(results[0].ref_id);
+    if (!place) return null;
 
-    return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+    const coords = { lat: place.lat, lng: place.lng };
+    cacheSet(cacheKey, coords);
+    return coords;
   },
 
   async reverse(lat: number, lng: number) {
-    const url = `${NOMINATIM_BASE}/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`;
-    const res = await fetch(url, { headers: NOMINATIM_HEADERS });
+    // Làm tròn ~1m để tăng cache hit khi click quanh cùng 1 điểm
+    const cacheKey = `rev:${lat.toFixed(5)},${lng.toFixed(5)}`;
+    const cached = cacheGet<ReverseGeocodeResult>(cacheKey);
+    if (cached !== undefined) return cached;
 
-    if (!res.ok) return null;
-
-    const data: NominatimReverseResult = await res.json();
-    const addr = data.address;
-    if (!addr) return null;
-
-    let province = addr["ISO3166-2-lvl4"] ? ISO_PROVINCE_MAP[addr["ISO3166-2-lvl4"]] : "";
-    if (!province) province = addr.state || addr.province || "";
-    if (!province && addr.city) province = addr.city;
-
-    let district = addr.city_district || addr.county || addr.town || "";
-    // Special handling for cities like TP Thủ Đức inside TP HCM
-    if (!district && addr.city && addr.city !== province) {
-      district = addr.city;
+    const url = `${VIETMAP_BASE}/reverse/v3?apikey=${VIETMAP_API_KEY}&lat=${lat}&lng=${lng}`;
+    const res = await fetch(url);
+    if (!res.ok) {
+      if (res.status === 429) console.warn("[VietMap] Hết quota ngày (429) — reverse geocode tạm không khả dụng.");
+      return null;
     }
 
-    let ward = addr.suburb || addr.village || addr.quarter || addr.neighbourhood || "";
+    const data: VietMapSearchResult[] = await res.json();
+    if (!data.length) return null;
 
-    // Fallback to display_name parsing if some components are missing
-    if (data.display_name && (!province || !district || !ward)) {
-      const parts = data.display_name.split(",").map(p => p.trim());
-      const addressParts = parts.filter(p => p !== "Việt Nam" && !/^\d+$/.test(p));
-      
-      if (!province && addressParts.length >= 1) {
-        province = addressParts[addressParts.length - 1];
-      }
-      if (!district && addressParts.length >= 2) {
-        if (addressParts[addressParts.length - 1] === province) {
-          district = addressParts[addressParts.length - 2];
-        }
-      }
-      if (!ward && addressParts.length >= 3) {
-        if (addressParts[addressParts.length - 1] === province && addressParts[addressParts.length - 2] === district) {
-          ward = addressParts[addressParts.length - 3];
-        }
-      }
-    }
+    const first = data[0];
+    const province = boundaryByType(first.boundaries, 0);
+    const district = boundaryByType(first.boundaries, 1);
+    const ward = boundaryByType(first.boundaries, 2);
 
     if (!province && !district && !ward) return null;
 
-    return { province, district, ward };
+    // `name` holds house number + street (e.g. "948 Trường Chinh")
+    const result = { province, district, ward, street: first.name || "" };
+    cacheSet(cacheKey, result);
+    return result;
   },
 };
 
@@ -158,29 +175,84 @@ export interface ReverseGeocodeResult {
   province: string;
   district: string;
   ward: string;
+  /** House number + street name, e.g. "948 Trường Chinh". May be empty. */
+  street?: string;
+}
+
+/**
+ * Search places (VietMap search/v3). Returns candidates without coordinates;
+ * resolve coordinates via getPlaceCoordinates(ref_id).
+ */
+export async function vietmapSearch(
+  query: string,
+  focus?: { lat: number; lng: number },
+): Promise<VietMapSearchResult[]> {
+  let url = `${VIETMAP_BASE}/search/v3?apikey=${VIETMAP_API_KEY}&text=${encodeURIComponent(query)}`;
+  if (focus) url += `&focus=${focus.lat},${focus.lng}`;
+
+  const res = await fetch(url);
+  if (!res.ok) return [];
+
+  const data: VietMapSearchResult[] = await res.json();
+  return Array.isArray(data) ? data : [];
+}
+
+/** Autocomplete variant (VietMap autocomplete/v3) – same shape as search. */
+export async function vietmapAutocomplete(
+  query: string,
+  focus?: { lat: number; lng: number },
+): Promise<VietMapSearchResult[]> {
+  let url = `${VIETMAP_BASE}/autocomplete/v3?apikey=${VIETMAP_API_KEY}&text=${encodeURIComponent(query)}`;
+  if (focus) url += `&focus=${focus.lat},${focus.lng}`;
+
+  const res = await fetch(url);
+  if (!res.ok) return [];
+
+  const data: VietMapSearchResult[] = await res.json();
+  return Array.isArray(data) ? data : [];
+}
+
+/** Resolve a search/autocomplete ref_id to coordinates (VietMap place/v3). */
+export async function getPlaceCoordinates(
+  refId: string,
+): Promise<{ lat: number; lng: number } | null> {
+  const place = await vietmapPlace(refId);
+  return place ? { lat: place.lat, lng: place.lng } : null;
+}
+
+async function vietmapPlace(refId: string): Promise<VietMapPlaceResult | null> {
+  const cacheKey = `place:${refId}`;
+  const cached = cacheGet<VietMapPlaceResult>(cacheKey);
+  if (cached !== undefined) return cached;
+
+  const url = `${VIETMAP_BASE}/place/v3?apikey=${VIETMAP_API_KEY}&refid=${encodeURIComponent(refId)}`;
+  const res = await fetch(url);
+  if (!res.ok) {
+    if (res.status === 429) console.warn("[VietMap] Hết quota ngày (429) — place lookup tạm không khả dụng.");
+    return null;
+  }
+  const data: VietMapPlaceResult = await res.json();
+  cacheSet(cacheKey, data);
+  return data;
 }
 
 /**
  * Geocode a location name to coordinates.
- * Uses Nominatim API. Restricts to Vietnam (countrycodes=vn).
  * Returns null if not found.
  */
-export async function geocodeLocation(
-  query: string,
-): Promise<{ lat: number; lng: number } | null> {
-  return NominatimProvider.geocode(query);
+export async function geocodeLocation(query: string): Promise<{ lat: number; lng: number } | null> {
+  return VietMapProvider.geocode(query);
 }
 
 /**
  * Reverse geocode coordinates to address components.
- * Uses Nominatim Reverse API.
- * Returns province, district, ward names (Vietnamese) or null if not found.
+ * Returns province, district, ward names (Vietnamese) + street, or null.
  */
 export async function reverseGeocode(
   lat: number,
   lng: number,
 ): Promise<ReverseGeocodeResult | null> {
-  return NominatimProvider.reverse(lat, lng);
+  return VietMapProvider.reverse(lat, lng);
 }
 
 /**
@@ -197,18 +269,13 @@ export function findBestMatch<T extends { id: string; name: string }>(
   const normalizedTarget = normalizeVietnamese(target);
 
   // 1. Exact normalized match
-  const exact = items.find(
-    (item) => normalizeVietnamese(item.name) === normalizedTarget,
-  );
+  const exact = items.find((item) => normalizeVietnamese(item.name) === normalizedTarget);
   if (exact) return exact.id;
 
   // 2. Includes match
   const included = items.find((item) => {
     const normalizedName = normalizeVietnamese(item.name);
-    return (
-      normalizedName.includes(normalizedTarget) ||
-      normalizedTarget.includes(normalizedName)
-    );
+    return normalizedName.includes(normalizedTarget) || normalizedTarget.includes(normalizedName);
   });
   if (included) return included.id;
 

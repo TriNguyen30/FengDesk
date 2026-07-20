@@ -1,15 +1,6 @@
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import {
-  ChevronLeft,
-  ChevronRight,
-  Eye,
-  Loader2,
-  Package,
-  Search,
-  Truck,
-  X,
-} from "lucide-react";
+import { ChevronLeft, ChevronRight, Eye, Loader2, Package, Search, Truck, X } from "lucide-react";
 import {
   DeliveryDetailModal,
   useCreateDeliveryShipment,
@@ -169,7 +160,9 @@ export function ShopDeliveriesView({ storeId }: ShopDeliveriesViewProps) {
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <Package className="mb-4 h-12 w-12 text-gray-300" />
           <h3 className="text-base font-semibold text-gray-900">Không có đơn giao nào</h3>
-          <p className="text-sm text-gray-500 mt-1">Khi có khách đặt hàng, đơn giao sẽ hiện ở đây.</p>
+          <p className="text-sm text-gray-500 mt-1">
+            Khi có khách đặt hàng, đơn giao sẽ hiện ở đây.
+          </p>
         </div>
       ) : (
         <div className="overflow-x-auto">
@@ -200,14 +193,18 @@ export function ShopDeliveriesView({ storeId }: ShopDeliveriesViewProps) {
                     className="hover:bg-gray-50/30 transition-colors cursor-pointer"
                     onClick={() => setDetailDeliveryId(d.id)}
                   >
-                    <td className="p-4 font-mono font-bold text-gray-900">#{d.id.substring(0, 8)}</td>
+                    <td className="p-4 font-mono font-bold text-gray-900">
+                      #{d.id.substring(0, 8)}
+                    </td>
                     <td className="p-4 text-xs text-gray-500 whitespace-nowrap">
                       {formatOrderDate(d.createdAt)}
                     </td>
                     <td className="p-4 font-semibold text-gray-800 whitespace-nowrap">
                       {formatVnd(d.subtotal)}
                     </td>
-                    <td className="p-4 text-gray-700 whitespace-nowrap">{formatVnd(d.shippingFee)}</td>
+                    <td className="p-4 text-gray-700 whitespace-nowrap">
+                      {formatVnd(d.shippingFee)}
+                    </td>
                     <td className="p-4 font-mono text-xs text-gray-700">
                       {d.trackingCode ? d.trackingCode : <span className="text-gray-300">—</span>}
                     </td>
@@ -228,7 +225,11 @@ export function ShopDeliveriesView({ storeId }: ShopDeliveriesViewProps) {
                           disabled={busyConfirm}
                           className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer"
                         >
-                          {busyConfirm ? <Loader2 size={13} className="animate-spin" /> : <Package size={13} />}
+                          {busyConfirm ? (
+                            <Loader2 size={13} className="animate-spin" />
+                          ) : (
+                            <Package size={13} />
+                          )}
                           Nhận đơn
                         </button>
                       )}
@@ -238,7 +239,11 @@ export function ShopDeliveriesView({ storeId }: ShopDeliveriesViewProps) {
                           disabled={busyShip}
                           className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-primary-dark disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer"
                         >
-                          {busyShip ? <Loader2 size={13} className="animate-spin" /> : <Truck size={13} />}
+                          {busyShip ? (
+                            <Loader2 size={13} className="animate-spin" />
+                          ) : (
+                            <Truck size={13} />
+                          )}
                           Tạo đơn ship
                         </button>
                       )}

@@ -9,44 +9,45 @@
 
 > ⚠️ **Lưu ý tên gọi:** `src/components/ui/WorkspaceSwitcher.tsx` là switcher **"Đổi khu"** (shop/seller/admin theo quyền) — **KHÔNG** phải bộ chọn workspace-profile phong thủy. Đừng gắn vector vào đó. App hiện **chưa có** bộ chọn "workspace profile đang active"; đó là việc của **Phase 2** (tiền đề cho vị trí #3). Ở Phase 1 chỉ đặt trong trang ProfileWorkspace.
 
-> 🎨 **Tham chiếu thiết kế (nguồn visual chuẩn):** [`ElementVector-Fit-UI.html`](./ElementVector-Fit-UI.html) — mở bằng trình duyệt để xem đúng layout/màu/spacing của TURN 5 (mục "Độ phù hợp phong thủy với không gian của bạn"). Bám file này khi dựng markup; bảng màu ở mục 4 trích từ đây. 
+> 🎨 **Tham chiếu thiết kế (nguồn visual chuẩn):** [`ElementVector-Fit-UI.html`](./ElementVector-Fit-UI.html) — mở bằng trình duyệt để xem đúng layout/màu/spacing của TURN 5 (mục "Độ phù hợp phong thủy với không gian của bạn"). Bám file này khi dựng markup; bảng màu ở mục 4 trích từ đây.
 > Lưu ý: file này chỉ là bản dựng sẵn dùng để tham khảo layout và cho người dùng thấy cái nhìn trực quan, ta sẽ cần thay đổi cho phù phù hợp trong quá trình thực hiện
 
 ## 0. Phân rã TURN 5 theo 6 vị trí (bức tranh tổng)
 
 Mục "Độ phù hợp phong thủy với không gian của bạn" (TURN 5) là **một cụm gộp**. Phần trên (ảnh/giá/nút mua) chỉ là product item xem trước, **không thuộc component**. Tách cụm thành các **atom tái dùng**, đặt ở `src/features/recommendation/components/element-vector/`:
 
-| Atom | Vai trò |
-|------|---------|
-| `ScoreBadge` | Vòng `%` + tier (chỉ dùng khi là *fit sản phẩm × phòng*) |
-| `ElementBars` | Dãy thanh 5 hành — prop `mode: "space" \| "fit" \| "aggregate"` (còn dùng ở compact/mini và ở fit sản phẩm, vị trí #1 full đã thay bằng `ElementTags` + `ElementRadarChart`) |
+| Atom                | Vai trò                                                                                                                                                                                                                                     |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ScoreBadge`        | Vòng `%` + tier (chỉ dùng khi là _fit sản phẩm × phòng_)                                                                                                                                                                                    |
+| `ElementBars`       | Dãy thanh 5 hành — prop `mode: "space" \| "fit" \| "aggregate"` (còn dùng ở compact/mini và ở fit sản phẩm, vị trí #1 full đã thay bằng `ElementTags` + `ElementRadarChart`)                                                                |
 | `ElementRadarChart` | Radar 5 trục ngũ hành — nét đứt không fill = `adjustedIdeal` (mức lý tưởng), nét liền fill 25% + dot màu hành = `current` (hiện tại). Domain mặc định 50%, tự giãn theo giá trị lớn nhất nếu có hành vượt 50% (xem `ElementRadarChart.tsx`) |
-| `ElementTags` | Dải chip 5 hành thay cho bars ở vị trí #1: dot màu + tên hành + trạng thái `↑ cần bù` / `↓ thừa` / `ổn` suy từ `gapStatus(gap)` |
-| `SpaceInsightList` | Danh sách gợi ý (icon + tiêu đề + mô tả) suy **thuần từ dữ liệu `element-analysis`** (không có bản mệnh/hướng đặt — data đó chỉ có ở fit sản phẩm × phòng) — dùng `InfoRow` chung với `InfoCardTrio` |
-| `InfoRow` | Icon tròn + tiêu đề + mô tả — 1 dòng dùng chung cho `InfoCardTrio` (fit sản phẩm) và `SpaceInsightList` (không gian thuần) |
-| `InfoCardTrio` | 3 thẻ: Không gian · Hợp bản mệnh · Hướng đặt — **chỉ dùng ở fit sản phẩm × phòng** (vị trí #3), có `menhLine`/`placementHint` từ `ProductFitResponse` mà `element-analysis` không có |
-| `SpaceTabs` | Dải tab chọn phòng (mỗi tab có `%`) + "＋ Thêm không gian" |
-| `EmptyState` | "Bạn chưa có không gian nào" |
-| `SummaryLine` | Câu kết "hành X trội — hợp phòng đang thiếu X" (dùng ở fit sản phẩm, vị trí #3) |
-| `FitBadge` | Chip `%` siêu gọn |
+| `ElementTags`       | Dải chip 5 hành thay cho bars ở vị trí #1: dot màu + tên hành + trạng thái `↑ cần bù` / `↓ thừa` / `ổn` suy từ `gapStatus(gap)`                                                                                                             |
+| `SpaceInsightList`  | Danh sách gợi ý (icon + tiêu đề + mô tả) suy **thuần từ dữ liệu `element-analysis`** (không có bản mệnh/hướng đặt — data đó chỉ có ở fit sản phẩm × phòng) — dùng `InfoRow` chung với `InfoCardTrio`                                        |
+| `InfoRow`           | Icon tròn + tiêu đề + mô tả — 1 dòng dùng chung cho `InfoCardTrio` (fit sản phẩm) và `SpaceInsightList` (không gian thuần)                                                                                                                  |
+| `InfoCardTrio`      | 3 thẻ: Không gian · Hợp bản mệnh · Hướng đặt — **chỉ dùng ở fit sản phẩm × phòng** (vị trí #3), có `menhLine`/`placementHint` từ `ProductFitResponse` mà `element-analysis` không có                                                        |
+| `SpaceTabs`         | Dải tab chọn phòng (mỗi tab có `%`) + "＋ Thêm không gian"                                                                                                                                                                                  |
+| `EmptyState`        | "Bạn chưa có không gian nào"                                                                                                                                                                                                                |
+| `SummaryLine`       | Câu kết "hành X trội — hợp phòng đang thiếu X" (dùng ở fit sản phẩm, vị trí #3)                                                                                                                                                             |
+| `FitBadge`          | Chip `%` siêu gọn                                                                                                                                                                                                                           |
 
 **Cắt phần nào → dùng ở đâu:**
 
-| # Vị trí | Lắp atom | Cắt bỏ | Data | `ElementBars.mode` |
-|---|---|---|---|---|
-| 1 ⭐ Trang Workspace | `ElementTags` + `SpaceInsightList` + `ElementRadarChart` (grid 2 cột: trái = tags+list, phải = radar) | ScoreBadge, InfoCardTrio, SpaceTabs, `ElementBars` (bars ngang đã bỏ — tốn diện tích) | `element-analysis` | — |
-| 2 Workspace card (list ProfileWorkspace) | `ElementBars` mini **hoặc** `SummaryLine` gọn | phần còn lại | `element-analysis` | `space` (mini) |
-| 2b (Phase 2) Bộ chọn "phòng đang active" | `SummaryLine` compact + `FitBadge` | — | element-analysis | space (mini) |
-| 3 Chi tiết sản phẩm | **TOÀN BỘ**: ScoreBadge + ElementBars + InfoCardTrio + SpaceTabs + EmptyState + SummaryLine | — | fit sản phẩm × phòng | `fit` |
-| 4 Kết quả gợi ý (card) | `ScoreBadge` + `SummaryLine` + hướng đặt | Radar, SpaceTabs | `RecommendationResponse.items` | `fit` |
-| 5 Card listing/search | `FitBadge` (chỉ `%`) | phần còn lại | fit rút gọn | — |
-| 6 Giỏ hàng | `ElementBars` + `SummaryLine` | ScoreBadge per-item, tabs | tổng vector giỏ vs phòng | `aggregate` |
+| # Vị trí                                 | Lắp atom                                                                                              | Cắt bỏ                                                                                | Data                           | `ElementBars.mode` |
+| ---------------------------------------- | ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- | ------------------------------ | ------------------ |
+| 1 ⭐ Trang Workspace                     | `ElementTags` + `SpaceInsightList` + `ElementRadarChart` (grid 2 cột: trái = tags+list, phải = radar) | ScoreBadge, InfoCardTrio, SpaceTabs, `ElementBars` (bars ngang đã bỏ — tốn diện tích) | `element-analysis`             | —                  |
+| 2 Workspace card (list ProfileWorkspace) | `ElementBars` mini **hoặc** `SummaryLine` gọn                                                         | phần còn lại                                                                          | `element-analysis`             | `space` (mini)     |
+| 2b (Phase 2) Bộ chọn "phòng đang active" | `SummaryLine` compact + `FitBadge`                                                                    | —                                                                                     | element-analysis               | space (mini)       |
+| 3 Chi tiết sản phẩm                      | **TOÀN BỘ**: ScoreBadge + ElementBars + InfoCardTrio + SpaceTabs + EmptyState + SummaryLine           | —                                                                                     | fit sản phẩm × phòng           | `fit`              |
+| 4 Kết quả gợi ý (card)                   | `ScoreBadge` + `SummaryLine` + hướng đặt                                                              | Radar, SpaceTabs                                                                      | `RecommendationResponse.items` | `fit`              |
+| 5 Card listing/search                    | `FitBadge` (chỉ `%`)                                                                                  | phần còn lại                                                                          | fit rút gọn                    | —                  |
+| 6 Giỏ hàng                               | `ElementBars` + `SummaryLine`                                                                         | ScoreBadge per-item, tabs                                                             | tổng vector giỏ vs phòng       | `aggregate`        |
 
 **Nguyên tắc:** build atom dùng chung một lần, mỗi vị trí **compose** đúng mảnh cần — không copy cả cụm. `ElementBars` là lõi tái dùng nhờ prop `mode`.
 
 **Thứ tự triển khai (theo data sẵn có):**
+
 - **Phase 1 (task này):** #1 + #2 — dùng endpoint `element-analysis` (đã có task BE).
-- **Phase 2:** #3 + #4 — cần endpoint *fit sản phẩm × phòng* (chưa có) / `RecommendationResponse`.
+- **Phase 2:** #3 + #4 — cần endpoint _fit sản phẩm × phòng_ (chưa có) / `RecommendationResponse`.
 - **Phase 3:** #5 + #6 — `FitBadge` + tổng hợp giỏ.
 
 ## Convention repo (bắt buộc theo)
@@ -123,13 +124,14 @@ interface ElementVectorFitProps {
 ```
 
 **Yêu cầu hiển thị (bản `full`) — cập nhật sau refactor bỏ 5 thanh bar ngang:**
+
 - Tiêu đề: "Ngũ hành không gian của bạn".
 - Layout **grid 2 cột** (`grid-cols-1 lg:grid-cols-2`, stack dọc trên mobile):
   - **Cột trái** — `ElementTags` (dải chip 5 hành, thứ tự Kim, Moc, Thuy, Hoa, Tho): dot màu hành + tên hành + trạng thái suy từ `gapStatus(gap)`:
     - `gap > 0.05` (deficit) → "↑ cần bù", nền tan `#f6ead8`.
     - `gap < −0.05` (surplus) → "↓ thừa", nền tan `#f6ead8` (cùng tông với deficit — cả hai đều là "cần chú ý", khác với "ổn").
     - còn lại (balanced) → "ổn", nền trắng viền `#e5e7eb`.
-    Bên dưới là `SpaceInsightList` (3 dòng icon+tiêu đề+mô tả, suy **thuần từ dữ liệu sẵn có** — không bịa bản mệnh/hướng đặt):
+      Bên dưới là `SpaceInsightList` (3 dòng icon+tiêu đề+mô tả, suy **thuần từ dữ liệu sẵn có** — không bịa bản mệnh/hướng đặt):
     1. "Hợp với không gian này" — liệt kê các hành đang thiếu (deficit).
     2. "Đang dư trong phòng" — chỉ hiện khi có hành surplus.
     3. "Ưu tiên bổ sung" — hành `dominantNeed`.
@@ -142,11 +144,11 @@ interface ElementVectorFitProps {
 ```ts
 const ELEMENT_VI = { Kim: "Kim", Moc: "Mộc", Thuy: "Thủy", Hoa: "Hỏa", Tho: "Thổ" };
 const ELEMENT_COLOR = {
-  Moc:  "#7d8f69", // sage (brand)
+  Moc: "#7d8f69", // sage (brand)
   Thuy: "#3b82f6", // blue
-  Hoa:  "#ef4444", // red
-  Tho:  "#c4a86a", // earth gold
-  Kim:  "#9ca3af", // metal gray
+  Hoa: "#ef4444", // red
+  Tho: "#c4a86a", // earth gold
+  Kim: "#9ca3af", // metal gray
 };
 // nền/viền/chữ phụ: bg #fafbf9, border #e5e7eb, text #111827, muted #6b7280, thừa #fdecea
 ```
@@ -157,10 +159,14 @@ Chuẩn hóa bề rộng thanh: `width = value * 100%` (value đã ∈ [0,1]). `
 
 **a) Trang Workspace** — `src/features/users/pages/ProfileWorkspace.tsx`:
 Khi có workspace đang chọn/mặc định, render:
+
 ```tsx
 const { analysis } = useWorkspaceElementAnalysis(selectedWorkspaceId);
-{analysis && <ElementVectorFit analysis={analysis} variant="full" />}
+{
+  analysis && <ElementVectorFit analysis={analysis} variant="full" />;
+}
 ```
+
 Đặt trong panel chi tiết workspace (cạnh thông tin phòng), có skeleton khi `status === "pending"`.
 
 **b) Mini vector trên workspace card** — trong danh sách ở `src/features/users/pages/ProfileWorkspace.tsx`:
@@ -169,16 +175,22 @@ Mỗi card workspace (khi user có nhiều phòng) render `<ElementVectorFit ana
 > ❌ KHÔNG dùng `src/components/ui/WorkspaceSwitcher.tsx` (đó là switcher đổi khu shop/seller/admin, không liên quan). Bộ chọn "phòng đang active" (2b) để Phase 2.
 
 ## 6. Acceptance
+
 - Không có workspace đang chọn → không render (không lỗi).
 - `status pending` → skeleton; `error` → ẩn gọn (không chặn trang).
 - Giá trị hiển thị (tag/tooltip) làm tròn hợp lý; radar không tràn khung ở mọi kích thước viewport (đã test mobile/desktop qua `preview_resize`).
 - `pnpm type-check` + `pnpm lint` sạch.
 
 ## 7. Ngoài phạm vi
+
 - Component **fit sản phẩm × phòng** (per-product, ở trang chi tiết sản phẩm) — task riêng, cần endpoint fit sản phẩm.
 - Trang kết quả gợi ý `/recommendations`.
 - Form nhập màu/vật liệu phòng (cần API workspace lộ `workspace_profile_inputs` trước).
 
 ## Phụ thuộc
+
 ⚠️ Làm **sau** khi endpoint backend `GET /api/workspace/{id}/element-analysis` đã có (response shape ở mục 1). Nếu chưa có, mock tạm bằng data mẫu để dựng UI, nhưng đừng merge khi API thật chưa sẵn.
+
+```
+
 ```

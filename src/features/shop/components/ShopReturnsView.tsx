@@ -23,16 +23,37 @@ import { DeliveryDetailModal } from "@/features/orders";
 import { formatOrderDate, formatVnd } from "@/features/orders/utils/orderUtils";
 
 const RETURN_STATUS_META: Record<string, { label: string; className: string }> = {
-  Requested: { label: "Yêu cầu mới", className: "bg-amber-50 text-amber-600 border border-amber-200" },
-  Approved: { label: "Đã duyệt", className: "bg-indigo-50 text-indigo-600 border border-indigo-200" },
+  Requested: {
+    label: "Yêu cầu mới",
+    className: "bg-amber-50 text-amber-600 border border-amber-200",
+  },
+  Approved: {
+    label: "Đã duyệt",
+    className: "bg-indigo-50 text-indigo-600 border border-indigo-200",
+  },
   Rejected: { label: "Đã từ chối", className: "bg-red-50 text-red-500 border border-red-200" },
   Processing: { label: "Đang xử lý", className: "bg-blue-50 text-blue-600 border border-blue-200" },
-  Completed: { label: "Hoàn tất", className: "bg-emerald-50 text-emerald-600 border border-emerald-200" },
+  Completed: {
+    label: "Hoàn tất",
+    className: "bg-emerald-50 text-emerald-600 border border-emerald-200",
+  },
   Cancelled: { label: "Đã hủy", className: "bg-gray-100 text-gray-500 border border-gray-200" },
-  ReturnInTransit: { label: "Đang chuyển về", className: "bg-sky-50 text-sky-600 border border-sky-200" },
-  ItemReceived: { label: "Đã nhận hàng", className: "bg-teal-50 text-teal-600 border border-teal-200" },
-  Refunding: { label: "Đang hoàn tiền", className: "bg-violet-50 text-violet-600 border border-violet-200" },
-  Exchanging: { label: "Đang đổi hàng", className: "bg-purple-50 text-purple-600 border border-purple-200" },
+  ReturnInTransit: {
+    label: "Đang chuyển về",
+    className: "bg-sky-50 text-sky-600 border border-sky-200",
+  },
+  ItemReceived: {
+    label: "Đã nhận hàng",
+    className: "bg-teal-50 text-teal-600 border border-teal-200",
+  },
+  Refunding: {
+    label: "Đang hoàn tiền",
+    className: "bg-violet-50 text-violet-600 border border-violet-200",
+  },
+  Exchanging: {
+    label: "Đang đổi hàng",
+    className: "bg-purple-50 text-purple-600 border border-purple-200",
+  },
 };
 
 const RETURN_TYPE_LABEL: Record<string, string> = {
@@ -116,11 +137,17 @@ export default function ShopReturnsView({ storeId }: ShopReturnsViewProps) {
   const [rejecting, setRejecting] = useState(false);
 
   // Receive modal
-  const [receiveModal, setReceiveModal] = useState<ReceiveModalState>({ open: false, returnId: null });
+  const [receiveModal, setReceiveModal] = useState<ReceiveModalState>({
+    open: false,
+    returnId: null,
+  });
   const [receiving, setReceiving] = useState(false);
 
   // Resolve modal
-  const [resolveModal, setResolveModal] = useState<ResolveModalState>({ open: false, returnId: null });
+  const [resolveModal, setResolveModal] = useState<ResolveModalState>({
+    open: false,
+    returnId: null,
+  });
   const [resolveRestock, setResolveRestock] = useState(true);
   const [resolveNote, setResolveNote] = useState("");
   const [resolving, setResolving] = useState(false);
@@ -133,23 +160,26 @@ export default function ShopReturnsView({ storeId }: ShopReturnsViewProps) {
   // Original order (delivery) detail modal — mở từ nút "Xem đơn gốc"
   const [orderDetailDeliveryId, setOrderDetailDeliveryId] = useState<string | null>(null);
 
-  const fetchReturns = useCallback(async (p: number) => {
-    setLoading(true);
-    try {
-      const res = await returnApi.getStoreReturns(storeId, { Page: p, PageSize: PAGE_SIZE });
-      if (res.data.isSuccess) {
-        setReturns(res.data.data.items);
-        setTotalPages(res.data.data.totalPages);
-        setTotalCount(res.data.data.totalCount);
-      } else {
-        toast.error(res.data.message || "Không thể tải danh sách trả hàng");
+  const fetchReturns = useCallback(
+    async (p: number) => {
+      setLoading(true);
+      try {
+        const res = await returnApi.getStoreReturns(storeId, { Page: p, PageSize: PAGE_SIZE });
+        if (res.data.isSuccess) {
+          setReturns(res.data.data.items);
+          setTotalPages(res.data.data.totalPages);
+          setTotalCount(res.data.data.totalCount);
+        } else {
+          toast.error(res.data.message || "Không thể tải danh sách trả hàng");
+        }
+      } catch {
+        toast.error("Có lỗi xảy ra khi tải dữ liệu");
+      } finally {
+        setLoading(false);
       }
-    } catch {
-      toast.error("Có lỗi xảy ra khi tải dữ liệu");
-    } finally {
-      setLoading(false);
-    }
-  }, [storeId]);
+    },
+    [storeId],
+  );
 
   useEffect(() => {
     fetchReturns(page);
@@ -373,7 +403,9 @@ export default function ShopReturnsView({ storeId }: ShopReturnsViewProps) {
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <PackageX className="mb-4 h-12 w-12 text-gray-300" />
           <h3 className="text-base font-semibold text-gray-900">Không có yêu cầu trả hàng</h3>
-          <p className="text-sm text-gray-500 mt-1">Các yêu cầu trả hàng của khách sẽ hiển thị ở đây.</p>
+          <p className="text-sm text-gray-500 mt-1">
+            Các yêu cầu trả hàng của khách sẽ hiển thị ở đây.
+          </p>
         </div>
       ) : (
         <div className="overflow-x-auto">
@@ -397,8 +429,14 @@ export default function ShopReturnsView({ storeId }: ShopReturnsViewProps) {
                 };
 
                 return (
-                  <tr key={r.id} className="hover:bg-gray-50/30 transition-colors cursor-pointer" onClick={() => openDetailModal(r.id)}>
-                    <td className="p-4 font-mono font-bold text-gray-900">#{r.id.substring(0, 8)}</td>
+                  <tr
+                    key={r.id}
+                    className="hover:bg-gray-50/30 transition-colors cursor-pointer"
+                    onClick={() => openDetailModal(r.id)}
+                  >
+                    <td className="p-4 font-mono font-bold text-gray-900">
+                      #{r.id.substring(0, 8)}
+                    </td>
                     <td className="p-4 text-xs text-gray-500 whitespace-nowrap">
                       {formatOrderDate(r.createdAt)}
                     </td>
@@ -416,7 +454,10 @@ export default function ShopReturnsView({ storeId }: ShopReturnsViewProps) {
                         {meta.label}
                       </span>
                     </td>
-                    <td className="p-4 text-right flex items-center justify-end gap-2" onClick={(e) => e.stopPropagation()}>
+                    <td
+                      className="p-4 text-right flex items-center justify-end gap-2"
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       {r.status === "Requested" && (
                         <>
                           <button
@@ -457,8 +498,8 @@ export default function ShopReturnsView({ storeId }: ShopReturnsViewProps) {
                         onClick={() => openDetailModal(r.id)}
                         className="inline-flex items-center gap-1 rounded-lg border border-gray-200 bg-gray-50 px-2.5 py-1.5 text-xs font-semibold text-gray-600 hover:bg-gray-100 transition-colors cursor-pointer"
                       >
-                         <Eye size={14} />
-                         Chi tiết
+                        <Eye size={14} />
+                        Chi tiết
                       </button>
                     </td>
                   </tr>
@@ -731,7 +772,7 @@ export default function ShopReturnsView({ storeId }: ShopReturnsViewProps) {
                 </button>
               </div>
             )}
-            
+
             {returnDetail && returnDetail.status === "ReturnInTransit" && (
               <div className="flex gap-3 border-t border-gray-100 px-6 py-4 bg-gray-50/50">
                 <button
@@ -746,7 +787,7 @@ export default function ShopReturnsView({ storeId }: ShopReturnsViewProps) {
                 </button>
               </div>
             )}
-            
+
             {returnDetail && returnDetail.status === "ItemReceived" && (
               <div className="flex gap-3 border-t border-gray-100 px-6 py-4 bg-gray-50/50">
                 <button
@@ -882,7 +923,8 @@ export default function ShopReturnsView({ storeId }: ShopReturnsViewProps) {
               <div>
                 <h3 className="text-base font-bold text-gray-900">Xác nhận nhận hàng?</h3>
                 <p className="mt-1 text-sm text-gray-500">
-                  Bạn xác nhận đã nhận được hàng trả từ khách? Trạng thái sẽ chuyển sang "Đã nhận hàng".
+                  Bạn xác nhận đã nhận được hàng trả từ khách? Trạng thái sẽ chuyển sang "Đã nhận
+                  hàng".
                 </p>
               </div>
             </div>

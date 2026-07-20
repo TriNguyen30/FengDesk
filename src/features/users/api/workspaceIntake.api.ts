@@ -1,5 +1,6 @@
 import fetchHttpClient from "@/lib/httpClient";
 import type { ApiResponse } from "@/types/api";
+import { AI_REQUEST_TIMEOUT_MS } from "@/features/chatbox/api/chat.api";
 import type { WorkspaceProfileDraft } from "../types/workspace";
 
 /** Bắt đầu 1 job intake async — trả operationId ngay (không chờ LLM). FE nghe realtime + poll fallback. */
@@ -24,6 +25,7 @@ export const startParseWorkspace = async (
   const response = await fetchHttpClient.post<ApiResponse<WorkspaceIntakeStart>>(
     "/workspace/parse-description",
     { description, imageUrls, think },
+    { timeout: AI_REQUEST_TIMEOUT_MS },
   );
   return response.data.data;
 };

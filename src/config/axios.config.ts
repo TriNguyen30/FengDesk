@@ -3,5 +3,5 @@ export const axiosBaseConfig = {
     "Content-Type": "application/json;charset=UTF-8",
     "ngrok-skip-browser-warning": "true",
   },
-  timeout: 30000,
+  timeout: 60000,
 };

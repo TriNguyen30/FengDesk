@@ -1,4 +1,4 @@
-import { Truck, Package, User, LogOut, Sparkles, Store } from "lucide-react";
+import { Truck, Package, User, LogOut, Sparkles, Store, Bot } from "lucide-react";
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -210,7 +210,7 @@ export default function Navbar() {
                 className="flex min-w-[44px] flex-col items-center gap-0.5 rounded-lg px-1 py-1 text-gray-700 transition-colors hover:text-primary cursor-pointer"
                 aria-label="Trợ lý AI"
               >
-                <Sparkles size={22} strokeWidth={1.8} />
+                <Bot size={22} strokeWidth={1.8} />
                 <span className="hidden text-[10px] font-medium sm:block sm:text-xs">
                   Trợ lý AI
                 </span>
@@ -219,12 +219,20 @@ export default function Navbar() {
               {user && <NotificationDropdown />}
 
               {user ? (
-                <div ref={userDropdownRootRef} className="relative group flex flex-col items-center" onMouseEnter={openUserDropdown} onMouseLeave={closeUserDropdown}>
+                <div
+                  ref={userDropdownRootRef}
+                  className="relative group flex flex-col items-center"
+                  onMouseEnter={openUserDropdown}
+                  onMouseLeave={closeUserDropdown}
+                >
                   <button
                     type="button"
                     className="flex min-w-[44px] flex-col items-center gap-0.5 rounded-lg px-1 py-1 text-gray-700 transition-colors hover:text-primary cursor-pointer"
                     aria-label="Tài khoản"
-                    onClick={() => { closeUserDropdown(); navigate("/profile/info"); }}
+                    onClick={() => {
+                      closeUserDropdown();
+                      navigate("/profile/info");
+                    }}
                   >
                     <div className="flex size-[22px] items-center justify-center rounded-full bg-primary/10 text-primary font-bold text-[11px]">
                       {lastName ? lastName.charAt(0) : <User size={14} />}
@@ -236,7 +244,9 @@ export default function Navbar() {
 
                   {/* Dropdown menu */}
                   {userDropdownOpen && (
-                    <div className={`absolute right-0 top-full mt-0 flex w-48 flex-col rounded-lg bg-white shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] ring-1 ring-black/5 z-50 overflow-hidden ${userDropdownClosing ? "nav-dropdown-exit" : "nav-dropdown-enter"}`}>
+                    <div
+                      className={`absolute right-0 top-full mt-0 flex w-48 flex-col rounded-lg bg-white shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] ring-1 ring-black/5 z-50 overflow-hidden ${userDropdownClosing ? "nav-dropdown-exit" : "nav-dropdown-enter"}`}
+                    >
                       <div className="px-4 py-3 border-b border-gray-100 bg-gray-50/50">
                         <p className="text-sm font-semibold text-gray-900 truncate">
                           {user.fullName || "Người dùng"}
@@ -245,19 +255,28 @@ export default function Navbar() {
                       </div>
                       <div className="p-1">
                         <button
-                          onClick={() => { closeUserDropdown(); navigate("/profile/info"); }}
+                          onClick={() => {
+                            closeUserDropdown();
+                            navigate("/profile/info");
+                          }}
                           className="flex w-full items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 rounded-md transition-colors text-left font-medium cursor-pointer"
                         >
                           Tài Khoản Của Tôi
                         </button>
                         <button
-                          onClick={() => { closeUserDropdown(); navigate("/profile/workspace"); }}
+                          onClick={() => {
+                            closeUserDropdown();
+                            navigate("/profile/workspace");
+                          }}
                           className="flex w-full items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 rounded-md transition-colors text-left font-medium cursor-pointer"
                         >
                           Không Gian Làm Việc
                         </button>
                         <button
-                          onClick={() => { closeUserDropdown(); navigate("/profile/orders"); }}
+                          onClick={() => {
+                            closeUserDropdown();
+                            navigate("/profile/orders");
+                          }}
                           className="flex w-full items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 rounded-md transition-colors text-left font-medium cursor-pointer"
                         >
                           Đơn Mua
@@ -265,7 +284,10 @@ export default function Navbar() {
                         {/* Người bán đã có khu riêng ở switcher "Đổi khu" → avatar chỉ giữ CTA cho người chưa bán. */}
                         {!getRoles(user).includes("GardenOwner") && !hasSellerWorkspaceAccess && (
                           <button
-                            onClick={() => { closeUserDropdown(); navigate("/become-seller"); }}
+                            onClick={() => {
+                              closeUserDropdown();
+                              navigate("/become-seller");
+                            }}
                             className="flex w-full items-center px-3 py-2 text-sm text-primary hover:bg-primary/5 rounded-md transition-colors text-left font-medium cursor-pointer"
                           >
                             <Store size={16} className="mr-2" />
@@ -274,7 +296,10 @@ export default function Navbar() {
                         )}
 
                         <button
-                          onClick={() => { closeUserDropdown(); handleLogout(); }}
+                          onClick={() => {
+                            closeUserDropdown();
+                            handleLogout();
+                          }}
                           className="flex w-full items-center px-3 py-2 text-sm text-red-600 hover:bg-red-50 hover:text-red-700 rounded-md transition-colors text-left font-medium cursor-pointer"
                         >
                           <LogOut size={16} className="mr-2" />

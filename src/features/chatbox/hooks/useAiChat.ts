@@ -49,10 +49,13 @@ export function useAiChat(productId?: string) {
   const loadingMoreRef = useRef(false);
 
   // Chỉ join group aiStatus khi đã biết chatboxId (lượt gửi đầu tiên chưa có phòng — xem fallback dưới).
-  const { activity: liveActivity, narrations } = useAiActivity(chatboxId ? `chat-${chatboxId}` : null);
+  const { activity: liveActivity, narrations } = useAiActivity(
+    chatboxId ? `chat-${chatboxId}` : null,
+  );
   // Lượt gửi đầu (chưa có chatboxId → chưa join được group) hoặc realtime chưa kịp phát: fallback "thinking"
   // trong lúc đang chờ REST, để indicator không im lặng.
-  const activity = liveActivity ?? (sending ? { operationId: "pending", phase: "thinking" as const } : null);
+  const activity =
+    liveActivity ?? (sending ? { operationId: "pending", phase: "thinking" as const } : null);
 
   const chatboxRef = useRef<string | null>(null);
   useEffect(() => {
