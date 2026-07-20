@@ -74,13 +74,13 @@ export default function ProfileInfoPage() {
   }, []);
 
   if (isLoading) {
-    return <div className="max-w-2xl animate-pulse space-y-6">Đang tải thông tin...</div>;
+    return <div className="w-full animate-pulse space-y-6">Đang tải thông tin...</div>;
   }
 
   if (!profile) return null;
 
   return (
-    <div className="max-w-2xl">
+    <div className="w-full">
       <h1 className="mb-6 text-2xl font-bold text-gray-900">Thông tin tài khoản</h1>
 
       <div className="space-y-6">

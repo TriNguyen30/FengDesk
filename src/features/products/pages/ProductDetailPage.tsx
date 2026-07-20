@@ -40,6 +40,7 @@ import {
 } from "@/features/chatbox/store/chatboxSlice";
 import { setAuthModal } from "@/features/auth/store/authSlice";
 import ProductFitPanel from "@/features/recommendation/components/element-vector/ProductFitPanel";
+import FeatureBar from "@/components/ui/FeatureBar";
 
 const ELEMENT_LABELS: Record<string, string> = {
   Kim: "Kim",
@@ -47,6 +48,14 @@ const ELEMENT_LABELS: Record<string, string> = {
   Thuy: "Thủy",
   Hoa: "Hỏa",
   Tho: "Thổ",
+};
+
+const ELEMENT_COLORS: Record<string, string> = {
+  Kim: "bg-slate-500",
+  Moc: "bg-green-600",
+  Thuy: "bg-blue-500",
+  Hoa: "bg-red-500",
+  Tho: "bg-amber-600",
 };
 
 export default function ProductDetailPage() {
@@ -149,7 +158,7 @@ export default function ProductDetailPage() {
       dispatch(setActiveChatbox(box.id));
       dispatch(setView("conversation"));
       dispatch(openChatbox());
-      void chatHub.joinChatbox(box.id).catch(() => {});
+      void chatHub.joinChatbox(box.id).catch(() => { });
       const msgRes = await chatApi.getMessages(box.id);
       if (msgRes.data.isSuccess) {
         dispatch(setMessages({ roomId: box.id, messages: [...msgRes.data.data.items].reverse() }));
@@ -340,6 +349,13 @@ export default function ProductDetailPage() {
   const currentPrice = selectedItem?.price ?? product.items[0]?.price ?? 0;
   const outOfStock = selectedItem?.stock === 0;
 
+  const elementLabel = product.primaryElement
+    ? ELEMENT_LABELS[product.primaryElement] || product.primaryElement
+    : null;
+  const elementColor = product.primaryElement
+    ? ELEMENT_COLORS[product.primaryElement] || "bg-primary"
+    : "";
+
   return (
     <div className="mx-auto max-w-6xl px-3 py-4 sm:px-6 sm:py-6">
       {/* Breadcrumb */}
@@ -384,6 +400,13 @@ export default function ProductDetailPage() {
               onMouseLeave={() => setIsHovering(false)}
               onClick={openLightbox}
             >
+              {elementLabel && (
+                <div
+                  className={`absolute top-3 right-3 z-10 rounded-md px-2.5 py-1 text-xs font-bold uppercase tracking-wider text-white shadow-sm pointer-events-none ${elementColor}`}
+                >
+                  Mệnh {elementLabel}
+                </div>
+              )}
               {activeImage ? (
                 <>
                   <motion.img
@@ -396,9 +419,9 @@ export default function ProductDetailPage() {
                     style={
                       isHovering
                         ? {
-                            transformOrigin: `${zoomPos.x}% ${zoomPos.y}%`,
-                            transform: "scale(2.2)",
-                          }
+                          transformOrigin: `${zoomPos.x}% ${zoomPos.y}%`,
+                          transform: "scale(2.2)",
+                        }
                         : undefined
                     }
                     className="h-full w-full object-contain transition-transform duration-100 ease-out"
@@ -422,11 +445,10 @@ export default function ProductDetailPage() {
                   <button
                     key={img.id}
                     onClick={() => setActiveImage(img.url)}
-                    className={`h-16 w-16 shrink-0 overflow-hidden rounded-lg border-2 bg-gray-50 transition-all cursor-pointer ${
-                      activeImage === img.url
+                    className={`h-16 w-16 shrink-0 overflow-hidden rounded-lg border-2 bg-gray-50 transition-all cursor-pointer ${activeImage === img.url
                         ? "border-primary"
                         : "border-transparent hover:border-gray-300"
-                    }`}
+                      }`}
                   >
                     <img src={img.url} alt="thumb" className="h-full w-full object-contain" />
                   </button>
@@ -506,11 +528,10 @@ export default function ProductDetailPage() {
                       <button
                         key={item.id}
                         onClick={() => setSelectedItem(item)}
-                        className={`relative flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-all focus:outline-none cursor-not-allowed ${
-                          isSelected
+                        className={`relative flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-all focus:outline-none cursor-not-allowed ${isSelected
                             ? "border-primary bg-primary/5 text-primary"
                             : "border-gray-200 text-gray-600 hover:border-primary/40 hover:bg-gray-50 cursor-pointer"
-                        }`}
+                          }`}
                       >
                         {item.name}
                         <span className="text-xs opacity-60">
@@ -562,11 +583,11 @@ export default function ProductDetailPage() {
                 {(selectedItem.lengthCm > 0 ||
                   selectedItem.widthCm > 0 ||
                   selectedItem.heightCm > 0) && (
-                  <span className="rounded-md  border border-gray-200 px-2.5 py-1 text-xs font-medium text-gray-500">
-                    Kích thước: {selectedItem.lengthCm}x{selectedItem.widthCm}x
-                    {selectedItem.heightCm} cm
-                  </span>
-                )}
+                    <span className="rounded-md  border border-gray-200 px-2.5 py-1 text-xs font-medium text-gray-500">
+                      Kích thước: {selectedItem.lengthCm}x{selectedItem.widthCm}x
+                      {selectedItem.heightCm} cm
+                    </span>
+                  )}
               </div>
             )}
 
@@ -746,6 +767,8 @@ export default function ProductDetailPage() {
         hideViewAll
       />
 
+      <FeatureBar />
+
       {/* Lightbox Modal */}
       <AnimatePresence>
         {isLightboxOpen && (
@@ -859,11 +882,10 @@ export default function ProductDetailPage() {
                       setScale(1);
                       setPanOffset({ x: 0, y: 0 });
                     }}
-                    className={`h-12 w-12 sm:h-16 sm:w-16 shrink-0 overflow-hidden rounded-lg border-2 bg-gray-900 transition-all ${
-                      lightboxIndex === idx
+                    className={`h-12 w-12 sm:h-16 sm:w-16 shrink-0 overflow-hidden rounded-lg border-2 bg-gray-900 transition-all ${lightboxIndex === idx
                         ? "border-primary"
                         : "border-transparent opacity-50 hover:opacity-100"
-                    }`}
+                      }`}
                   >
                     <img
                       src={img.url}
@@ -946,9 +968,9 @@ function SuggestedProductsSection({
   }
 
   return (
-    <section className="mt-8 min-w-0 sm:mt-12 w-full">
+    <section className="mt-6 w-full overflow-hidden rounded-2xl bg-white p-4 shadow-sm ring-1 ring-gray-100 sm:p-6">
       <div className="mb-4 flex items-center justify-between gap-2 sm:mb-6">
-        <h2 className="text-sm font-medium text-gray-500 sm:text-sm uppercase">{title}</h2>
+        <h2 className="text-lg font-bold text-gray-900">{title}</h2>
         {viewAllLink && (
           <Link
             to={viewAllLink}

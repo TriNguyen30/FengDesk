@@ -11,6 +11,7 @@ const elements = [
     traits: "Quyết đoán & Tinh tế",
     color: "bg-slate-50",
     hoverColor: "hover:bg-slate-100",
+    ringColor: "hover:ring-slate-400",
     textColor: "text-slate-800",
     iconColor: "text-slate-500",
     overlayColor: "#64748b",
@@ -26,6 +27,7 @@ const elements = [
     traits: "Sáng tạo & Linh hoạt",
     color: "bg-green-50",
     hoverColor: "hover:bg-green-100",
+    ringColor: "hover:ring-green-400",
     textColor: "text-green-800",
     iconColor: "text-green-600",
     overlayColor: "#16a34a",
@@ -41,6 +43,7 @@ const elements = [
     traits: "Thông thái & Thích nghi",
     color: "bg-blue-50",
     hoverColor: "hover:bg-blue-100",
+    ringColor: "hover:ring-blue-400",
     textColor: "text-blue-800",
     iconColor: "text-blue-600",
     overlayColor: "#1d4ed8",
@@ -56,6 +59,7 @@ const elements = [
     traits: "Nhiệt huyết & Đam mê",
     color: "bg-red-50",
     hoverColor: "hover:bg-red-100",
+    ringColor: "hover:ring-red-400",
     textColor: "text-red-800",
     iconColor: "text-red-600",
     overlayColor: "#dc2626",
@@ -71,6 +75,7 @@ const elements = [
     traits: "Kiên định & Đáng tin",
     color: "bg-amber-50",
     hoverColor: "hover:bg-amber-100",
+    ringColor: "hover:ring-amber-400",
     textColor: "text-amber-800",
     iconColor: "text-amber-600",
     overlayColor: "#b45309",
@@ -818,129 +823,153 @@ export default function FiveElementsSection() {
 
   return (
     <section className="mt-8 sm:mt-12 relative">
-      <div className="mb-6 flex flex-col items-center justify-between gap-4 sm:flex-row sm:mb-8">
-        <div>
-          <h2 className="flex items-center gap-2 text-xl font-extrabold text-gray-900 sm:text-2xl">
-            FengDesk AI - Ngũ Hành Trọng Không Gian
-          </h2>
-          <p className="mt-1 text-sm text-gray-500 sm:text-base">
-            Khám phá cây phong thủy phù hợp với bản mệnh của bạn để tối ưu sinh khí và tài lộc.
-          </p>
+      {/* ── Decorative frame wrapper ─────────────────────────────────────── */}
+      <div className="relative">
+        {/* Ambient glow blobs behind the frame */}
+        <div className="pointer-events-none absolute -inset-x-6 -inset-y-8 -z-10 overflow-hidden sm:-inset-x-10 sm:-inset-y-12">
+          <div className="absolute -left-10 -top-10 h-56 w-56 rounded-full bg-primary/20 blur-3xl sm:h-72 sm:w-72" />
+          <div className="absolute -right-10 -bottom-10 h-56 w-56 rounded-full bg-amber-300/20 blur-3xl sm:h-72 sm:w-72" />
         </div>
-        <Link
-          to="/products"
-          className="shrink-0 rounded-full bg-primary/10 px-5 py-2 text-sm font-semibold text-primary transition-colors hover:bg-primary/20"
-        >
-          Trải nghiệm AI ngay
-        </Link>
-      </div>
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-5">
-        {elements.map((element) => (
-          <a
-            key={element.id}
-            href={`/products?element=${element.id}`}
-            onClick={(e) => handleElementClick(e, element.id)}
-            className={`group relative flex flex-col items-center justify-center rounded-2xl text-center transition-all duration-300 ${element.color} ${element.hoverColor} hover:-translate-y-1 hover:shadow-lg cursor-pointer`}
-          >
-            {/* Background effects container (clipped to rounded-2xl) */}
-            <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden rounded-2xl">
-              {/* Spinning border gradient */}
-              <div
-                className="absolute inset-[-100%] opacity-0 group-hover:opacity-100 animate-[spin_3s_linear_infinite] transition-opacity duration-300"
-                style={{
-                  background: `conic-gradient(from 0deg, transparent 0 180deg, ${element.overlayColor} 360deg)`,
-                }}
-              />
-              {/* Inner background to mask the center */}
-              <div
-                className={`absolute inset-[2px] rounded-[14px] ${element.color} ${element.hoverColor.replace("hover:", "group-hover:")} transition-colors duration-300`}
-              />
-
-              {/* Image overlay */}
-              <div
-                className="absolute inset-[2px] opacity-[0.03] mix-blend-multiply transition-opacity duration-300 group-hover:opacity-[0.08] rounded-[14px]"
-                style={{
-                  backgroundImage: `url(${element.image})`,
-                  backgroundSize: "cover",
-                  backgroundPosition: "center",
-                }}
-              />
-            </div>
-
-            {/* Hover particles (unclipped) */}
-            <HoverParticles type={element.id as ElementType} />
-
-            {/* Content layer */}
-            <div className="relative z-10 flex w-full flex-col items-center p-6">
-              <div
-                className={`mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-white shadow-sm transition-transform duration-300 group-hover:scale-110 ${element.iconColor}`}
-              >
-                {element.icon}
-              </div>
-              <h3 className={`text-lg font-bold ${element.textColor}`}>{element.name}</h3>
-              <p className="mt-1 text-xs font-medium text-gray-500 sm:text-sm">{element.traits}</p>
-              <span
-                className={`mt-4 rounded-full bg-white/60 px-3 py-1 text-[10px] font-semibold uppercase tracking-wider ${element.textColor} backdrop-blur-sm transition-colors group-hover:bg-white`}
-              >
-                Khám phá
-              </span>
-            </div>
-          </a>
-        ))}
-      </div>
-
-      {/* ── Full-screen elemental animation overlay (now a real 3D scene) ── */}
-      <AnimatePresence>
-        {animatingElement && activeElem && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
-            className="fixed inset-0 z-[9999] overflow-hidden"
-            style={{ backgroundColor: activeElem.overlayColor }}
-          >
+        {/* Gradient border shell */}
+        <div className="rounded-[28px] bg-gradient-to-br from-primary/40 via-amber-200/40 to-primary/40 p-[1.5px] shadow-xl shadow-primary/10">
+          <div className="relative overflow-hidden rounded-[26px] bg-white">
+            {/* Subtle dot-pattern texture */}
             <div
-              className="absolute inset-0"
+              className="pointer-events-none absolute inset-0 opacity-[0.04]"
               style={{
-                background: `radial-gradient(ellipse at center, transparent 20%, rgba(0,0,0,0.55) 100%)`,
+                backgroundImage: "radial-gradient(currentColor 1px, transparent 1px)",
+                backgroundSize: "18px 18px",
+                color: "#0f172a",
               }}
             />
 
-            <ElementCanvas elementId={animatingElement} />
+            {/* Corner brackets */}
+            <div className="pointer-events-none absolute left-3 top-3 h-6 w-6 rounded-tl-lg border-l-2 border-t-2 border-primary/50 sm:left-4 sm:top-4 sm:h-8 sm:w-8" />
+            <div className="pointer-events-none absolute right-3 top-3 h-6 w-6 rounded-tr-lg border-r-2 border-t-2 border-primary/50 sm:right-4 sm:top-4 sm:h-8 sm:w-8" />
+            <div className="pointer-events-none absolute bottom-3 left-3 h-6 w-6 rounded-bl-lg border-b-2 border-l-2 border-primary/50 sm:bottom-4 sm:left-4 sm:h-8 sm:w-8" />
+            <div className="pointer-events-none absolute bottom-3 right-3 h-6 w-6 rounded-br-lg border-b-2 border-r-2 border-primary/50 sm:bottom-4 sm:right-4 sm:h-8 sm:w-8" />
 
-            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-              <motion.div
-                initial={{ scale: 0.4, opacity: 0, y: 30 }}
-                animate={{ scale: 1, opacity: 1, y: 0 }}
-                transition={{ delay: 0.25, duration: 0.6, type: "spring", bounce: 0.35 }}
-                className={`flex flex-col items-center gap-5 ${activeElem.overlayText}`}
-              >
-                <motion.div
-                  animate={{ scale: [1, 1.08, 1] }}
-                  transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
-                  className="drop-shadow-2xl"
+            {/* ── Actual content, unchanged ───────────────────────────── */}
+            <div className="relative z-10 px-5 py-8 sm:px-10 sm:py-10">
+              <div className="mb-6 flex flex-col items-center justify-between gap-4 sm:flex-row sm:mb-8">
+                <div>
+                  <h2 className="flex items-center gap-2 text-xl font-extrabold text-gray-900 sm:text-2xl">
+                    FengDesk AI - Ngũ Hành Trọng Không Gian
+                  </h2>
+                  <p className="mt-1 text-sm text-gray-500 sm:text-base">
+                    Khám phá cây phong thủy phù hợp với bản mệnh của bạn để tối ưu sinh khí và tài lộc.
+                  </p>
+                </div>
+                <Link
+                  to="/products"
+                  className="shrink-0 rounded-full bg-primary/10 px-5 py-2 text-sm font-semibold text-primary transition-colors hover:bg-primary/20"
                 >
-                  {activeElem.largeIcon}
-                </motion.div>
-                <h1 className="text-5xl font-black tracking-tight drop-shadow-lg sm:text-7xl">
-                  {activeElem.name}
-                </h1>
-                <p className="text-lg font-medium opacity-90 drop-shadow sm:text-2xl">
-                  Khám phá năng lượng {activeElem.traits}
-                </p>
-                <motion.div
-                  initial={{ width: 0 }}
-                  animate={{ width: "8rem" }}
-                  transition={{ delay: 0.5, duration: 0.6 }}
-                  className="h-0.5 rounded-full bg-white/60"
-                />
-              </motion.div>
+                  Trải nghiệm AI ngay
+                </Link>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-5">
+                {elements.map((element) => (
+                  <a
+                    key={element.id}
+                    href={`/products?element=${element.id}`}
+                    onClick={(e) => handleElementClick(e, element.id)}
+                    className={`group relative flex flex-col items-center justify-center rounded-2xl text-center transition-all duration-300 ${element.color} ${element.hoverColor} hover:ring-2 hover:ring-offset-2 ${element.ringColor} hover:-translate-y-1 hover:shadow-lg cursor-pointer`}
+                  >
+                <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden rounded-2xl">
+                  <div
+                    className="absolute inset-[-100%] opacity-0 group-hover:opacity-100 animate-[spin_3s_linear_infinite] transition-opacity duration-300"
+                    style={{
+                      background: `conic-gradient(from 0deg, transparent 0 180deg, ${element.overlayColor} 360deg)`,
+                    }}
+                  />
+                  <div
+                    className={`absolute inset-[2px] rounded-[14px] ${element.color} ${element.hoverColor.replace("hover:", "group-hover:")} transition-colors duration-300`}
+                  />
+                  <div
+                    className="absolute inset-[2px] opacity-[0.03] mix-blend-multiply transition-opacity duration-300 group-hover:opacity-[0.08] rounded-[14px]"
+                    style={{
+                      backgroundImage: `url(${element.image})`,
+                      backgroundSize: "cover",
+                      backgroundPosition: "center",
+                    }}
+                  />
+                </div>
+
+                <HoverParticles type={element.id as ElementType} />
+
+                <div className="relative z-10 flex w-full flex-col items-center p-6">
+                  <div
+                    className={`mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-white shadow-sm transition-transform duration-300 group-hover:scale-110 ${element.iconColor}`}
+                  >
+                    {element.icon}
+                  </div>
+                  <h3 className={`text-lg font-bold ${element.textColor}`}>{element.name}</h3>
+                  <p className="mt-1 text-xs font-medium text-gray-500 sm:text-sm">{element.traits}</p>
+                  <span
+                    className={`mt-4 rounded-full bg-white/60 px-3 py-1 text-[10px] font-semibold uppercase tracking-wider ${element.textColor} backdrop-blur-sm transition-colors group-hover:bg-white`}
+                  >
+                    Khám phá
+                  </span>
+                </div>
+              </a>
+                ))}
             </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+      {/* ── Full-screen elemental animation overlay (unchanged) ── */ }
+  <AnimatePresence>
+    {animatingElement && activeElem && (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.3 }}
+        className="fixed inset-0 z-[9999] overflow-hidden"
+        style={{ backgroundColor: activeElem.overlayColor }}
+      >
+        <div
+          className="absolute inset-0"
+          style={{
+            background: `radial-gradient(ellipse at center, transparent 20%, rgba(0,0,0,0.55) 100%)`,
+          }}
+        />
+        <ElementCanvas elementId={animatingElement} />
+        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+          <motion.div
+            initial={{ scale: 0.4, opacity: 0, y: 30 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            transition={{ delay: 0.25, duration: 0.6, type: "spring", bounce: 0.35 }}
+            className={`flex flex-col items-center gap-5 ${activeElem.overlayText}`}
+          >
+            <motion.div
+              animate={{ scale: [1, 1.08, 1] }}
+              transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+              className="drop-shadow-2xl"
+            >
+              {activeElem.largeIcon}
+            </motion.div>
+            <h1 className="text-5xl font-black tracking-tight drop-shadow-lg sm:text-7xl">
+              {activeElem.name}
+            </h1>
+            <p className="text-lg font-medium opacity-90 drop-shadow sm:text-2xl">
+              Khám phá năng lượng {activeElem.traits}
+            </p>
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: "8rem" }}
+              transition={{ delay: 0.5, duration: 0.6 }}
+              className="h-0.5 rounded-full bg-white/60"
+            />
           </motion.div>
-        )}
-      </AnimatePresence>
-    </section>
+        </div>
+      </motion.div>
+    )}
+  </AnimatePresence>
+    </section >
   );
 }

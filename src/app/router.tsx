@@ -37,6 +37,7 @@ import { PaymentSuccessPage, PaymentCancelPage } from "@/features/payment";
 import NotificationPage from "@/features/notification/pages/NotificationPage";
 import ProfileReturnOrder from "@/features/users/pages/ProfileReturnOrder";
 import MyInvitationsPage from "@/features/shop/pages/MyInvitationsPage";
+import NotFoundPage from "@/features/shared/404Page";
 
 export default function AppRoutes() {
   return (
@@ -170,6 +171,8 @@ export default function AppRoutes() {
         <Route path="order-returns" element={<ManageOrderReturnPage />} />
         <Route path="customers" element={<StaffSupportPage />} />
       </Route>
+      {/* 404 Fallback */}
+      <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );
 }
