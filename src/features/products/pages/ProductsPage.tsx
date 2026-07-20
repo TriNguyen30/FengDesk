@@ -5,7 +5,8 @@ import type { Category } from "@/features/category/types/category";
 import ProductCard, { ProductCardSkeleton } from "@/features/products/components/ProductCard";
 import { useProductList } from "@/features/products/hooks/useProducts";
 import type { GetProductsParams } from "@/features/products/types/product";
-import { SearchX, List, ChevronRight, Filter } from "lucide-react";
+import { SearchX, List, ChevronRight, Filter, Banknote } from "lucide-react";
+import FeatureBar from "@/components/ui/FeatureBar";
 
 const FS_ELEMENTS = [
   { code: "Kim", label: "Kim (Kim loại)" },
@@ -15,12 +16,31 @@ const FS_ELEMENTS = [
   { code: "Tho", label: "Thổ (Đất)" },
 ];
 
+const PRICE_RANGES = [
+  { id: "0-100000", label: "Dưới 100.000đ", min: 0, max: 100000 },
+  { id: "100000-300000", label: "100.000đ - 300.000đ", min: 100000, max: 300000 },
+  { id: "300000-500000", label: "300.000đ - 500.000đ", min: 300000, max: 500000 },
+  { id: "500000-1000000", label: "500.000đ - 1.000.000đ", min: 500000, max: 1000000 },
+  { id: "1000000-999999999", label: "Trên 1.000.000đ", min: 1000000, max: 999999999 },
+];
+
 export default function ProductsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const search = searchParams.get("search") || "";
   const categoryId = searchParams.get("categoryId") || "";
   const sort = searchParams.get("sort") || "default";
   const element = searchParams.get("element") || "";
+  const priceRangeId = searchParams.get("price") || "";
+
+  const handlePriceSelect = (id: string) => {
+    const newParams = new URLSearchParams(searchParams);
+    if (id) {
+      newParams.set("price", id);
+    } else {
+      newParams.delete("price");
+    }
+    setSearchParams(newParams);
+  };
 
   const handleElementSelect = (code: string) => {
     const newParams = new URLSearchParams(searchParams);
@@ -56,7 +76,14 @@ export default function ProductsPage() {
 
   const sortedProducts = useMemo(() => {
     if (!products) return [];
-    const arr = [...products];
+    let arr = [...products];
+
+    if (priceRangeId) {
+      const range = PRICE_RANGES.find(r => r.id === priceRangeId);
+      if (range) {
+        arr = arr.filter(p => p.minPrice >= range.min && p.minPrice <= range.max);
+      }
+    }
 
     switch (sort) {
       case "name-asc":
@@ -70,7 +97,7 @@ export default function ProductsPage() {
       default:
         return arr;
     }
-  }, [products, sort]);
+  }, [products, sort, priceRangeId]);
 
   useEffect(() => {
     async function fetchCategories() {
@@ -90,7 +117,7 @@ export default function ProductsPage() {
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
-  }, [search, categoryId, element]);
+  }, [search, categoryId, element, priceRangeId]);
 
   const handleCategorySelect = (id: string) => {
     const newParams = new URLSearchParams(searchParams);
@@ -174,6 +201,49 @@ export default function ProductsPage() {
                   ))}
                 </>
               )}
+            </div>
+
+            <div className="mt-8">
+              <h2 className="mb-4 flex items-center gap-2 font-medium text-gray-900">
+                <Banknote className="h-4 w-4" />
+                Mức Giá
+              </h2>
+              <div className="flex flex-col gap-3 mt-2">
+                <label className="flex items-center gap-3 cursor-pointer group">
+                  <input
+                    type="checkbox"
+                    checked={!priceRangeId}
+                    onChange={() => handlePriceSelect("")}
+                    className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
+                  />
+                  <span
+                    className={`text-sm font-medium transition-colors ${
+                      !priceRangeId ? "text-primary" : "text-gray-600 group-hover:text-gray-900"
+                    }`}
+                  >
+                    Tất cả mức giá
+                  </span>
+                </label>
+                {PRICE_RANGES.map((pr) => (
+                  <label key={pr.id} className="flex items-center gap-3 cursor-pointer group">
+                    <input
+                      type="checkbox"
+                      checked={priceRangeId === pr.id}
+                      onChange={() => handlePriceSelect(priceRangeId === pr.id ? "" : pr.id)}
+                      className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
+                    />
+                    <span
+                      className={`text-sm font-medium transition-colors ${
+                        priceRangeId === pr.id
+                          ? "text-primary"
+                          : "text-gray-600 group-hover:text-gray-900"
+                      }`}
+                    >
+                      {pr.label}
+                    </span>
+                  </label>
+                ))}
+              </div>
             </div>
 
             <div className="mt-8">
@@ -297,6 +367,7 @@ export default function ProductsPage() {
           )}
         </div>
       </div>
+      <FeatureBar />
     </div>
   );
 }

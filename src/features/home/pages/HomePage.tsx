@@ -51,11 +51,11 @@ export default function HomePage() {
       <main className="mx-auto w-full min-w-0 max-w-screen-xl px-3 py-4 sm:px-4 sm:py-6 lg:px-10">
         <CategoryBar />
         <HeroSlider slides={slides} />
-        <FeatureBar />
+        <ImageCollections />
         <FiveElementsSection />
         <PopularCategories />
         <BestSellersSection />
-        <ImageCollections />
+        <FeatureBar />
       </main>
     </>
   );

@@ -86,21 +86,25 @@ export default function WorkspaceSwitcher() {
               Đổi khu làm việc
             </p>
           </div>
-          <div className="p-1">
+          <div className="flex flex-col gap-1 p-1">
             {visible.map((w) => {
               const Icon = ICONS[w.key];
               const active = w.key === current.key;
+
               return (
                 <button
                   key={w.key}
                   type="button"
                   onClick={() => go(w)}
-                  className={`flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-left text-sm font-medium transition-colors cursor-pointer ${
-                    active ? "bg-primary/5 text-primary" : "text-gray-700 hover:bg-gray-100"
-                  }`}
+                  className={`flex w-full cursor-pointer items-center gap-2.5 rounded-md px-3 py-2 text-left text-sm font-medium transition-colors ${active
+                      ? "bg-primary/5 text-primary"
+                      : "text-gray-700 hover:bg-gray-100"
+                    }`}
                 >
                   <Icon size={16} />
+
                   <span className="flex-1">{w.label}</span>
+
                   {active && <Check size={15} className="text-primary" />}
                 </button>
               );

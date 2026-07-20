@@ -2,22 +2,22 @@ import { Truck, Sparkles, ShieldCheck, Clock } from "lucide-react";
 
 const features = [
   {
-    icon: <Sparkles size={28} className="text-primary" />,
+    icon: <Sparkles size={36} strokeWidth={1.2} className="text-primary" />,
     title: "AI Tư vấn phong thủy",
     sub: "Đề xuất theo bản mệnh",
   },
   {
-    icon: <Truck size={28} className="text-primary" />,
+    icon: <Truck size={36} strokeWidth={1.2} className="text-primary" />,
     title: "Miễn phí vận chuyển",
     sub: "Cho đơn từ 500.000đ",
   },
   {
-    icon: <ShieldCheck size={28} className="text-primary" />,
+    icon: <ShieldCheck size={36} strokeWidth={1.2} className="text-primary" />,
     title: "Cây khỏe mạnh",
     sub: "Bảo hành 7 ngày",
   },
   {
-    icon: <Clock size={28} className="text-primary" />,
+    icon: <Clock size={36} strokeWidth={1.2} className="text-primary" />,
     title: "Hỗ trợ 24/7",
     sub: "Chuyên gia tư vấn",
   },
@@ -25,20 +25,49 @@ const features = [
 
 export default function FeatureBar() {
   return (
-    <div className="mt-3 grid grid-cols-2 gap-2 sm:mt-4 sm:grid-cols-2 sm:gap-3 lg:grid-cols-4 lg:gap-0 lg:overflow-hidden lg:rounded-xl lg:border lg:border-gray-200">
-      {features.map((f, i) => (
-        <div
-          key={i}
-          className="flex min-h-[68px] items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2.5 sm:min-h-[72px] sm:gap-3 sm:px-4 sm:py-3 lg:min-h-0 lg:rounded-none lg:border-0 lg:border-r lg:border-gray-100 lg:px-5 lg:py-4 lg:last:border-r-0"
-        >
-          <span className="shrink-0 [&>svg]:size-5 sm:[&>svg]:size-7">{f.icon}</span>
-
-          <div className="min-w-0">
-            <p className="text-xs font-semibold text-gray-800 sm:text-sm">{f.title}</p>
-            <p className="text-[10px] text-gray-500 sm:text-xs">{f.sub}</p>
+    <>
+      {/* Desktop Version - Skewed Parallelogram layout */}
+      <div className="mt-10 hidden lg:block overflow-visible pb-6 px-4">
+        <div className="relative mx-auto max-w-6xl">
+          {/* Skewed Background to avoid blurring the text */}
+          <div
+            className="absolute inset-0 bg-white shadow-[0_5px_20px_rgba(0,0,0,0.05)] border border-gray-100/50"
+            style={{ transform: "skewX(-12deg)", borderRadius: "10px" }}
+          />
+          
+          <div className="relative z-10 flex w-full items-center justify-between px-6 py-8">
+            {features.map((f, i) => (
+              <div
+                key={i}
+                className="flex flex-1 flex-col items-center justify-center text-center px-4"
+              >
+                <div className="mb-4">{f.icon}</div>
+                <h3 className="mb-1.5 text-[15px] font-extrabold uppercase tracking-wide text-gray-900">
+                  {f.title}
+                </h3>
+                <p className="text-[13px] font-medium text-gray-700">{f.sub}</p>
+              </div>
+            ))}
           </div>
         </div>
-      ))}
-    </div>
+      </div>
+
+      {/* Mobile/Tablet Version - Standard Grid */}
+      <div className="mt-4 grid grid-cols-2 gap-3 sm:gap-4 lg:hidden">
+        {features.map((f, i) => (
+          <div
+            key={i}
+            className="flex flex-col items-center justify-center rounded-xl bg-white p-4 text-center shadow-[0_2px_10px_rgba(0,0,0,0.04)] border border-gray-50"
+          >
+            <div className="mb-2">{f.icon}</div>
+            <h3 className="mb-1 text-xs sm:text-sm font-extrabold uppercase tracking-tight text-gray-900">
+              {f.title}
+            </h3>
+            <p className="text-[10px] sm:text-xs font-medium text-gray-600">{f.sub}</p>
+          </div>
+        ))}
+      </div>
+    </>
   );
 }
+

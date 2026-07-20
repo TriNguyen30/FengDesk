@@ -12,6 +12,7 @@ import type { UpdateCartItemParams } from "@/features/cart/types/cart";
 import Modal from "@/components/ui/Modal";
 import EmptyCartImg from "@/assets/image/EmptyCart.jpg";
 import { generateSlug } from "@/utils/string";
+import FeatureBar from "@/components/ui/FeatureBar";
 
 function formatVnd(n: number): string {
   return n.toLocaleString("vi-VN") + "đ";
@@ -310,6 +311,7 @@ export default function CartPage() {
           </div>
         </div>
       </Modal>
+      <FeatureBar />
     </div>
   );
 }

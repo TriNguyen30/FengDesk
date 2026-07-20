@@ -11,6 +11,7 @@ import type { PaymentMethod } from "@/features/orders/types/orders";
 import { formatVnd, PAYMENT_METHODS } from "@/features/orders/utils/orderUtils";
 import AddressModal from "@/features/users/components/AddressModal";
 import { paymentApi } from "@/features/payment";
+import FeatureBar from "@/components/ui/FeatureBar";
 
 interface CheckoutLocationState {
   selectedItemIds?: string[];
@@ -216,11 +217,10 @@ export default function CheckoutPage() {
                 {addresses.map((address) => (
                   <label
                     key={address.id}
-                    className={`flex cursor-pointer gap-3 rounded-xl border p-4 transition-colors ${
-                      selectedAddressId === address.id
-                        ? "border-primary bg-primary/5"
-                        : "border-gray-200 hover:border-primary/40"
-                    }`}
+                    className={`flex cursor-pointer gap-3 rounded-xl border p-4 transition-colors ${selectedAddressId === address.id
+                      ? "border-primary bg-primary/5"
+                      : "border-gray-200 hover:border-primary/40"
+                      }`}
                   >
                     <input
                       type="radio"
@@ -261,11 +261,10 @@ export default function CheckoutPage() {
               {PAYMENT_METHODS.map((method) => (
                 <label
                   key={method.value}
-                  className={`flex cursor-pointer items-center gap-3 rounded-xl border p-4 transition-colors ${
-                    paymentMethod === method.value
-                      ? "border-primary bg-primary/5"
-                      : "border-gray-200 hover:border-primary/40"
-                  }`}
+                  className={`flex cursor-pointer items-center gap-3 rounded-xl border p-4 transition-colors ${paymentMethod === method.value
+                    ? "border-primary bg-primary/5"
+                    : "border-gray-200 hover:border-primary/40"
+                    }`}
                 >
                   <input
                     type="radio"
@@ -380,7 +379,7 @@ export default function CheckoutPage() {
           </div>
         </div>
       </div>
-
+      <FeatureBar />
       <AddressModal
         isOpen={isAddressModalOpen}
         onClose={() => setIsAddressModalOpen(false)}
