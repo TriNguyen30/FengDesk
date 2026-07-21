@@ -5,7 +5,7 @@ import PopularCategories from "@/components/ui/PopularCategories";
 import { BestSellersSection } from "@/features/products/components/ProductCard";
 import FiveElementsSection from "../components/FiveElementsSection";
 import ImageCollections from "../components/ImageCollections";
-
+import CommitmentPage from "@/components/ui/CommitmentPage";
 const slides: HeroSlide[] = [
   {
     id: 1,
@@ -56,6 +56,7 @@ export default function HomePage() {
         <PopularCategories />
         <BestSellersSection />
         <FeatureBar />
+        <CommitmentPage />
       </main>
     </>
   );

@@ -4,6 +4,8 @@ import { toast } from "sonner";
 import { Store, Plus, Phone, Clock, Loader2, ChevronRight, Truck, Users } from "lucide-react";
 import { getMyShopsRequest } from "@/features/shop/api/shop.api";
 import type { Shop } from "@/features/shop/types/shop";
+import FeatureBar from "@/components/ui/FeatureBar";
+import CommitmentPage from "@/components/ui/CommitmentPage";
 
 type SellerShopCard = {
   id: string;
@@ -78,7 +80,7 @@ export default function MyShopsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-10">
+    <div className="mx-auto max-w-6xl px-3 py-4 sm:px-6 sm:py-6">
       {/* Breadcrumb */}
       <nav className="mb-6 flex items-center gap-2 text-sm font-medium text-gray-500">
         <Link to="/" className="hover:text-primary transition-colors">
@@ -124,9 +126,8 @@ export default function MyShopsPage() {
                 </p>
               </div>
               <span
-                className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${
-                  shop.isActive ? "bg-green-50 text-green-600" : "bg-gray-100 text-gray-500"
-                }`}
+                className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${shop.isActive ? "bg-green-50 text-green-600" : "bg-gray-100 text-gray-500"
+                  }`}
               >
                 {shop.isActive ? "Đang hoạt động" : "Tạm dừng"}
               </span>
@@ -186,6 +187,8 @@ export default function MyShopsPage() {
           </div>
         ))}
       </div>
+      <FeatureBar />
+      <CommitmentPage />
     </div>
   );
 }

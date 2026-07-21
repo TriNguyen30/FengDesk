@@ -12,6 +12,7 @@ import { formatVnd, PAYMENT_METHODS } from "@/features/orders/utils/orderUtils";
 import AddressModal from "@/features/users/components/AddressModal";
 import { paymentApi } from "@/features/payment";
 import FeatureBar from "@/components/ui/FeatureBar";
+import CommitmentPage from "../../../components/ui/CommitmentPage.tsx";
 
 interface CheckoutLocationState {
   selectedItemIds?: string[];
@@ -170,7 +171,7 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl px-3 py-4 sm:px-6 sm:py-6">
+    <div className="mx-auto max-w-6xl px-3 py-4 sm:px-6 sm:py-6">
       <button
         onClick={() => navigate("/cart")}
         className="mb-4 flex items-center gap-1.5 text-sm font-medium text-gray-500 hover:text-primary cursor-pointer transition-colors"
@@ -380,6 +381,7 @@ export default function CheckoutPage() {
         </div>
       </div>
       <FeatureBar />
+      <CommitmentPage />
       <AddressModal
         isOpen={isAddressModalOpen}
         onClose={() => setIsAddressModalOpen(false)}
