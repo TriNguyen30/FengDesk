@@ -62,7 +62,7 @@ export default function PopularCategories() {
         <div className="relative inline-block">
           {/* Dark teal fold phía sau */}
           <div
-            className="absolute translate-x-[5px] translate-y-[0.1px] right-0 h-full w-12 sm:w-12 bg-teal-900"
+            className="absolute right-0 h-full w-12 sm:w-12 bg-teal-900"
             style={{ clipPath: "polygon(0 0, 100% 0, 0 100%)" }}
           />
 
