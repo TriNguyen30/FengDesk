@@ -62,7 +62,7 @@ export function useChatbox() {
 
   // Cập nhật tiêu đề tab (document.title) khi có tin nhắn chưa đọc
   useEffect(() => {
-    const baseTitle = document.title.replace(/^\(\d+\)\s*(Tin nhắn mới\.\.\.\s*-?\s*)?/, "");
+    const baseTitle = document.title.replace(/^\(\d+\)\s*(Tin nhắn mới.*?(?:\||-)\s*)?/, "");
     if (unreadCount > 0) {
       document.title = `(${unreadCount}) Tin nhắn mới | ${baseTitle}`;
     } else {
