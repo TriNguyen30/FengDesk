@@ -12,7 +12,7 @@ import { formatVnd, PAYMENT_METHODS } from "@/features/orders/utils/orderUtils";
 import AddressModal from "@/features/users/components/AddressModal";
 import { paymentApi } from "@/features/payment";
 import FeatureBar from "@/components/ui/FeatureBar";
-import CommitmentPage from "../../../components/ui/CommitmentPage.tsx";
+import CommitmentPage from "@/components/ui/CommitmentPage";
 
 interface CheckoutLocationState {
   selectedItemIds?: string[];

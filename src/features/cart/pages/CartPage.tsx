@@ -13,7 +13,7 @@ import Modal from "@/components/ui/Modal";
 import EmptyCartImg from "@/assets/image/EmptyCart.jpg";
 import { generateSlug } from "@/utils/string";
 import FeatureBar from "@/components/ui/FeatureBar";
-import CommitmentPage from "../../../components/ui/CommitmentPage.tsx";
+import CommitmentPage from "@/components/ui/CommitmentPage";
 
 function formatVnd(n: number): string {
   return n.toLocaleString("vi-VN") + "đ";
