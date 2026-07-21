@@ -26,9 +26,9 @@ const MINIMALIST_IMG =
 
 export default function ZenCollectionSection() {
   return (
-    <section className="py-10 sm:py-14">
+    <section className="py-5">
       {/* Header */}
-      <div className="mb-5 flex items-end justify-between gap-4 sm:mb-7">
+      {/* <div className="mb-5 flex items-end justify-between gap-4 sm:mb-7">
         <div>
           <h2 className="text-xl font-extrabold tracking-tight text-neutral-900 sm:text-2xl">
             Bộ Sưu Tập An Nhiên
@@ -44,7 +44,7 @@ export default function ZenCollectionSection() {
           Xem tất cả
           <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
         </a>
-      </div>
+      </div> */}
 
       {/* Bento grid */}
       <div className="grid grid-cols-1 gap-4 sm:gap-5 md:grid-cols-3 md:grid-rows-2 md:h-[560px]">

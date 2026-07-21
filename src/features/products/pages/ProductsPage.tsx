@@ -7,6 +7,7 @@ import { useProductList } from "@/features/products/hooks/useProducts";
 import type { GetProductsParams } from "@/features/products/types/product";
 import { SearchX, List, ChevronRight, Filter, Banknote } from "lucide-react";
 import FeatureBar from "@/components/ui/FeatureBar";
+import CommitmentPage from "@/components/ui/CommitmentPage";
 
 const FS_ELEMENTS = [
   { code: "Kim", label: "Kim (Kim loại)" },
@@ -173,9 +174,8 @@ export default function ProductsPage() {
                       className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
                     />
                     <span
-                      className={`text-sm font-medium transition-colors ${
-                        !categoryId ? "text-primary" : "text-gray-600 group-hover:text-gray-900"
-                      }`}
+                      className={`text-sm font-medium transition-colors ${!categoryId ? "text-primary" : "text-gray-600 group-hover:text-gray-900"
+                        }`}
                     >
                       Tất cả sản phẩm
                     </span>
@@ -189,11 +189,10 @@ export default function ProductsPage() {
                         className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
                       />
                       <span
-                        className={`text-sm font-medium transition-colors ${
-                          categoryId === cat.id
+                        className={`text-sm font-medium transition-colors ${categoryId === cat.id
                             ? "text-primary"
                             : "text-gray-600 group-hover:text-gray-900"
-                        }`}
+                          }`}
                       >
                         {cat.name}
                       </span>
@@ -217,9 +216,8 @@ export default function ProductsPage() {
                     className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
                   />
                   <span
-                    className={`text-sm font-medium transition-colors ${
-                      !priceRangeId ? "text-primary" : "text-gray-600 group-hover:text-gray-900"
-                    }`}
+                    className={`text-sm font-medium transition-colors ${!priceRangeId ? "text-primary" : "text-gray-600 group-hover:text-gray-900"
+                      }`}
                   >
                     Tất cả mức giá
                   </span>
@@ -233,11 +231,10 @@ export default function ProductsPage() {
                       className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
                     />
                     <span
-                      className={`text-sm font-medium transition-colors ${
-                        priceRangeId === pr.id
+                      className={`text-sm font-medium transition-colors ${priceRangeId === pr.id
                           ? "text-primary"
                           : "text-gray-600 group-hover:text-gray-900"
-                      }`}
+                        }`}
                     >
                       {pr.label}
                     </span>
@@ -260,9 +257,8 @@ export default function ProductsPage() {
                     className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
                   />
                   <span
-                    className={`text-sm font-medium transition-colors ${
-                      !element ? "text-primary" : "text-gray-600 group-hover:text-gray-900"
-                    }`}
+                    className={`text-sm font-medium transition-colors ${!element ? "text-primary" : "text-gray-600 group-hover:text-gray-900"
+                      }`}
                   >
                     Tất cả các mệnh
                   </span>
@@ -276,11 +272,10 @@ export default function ProductsPage() {
                       className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
                     />
                     <span
-                      className={`text-sm font-medium transition-colors ${
-                        element === el.code
+                      className={`text-sm font-medium transition-colors ${element === el.code
                           ? "text-primary"
                           : "text-gray-600 group-hover:text-gray-900"
-                      }`}
+                        }`}
                     >
                       {el.label}
                     </span>
@@ -368,6 +363,7 @@ export default function ProductsPage() {
         </div>
       </div>
       <FeatureBar />
+      <CommitmentPage />
     </div>
   );
 }

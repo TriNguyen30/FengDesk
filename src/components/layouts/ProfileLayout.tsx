@@ -3,6 +3,8 @@ import { User, MapPin, Package, HousePlus, Bell, RefreshCw, Mail } from "lucide-
 import { useEffect } from "react";
 import { useMyStoreInvitations } from "@/features/shop/hooks/useShopStaff";
 import ThemeToggle from "@/components/ui/ThemeToggle";
+import FeatureBar from "@/components/ui/FeatureBar";
+import CommitmentPage from "@/components/ui/CommitmentPage";
 
 export default function ProfileLayout() {
   // Load lời mời (nhẹ) để hiện badge số lượng bên cạnh menu; nếu 0 thì ẩn badge.
@@ -77,6 +79,8 @@ export default function ProfileLayout() {
           </div>
         </main>
       </div>
+      <FeatureBar />
+      <CommitmentPage />
     </div>
   );
 }

@@ -234,20 +234,21 @@ export function BestSellersSection() {
     <section className="mt-6 min-w-0 overflow-hidden rounded-xl bg-white p-3 shadow-sm sm:mt-8 sm:p-4">
       {/* Header */}
       <div className="-mx-3 -mt-3 mb-4 flex items-center justify-between sm:-mx-4 sm:-mt-4">
-        <div className="relative">
+        <div className="relative inline-block">
           {/* Dark teal fold phía sau */}
           <div
-            className="absolute inset-y-0 -right-3 w-10 sm:-right-4 sm:w-12"
+            className="absolute translate-x-[5px] translate-y-[0.1px] right-0 h-full w-12 sm:w-12 bg-teal-900"
+            style={{ clipPath: "polygon(0 0, 100% 0, 0 100%)" }}
           />
 
           {/* Badge chính */}
           <h2
-            className="relative rounded-bl-none rounded-tl-xl bg-primary
+            className="relative z-10 rounded-tl-xl bg-primary
               px-4 py-2 pr-12 text-sm font-bold uppercase tracking-wide text-white
               sm:px-4 sm:py-2 sm:pr-16 sm:text-xl"
             style={{
               clipPath:
-                "polygon(0 0, 100% 0, calc(100% - 38px) 100%, 0 100%)",
+                "polygon(0 0, calc(100% - 28px) 0, 100% 100%, 0 100%)",
             }}
           >
             Sản phẩm bán chạy
