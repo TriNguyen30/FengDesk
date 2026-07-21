@@ -4,6 +4,7 @@ import { useAppDispatch, useAppSelector } from "@/app/store";
 import { setAuthModal } from "@/features/auth/store/authSlice";
 import { chatApi } from "@/features/chatbox/api/chat.api";
 import { chatHub } from "@/features/chatbox/lib/chatHub";
+import { showBrowserNotification, playNotificationSound } from "@/features/chatbox/utils/chatUtils";
 import { useAiActivity } from "@/features/shared/ai-activity";
 import {
   addMessage,
@@ -59,6 +60,16 @@ export function useChatbox() {
     isOpenRef.current = isOpen;
   }, [isOpen]);
 
+  // Cập nhật tiêu đề tab (document.title) khi có tin nhắn chưa đọc
+  useEffect(() => {
+    const baseTitle = document.title.replace(/^\(\d+\)\s*(Tin nhắn mới\.\.\.\s*-?\s*)?/, "");
+    if (unreadCount > 0) {
+      document.title = `(${unreadCount}) Tin nhắn mới | ${baseTitle}`;
+    } else {
+      document.title = baseTitle;
+    }
+  }, [unreadCount]);
+
   // Set id các phòng thuộc widget nhỏ (isGroup=true). Dùng trong onMessage để KHÔNG đếm unread
   // cho phòng AI riêng (isGroup=false) — phòng đó thuộc khung chat lớn.
   const widgetRoomIdsRef = useRef<Set<string>>(new Set());
@@ -97,9 +108,13 @@ export function useChatbox() {
         if (!fromMe) {
           void chatApi.markRead(m.chatboxId).catch(() => {});
           dispatch(clearChatboxUnread(m.chatboxId));
+          showBrowserNotification(m.senderName || "Tin nhắn mới", m.content || "Có hình ảnh mới");
+          playNotificationSound();
         }
       } else if (!fromMe) {
         dispatch(bumpChatboxUnread(m.chatboxId));
+        showBrowserNotification(m.senderName || "Tin nhắn mới", m.content || "Có hình ảnh mới");
+        playNotificationSound();
       }
     };
     const onUserJoined = (p: { chatboxId: string; userId: string }) => {
