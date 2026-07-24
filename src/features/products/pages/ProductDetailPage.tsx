@@ -41,6 +41,7 @@ import {
 import { setAuthModal } from "@/features/auth/store/authSlice";
 import ProductFitPanel from "@/features/recommendation/components/element-vector/ProductFitPanel";
 import FeatureBar from "@/components/ui/FeatureBar";
+import CommitmentPage from "@/components/ui/CommitmentPage"
 
 const ELEMENT_LABELS: Record<string, string> = {
   Kim: "Kim",
@@ -446,8 +447,8 @@ export default function ProductDetailPage() {
                     key={img.id}
                     onClick={() => setActiveImage(img.url)}
                     className={`h-16 w-16 shrink-0 overflow-hidden rounded-lg border-2 bg-gray-50 transition-all cursor-pointer ${activeImage === img.url
-                        ? "border-primary"
-                        : "border-transparent hover:border-gray-300"
+                      ? "border-primary"
+                      : "border-transparent hover:border-gray-300"
                       }`}
                   >
                     <img src={img.url} alt="thumb" className="h-full w-full object-contain" />
@@ -529,8 +530,8 @@ export default function ProductDetailPage() {
                         key={item.id}
                         onClick={() => setSelectedItem(item)}
                         className={`relative flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-all focus:outline-none cursor-not-allowed ${isSelected
-                            ? "border-primary bg-primary/5 text-primary"
-                            : "border-gray-200 text-gray-600 hover:border-primary/40 hover:bg-gray-50 cursor-pointer"
+                          ? "border-primary bg-primary/5 text-primary"
+                          : "border-gray-200 text-gray-600 hover:border-primary/40 hover:bg-gray-50 cursor-pointer"
                           }`}
                       >
                         {item.name}
@@ -768,6 +769,7 @@ export default function ProductDetailPage() {
       />
 
       <FeatureBar />
+      <CommitmentPage />
 
       {/* Lightbox Modal */}
       <AnimatePresence>
@@ -883,8 +885,8 @@ export default function ProductDetailPage() {
                       setPanOffset({ x: 0, y: 0 });
                     }}
                     className={`h-12 w-12 sm:h-16 sm:w-16 shrink-0 overflow-hidden rounded-lg border-2 bg-gray-900 transition-all ${lightboxIndex === idx
-                        ? "border-primary"
-                        : "border-transparent opacity-50 hover:opacity-100"
+                      ? "border-primary"
+                      : "border-transparent opacity-50 hover:opacity-100"
                       }`}
                   >
                     <img

@@ -1,0 +1,18 @@
+{
+  "navbar": {
+    "promo_freeship_short": "Freeship over 500k",
+    "promo_freeship_long": "Free shipping on orders over 500.000đ",
+    "promo_return": "7-day return",
+    "promo_support": "Support:",
+    "ai_assistant": "AI Assistant",
+    "account": "Account",
+    "my_account": "My Account",
+    "workspace": "Workspaces",
+    "orders": "My Orders",
+    "become_seller": "Become a seller",
+    "logout": "Log out",
+    "logout_success": "Logged out successfully",
+    "login_required_ai": "Please login to use AI Assistant",
+    "default_user": "User"
+  }
+}

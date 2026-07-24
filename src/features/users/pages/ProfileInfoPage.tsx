@@ -81,7 +81,12 @@ export default function ProfileInfoPage() {
 
   return (
     <div className="w-full">
-      <h1 className="mb-6 text-2xl font-bold text-gray-900">Thông tin tài khoản</h1>
+      <div className="mb-6">
+        <h1 className="text-xl font-bold tracking-tight text-gray-900">Thông tin tài khoản</h1>
+        <p className="mt-0.5 text-sm text-gray-500">
+          Quản lý thông tin cá nhân và thiết lập tài khoản của bạn.
+        </p>
+      </div>
 
       <div className="space-y-6">
         <div className="flex items-center gap-6 pb-6 border-b border-gray-100">

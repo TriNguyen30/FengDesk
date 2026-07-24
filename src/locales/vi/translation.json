@@ -1,0 +1,18 @@
+{
+  "navbar": {
+    "promo_freeship_short": "Freeship từ 500k",
+    "promo_freeship_long": "Miễn phí vận chuyển từ 500.000đ",
+    "promo_return": "Đổi trả trong 7 ngày",
+    "promo_support": "Hỗ trợ:",
+    "ai_assistant": "Trợ lý AI",
+    "account": "Tài khoản",
+    "my_account": "Tài Khoản Của Tôi",
+    "workspace": "Không Gian Làm Việc",
+    "orders": "Đơn Mua",
+    "become_seller": "Trở thành người bán",
+    "logout": "Đăng xuất",
+    "logout_success": "Đăng xuất thành công",
+    "login_required_ai": "Vui lòng đăng nhập để dùng trợ lý AI",
+    "default_user": "Người dùng"
+  }
+}

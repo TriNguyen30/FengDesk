@@ -228,9 +228,11 @@ export default function ProfileReturnOrder() {
   return (
     <div>
       {/* Title row */}
-      <div className="mb-5 flex items-center gap-2">
-        <RotateCcw className="h-5 w-5 text-orange-500" />
-        <h2 className="text-xl font-bold text-gray-900">Yêu cầu trả hàng</h2>
+      <div className="mb-5">
+        <h1 className="text-xl font-bold tracking-tight text-gray-900">Yêu cầu trả hàng</h1>
+        <p className="mt-0.5 text-sm text-gray-500">
+          Quản lý và theo dõi các yêu cầu trả hàng, hoàn tiền của bạn.
+        </p>
       </div>
 
       {/* List */}
