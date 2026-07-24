@@ -48,15 +48,22 @@ export default function OrdersPage() {
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Đơn hàng của tôi</h1>
-        {listStatus !== "loading" && (
-          <p className="mt-1 text-sm text-gray-500 font-medium">
-            <strong className="text-gray-900">
-              {activeTab ? filteredOrders.length : pagination.totalCount || 0}
-            </strong>{" "}
-            đơn hàng
-          </p>
-        )}
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="text-xl font-bold tracking-tight text-gray-900">Đơn hàng của tôi</h1>
+            <p className="mt-0.5 text-sm text-gray-500">
+              Theo dõi và quản lý các đơn hàng bạn đã đặt.
+            </p>
+          </div>
+          {listStatus !== "loading" && (
+            <p className="text-sm text-gray-500 font-medium bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100">
+              <strong className="text-gray-900">
+                {activeTab ? filteredOrders.length : pagination.totalCount || 0}
+              </strong>{" "}
+              đơn hàng
+            </p>
+          )}
+        </div>
       </div>
 
       {/* Tabs Scroll */}
@@ -71,9 +78,8 @@ export default function OrdersPage() {
               <button
                 key={tab.value}
                 onClick={() => setActiveTab(tab.value)}
-                className={`relative flex-1 whitespace-nowrap px-5 py-4 text-center text-sm font-medium transition-colors cursor-pointer ${
-                  isActive ? "text-primary" : "text-gray-500 hover:text-gray-700"
-                }`}
+                className={`relative flex-1 whitespace-nowrap px-5 py-4 text-center text-sm font-medium transition-colors cursor-pointer ${isActive ? "text-primary" : "text-gray-500 hover:text-gray-700"
+                  }`}
               >
                 {tab.label}
                 {isActive && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />}
