@@ -20,6 +20,14 @@ export async function loginRequest(payload: LoginPayload) {
   return data;
 }
 
+export async function loginGoogleRequest(payload: { token: string }) {
+  const { data } = await fetchHttpClient.post<ApiResponse<LoginResponseData>>(
+    "/Auth/google-login",
+    payload,
+  );
+  return data;
+}
+
 export async function registerInitiateRequest(payload: RegisterInitiatePayload) {
   const { data } = await fetchHttpClient.post<ApiResponse<RegisterResponseData>>(
     "/Auth/register/initiate",
