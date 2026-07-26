@@ -1,3 +1,10 @@
+import { useState } from "react";
+import { useGoogleLogin } from "@react-oauth/google";
+import { toast } from "sonner";
+import { loginGoogleRequest } from "@/features/auth/api/auth.api";
+import { useAuthSession } from "@/features/auth/hooks/useAuthSession";
+import { getAuthErrorMessage } from "@/features/auth/utils/getAuthErrorMessage";
+
 function GoogleIcon() {
   return (
     <svg viewBox="0 0 24 24" className="size-5" aria-hidden>
@@ -21,20 +28,42 @@ function GoogleIcon() {
   );
 }
 
-function FacebookIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="size-5" aria-hidden fill="#1877F2">
-      <path d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047V9.41c0-3.025 1.792-4.697 4.533-4.697 1.312 0 2.686.236 2.686.236v2.97h-1.513c-1.491 0-1.956.93-1.956 1.886v2.268h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073z" />
-    </svg>
-  );
-}
-
 type SocialAuthButtonsProps = {
   dividerLabel?: string;
+  onSuccess?: () => void;
 };
 
-export default function SocialAuthButtons({ dividerLabel = "HOẶC" }: SocialAuthButtonsProps) {
-  const handleGoogle = () => console.log("Google sign-in");
+export default function SocialAuthButtons({ dividerLabel = "HOẶC", onSuccess }: SocialAuthButtonsProps) {
+  const [isLoading, setIsLoading] = useState(false);
+  const { persistSession } = useAuthSession();
+
+  const handleGoogle = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      setIsLoading(true);
+      try {
+        const response = await loginGoogleRequest({ token: tokenResponse.access_token });
+        
+        if (!response.isSuccess || !response.data) {
+          toast.error(response.message || "Đăng nhập Google thất bại");
+          return;
+        }
+
+        persistSession(response.data);
+        toast.success(response.message || "Đăng nhập thành công");
+        onSuccess?.();
+
+        const roles = (response.data.user.role ?? "").split(",").map((r) => r.trim());
+        if (roles.some((r) => r === "Staff" || r === "Manager" || r === "Admin")) {
+          window.location.assign("/manager");
+        }
+      } catch (error) {
+        toast.error(getAuthErrorMessage(error, "Đăng nhập Google thất bại. Vui lòng thử lại."));
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    onError: () => toast.error("Đăng nhập Google thất bại"),
+  });
 
   return (
     <>
@@ -49,12 +78,13 @@ export default function SocialAuthButtons({ dividerLabel = "HOẶC" }: SocialAut
       <div className="flex flex-col gap-2.5">
         <button
           type="button"
-          onClick={handleGoogle}
-          className="flex min-h-11 w-full items-center justify-center rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm transition hover:bg-gray-50 active:bg-gray-100 cursor-pointer"
+          onClick={() => handleGoogle()}
+          disabled={isLoading}
+          className="flex min-h-11 w-full items-center justify-center rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm transition hover:bg-gray-50 active:bg-gray-100 cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
         >
           <div className="flex items-center gap-2">
             <GoogleIcon />
-            <span>Tiếp tục với Google</span>
+            <span>{isLoading ? "Đang xử lý..." : "Tiếp tục với Google"}</span>
           </div>
         </button>
       </div>
