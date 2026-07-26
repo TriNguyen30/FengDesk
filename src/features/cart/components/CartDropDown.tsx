@@ -184,7 +184,7 @@ export default function CartDropDown() {
         <a
           href="/cart"
           onClick={(e) => handleNavigate(e, "/cart")}
-          className="flex min-w-[44px] flex-col items-center gap-0.5 rounded-lg px-1 py-1 text-gray-700 transition-colors hover:text-primary active:bg-gray-100 cursor-pointer relative"
+          className="flex min-w-[36px] sm:min-w-[44px] flex-col items-center gap-0.5 rounded-lg px-1 py-1 text-gray-700 transition-colors hover:text-primary active:bg-gray-100 cursor-pointer relative"
           aria-haspopup="true"
           aria-label={t("cart.cart_with_items_count", { count: itemCount })}
         >
