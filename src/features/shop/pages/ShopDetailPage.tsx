@@ -24,6 +24,8 @@ import {
   ShopStatsSection,
 } from "../components";
 import ShopReturnsView from "../components/ShopReturnsView";
+import FeatureBar from "@/components/ui/FeatureBar";
+import CommitmentPage from "@/components/ui/CommitmentPage";
 
 type ShopTab = "products" | "stats" | "deliveries" | "returns" | "chat" | "staff";
 
@@ -48,6 +50,7 @@ export default function ShopDetailPage() {
     products,
     loading: loadingProducts,
     totalCount,
+    query,
   } = useProductList({
     storeId: id || undefined,
     search: searchQuery || undefined,
@@ -284,6 +287,7 @@ export default function ShopDetailPage() {
             shopId={shop.id}
             isShopMember={isShopMember}
             canAddProduct={isOwnerView}
+            onRefresh={() => query.refetch()}
           />
         </div>
       )}
@@ -343,6 +347,9 @@ export default function ShopDetailPage() {
       {activeTab === "stats" && isOwnerView && shop.id && <ShopStatsSection storeId={shop.id} />}
 
       {activeTab === "staff" && isOwnerView && shop.id && <ShopStaffSection storeId={shop.id} />}
+
+      <FeatureBar />
+      <CommitmentPage />
     </div>
   );
 }

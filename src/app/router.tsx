@@ -13,7 +13,6 @@ import DashboardPage from "@/features/manager/pages/DashboardPage";
 import ManageCategoriesPage from "@/features/manager/pages/ManageCategoriesPage";
 import ManageProductsPage from "@/features/manager/pages/ManageProductsPage";
 import CreateProductPage from "@/features/manager/pages/CreateProductPage";
-import EditProductPage from "@/features/manager/pages/EditProductPage";
 import ManageStoresPage from "@/features/manager/pages/ManageStoresPage";
 import ManageOrdersPage from "@/features/manager/pages/ManageOrdersPage";
 import StaffSupportPage from "@/features/chatbox/pages/StaffSupportPage";
@@ -91,14 +90,6 @@ export default function AppRoutes() {
           }
         />
         <Route
-          path="/seller/:storeId/products/:id/edit"
-          element={
-            <ProtectedRoute>
-              <EditProductPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
           path="/become-seller"
           element={
             <ProtectedRoute>
@@ -165,7 +156,6 @@ export default function AppRoutes() {
         <Route path="categories" element={<ManageCategoriesPage />} />
         <Route path="products" element={<ManageProductsPage />} />
         <Route path="products/new" element={<CreateProductPage />} />
-        <Route path="products/:id/edit" element={<EditProductPage />} />
         <Route path="stores" element={<ManageStoresPage />} />
         <Route path="orders" element={<ManageOrdersPage />} />
         <Route path="order-returns" element={<ManageOrderReturnPage />} />

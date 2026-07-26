@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import {
   ShoppingCart,
@@ -22,6 +22,8 @@ import {
 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { toast } from "sonner";
+import confetti from "canvas-confetti";
+import { useTranslation } from "react-i18next";
 import { ProductItem } from "../types/product";
 import { useProductDetail, useProductList } from "../hooks/useProducts";
 import ProductCard, { ProductCardSkeleton } from "../components/ProductCard";
@@ -41,6 +43,7 @@ import {
 import { setAuthModal } from "@/features/auth/store/authSlice";
 import ProductFitPanel from "@/features/recommendation/components/element-vector/ProductFitPanel";
 import FeatureBar from "@/components/ui/FeatureBar";
+import CommitmentPage from "@/components/ui/CommitmentPage"
 
 const ELEMENT_LABELS: Record<string, string> = {
   Kim: "Kim",
@@ -59,16 +62,21 @@ const ELEMENT_COLORS: Record<string, string> = {
 };
 
 export default function ProductDetailPage() {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { addItem } = useCart();
   const { product, loading, failed } = useProductDetail(id);
+  const sortedImages = useMemo(() => {
+    return [...(product?.images || [])].sort((a, b) => a.sortOrder - b.sortOrder);
+  }, [product?.images]);
   const dispatch = useAppDispatch();
   const isAuthenticated = useAppSelector((s) => !!s.auth.token);
 
   // Guard chống double-click: ref chặn đồng bộ (2 click cùng tick), state để disable nút cho UX.
   const openingChatRef = useRef(false);
   const [isOpeningChat, setIsOpeningChat] = useState(false);
+  const thumbRef = useRef<HTMLDivElement>(null);
 
   const [selectedItem, setSelectedItem] = useState<ProductItem | null>(null);
   const [activeImage, setActiveImage] = useState<string>("");
@@ -95,7 +103,7 @@ export default function ProductDetailPage() {
     if (!product) return;
 
     setSelectedItem(product.items[0] ?? null);
-    setActiveImage(product.images[0]?.url ?? "");
+    setActiveImage(sortedImages[0]?.url ?? "");
     setQuantity(1);
     setShop(null);
 
@@ -110,10 +118,23 @@ export default function ProductDetailPage() {
     }
   }, [product]);
 
-  const handleAddToCart = () => {
+  const handleAddToCart = async (e: React.MouseEvent) => {
+    e.preventDefault();
     if (product && selectedItem) {
       addItem({ productItemId: selectedItem.id, quantity });
-      toast.success("Đã thêm vào giỏ hàng");
+      toast.success(t("product_detail.toast.added_to_cart"));
+
+      // Birthday popper animation
+      const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+      const x = (rect.left + rect.width / 2) / window.innerWidth;
+      const y = (rect.top + rect.height / 2) / window.innerHeight;
+
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { x, y },
+        colors: ['#26aa99', '#f39c12', '#e74c3c', '#9b59b6', '#3498db']
+      });
     }
   };
 
@@ -130,7 +151,7 @@ export default function ProductDetailPage() {
           }
         }
       } catch (error) {
-        toast.error("Lỗi khi mua ngay");
+        toast.error(t("product_detail.toast.buy_now_error"));
       }
     }
   };
@@ -150,7 +171,7 @@ export default function ProductDetailPage() {
     try {
       const res = await chatApi.startStoreSupport(shop.id);
       if (!res.data.isSuccess) {
-        toast.error(res.data.message || "Không mở được cuộc trò chuyện với cửa hàng.");
+        toast.error(res.data.message || t("product_detail.toast.chat_error"));
         return;
       }
       const box = res.data.data;
@@ -164,7 +185,7 @@ export default function ProductDetailPage() {
         dispatch(setMessages({ roomId: box.id, messages: [...msgRes.data.data.items].reverse() }));
       }
     } catch {
-      toast.error("Không mở được cuộc trò chuyện với cửa hàng.");
+      toast.error(t("product_detail.toast.chat_error"));
     } finally {
       openingChatRef.current = false;
       setIsOpeningChat(false);
@@ -179,8 +200,8 @@ export default function ProductDetailPage() {
   };
 
   const openLightbox = () => {
-    if (!product || product.images.length === 0) return;
-    const idx = product.images.findIndex((img) => img.url === activeImage);
+    if (!product || sortedImages.length === 0) return;
+    const idx = sortedImages.findIndex((img) => img.url === activeImage);
     setLightboxIndex(idx >= 0 ? idx : 0);
     setScale(1);
     setPanOffset({ x: 0, y: 0 });
@@ -188,22 +209,45 @@ export default function ProductDetailPage() {
   };
 
   const handleNextImage = useCallback(() => {
-    if (!product || product.images.length === 0) return;
-    const nextIdx = (lightboxIndex + 1) % product.images.length;
+    if (!product || sortedImages.length === 0) return;
+    const nextIdx = (lightboxIndex + 1) % sortedImages.length;
     setLightboxIndex(nextIdx);
-    setActiveImage(product.images[nextIdx].url);
+    setActiveImage(sortedImages[nextIdx].url);
     setScale(1);
     setPanOffset({ x: 0, y: 0 });
-  }, [lightboxIndex, product, setActiveImage]);
+  }, [lightboxIndex, product, sortedImages, setActiveImage]);
 
   const handlePrevImage = useCallback(() => {
-    if (!product || product.images.length === 0) return;
-    const prevIdx = (lightboxIndex - 1 + product.images.length) % product.images.length;
+    if (!product || sortedImages.length === 0) return;
+    const prevIdx = (lightboxIndex - 1 + sortedImages.length) % sortedImages.length;
     setLightboxIndex(prevIdx);
-    setActiveImage(product.images[prevIdx].url);
+    setActiveImage(sortedImages[prevIdx].url);
     setScale(1);
     setPanOffset({ x: 0, y: 0 });
-  }, [lightboxIndex, product, setActiveImage]);
+  }, [lightboxIndex, product, sortedImages, setActiveImage]);
+
+  const handleMainNextImage = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (sortedImages.length <= 1) return;
+    const currentIndex = sortedImages.findIndex((img) => img.url === activeImage);
+    const nextIndex = (currentIndex + 1) % sortedImages.length;
+    setActiveImage(sortedImages[nextIndex].url);
+  };
+
+  const handleMainPrevImage = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (sortedImages.length <= 1) return;
+    const currentIndex = sortedImages.findIndex((img) => img.url === activeImage);
+    const prevIndex = (currentIndex - 1 + sortedImages.length) % sortedImages.length;
+    setActiveImage(sortedImages[prevIndex].url);
+  };
+
+  const scrollThumbnails = (direction: 'left' | 'right') => {
+    if (thumbRef.current) {
+      const scrollAmount = thumbRef.current.clientWidth / 2; // Scroll half a page for smoother UX
+      thumbRef.current.scrollBy({ left: direction === 'left' ? -scrollAmount : scrollAmount, behavior: 'smooth' });
+    }
+  };
 
   const handleZoomIn = () => {
     setScale((s) => Math.min(s + 0.5, 4));
@@ -283,20 +327,20 @@ export default function ProductDetailPage() {
 
   // Auto swipe main image every 5 seconds
   useEffect(() => {
-    if (!product || product.images.length <= 1 || isLightboxOpen || isHovering) return;
+    if (!product || sortedImages.length <= 1 || isLightboxOpen || isHovering) return;
 
     const intervalId = setInterval(() => {
       setActiveImage((currentImage) => {
-        const currentIndex = product.images.findIndex((img) => img.url === currentImage);
-        const nextIndex = currentIndex === -1 ? 0 : (currentIndex + 1) % product.images.length;
-        return product.images[nextIndex].url;
+        const currentIndex = sortedImages.findIndex((img) => img.url === currentImage);
+        const nextIndex = currentIndex === -1 ? 0 : (currentIndex + 1) % sortedImages.length;
+        return sortedImages[nextIndex].url;
       });
     }, 5000);
 
     return () => clearInterval(intervalId);
-  }, [product, isLightboxOpen, isHovering]);
+  }, [product, sortedImages, isLightboxOpen, isHovering]);
 
-  const error = failed ? "Không thể tải thông tin sản phẩm" : null;
+  const error = failed ? t("product_detail.error.load_failed") : null;
 
   // ── Loading skeleton ──────────────────────────────────────────────────────
   if (loading) {
@@ -335,12 +379,12 @@ export default function ProductDetailPage() {
     return (
       <div className="flex min-h-[50vh] flex-col items-center justify-center gap-4 text-center px-4">
         <AlertCircle className="h-12 w-12 text-red-500" />
-        <p className="text-base font-medium text-gray-800">{error || "Không tìm thấy sản phẩm"}</p>
+        <p className="text-base font-medium text-gray-800">{error || t("product_detail.error.not_found")}</p>
         <button
           onClick={() => navigate(-1)}
-          className="rounded-lg bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200"
+          className="rounded-lg bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 cursor-pointer"
         >
-          Quay lại
+          {t("product_detail.actions.back")}
         </button>
       </div>
     );
@@ -357,15 +401,15 @@ export default function ProductDetailPage() {
     : "";
 
   return (
-    <div className="mx-auto max-w-6xl px-3 py-4 sm:px-6 sm:py-6">
+    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       {/* Breadcrumb */}
       <nav className="mb-4 flex items-center gap-2 text-sm font-medium text-gray-500">
         <Link to="/" className="hover:text-primary transition-colors">
-          Trang chủ
+          {t("products_page.breadcrumb.home")}
         </Link>
         <ChevronRight className="h-4 w-4 text-gray-400" />
         <Link to="/products" className="hover:text-primary transition-colors">
-          Sản phẩm
+          {t("products_page.breadcrumb.products")}
         </Link>
         {product && product.categories && product.categories.length > 0 && (
           <>
@@ -404,7 +448,7 @@ export default function ProductDetailPage() {
                 <div
                   className={`absolute top-3 right-3 z-10 rounded-md px-2.5 py-1 text-xs font-bold uppercase tracking-wider text-white shadow-sm pointer-events-none ${elementColor}`}
                 >
-                  Mệnh {elementLabel}
+                  {t("product_detail.labels.element")} {elementLabel}
                 </div>
               )}
               {activeImage ? (
@@ -416,16 +460,29 @@ export default function ProductDetailPage() {
                     transition={{ duration: 0.4, ease: "easeOut" }}
                     src={activeImage}
                     alt={product.name}
-                    style={
-                      isHovering
-                        ? {
-                          transformOrigin: `${zoomPos.x}% ${zoomPos.y}%`,
-                          transform: "scale(2.2)",
-                        }
-                        : undefined
-                    }
-                    className="h-full w-full object-contain transition-transform duration-100 ease-out"
+                    style={{
+                      transformOrigin: `${zoomPos.x}% ${zoomPos.y}%`,
+                      transform: isHovering ? "scale(2.2)" : "scale(1)",
+                    }}
+                    className="h-full w-full object-contain transition-transform duration-300 ease-out"
                   />
+                  {/* Slider Controls */}
+                  {sortedImages.length > 1 && (
+                    <>
+                      <button
+                        onClick={handleMainPrevImage}
+                        className="absolute left-3 top-1/2 -translate-y-1/2 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-gray-800 shadow-md backdrop-blur-sm opacity-0 transition-all duration-200 group-hover:opacity-100 hover:bg-white cursor-pointer"
+                      >
+                        <ChevronLeft size={20} />
+                      </button>
+                      <button
+                        onClick={handleMainNextImage}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-gray-800 shadow-md backdrop-blur-sm opacity-0 transition-all duration-200 group-hover:opacity-100 hover:bg-white cursor-pointer"
+                      >
+                        <ChevronRight size={20} />
+                      </button>
+                    </>
+                  )}
                   {/* Zoom hint overlay */}
                   <div className="absolute right-3 bottom-3 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-gray-600 shadow-md backdrop-blur-sm opacity-0 transition-all duration-200 group-hover:opacity-100 scale-95 group-hover:scale-100 pointer-events-none">
                     <Maximize2 size={16} />
@@ -433,26 +490,57 @@ export default function ProductDetailPage() {
                 </>
               ) : (
                 <div className="flex h-full items-center justify-center text-sm text-gray-300">
-                  Không có ảnh
+                  {t("product_detail.labels.no_image")}
                 </div>
               )}
             </div>
 
             {/* Thumbnails */}
-            {product.images.length > 1 && (
-              <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
-                {product.images.map((img) => (
+            {sortedImages.length > 1 && (
+              <div className="relative mt-3 group/thumb">
+                {sortedImages.length > 5 && (
                   <button
-                    key={img.id}
-                    onClick={() => setActiveImage(img.url)}
-                    className={`h-16 w-16 shrink-0 overflow-hidden rounded-lg border-2 bg-gray-50 transition-all cursor-pointer ${activeImage === img.url
+                    onClick={() => scrollThumbnails('left')}
+                    className="absolute left-1 top-1/2 -translate-y-1/2 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-white/90 text-gray-800 shadow-md backdrop-blur-sm opacity-0 transition-all duration-200 group-hover/thumb:opacity-100 hover:bg-white cursor-pointer"
+                  >
+                    <ChevronLeft size={16} />
+                  </button>
+                )}
+
+                <style>{`
+                  .hide-scrollbar-force::-webkit-scrollbar {
+                    display: none !important;
+                    width: 0 !important;
+                    height: 0 !important;
+                  }
+                `}</style>
+                <div
+                  ref={thumbRef}
+                  className="flex gap-2 sm:gap-3 overflow-x-auto snap-x snap-mandatory pb-1 hide-scrollbar-force"
+                  style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                >
+                  {sortedImages.map((img) => (
+                    <button
+                      key={img.id}
+                      onClick={() => setActiveImage(img.url)}
+                      className={`group aspect-square w-[calc(20%-0.4rem)] sm:w-[calc(20%-0.6rem)] shrink-0 snap-start overflow-hidden rounded-lg border-2 bg-gray-50 transition-all cursor-pointer ${activeImage === img.url
                         ? "border-primary"
                         : "border-transparent hover:border-gray-300"
-                      }`}
+                        }`}
+                    >
+                      <img src={img.url} alt="thumb" className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110" />
+                    </button>
+                  ))}
+                </div>
+
+                {sortedImages.length > 5 && (
+                  <button
+                    onClick={() => scrollThumbnails('right')}
+                    className="absolute right-1 top-1/2 -translate-y-1/2 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-white/90 text-gray-800 shadow-md backdrop-blur-sm opacity-0 transition-all duration-200 group-hover/thumb:opacity-100 hover:bg-white cursor-pointer"
                   >
-                    <img src={img.url} alt="thumb" className="h-full w-full object-contain" />
+                    <ChevronRight size={16} />
                   </button>
-                ))}
+                )}
               </div>
             )}
           </div>
@@ -480,7 +568,7 @@ export default function ProductDetailPage() {
               </h1>
               <div className="mt-1.5 flex flex-wrap items-center gap-3 text-sm text-gray-400">
                 <p>
-                  Cửa hàng:{" "}
+                  {t("product_detail.labels.store")}{" "}
                   <button
                     onClick={() =>
                       product.gardenStoreId && navigate(`/stores/${product.gardenStoreId}`)
@@ -494,7 +582,7 @@ export default function ProductDetailPage() {
                   <>
                     <span className="hidden sm:block h-3 w-px bg-gray-300"></span>
                     <p>
-                      Mã sản phẩm:{" "}
+                      {t("product_detail.labels.sku")}{" "}
                       <span className="font-medium text-gray-600">{selectedItem.sku}</span>
                     </p>
                   </>
@@ -514,10 +602,10 @@ export default function ProductDetailPage() {
             {product.items.length > 0 && (
               <div>
                 <div className="mb-2.5 flex items-center gap-3">
-                  <span className="text-sm font-medium text-gray-700">Phân loại</span>
+                  <span className="text-sm font-medium text-gray-700">{t("product_detail.labels.variant")}</span>
                   {selectedItem && (
                     <span className="text-xs text-gray-400">
-                      Kho: {selectedItem.stock} sản phẩm
+                      {t("product_detail.labels.stock", { stock: selectedItem.stock })}
                     </span>
                   )}
                 </div>
@@ -529,8 +617,8 @@ export default function ProductDetailPage() {
                         key={item.id}
                         onClick={() => setSelectedItem(item)}
                         className={`relative flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-all focus:outline-none cursor-not-allowed ${isSelected
-                            ? "border-primary bg-primary/5 text-primary"
-                            : "border-gray-200 text-gray-600 hover:border-primary/40 hover:bg-gray-50 cursor-pointer"
+                          ? "border-primary bg-primary/5 text-primary"
+                          : "border-gray-200 text-gray-600 hover:border-primary/40 hover:bg-gray-50 cursor-pointer"
                           }`}
                       >
                         {item.name}
@@ -551,7 +639,7 @@ export default function ProductDetailPage() {
             {product.primaryElement && (
               <div className="flex flex-wrap gap-1.5">
                 <span className="rounded-md bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">
-                  Hành: {ELEMENT_LABELS[product.primaryElement] ?? product.primaryElement}
+                  {t("product_detail.labels.element")} {ELEMENT_LABELS[product.primaryElement] ?? product.primaryElement}
                 </span>
                 {(product.secondaryElements ?? []).map((el) => (
                   <span
@@ -577,15 +665,14 @@ export default function ProductDetailPage() {
               <div className="flex flex-wrap gap-1.5">
                 {selectedItem.weightGram > 0 && (
                   <span className="rounded-md  border border-gray-200 px-2.5 py-1 text-xs font-medium text-gray-500">
-                    Nặng: {selectedItem.weightGram}g
+                    {t("product_detail.labels.weight", { weight: selectedItem.weightGram })}
                   </span>
                 )}
                 {(selectedItem.lengthCm > 0 ||
                   selectedItem.widthCm > 0 ||
                   selectedItem.heightCm > 0) && (
                     <span className="rounded-md  border border-gray-200 px-2.5 py-1 text-xs font-medium text-gray-500">
-                      Kích thước: {selectedItem.lengthCm}x{selectedItem.widthCm}x
-                      {selectedItem.heightCm} cm
+                      {t("product_detail.labels.size", { l: selectedItem.lengthCm, w: selectedItem.widthCm, h: selectedItem.heightCm })}
                     </span>
                   )}
               </div>
@@ -593,9 +680,9 @@ export default function ProductDetailPage() {
 
             {/* Add to cart */}
             <div className="mt-auto pt-2 flex flex-col gap-3">
-              <div className="flex flex-col sm:flex-row gap-3">
+              <div className="flex flex-row gap-3">
                 {/* Quantity Selector */}
-                <div className="flex items-center rounded-lg border border-gray-200 bg-white p-1 h-10 w-28 shrink-0 shadow-sm">
+                <div className="flex items-center rounded-lg border border-gray-200 bg-white p-1 h-10 sm:h-11 w-24 sm:w-28 shrink-0 shadow-sm">
                   <button
                     onClick={() => setQuantity((q) => Math.max(1, q - 1))}
                     disabled={quantity <= 1 || outOfStock}
@@ -617,7 +704,7 @@ export default function ProductDetailPage() {
                       if (selectedItem && val > selectedItem.stock) val = selectedItem.stock;
                       setQuantity(val);
                     }}
-                    className="flex-1 w-10 text-center text-sm font-semibold tabular-nums text-gray-900 focus:outline-none bg-transparent"
+                    className="flex-1 w-8 sm:w-10 text-center text-sm font-semibold tabular-nums text-gray-900 focus:outline-none bg-transparent"
                   />
                   <button
                     onClick={() =>
@@ -635,30 +722,30 @@ export default function ProductDetailPage() {
                 <button
                   onClick={handleAddToCart}
                   disabled={!selectedItem || outOfStock}
-                  className="flex flex-1 items-center justify-center gap-2 rounded-lg border-1 border-primary bg-primary/5 px-4 py-0 text-sm font-semibold text-primary transition-all hover:bg-primary/10 active:scale-95 disabled:cursor-not-allowed disabled:border-gray-200 disabled:text-gray-400 disabled:bg-gray-50 cursor-pointer h-10 w-full"
+                  className="flex flex-1 items-center justify-center gap-2 rounded-lg border-1 border-primary bg-primary/5 px-2 sm:px-4 py-0 text-sm font-semibold text-primary transition-all hover:bg-primary/10 active:scale-95 disabled:cursor-not-allowed disabled:border-gray-200 disabled:text-gray-400 disabled:bg-gray-50 cursor-pointer h-10 sm:h-11 w-full"
                 >
-                  <ShoppingCart className="h-4 w-4" />
-                  {outOfStock ? "Hết hàng" : "Thêm giỏ hàng"}
+                  <ShoppingCart className="h-4 w-4 shrink-0" />
+                  <span className="truncate">{outOfStock ? t("product_detail.actions.out_of_stock_sm") : t("product_detail.actions.add_to_cart")}</span>
                 </button>
               </div>
 
               <button
                 onClick={handleBuyNow}
                 disabled={!selectedItem || outOfStock}
-                className="flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-0 text-sm font-semibold text-white shadow-sm transition-all hover:bg-primary-dark active:scale-95 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:shadow-none cursor-pointer h-10 w-full"
+                className="flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-0 text-lg font-bold text-white shadow-sm transition-all hover:bg-primary-dark active:scale-95 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:shadow-none cursor-pointer h-11 sm:h-12 w-full"
               >
-                {outOfStock ? "Hết hàng" : "Mua ngay"}
+                {outOfStock ? t("product_detail.actions.out_of_stock") : t("product_detail.actions.buy_now")}
               </button>
             </div>
 
             {/* Promotional Banners */}
             <div className="space-y-2.5">
-              <div className="flex items-center gap-3 rounded-xl border border-green-100 p-3 text-sm text-green-700 shadow-sm transition-colors hover:bg-green-100/50">
+              <div className="flex items-center gap-3 text-sm">
                 <div className="flex h-8 w-8 items-center justify-center rounded-full bg-green-100 text-green-600 shrink-0 shadow-sm">
                   <Truck className="h-4 w-4" />
                 </div>
                 <span className="font-semibold">
-                  Free Ship TP.Hồ Chí Minh cho hoá đơn từ 500.000đ
+                  {t("product_detail.labels.free_ship")}
                 </span>
               </div>
             </div>
@@ -690,14 +777,14 @@ export default function ProductDetailPage() {
                   className="flex items-center gap-1.5 rounded-lg border border-primary px-3 py-1.5 text-xs font-semibold text-primary hover:bg-primary/5 transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   <MessageSquare className="h-3.5 w-3.5" />
-                  Chat ngay
+                  {t("product_detail.actions.chat_now")}
                 </button>
                 <button
                   onClick={() => navigate(`/stores/${shop.id}`)}
                   className="flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
                 >
                   <Store className="h-3.5 w-3.5" />
-                  Xem Shop
+                  {t("product_detail.actions.view_shop")}
                 </button>
               </div>
             </div>
@@ -706,28 +793,28 @@ export default function ProductDetailPage() {
           <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-y-4 gap-x-6 text-sm">
             <div className="flex flex-col gap-1.5 text-gray-500">
               <span className="flex items-center gap-1.5">
-                <Phone className="h-4 w-4" /> Hotline
+                <Phone className="h-4 w-4" /> {t("product_detail.labels.hotline")}
               </span>
-              <span className="font-semibold text-primary">{shop.hotline || "Đang cập nhật"}</span>
+              <span className="font-semibold text-primary">{shop.hotline || t("product_detail.labels.updating")}</span>
             </div>
             <div className="flex flex-col gap-1.5 text-gray-500">
               <span className="flex items-center gap-1.5">
-                <Clock className="h-4 w-4" /> Giờ mở cửa
+                <Clock className="h-4 w-4" /> {t("product_detail.labels.opening_hours")}
               </span>
               <span className="font-medium text-gray-800">
-                {shop.openingHours || "Đang cập nhật"}
+                {shop.openingHours || t("product_detail.labels.updating")}
               </span>
             </div>
             <div className="flex flex-col gap-1.5 text-gray-500 sm:col-span-2 lg:col-span-1">
               <span className="flex items-center gap-1.5">
-                <MapPin className="h-4 w-4" /> Địa chỉ
+                <MapPin className="h-4 w-4" /> {t("product_detail.labels.address")}
               </span>
               <span className="font-medium text-gray-800 line-clamp-2">
                 {typeof shop.address === "object" && shop.address
-                  ? (shop.address as any).streetAddress || "Đang cập nhật"
+                  ? (shop.address as any).streetAddress || t("product_detail.labels.updating")
                   : typeof shop.address === "string"
                     ? shop.address
-                    : "Đang cập nhật"}
+                    : t("product_detail.labels.updating")}
               </span>
             </div>
           </div>
@@ -738,7 +825,7 @@ export default function ProductDetailPage() {
       {product.description && (
         <div className="mt-6 rounded-2xl bg-white shadow-sm ring-1 ring-gray-100 p-4 sm:p-6 overflow-hidden">
           <h2 className="text-lg font-bold text-gray-900 mb-4 pb-4 border-b border-gray-100">
-            Mô tả sản phẩm
+            {t("product_detail.labels.description")}
           </h2>
           <div
             className="text-sm leading-relaxed text-gray-600 quill-content"
@@ -753,7 +840,7 @@ export default function ProductDetailPage() {
       {/* Same Store Products Section */}
       {product.gardenStoreId && (
         <SuggestedProductsSection
-          title="Các sản phẩm khác của shop"
+          title={t("product_detail.suggested.from_shop")}
           currentProductId={product.id}
           storeId={product.gardenStoreId}
         />
@@ -761,13 +848,14 @@ export default function ProductDetailPage() {
 
       {/* Suggested Products Section */}
       <SuggestedProductsSection
-        title="Có thể bạn cũng thích"
+        title={t("product_detail.suggested.you_may_like")}
         currentProductId={product.id}
         categoryId={product.categories?.[0]?.id}
         hideViewAll
       />
 
       <FeatureBar />
+      <CommitmentPage />
 
       {/* Lightbox Modal */}
       <AnimatePresence>
@@ -779,9 +867,9 @@ export default function ProductDetailPage() {
                 <span className="text-sm font-semibold text-gray-300 truncate max-w-[200px] sm:max-w-md">
                   {product.name}
                 </span>
-                {product.images.length > 0 && (
+                {sortedImages.length > 0 && (
                   <span className="text-xs text-gray-400 mt-0.5">
-                    {lightboxIndex + 1} / {product.images.length}
+                    {lightboxIndex + 1} / {sortedImages.length}
                   </span>
                 )}
               </div>
@@ -790,7 +878,7 @@ export default function ProductDetailPage() {
                   onClick={handleZoomOut}
                   disabled={scale <= 1}
                   className="p-2 rounded-full bg-white/5 hover:bg-white/10 text-white disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
-                  title="Thu nhỏ"
+                  title={t("product_detail.lightbox.zoom_out")}
                 >
                   <ZoomOut size={18} />
                 </button>
@@ -798,7 +886,7 @@ export default function ProductDetailPage() {
                   onClick={handleZoomIn}
                   disabled={scale >= 4}
                   className="p-2 rounded-full bg-white/5 hover:bg-white/10 text-white disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
-                  title="Phóng to"
+                  title={t("product_detail.lightbox.zoom_in")}
                 >
                   <ZoomIn size={18} />
                 </button>
@@ -806,14 +894,14 @@ export default function ProductDetailPage() {
                   onClick={handleResetZoom}
                   disabled={scale === 1 && panOffset.x === 0 && panOffset.y === 0}
                   className="p-2 rounded-full bg-white/5 hover:bg-white/10 text-white disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
-                  title="Đặt lại"
+                  title={t("product_detail.lightbox.reset")}
                 >
                   <RotateCcw size={18} />
                 </button>
                 <button
                   onClick={() => setIsLightboxOpen(false)}
                   className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white cursor-pointer transition-colors"
-                  title="Đóng (Esc)"
+                  title={t("product_detail.lightbox.close")}
                 >
                   <X size={20} />
                 </button>
@@ -823,7 +911,7 @@ export default function ProductDetailPage() {
             {/* Main view area */}
             <div className="relative flex-1 w-full flex items-center justify-center overflow-hidden my-4">
               {/* Prev Button */}
-              {product.images.length > 1 && (
+              {sortedImages.length > 1 && (
                 <button
                   onClick={handlePrevImage}
                   className="absolute left-2 sm:left-4 z-10 p-3 rounded-full bg-black/40 hover:bg-black/60 text-white cursor-pointer transition-colors"
@@ -843,9 +931,9 @@ export default function ProductDetailPage() {
                 onTouchMove={handleTouchMove}
                 onTouchEnd={handleMouseUp}
               >
-                {product.images[lightboxIndex] && (
+                {sortedImages[lightboxIndex] && (
                   <img
-                    src={product.images[lightboxIndex].url}
+                    src={sortedImages[lightboxIndex].url}
                     alt="Product preview"
                     onDoubleClick={handleDoubleClick}
                     draggable={false}
@@ -860,7 +948,7 @@ export default function ProductDetailPage() {
               </div>
 
               {/* Next Button */}
-              {product.images.length > 1 && (
+              {sortedImages.length > 1 && (
                 <button
                   onClick={handleNextImage}
                   className="absolute right-2 sm:right-4 z-10 p-3 rounded-full bg-black/40 hover:bg-black/60 text-white cursor-pointer transition-colors"
@@ -871,9 +959,9 @@ export default function ProductDetailPage() {
             </div>
 
             {/* Bottom thumbnail bar */}
-            {product.images.length > 1 && (
+            {sortedImages.length > 1 && (
               <div className="w-full max-w-xl px-4 py-2 overflow-x-auto flex justify-center gap-2 select-none z-10 pb-4">
-                {product.images.map((img, idx) => (
+                {sortedImages.map((img, idx) => (
                   <button
                     key={img.id}
                     onClick={() => {
@@ -883,8 +971,8 @@ export default function ProductDetailPage() {
                       setPanOffset({ x: 0, y: 0 });
                     }}
                     className={`h-12 w-12 sm:h-16 sm:w-16 shrink-0 overflow-hidden rounded-lg border-2 bg-gray-900 transition-all ${lightboxIndex === idx
-                        ? "border-primary"
-                        : "border-transparent opacity-50 hover:opacity-100"
+                      ? "border-primary"
+                      : "border-transparent opacity-50 hover:opacity-100"
                       }`}
                   >
                     <img
@@ -904,6 +992,7 @@ export default function ProductDetailPage() {
 }
 
 function ProductFitSection({ productId }: { productId: string }) {
+  const { t } = useTranslation();
   const dispatch = useAppDispatch();
   const isAuthenticated = useAppSelector((s) => !!s.auth.token);
 
@@ -914,16 +1003,16 @@ function ProductFitSection({ productId }: { productId: string }) {
       ) : (
         <div className="flex flex-col items-center gap-3 py-4 text-center">
           <span className="text-sm font-bold text-gray-900">
-            Độ phù hợp phong thủy với không gian của bạn
+            {t("product_detail.feng_shui.title")}
           </span>
           <p className="max-w-md text-sm text-gray-500">
-            Đăng nhập để xem sản phẩm này hợp đến đâu với bản mệnh và Ngũ hành từng phòng của bạn.
+            {t("product_detail.feng_shui.login_prompt")}
           </p>
           <button
             onClick={() => dispatch(setAuthModal("login"))}
             className="cursor-pointer rounded-lg bg-primary px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary/90"
           >
-            Đăng nhập
+            {t("product_detail.actions.login")}
           </button>
         </div>
       )}
@@ -940,12 +1029,16 @@ interface SuggestedProductsSectionProps {
 }
 
 function SuggestedProductsSection({
-  title = "Sản phẩm tương tự",
+  title,
   currentProductId,
   categoryId,
   storeId,
   hideViewAll,
 }: SuggestedProductsSectionProps) {
+  const { t } = useTranslation();
+  
+  const displayTitle = title || t("product_detail.suggested.similar");
+
   const { products, loading } = useProductList({
     categoryId: categoryId || undefined,
     storeId: storeId || undefined,
@@ -970,13 +1063,13 @@ function SuggestedProductsSection({
   return (
     <section className="mt-6 w-full overflow-hidden rounded-2xl bg-white p-4 shadow-sm ring-1 ring-gray-100 sm:p-6">
       <div className="mb-4 flex items-center justify-between gap-2 sm:mb-6">
-        <h2 className="text-lg font-bold text-gray-900">{title}</h2>
+        <h2 className="text-lg font-bold text-gray-900">{displayTitle}</h2>
         {viewAllLink && (
           <Link
             to={viewAllLink}
             className="shrink-0 text-sm font-medium text-primary transition-colors hover:text-primary-dark cursor-pointer"
           >
-            Xem tất cả &rsaquo;
+            {t("product_detail.suggested.view_all")}
           </Link>
         )}
       </div>

@@ -1,0 +1,833 @@
+{
+  "navbar": {
+    "promo_freeship_short": "Freeship từ 500k",
+    "promo_freeship_long": "Miễn phí vận chuyển từ 500.000đ",
+    "promo_return": "Đổi trả trong 7 ngày",
+    "promo_support": "Hỗ trợ:",
+    "ai_assistant": "Trợ lý AI",
+    "account": "Tài khoản",
+    "my_account": "Tài Khoản Của Tôi",
+    "workspace": "Không Gian Làm Việc",
+    "orders": "Đơn Mua",
+    "become_seller": "Trở thành người bán",
+    "logout": "Đăng xuất",
+    "logout_success": "Đăng xuất thành công",
+    "login_required_ai": "Vui lòng đăng nhập để dùng trợ lý AI",
+    "default_user": "Người dùng"
+  },
+  "cart": {
+    "decrease_quantity": "Giảm số lượng",
+    "increase_quantity": "Tăng số lượng",
+    "remove_from_cart": "Xóa khỏi giỏ",
+    "cart_with_items_count": "Giỏ hàng, {{count}} sản phẩm",
+    "cart": "Giỏ hàng",
+    "cart_cleared": "Đã xóa giỏ hàng",
+    "clear_all": "Xóa tất cả",
+    "close": "Đóng",
+    "empty_cart": "Chưa có sản phẩm nào",
+    "shop_now": "Mua sắm ngay",
+    "subtotal": "Tạm tính",
+    "view_cart": "Xem giỏ hàng"
+  },
+  "notification": {
+    "mark_all_read_success": "Đã đánh dấu tất cả thông báo là đã đọc",
+    "mark_all_read_error": "Không thể cập nhật trạng thái thông báo",
+    "notification_with_unread_count": "Thông báo, {{count}} tin chưa đọc",
+    "notification": "Thông báo",
+    "your_notifications": "Thông báo của bạn",
+    "mark_all_read": "Đánh dấu tất cả đã đọc",
+    "loading_notifications": "Đang tải thông báo...",
+    "no_notifications": "Chưa có thông báo nào",
+    "no_notifications_desc": "Chúng tôi sẽ thông báo cho bạn khi có cập nhật mới."
+  },
+  "search": {
+    "search_placeholder_1": "Bạn cần tìm cây gì?",
+    "search_placeholder_2": "Tìm cây phong thủy theo mệnh...",
+    "search_placeholder_3": "Cây cảnh để bàn làm việc...",
+    "search_placeholder_4": "Tìm kiếm vật phẩm may mắn...",
+    "search_placeholder_5": "Cây quà tặng ý nghĩa...",
+    "search_button_aria_label": "Tìm kiếm"
+  },
+  "category_bar": {
+    "home": "Trang chủ",
+    "products": "Sản phẩm",
+    "about": "Giới thiệu",
+    "news": "Tin tức",
+    "contact": "Liên Hệ",
+    "categories": "Danh mục"
+  },
+  "hero_slider": {
+    "slide1": {
+      "badge": "FENGDESK AI",
+      "title": "Khám Phá Cây Phong Thủy",
+      "highlight": "Tương Sinh",
+      "desc1": "Tư vấn cây hợp mệnh bằng AI",
+      "desc2": "Mang lại may mắn & tài lộc",
+      "primaryBtn": "Trải nghiệm AI",
+      "secondaryBtn": "Xem thêm"
+    },
+    "slide2": {
+      "badge": "BỘ SƯU TẬP",
+      "title": "Góc Làm Việc",
+      "highlight": "Lý Tưởng",
+      "desc1": "Thanh lọc không khí, giảm căng thẳng",
+      "desc2": "Phù hợp mọi không gian văn phòng",
+      "primaryBtn": "Khám phá",
+      "secondaryBtn": "Xem thêm"
+    },
+    "slide3": {
+      "badge": "ƯU ĐÃI",
+      "title": "Cây Cảnh Để Bàn",
+      "highlight": "GIẢM 20%",
+      "desc1": "Thiết kế chậu sành sứ cao cấp",
+      "desc2": "Giao hàng an toàn tận nơi",
+      "primaryBtn": "Mua ngay",
+      "secondaryBtn": "Xem thêm"
+    }
+  },
+  "image_collections": {
+    "deep_focus": {
+      "title": "Bộ Tập Trung Sâu",
+      "desc": "Thiết kế giúp giảm cortisol và tăng khả năng tập trung trong những giờ code hoặc sáng tạo kéo dài.",
+      "btn": "Mua Bộ Sản Phẩm"
+    },
+    "new_arrival": {
+      "badge": "Mới Ra Mắt",
+      "title": "Đèn Trồng Cây AI"
+    },
+    "minimalist": {
+      "title": "Tối Giản",
+      "desc": "Ít chăm sóc, hiệu ứng cao."
+    },
+    "ai_consult": {
+      "title": "Tư Vấn AI Cá Nhân",
+      "desc": "Để AI phân tích ánh sáng và năng lượng không gian, gợi ý cây phù hợp riêng cho bạn.",
+      "btn": "Bắt Đầu Quét"
+    },
+    "view_all": "Xem tất cả"
+  },
+  "five_elements": {
+    "title": "FengDesk AI - Ngũ Hành Trong Không Gian",
+    "desc": "Khám phá cây phong thủy phù hợp với bản mệnh của bạn để tối ưu sinh khí và tài lộc.",
+    "btn": "Trải nghiệm AI ngay",
+    "explore": "Khám phá",
+    "explore_energy": "Khám phá năng lượng",
+    "kim": {
+      "name": "Mệnh Kim",
+      "traits": "Quyết đoán & Tinh tế"
+    },
+    "moc": {
+      "name": "Mệnh Mộc",
+      "traits": "Sáng tạo & Linh hoạt"
+    },
+    "thuy": {
+      "name": "Mệnh Thủy",
+      "traits": "Thông thái & Thích nghi"
+    },
+    "hoa": {
+      "name": "Mệnh Hỏa",
+      "traits": "Nhiệt huyết & Đam mê"
+    },
+    "tho": {
+      "name": "Mệnh Thổ",
+      "traits": "Kiên định & Đáng tin"
+    }
+  },
+  "popular_categories": {
+    "title": "Danh mục nổi bật",
+    "view_all": "Xem tất cả ›"
+  },
+  "best_sellers": {
+    "title": "Sản phẩm bán chạy",
+    "view_all": "Xem tất cả ›"
+  },
+  "feature_bar": {
+    "feature1": {
+      "title": "AI Tư vấn phong thủy",
+      "sub": "Đề xuất theo bản mệnh"
+    },
+    "feature2": {
+      "title": "Miễn phí vận chuyển",
+      "sub": "Cho đơn từ 500.000đ"
+    },
+    "feature3": {
+      "title": "Cây khỏe mạnh",
+      "sub": "Bảo hành 7 ngày"
+    },
+    "feature4": {
+      "title": "Hỗ trợ 24/7",
+      "sub": "Chuyên gia tư vấn"
+    }
+  },
+  "commitment": {
+    "title1": "Cam Kết Từ",
+    "title2": "FengDesk",
+    "desc": "Chúng tôi tin rằng mỗi chậu cây không chỉ là một vật trang trí, mà còn là một người bạn đồng hành mang lại may mắn và năng lượng tích cực cho bạn.",
+    "c1": {
+      "title": "100% Cây Khỏe Mạnh & Tuyển Chọn Khắt Khe",
+      "desc": "Mỗi chậu cây đều trải qua quy trình 5 bước kiểm tra chất lượng từ vườn ươm. Chúng tôi cam kết không giao cây có dấu hiệu sâu bệnh, héo úa hoặc hư hỏng. Cây luôn đạt trạng thái sinh trưởng tốt nhất khi đến tay bạn."
+    },
+    "c2": {
+      "title": "Bảo Hành Sinh Trưởng & Đổi Trả Miễn Phí",
+      "desc": "Sự an tâm của bạn là ưu tiên hàng đầu. FengDesk bảo hành 1 đổi 1 trong vòng 7 ngày đầu tiên nếu cây có bất kỳ dấu hiệu suy yếu nào do nguyên nhân khách quan hoặc do quá trình vận chuyển."
+    },
+    "c3": {
+      "title": "Đồng Hành & Tư Vấn Tận Tâm Trọn Đời",
+      "desc": "Bạn không chỉ mua một cái cây, bạn nhận được sự đồng hành. Đội ngũ chuyên gia phong thủy và kỹ sư nông nghiệp của chúng tôi luôn sẵn sàng hỗ trợ bạn cách chăm sóc cây phù hợp với từng không gian sống."
+    },
+    "c4": {
+      "title": "Đóng Gói Tiêu Chuẩn & Giao Hàng An Toàn",
+      "desc": "Hệ thống đóng gói độc quyền với nhiều lớp bảo vệ giúp cố định chậu và cành lá. Chúng tôi đảm bảo cây luôn an toàn, không dập nát, gãy cành hay đổ đất trong suốt chặng đường vận chuyển."
+    }
+  },
+  "products_page": {
+    "breadcrumb": {
+      "home": "Trang chủ",
+      "products": "Sản phẩm"
+    },
+    "filters": {
+      "categories": "Danh Mục",
+      "all_products": "Tất cả sản phẩm",
+      "price": "Mức Giá",
+      "all_prices": "Tất cả mức giá",
+      "element": "Mệnh (Hành)",
+      "all_elements": "Tất cả các mệnh"
+    },
+    "elements": {
+      "kim": "Kim (Kim loại)",
+      "moc": "Mộc (Cây cối)",
+      "thuy": "Thủy (Nước)",
+      "hoa": "Hỏa (Lửa)",
+      "tho": "Thổ (Đất)"
+    },
+    "price_ranges": {
+      "under_100": "Dưới 100.000đ",
+      "100_300": "100.000đ - 300.000đ",
+      "300_500": "300.000đ - 500.000đ",
+      "500_1000": "500.000đ - 1.000.000đ",
+      "over_1000": "Trên 1.000.000đ"
+    },
+    "search_results_for": "Kết quả tìm kiếm cho:",
+    "clear_search": "Xóa tìm kiếm",
+    "sort_by": "Sắp xếp theo:",
+    "sort": {
+      "default": "Mặc định",
+      "name_asc": "Tên A-Z",
+      "name_desc": "Tên Z-A",
+      "price_asc": "Giá tăng dần",
+      "price_desc": "Giá giảm dần"
+    },
+    "empty": {
+      "title": "Không tìm thấy sản phẩm",
+      "desc": "Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm.",
+      "clear_all": "Xóa tất cả bộ lọc"
+    }
+  },
+  "product_detail": {
+    "toast": {
+      "added_to_cart": "Đã thêm vào giỏ hàng",
+      "buy_now_error": "Lỗi khi mua ngay",
+      "chat_error": "Không mở được cuộc trò chuyện với cửa hàng."
+    },
+    "error": {
+      "load_failed": "Không thể tải thông tin sản phẩm",
+      "not_found": "Không tìm thấy sản phẩm"
+    },
+    "actions": {
+      "back": "Quay lại",
+      "chat_now": "Chat ngay",
+      "view_shop": "Xem Shop",
+      "add_to_cart": "Thêm giỏ hàng",
+      "buy_now": "MUA NGAY",
+      "out_of_stock": "HẾT HÀNG",
+      "out_of_stock_sm": "Hết hàng",
+      "login": "Đăng nhập"
+    },
+    "labels": {
+      "no_image": "Không có ảnh",
+      "store": "Cửa hàng:",
+      "sku": "Mã sản phẩm:",
+      "variant": "Phân loại",
+      "stock": "Kho: {{stock}} sản phẩm",
+      "element": "Hành:",
+      "weight": "Nặng: {{weight}}g",
+      "size": "Kích thước: {{l}}x{{w}}x{{h}} cm",
+      "free_ship": "Free Ship TP.Hồ Chí Minh cho hoá đơn từ 500.000đ",
+      "hotline": "Hotline",
+      "opening_hours": "Giờ mở cửa",
+      "address": "Địa chỉ",
+      "updating": "Đang cập nhật",
+      "description": "Mô tả sản phẩm"
+    },
+    "feng_shui": {
+      "title": "Độ phù hợp phong thủy với không gian của bạn",
+      "login_prompt": "Đăng nhập để xem sản phẩm này hợp đến đâu với bản mệnh và Ngũ hành từng phòng của bạn."
+    },
+    "suggested": {
+      "similar": "Sản phẩm tương tự",
+      "from_shop": "Các sản phẩm khác của shop",
+      "you_may_like": "Có thể bạn cũng thích",
+      "view_all": "Xem tất cả ›"
+    },
+    "lightbox": {
+      "zoom_out": "Thu nhỏ",
+      "zoom_in": "Phóng to",
+      "reset": "Đặt lại",
+      "close": "Đóng (Esc)"
+    }
+  },
+  "cart_page": {
+    "title": "Giỏ hàng của bạn",
+    "breadcrumb": {
+      "home": "Trang chủ",
+      "cart": "Giỏ hàng"
+    },
+    "actions": {
+      "remove": "Xóa",
+      "select_all": "Chọn tất cả",
+      "delete_all": "Xóa tất cả",
+      "checkout": "Tiến hành thanh toán",
+      "cancel": "Hủy",
+      "shop_now": "Mua Sắm Ngay"
+    },
+    "empty_state": {
+      "title": "“Hổng” có gì trong giỏ hết",
+      "desc": "Về trang cửa hàng để chọn mua sản phẩm bạn nhé!!"
+    },
+    "summary": {
+      "title": "Tóm tắt đơn hàng",
+      "items_count": "{{count}} Sản phẩm",
+      "subtotal": "Tạm tính ({{count}} sản phẩm)",
+      "shipping_fee": "Phí vận chuyển",
+      "not_calculated": "Chưa tính",
+      "total": "Tổng cộng",
+      "vat_included": "(Đã bao gồm VAT nếu có)"
+    },
+    "delete_modal": {
+      "title": "Xóa tất cả sản phẩm trong giỏ hàng",
+      "desc": "Bạn có chắc chắn muốn xóa tất cả sản phẩm trong giỏ hàng?"
+    },
+    "toast": {
+      "select_required": "Vui lòng chọn ít nhất một sản phẩm",
+      "cart_deleted": "Đã xóa giỏ hàng"
+    }
+  },
+  "checkout_page": {
+    "title": "Thanh toán",
+    "actions": {
+      "back_to_cart": "Quay lại giỏ hàng",
+      "add_address": "+ Thêm địa chỉ",
+      "add_address_now": "Thêm địa chỉ ngay",
+      "place_order": "Đặt hàng",
+      "processing": "Đang xử lý..."
+    },
+    "address": {
+      "title": "Địa chỉ giao hàng",
+      "no_address": "Bạn chưa có địa chỉ giao hàng",
+      "default": "Mặc định"
+    },
+    "payment": {
+      "title": "Phương thức thanh toán"
+    },
+    "note": {
+      "label": "Ghi chú đơn hàng (tuỳ chọn)",
+      "placeholder": "Ghi chú cho người bán hoặc shipper..."
+    },
+    "summary": {
+      "title": "Đơn hàng ({{count}} sản phẩm)",
+      "subtotal": "Tạm tính ({{count}} sản phẩm)",
+      "shipping_fee": "Phí vận chuyển",
+      "calculating": "Đang tính...",
+      "free": "Miễn phí",
+      "total": "Tổng cộng",
+      "terms_prefix": "Bằng việc đặt hàng, bạn đồng ý với ",
+      "terms_link": "điều khoản mua hàng",
+      "free_ship": "Free Ship TP.Hồ Chí Minh cho hoá đơn từ 500.000đ"
+    },
+    "toast": {
+      "select_product": "Vui lòng chọn sản phẩm để thanh toán",
+      "load_address_error": "Không thể tải danh sách địa chỉ",
+      "select_address": "Vui lòng chọn địa chỉ giao hàng",
+      "no_product": "Không có sản phẩm để thanh toán",
+      "order_success": "Đặt hàng thành công",
+      "payment_link_error": "Không thể tạo liên kết thanh toán",
+      "payment_gateway_error": "Lỗi khi kết nối cổng thanh toán PayOS",
+      "order_error": "Không thể tạo đơn hàng"
+    }
+  },
+  "product_card": {
+    "toast": {
+      "add_success": "Đã thêm vào giỏ hàng",
+      "add_error": "Không thể thêm vào giỏ hàng"
+    },
+    "labels": {
+      "element": "Mệnh",
+      "edit": "Sửa sản phẩm",
+      "sold": "Đã bán {{count}}",
+      "add_to_cart": "Thêm vào giỏ",
+      "in_stock": "Còn hàng"
+    }
+  },
+  "review_section": {
+    "validation": {
+      "select_rating": "Vui lòng chọn số sao đánh giá.",
+      "min_length": "Nội dung đánh giá phải có ít nhất 5 ký tự."
+    },
+    "rating_labels": {
+      "terrible": "Rất tệ",
+      "bad": "Không hài lòng",
+      "normal": "Bình thường",
+      "good": "Hài lòng",
+      "excellent": "Tuyệt vời",
+      "select": "Chọn đánh giá"
+    },
+    "title": "Đánh giá sản phẩm ({{count}})",
+    "reviews_count": "{{count}} lượt đánh giá",
+    "write_review": {
+      "title": "Viết đánh giá của bạn",
+      "rating_label": "Đánh giá của bạn:",
+      "placeholder": "Chia sẻ cảm nhận của bạn về sản phẩm (chất lượng, đóng gói, giao hàng...)",
+      "submit": "Gửi đánh giá",
+      "login_prompt": "Bạn đã mua sản phẩm này? Đăng nhập để chia sẻ cảm nghĩ của bạn.",
+      "login_now": "Đăng nhập ngay"
+    },
+    "list": {
+      "loading": "Đang tải các đánh giá...",
+      "empty": "Chưa có đánh giá nào cho sản phẩm này. Hãy là người đầu tiên đánh giá!",
+      "anonymous": "Người dùng ẩn danh",
+      "you": "Bạn"
+    },
+    "actions": {
+      "edit": "Sửa",
+      "delete": "Xóa",
+      "cancel": "Hủy",
+      "save": "Lưu thay đổi"
+    },
+    "delete_confirm": {
+      "message": "Xác nhận xóa đánh giá này?"
+    },
+    "edit_review": {
+      "title": "Chỉnh sửa đánh giá của bạn",
+      "rating_label": "Đánh giá:"
+    }
+  },
+  "workspace": {
+    "switch": "Đổi khu làm việc",
+    "roles": {
+      "shop": "Mua sắm",
+      "seller": "Cửa hàng",
+      "admin": "Quản trị"
+    }
+  },
+  "footer": {
+    "brand_desc": "Mang đến không gian làm việc cân bằng, thịnh vượng và tràn đầy năng lượng tích cực với các vật phẩm phong thủy tinh tế.",
+    "address": "Khu CNC, Quận 9, Thủ Đức",
+    "about": {
+      "title": "Về FengDesk",
+      "story": "Câu chuyện thương hiệu",
+      "careers": "Tuyển dụng",
+      "news": "Tin tức phong thủy",
+      "contact": "Liên hệ",
+      "registered": "Đã đăng ký với Bộ Công Thương"
+    },
+    "support": {
+      "title": "Hỗ trợ khách hàng",
+      "shipping": "Chính sách vận chuyển",
+      "returns": "Chính sách đổi trả",
+      "guide": "Hướng dẫn mua hàng",
+      "faq": "Câu hỏi thường gặp (FAQ)"
+    },
+    "newsletter": {
+      "title": "Đăng ký nhận tin",
+      "desc": "Nhận thông tin mới nhất về sản phẩm và các ưu đãi đặc biệt.",
+      "email_placeholder": "Email của bạn",
+      "submit": "Gửi"
+    },
+    "socials": {
+      "title": "Kết nối với chúng tôi"
+    },
+    "legal": {
+      "terms": "Điều khoản dịch vụ",
+      "privacy": "Chính sách bảo mật"
+    }
+  },
+  "profile_layout": {
+    "title": "Hồ Sơ",
+    "nav": {
+      "info": "Thông tin tài khoản",
+      "addresses": "Địa chỉ",
+      "workspace": "Không gian làm việc",
+      "orders": "Đơn hàng của tôi",
+      "returns": "Yêu cầu trả hàng",
+      "invitations": "Lời mời làm nhân viên",
+      "notifications": "Thông báo"
+    }
+  },
+  "profile_info": {
+    "toast": {
+      "birth_time_success": "Đã cập nhật giờ sinh",
+      "birth_time_error": "Không cập nhật được giờ sinh",
+      "logout_success": "Đăng xuất thành công"
+    },
+    "loading": "Đang tải thông tin...",
+    "title": "Thông tin tài khoản",
+    "subtitle": "Quản lý thông tin cá nhân và thiết lập tài khoản của bạn.",
+    "default_user": "Người dùng",
+    "roles": {
+      "customer": "Khách hàng",
+      "staff": "Nhân viên"
+    },
+    "fields": {
+      "fullname": "Họ và tên",
+      "email": "Email",
+      "phone": "Số điện thoại",
+      "gender": "Giới tính",
+      "dob": "Ngày sinh",
+      "element": "Mệnh Phong Thuỷ",
+      "birth_time": "Giờ sinh",
+      "optional": "(tùy chọn)"
+    },
+    "values": {
+      "not_updated": "Chưa cập nhật",
+      "male": "Nam",
+      "female": "Nữ",
+      "metal": "Kim",
+      "wood": "Mộc",
+      "water": "Thủy",
+      "fire": "Hỏa",
+      "earth": "Thổ"
+    },
+    "actions": {
+      "saving": "Đang lưu...",
+      "save": "Lưu",
+      "update": "Cập nhật thông tin",
+      "logout": "Đăng xuất"
+    },
+    "hints": {
+      "birth_time": "Thêm giờ sinh để trợ lý AI xem được Tứ Trụ / Bát Tự đầy đủ cho bạn.",
+      "update_wip": "Tính năng cập nhật thông tin đang được phát triển."
+    }
+  },
+  "address_book": {
+    "toast": {
+      "load_error": "Không thể tải danh sách địa chỉ",
+      "delete_success": "Xóa địa chỉ thành công",
+      "delete_error": "Không thể xóa địa chỉ",
+      "set_default_success": "Đã thiết lập địa chỉ mặc định",
+      "set_default_error": "Không thể thiết lập địa chỉ mặc định"
+    },
+    "title": "Địa chỉ của tôi",
+    "subtitle": "Quản lý địa chỉ nhận hàng để thanh toán nhanh chóng hơn.",
+    "add_new": "Thêm địa chỉ mới",
+    "empty": {
+      "title": "Chưa có địa chỉ nào",
+      "desc": "Thêm địa chỉ để nhận hàng thuận tiện hơn"
+    },
+    "item": {
+      "default_badge": "Mặc định",
+      "phone": "Số điện thoại:"
+    },
+    "actions": {
+      "update": "Cập nhật",
+      "set_default": "Mặc định",
+      "delete": "Xóa",
+      "cancel": "Hủy"
+    },
+    "delete_modal": {
+      "title": "Xóa địa chỉ",
+      "desc": "Bạn có chắc chắn muốn xóa địa chỉ này? Hành động này không thể hoàn tác.",
+      "confirm": "Xóa địa chỉ"
+    }
+  },
+  "orders_page": {
+    "tabs": {
+      "all": "Tất cả",
+      "pending": "Đang chờ",
+      "paid": "Đã thanh toán",
+      "processing": "Đang xử lý",
+      "completed": "Đã hoàn thành",
+      "cancelled": "Đã hủy",
+      "expired": "Đã hết hạn"
+    },
+    "title": "Đơn hàng của tôi",
+    "subtitle": "Theo dõi và quản lý các đơn hàng bạn đã đặt.",
+    "orders_count": "đơn hàng",
+    "empty": {
+      "message": "Bạn chưa có đơn hàng nào",
+      "in_status": "ở trạng thái này",
+      "shop_now": "Mua sắm ngay"
+    },
+    "card": {
+      "chat": "Chat",
+      "view_shop": "Xem Shop",
+      "delivery_success": "Giao hàng thành công",
+      "variant": "Phân loại hàng:",
+      "order_id": "Đơn hàng #",
+      "total": "Thành tiền:"
+    },
+    "actions": {
+      "pay": "Thanh Toán",
+      "review": "Đánh Giá",
+      "contact_seller": "Liên Hệ Người Bán",
+      "view_details": "Xem Chi Tiết"
+    },
+    "pagination": "Trang {{page}}/{{total_pages}} · {{total_count}} đơn hàng",
+    "review_modal": {
+      "title": "Đánh giá sản phẩm",
+      "select_product": "Chọn sản phẩm",
+      "your_rating": "Đánh giá của bạn",
+      "review_content": "Nội dung đánh giá",
+      "placeholder": "Hãy chia sẻ nhận xét của bạn về sản phẩm này nhé...",
+      "cancel": "Hủy",
+      "submit": "Gửi Đánh Giá",
+      "not_found": "Không tìm thấy thông tin sản phẩm để đánh giá.",
+      "toast": {
+        "select_product": "Vui lòng chọn sản phẩm để đánh giá",
+        "empty_content": "Vui lòng nhập nội dung đánh giá",
+        "success": "Đánh giá sản phẩm thành công!",
+        "error": "Không thể gửi đánh giá lúc này"
+      }
+    }
+  },
+  "order_detail": {
+    "toast": {
+      "upload_error": "Tải ảnh lên thất bại",
+      "no_item_selected": "Vui lòng chọn ít nhất một sản phẩm để trả.",
+      "return_success": "Gửi yêu cầu trả hàng thành công!",
+      "return_error": "Không thể gửi yêu cầu trả hàng",
+      "return_exception": "Có lỗi xảy ra khi gửi yêu cầu",
+      "cancel_success": "Đã hủy đơn hàng",
+      "cancel_error": "Không thể hủy đơn hàng"
+    },
+    "not_found": "Không tìm thấy đơn hàng",
+    "back_to_list": "Quay lại danh sách",
+    "back": "Quay lại đơn hàng",
+    "placed_at": "Đặt lúc",
+    "steps": {
+      "placed": "Đơn đã đặt",
+      "cancelled": "Đã hủy",
+      "expired": "Đã hết hạn",
+      "paid": "Đã thanh toán",
+      "processing": "Đang xử lý",
+      "completed": "Hoàn thành"
+    },
+    "product": {
+      "title": "Sản phẩm",
+      "per_item": "/ cái",
+      "subtotal": "Tạm tính",
+      "shipping_fee": "Phí vận chuyển",
+      "uncalculated": "Chưa tính",
+      "total": "Thành tiền",
+      "payment_method": "Thanh toán qua",
+      "paid": "Đã thanh toán"
+    },
+    "delivery": {
+      "title": "Đơn giao hàng",
+      "request_return": "Yêu cầu trả hàng",
+      "shipping_provider": "Đơn vị vận chuyển:",
+      "shipping_provider_short": "ĐVVC:",
+      "return_pending": "Đang chờ xử lý trả hàng",
+      "return_processing": "Đang xử lý trả hàng",
+      "return_btn": "Trả",
+      "delivered": "Đã giao hàng"
+    },
+    "delivery_status": {
+      "pending": "Đang chờ",
+      "confirmed": "Đã xác nhận",
+      "preparing": "Đang chuẩn bị",
+      "shipped": "Đang giao hàng",
+      "delivered": "Đã giao hàng",
+      "cancelled": "Đã hủy",
+      "returned": "Đã trả hàng"
+    },
+    "address": "Địa chỉ nhận hàng",
+    "note": "Ghi chú",
+    "actions": {
+      "pay_now": "Thanh toán ngay",
+      "return": "Trả hàng",
+      "buy_again": "Mua lại",
+      "cancel": "Hủy"
+    },
+    "cancel_modal": {
+      "title": "Hủy đơn hàng",
+      "desc": "Bạn có chắc chắn muốn hủy đơn hàng này?",
+      "no": "Không",
+      "cancelling": "Đang hủy...",
+      "confirm": "Hủy đơn"
+    },
+    "delivery_picker": {
+      "title": "Chọn đơn giao hàng",
+      "cancel": "Hủy"
+    },
+    "return_modal": {
+      "tag": "Trả hàng / Hoàn tiền",
+      "title": "Yêu cầu trả hàng",
+      "select_product": "Chọn sản phẩm muốn trả",
+      "deselect_all": "Bỏ chọn tất cả",
+      "select_all": "Chọn tất cả",
+      "no_product": "Không tìm thấy sản phẩm nào trong đơn giao này.",
+      "type": "Hình thức",
+      "reason": "Lý do",
+      "reason_detail": "Mô tả thêm",
+      "reason_placeholder": "Mô tả chi tiết vấn đề của bạn...",
+      "images": "Hình ảnh minh chứng (tối đa 3 ảnh)",
+      "image_alt": "Minh chứng",
+      "add_image": "Thêm ảnh",
+      "bank_info": "Thông tin tài khoản ngân hàng (tuỳ chọn)",
+      "account_name": "Tên chủ tài khoản",
+      "account_number": "Số tài khoản",
+      "bank_name": "Tên ngân hàng",
+      "cancel": "Hủy",
+      "submitting": "Đang gửi...",
+      "submit": "Gửi yêu cầu",
+      "types": {
+        "refund": "Hoàn tiền",
+        "exchange": "Đổi hàng"
+      },
+      "reasons": {
+        "plant_health": "Tình trạng cây trồng/Sản phẩm lỗi",
+        "wrong_item": "Sai sản phẩm",
+        "damaged_package": "Hư hỏng trong vận chuyển",
+        "not_as_described": "Không đúng mô tả"
+      }
+    }
+  },
+  "profile_return_order": {
+    "toast": {
+      "load_list_error": "Không thể tải danh sách yêu cầu",
+      "load_list_exception": "Có lỗi xảy ra khi tải dữ liệu",
+      "cancel_success": "Đã hủy yêu cầu trả hàng",
+      "cancel_error": "Không thể hủy yêu cầu",
+      "cancel_exception": "Có lỗi xảy ra khi hủy yêu cầu",
+      "ship_success": "Xác nhận trả hàng thành công",
+      "ship_error": "Không thể xác nhận trả hàng",
+      "ship_exception": "Có lỗi xảy ra khi xác nhận trả hàng",
+      "load_detail_error": "Không thể tải chi tiết yêu cầu trả hàng",
+      "load_detail_exception": "Có lỗi xảy ra khi tải chi tiết yêu cầu"
+    },
+    "empty": {
+      "title": "Chưa có yêu cầu trả hàng nào",
+      "desc": "Các yêu cầu trả hàng / hoàn tiền sẽ hiện ở đây.",
+      "btn": "Xem đơn hàng"
+    },
+    "title": "Yêu cầu trả hàng",
+    "desc": "Quản lý và theo dõi các yêu cầu trả hàng, hoàn tiền của bạn.",
+    "list": {
+      "order_num": "Đơn #",
+      "reason": "Lý do: ",
+      "products": " sản phẩm",
+      "view_detail": "Xem chi tiết",
+      "cancel_req": "Hủy yêu cầu",
+      "ship_back": "Trả hàng",
+      "view_order": "Xem đơn hàng"
+    },
+    "pagination": {
+      "prev": "Trước",
+      "next": "Sau"
+    },
+    "cancel_modal": {
+      "title": "Hủy yêu cầu trả hàng?",
+      "desc": "Bạn có chắc muốn hủy yêu cầu này không? Hành động này không thể hoàn tác.",
+      "no": "Không",
+      "cancelling": "Đang hủy...",
+      "confirm": "Xác nhận hủy"
+    },
+    "ship_modal": {
+      "title": "Xác nhận trả hàng",
+      "desc": "Nhập mã vận đơn (tracking code) nếu bạn có (không bắt buộc).",
+      "placeholder": "Mã vận đơn...",
+      "close": "Đóng",
+      "processing": "Đang xử lý...",
+      "confirm": "Xác nhận"
+    },
+    "detail_modal": {
+      "tag": "Chi tiết yêu cầu trả hàng",
+      "loading": "Đang tải...",
+      "not_found": "Không tìm thấy thông tin.",
+      "status": "Trạng thái",
+      "type": "Hình thức",
+      "refund_amount": "Số tiền hoàn",
+      "created_at": "Ngày tạo:",
+      "reason": "Lý do",
+      "rejected_reason": "Lý do từ chối",
+      "return_items": "Sản phẩm trả",
+      "bank_info": "Thông tin tài khoản ngân hàng",
+      "account_name": "Chủ tài khoản:",
+      "account_number": "Số tài khoản:",
+      "bank_name": "Ngân hàng:",
+      "refund_method": "Phương thức hoàn tiền:",
+      "images": "Hình ảnh",
+      "history": "Lịch sử trạng thái",
+      "cancel": "Hủy yêu cầu",
+      "ship_back": "Trả hàng",
+      "close": "Đóng"
+    },
+    "types": {
+      "refund": "Hoàn tiền",
+      "exchange": "Đổi hàng"
+    },
+    "reasons": {
+      "defective": "Sản phẩm bị lỗi",
+      "wrong_item": "Sai sản phẩm",
+      "not_as_described": "Không đúng mô tả",
+      "damaged": "Hư hỏng trong vận chuyển",
+      "changed_mind": "Đổi ý",
+      "other": "Lý do khác"
+    },
+    "statuses": {
+      "requested": "Đã gửi yêu cầu",
+      "approved": "Đã duyệt",
+      "item_received": "Đã nhận hàng",
+      "refunding": "Đang hoàn tiền",
+      "rejected": "Bị từ chối",
+      "processing": "Đang xử lý",
+      "completed": "Hoàn tất",
+      "cancelled": "Đã hủy",
+      "return_in_transit": "Đang chuyển hàng trả lại"
+    }
+  },
+  "my_invitations": {
+    "title": "Lời mời làm nhân viên",
+    "desc": "Các cửa hàng đã mời bạn tham gia — chấp nhận để có quyền nhận đơn và giao hàng.",
+    "refresh": "Làm mới",
+    "empty": {
+      "title": "Không có lời mời nào",
+      "desc": "Khi ai đó mời bạn làm nhân viên, lời mời sẽ xuất hiện tại đây."
+    },
+    "card": {
+      "title": "Lời mời làm nhân viên cửa hàng",
+      "inviter": "Người mời:",
+      "note": "Nếu đồng ý, bạn sẽ có quyền nhận đơn và giao hàng cho cửa hàng này.",
+      "reject": "Từ chối",
+      "accept": "Đồng ý",
+      "toast": {
+        "accept_error": "Không thể chấp nhận lời mời.",
+        "accept_success": "Đã đồng ý làm nhân viên.",
+        "reject_error": "Không thể từ chối lời mời.",
+        "reject_success": "Đã từ chối lời mời.",
+        "exception": "Đã xảy ra lỗi."
+      }
+    }
+  },
+  "notification": {
+    "notification": "Thông báo",
+    "notification_with_unread_count": "Thông báo ({{count}} chưa đọc)",
+    "title": "Thông báo của bạn",
+    "unread_count_1": "Bạn có ",
+    "unread_count_2": " thông báo chưa đọc",
+    "mark_all_read": "Đánh dấu tất cả đã đọc",
+    "loading": "Đang tải thông báo...",
+    "empty": {
+      "title": "Chưa có thông báo nào",
+      "desc": "Các thông báo về đơn hàng và hệ thống sẽ xuất hiện ở đây."
+    },
+    "pagination": {
+      "prev": "Trang trước",
+      "next": "Trang sau"
+    },
+    "toast": {
+      "mark_all_success": "Đã đánh dấu tất cả thông báo là đã đọc",
+      "mark_all_error": "Không thể cập nhật trạng thái thông báo"
+    }
+  }
+}

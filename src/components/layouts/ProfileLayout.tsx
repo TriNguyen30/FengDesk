@@ -3,8 +3,12 @@ import { User, MapPin, Package, HousePlus, Bell, RefreshCw, Mail } from "lucide-
 import { useEffect } from "react";
 import { useMyStoreInvitations } from "@/features/shop/hooks/useShopStaff";
 import ThemeToggle from "@/components/ui/ThemeToggle";
+import FeatureBar from "@/components/ui/FeatureBar";
+import CommitmentPage from "@/components/ui/CommitmentPage";
+import { useTranslation } from "react-i18next";
 
 export default function ProfileLayout() {
+  const { t } = useTranslation();
   // Load lời mời (nhẹ) để hiện badge số lượng bên cạnh menu; nếu 0 thì ẩn badge.
   const { invitations } = useMyStoreInvitations();
   const pendingCount = invitations.length;
@@ -15,18 +19,18 @@ export default function ProfileLayout() {
     icon: typeof User;
     badge?: number;
   }[] = [
-    { name: "Thông tin tài khoản", path: "/profile/info", icon: User },
-    { name: "Địa chỉ", path: "/profile/addresses", icon: MapPin },
-    { name: "Không gian làm việc", path: "/profile/workspace", icon: HousePlus },
-    { name: "Đơn hàng của tôi", path: "/profile/orders", icon: Package },
-    { name: "Yêu cầu trả hàng", path: "/profile/returns", icon: RefreshCw },
+    { name: t("profile_layout.nav.info"), path: "/profile/info", icon: User },
+    { name: t("profile_layout.nav.addresses"), path: "/profile/addresses", icon: MapPin },
+    { name: t("profile_layout.nav.workspace"), path: "/profile/workspace", icon: HousePlus },
+    { name: t("profile_layout.nav.orders"), path: "/profile/orders", icon: Package },
+    { name: t("profile_layout.nav.returns"), path: "/profile/returns", icon: RefreshCw },
     {
-      name: "Lời mời làm nhân viên",
+      name: t("profile_layout.nav.invitations"),
       path: "/profile/invitations",
       icon: Mail,
       badge: pendingCount,
     },
-    { name: "Thông báo", path: "/profile/notifications", icon: Bell },
+    { name: t("profile_layout.nav.notifications"), path: "/profile/notifications", icon: Bell },
   ];
 
   useEffect(() => {
@@ -39,7 +43,7 @@ export default function ProfileLayout() {
         {/* Sidebar */}
         <aside className="w-full shrink-0 md:w-64">
           <div className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm">
-            <h2 className="mb-4 px-2 text-lg font-bold text-gray-900">Hồ Sơ</h2>
+            <h2 className="mb-4 px-2 text-lg font-bold text-gray-900">{t("profile_layout.title")}</h2>
             <nav className="flex flex-col gap-1">
               {navItems.map((item) => {
                 const Icon = item.icon;
@@ -77,6 +81,8 @@ export default function ProfileLayout() {
           </div>
         </main>
       </div>
+      <FeatureBar />
+      <CommitmentPage />
     </div>
   );
 }

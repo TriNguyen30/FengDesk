@@ -17,6 +17,7 @@ import {
   Store,
   TicketX,
   Tags,
+  ChevronDown,
 } from "lucide-react";
 import { useAppSelector, useAppDispatch } from "@/app/store";
 import { logout } from "@/features/auth/store/authSlice";
@@ -29,11 +30,23 @@ const toasterStyle = { "--width": "min(100vw - 1.5rem, 356px)" } as CSSPropertie
 
 const navigation = [
   { name: "Tổng quan", href: "/manager/dashboard", icon: LayoutDashboard },
-  { name: "Danh mục", href: "/manager/categories", icon: Tags },
-  { name: "Sản phẩm", href: "/manager/products", icon: Package },
+  {
+    name: "Sản phẩm",
+    icon: Package,
+    children: [
+      { name: "Danh mục", href: "/manager/categories", icon: Tags },
+      { name: "Sản phẩm", href: "/manager/products", icon: Package },
+    ],
+  },
+  {
+    name: "Bán hàng",
+    icon: ShoppingCart,
+    children: [
+      { name: "Đơn hàng", href: "/manager/orders", icon: ShoppingCart },
+      { name: "Trả hàng", href: "/manager/order-returns", icon: TicketX },
+    ],
+  },
   { name: "Cửa hàng", href: "/manager/stores", icon: Store },
-  { name: "Đơn hàng", href: "/manager/orders", icon: ShoppingCart },
-  { name: "Trả hàng", href: "/manager/order-returns", icon: TicketX },
   { name: "Khách hàng", href: "/manager/customers", icon: Users },
   // { name: "Cài đặt", href: "/manager/settings", icon: Settings },
 ];
@@ -66,17 +79,35 @@ export default function ManagerLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
+  const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({});
   const location = useLocation();
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
+
+  const toggleMenu = (name: string) => {
+    setOpenMenus((prev) => ({ ...prev, [name]: !prev[name] }));
+  };
 
   const handleLogout = () => {
     clearSession();
     dispatch(logout());
   };
 
-  const currentNav = navigation.find((item) => location.pathname.startsWith(item.href));
-  const pageTitle = currentNav?.name ?? "Tổng quan";
+  let currentNavName = "Tổng quan";
+  for (const item of navigation) {
+    if (item.href && location.pathname.startsWith(item.href)) {
+      currentNavName = item.name;
+      break;
+    }
+    if (item.children) {
+      const child = item.children.find((c) => c.href && location.pathname.startsWith(c.href));
+      if (child) {
+        currentNavName = child.name;
+        break;
+      }
+    }
+  }
+  const pageTitle = currentNavName;
 
   const initial = user?.fullName?.charAt(0) || user?.email?.charAt(0) || "Q";
   const roleLabel = roleLabels[user?.role?.toLowerCase() ?? ""] ?? user?.role ?? "Quản lý";
@@ -118,27 +149,89 @@ export default function ManagerLayout() {
         {/* Nav */}
         <nav className="flex-1 space-y-1 overflow-y-auto p-3">
           {navigation.map((item) => {
-            const isActive = location.pathname.startsWith(item.href);
+            const hasChildren = !!item.children;
+            const isAnyChildActive = hasChildren
+              ? item.children!.some((child) => child.href && location.pathname.startsWith(child.href))
+              : false;
+            
+            const isActive = item.href ? location.pathname.startsWith(item.href) : isAnyChildActive;
+            const isOpen = openMenus[item.name] ?? isAnyChildActive;
+
             return (
-              <Link
-                key={item.name}
-                to={item.href}
-                title={collapsed ? item.name : undefined}
-                className={`group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
-                  isActive
-                    ? "bg-primary/10 text-primary"
-                    : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
-                } ${collapsed ? "justify-center" : ""}`}
-              >
-                {isActive && (
-                  <span className="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-full bg-primary" />
+              <div key={item.name} className="space-y-1">
+                {hasChildren ? (
+                  <button
+                    onClick={() => toggleMenu(item.name)}
+                    title={collapsed ? item.name : undefined}
+                    className={`group relative flex w-full items-center justify-between gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors cursor-pointer ${
+                      isActive
+                        ? "bg-primary/5 text-primary"
+                        : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                    } ${collapsed ? "justify-center" : ""}`}
+                  >
+                    <div className="flex items-center gap-3 truncate">
+                      {isActive && (
+                        <span className="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-full bg-primary" />
+                      )}
+                      <item.icon
+                        size={19}
+                        className={isActive ? "text-primary" : "text-gray-400 group-hover:text-gray-600"}
+                      />
+                      {!collapsed && <span className="truncate">{item.name}</span>}
+                    </div>
+                    {!collapsed && (
+                      <ChevronDown
+                        size={16}
+                        className={`transition-transform duration-200 ${isOpen ? "rotate-180" : ""} ${isActive ? "text-primary" : "text-gray-400"}`}
+                      />
+                    )}
+                  </button>
+                ) : (
+                  <Link
+                    to={item.href!}
+                    title={collapsed ? item.name : undefined}
+                    className={`group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
+                      isActive
+                        ? "bg-primary/10 text-primary"
+                        : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                    } ${collapsed ? "justify-center" : ""}`}
+                  >
+                    {isActive && (
+                      <span className="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-full bg-primary" />
+                    )}
+                    <item.icon
+                      size={19}
+                      className={isActive ? "text-primary" : "text-gray-400 group-hover:text-gray-600"}
+                    />
+                    {!collapsed && <span className="truncate">{item.name}</span>}
+                  </Link>
                 )}
-                <item.icon
-                  size={19}
-                  className={isActive ? "text-primary" : "text-gray-400 group-hover:text-gray-600"}
-                />
-                {!collapsed && <span className="truncate">{item.name}</span>}
-              </Link>
+
+                {hasChildren && isOpen && !collapsed && (
+                  <div className="mt-1 space-y-1 pl-9">
+                    {item.children!.map((child) => {
+                      const isChildActive = child.href && location.pathname.startsWith(child.href);
+                      return (
+                        <Link
+                          key={child.name}
+                          to={child.href!}
+                          className={`group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                            isChildActive
+                              ? "bg-primary/10 text-primary"
+                              : "text-gray-500 hover:bg-gray-100 hover:text-gray-900"
+                          }`}
+                        >
+                          <child.icon
+                            size={17}
+                            className={isChildActive ? "text-primary" : "text-gray-400 group-hover:text-gray-600"}
+                          />
+                          <span className="truncate">{child.name}</span>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             );
           })}
         </nav>

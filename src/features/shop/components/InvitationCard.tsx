@@ -5,6 +5,7 @@ import {
   useRejectStoreInvitation,
 } from "@/features/shop/hooks/useShopStaff";
 import type { StoreInvitation } from "@/features/shop/types/shop";
+import { useTranslation } from "react-i18next";
 
 interface Props {
   invitation: StoreInvitation;
@@ -25,6 +26,7 @@ function formatDate(iso: string) {
 }
 
 export default function InvitationCard({ invitation }: Props) {
+  const { t } = useTranslation();
   const accept = useAcceptStoreInvitation();
   const reject = useRejectStoreInvitation();
   const busy = accept.isPending || reject.isPending;
@@ -33,13 +35,13 @@ export default function InvitationCard({ invitation }: Props) {
     try {
       const res = await accept.mutateAsync(invitation.id);
       if (!res.isSuccess) {
-        toast.error(res.message || "Không thể chấp nhận lời mời.");
+        toast.error(res.message || t("my_invitations.card.toast.accept_error"));
         return;
       }
-      toast.success(res.message || "Đã đồng ý làm nhân viên.");
+      toast.success(res.message || t("my_invitations.card.toast.accept_success"));
     } catch (err) {
       console.error(err);
-      toast.error("Đã xảy ra lỗi.");
+      toast.error(t("my_invitations.card.toast.exception"));
     }
   };
 
@@ -47,13 +49,13 @@ export default function InvitationCard({ invitation }: Props) {
     try {
       const res = await reject.mutateAsync(invitation.id);
       if (!res.isSuccess) {
-        toast.error(res.message || "Không thể từ chối lời mời.");
+        toast.error(res.message || t("my_invitations.card.toast.reject_error"));
         return;
       }
-      toast.success(res.message || "Đã từ chối lời mời.");
+      toast.success(res.message || t("my_invitations.card.toast.reject_success"));
     } catch (err) {
       console.error(err);
-      toast.error("Đã xảy ra lỗi.");
+      toast.error(t("my_invitations.card.toast.exception"));
     }
   };
 
@@ -66,7 +68,7 @@ export default function InvitationCard({ invitation }: Props) {
           </span>
           <div className="min-w-0 flex-1">
             <p className="font-semibold leading-tight text-gray-900">
-              Lời mời làm nhân viên cửa hàng
+              {t("my_invitations.card.title")}
             </p>
             <p className="mt-0.5 text-sm text-gray-700">
               <span className="font-semibold">"{invitation.storeName}"</span>
@@ -74,13 +76,13 @@ export default function InvitationCard({ invitation }: Props) {
             <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-gray-500">
               <span className="inline-flex items-center gap-1">
                 <UserCircle2 size={12} className="shrink-0" />
-                Người mời: {invitation.invitedByName || "—"}
+                {t("my_invitations.card.inviter")} {invitation.invitedByName || "—"}
               </span>
               <span aria-hidden>·</span>
               <span>{formatDate(invitation.invitedAt)}</span>
             </p>
             <p className="mt-2 text-xs text-gray-500">
-              Nếu đồng ý, bạn sẽ có quyền nhận đơn và giao hàng cho cửa hàng này.
+              {t("my_invitations.card.note")}
             </p>
           </div>
         </div>
@@ -93,7 +95,7 @@ export default function InvitationCard({ invitation }: Props) {
             className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"
           >
             {reject.isPending ? <Loader2 size={14} className="animate-spin" /> : <X size={14} />}
-            Từ chối
+            {t("my_invitations.card.reject")}
           </button>
           <button
             type="button"
@@ -106,7 +108,7 @@ export default function InvitationCard({ invitation }: Props) {
             ) : (
               <Check size={14} />
             )}
-            Đồng ý
+            {t("my_invitations.card.accept")}
           </button>
         </div>
       </div>

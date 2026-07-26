@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { getCategoriesRequest } from "@/features/category/api/category.api";
 import type { Category } from "@/features/category/types/category";
 import dragonStatueIcon from "@/assets/icon/DragonStatue.png";
@@ -39,6 +40,7 @@ const getIconForCategory = (name: string, index: number) => {
 };
 
 export default function PopularCategories() {
+  const { t } = useTranslation();
   const [categories, setCategories] = useState<Category[]>([]);
 
   useEffect(() => {
@@ -59,20 +61,23 @@ export default function PopularCategories() {
     <section className="mt-6 min-w-0 overflow-hidden rounded-xl bg-white p-3 shadow-sm ring-1 ring-gray-100 sm:mt-8 sm:p-4">
       {/* Header */}
       <div className="-mx-3 -mt-3 mb-4 flex items-center justify-between sm:-mx-4 sm:-mt-4">
-        <div className="relative">
+        <div className="relative inline-block">
           {/* Dark teal fold phía sau */}
-          <div className="absolute inset-y-0 -right-3 w-10 sm:-right-4 sm:w-12" />
+          <div
+            className="absolute right-0 h-full w-12 sm:w-12 bg-teal-900"
+            style={{ clipPath: "polygon(0 0, 100% 0, 0 100%)" }}
+          />
 
           {/* Badge chính */}
           <h2
-            className="relative rounded-bl-none rounded-tl-xl bg-primary
+            className="relative z-10 rounded-tl-xl bg-primary
               px-4 py-2 pr-12 text-sm font-bold uppercase tracking-wide text-white
-              sm:px-4 py-2 sm:pr-16 sm:text-xl"
+              sm:px-4 sm:py-2 sm:pr-16 sm:text-xl"
             style={{
-              clipPath: "polygon(0 0, 100% 0, calc(100% - 38px) 100%, 0 100%)",
+              clipPath: "polygon(0 0, calc(100% - 28px) 0, 100% 100%, 0 100%)",
             }}
           >
-            Danh mục nổi bật
+            {t("popular_categories.title")}
           </h2>
         </div>
 
@@ -80,7 +85,7 @@ export default function PopularCategories() {
           to="/products"
           className="mr-5 shrink-0 cursor-pointer text-xs font-medium text-primary transition-colors hover:text-primary-dark sm:text-sm"
         >
-          Xem tất cả &rsaquo;
+          {t("popular_categories.view_all")}
         </Link>
       </div>
 

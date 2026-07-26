@@ -13,6 +13,8 @@ import Modal from "@/components/ui/Modal";
 import EmptyCartImg from "@/assets/image/EmptyCart.jpg";
 import { generateSlug } from "@/utils/string";
 import FeatureBar from "@/components/ui/FeatureBar";
+import CommitmentPage from "@/components/ui/CommitmentPage";
+import { useTranslation } from "react-i18next";
 
 function formatVnd(n: number): string {
   return n.toLocaleString("vi-VN") + "đ";
@@ -28,6 +30,7 @@ interface CartLineItemProps {
 
 function CartLineItem({ item, selected, onSelect, onQuantityChange, onRemove }: CartLineItemProps) {
   const { imageUrl } = useProductPrimaryImage(item.productId);
+  const { t } = useTranslation();
 
   return (
     <li className="flex gap-4 py-5 sm:items-center">
@@ -94,7 +97,7 @@ function CartLineItem({ item, selected, onSelect, onQuantityChange, onRemove }: 
             className="flex items-center gap-1.5 text-xs font-medium text-gray-400 hover:text-red-500 transition-colors cursor-pointer"
           >
             <Trash2 size={14} />
-            <span className="hidden sm:inline">Xóa</span>
+            <span className="hidden sm:inline">{t("cart_page.actions.remove")}</span>
           </button>
         </div>
       </div>
@@ -105,6 +108,7 @@ function CartLineItem({ item, selected, onSelect, onQuantityChange, onRemove }: 
 export default function CartPage() {
   const { items, setQuantity, removeItem, deleteAll } = useCart();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -150,14 +154,14 @@ export default function CartPage() {
   };
 
   return (
-    <div className="mx-auto max-w-6xl px-3 py-4 sm:px-6 sm:py-6">
+    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       {/* Breadcrumb */}
       <nav className="mb-4 flex items-center gap-2 text-sm font-medium text-gray-500">
         <Link to="/" className="hover:text-primary transition-colors">
-          Trang chủ
+          {t("cart_page.breadcrumb.home")}
         </Link>
         <ChevronRight className="h-4 w-4 text-gray-400" />
-        <span className="text-gray-900">Giỏ hàng</span>
+        <span className="text-gray-900">{t("cart_page.breadcrumb.cart")}</span>
       </nav>
 
       <div className="rounded-2xl bg-white shadow-sm ring-1 ring-gray-100 overflow-hidden">
@@ -166,15 +170,15 @@ export default function CartPage() {
             <div className="mb-4 flex items-center justify-center">
               <img src={EmptyCartImg} alt="Empty Cart" className="h-70 w-70 object-contain" />
             </div>
-            <h2 className="text-xl font-bold text-gray-900">“Hổng” có gì trong giỏ hết</h2>
+            <h2 className="text-xl font-bold text-gray-900">{t("cart_page.empty_state.title")}</h2>
             <p className="mt-2 text-sm text-gray-500">
-              Về trang cửa hàng để chọn mua sản phẩm bạn nhé!!
+              {t("cart_page.empty_state.desc")}
             </p>
             <Link
               to="/products"
               className="mt-6 rounded-xl bg-primary px-8 py-3.5 text-sm font-bold text-white shadow-md transition-all hover:bg-primary-dark hover:shadow-lg active:scale-95 cursor-pointer"
             >
-              Mua Sắm Ngay
+              {t("cart_page.actions.shop_now")}
             </Link>
           </div>
         ) : (
@@ -183,10 +187,10 @@ export default function CartPage() {
             <div className="flex-1 p-4 sm:p-6">
               <div className="mb-6 flex items-center justify-between border-b border-gray-100 pb-4">
                 <h1 className="text-xl font-medium leading-snug text-gray-900 sm:text-xl">
-                  Giỏ hàng của bạn
+                  {t("cart_page.title")}
                 </h1>
                 <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
-                  {items.length} Sản phẩm
+                  {t("cart_page.summary.items_count", { count: items.length })}
                 </span>
               </div>
 
@@ -203,7 +207,7 @@ export default function CartPage() {
                     htmlFor="selectAll"
                     className="text-sm font-medium text-gray-900 cursor-pointer select-none"
                   >
-                    Chọn tất cả
+                    {t("cart_page.actions.select_all")}
                   </label>
                 </div>
                 <button
@@ -212,7 +216,7 @@ export default function CartPage() {
                   }}
                   className="text-sm font-medium text-red-500 hover:text-red-700 cursor-pointer transition-colors"
                 >
-                  Xóa tất cả
+                  {t("cart_page.actions.delete_all")}
                 </button>
               </div>
 
@@ -232,28 +236,28 @@ export default function CartPage() {
 
             {/* ── Right: Order Summary ───────────────────────────────────── */}
             <div className="flex w-full flex-col gap-5 border-t border-gray-100 bg-gray-50/50 p-4 lg:w-96 lg:border-l lg:border-t-0 lg:p-6">
-              <h2 className="text-lg font-bold leading-snug text-gray-900">Tóm tắt đơn hàng</h2>
+              <h2 className="text-lg font-bold leading-snug text-gray-900">{t("cart_page.summary.title")}</h2>
 
               <div className="flex flex-col gap-4 text-sm text-gray-600">
                 <div className="flex justify-between">
-                  <span>Tạm tính ({selectedCount} sản phẩm)</span>
+                  <span>{t("cart_page.summary.subtotal", { count: selectedCount })}</span>
                   <span className="font-semibold text-gray-900">{formatVnd(selectedSubtotal)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Phí vận chuyển</span>
-                  <span className="font-semibold text-gray-900">Chưa tính</span>
+                  <span>{t("cart_page.summary.shipping_fee")}</span>
+                  <span className="font-semibold text-gray-900">{t("cart_page.summary.not_calculated")}</span>
                 </div>
               </div>
 
               <div className="border-t border-dashed border-gray-200 pt-4">
                 <div className="flex justify-between items-end">
-                  <span className="text-base font-bold text-gray-900">Tổng cộng</span>
+                  <span className="text-base font-bold text-gray-900">{t("cart_page.summary.total")}</span>
                   <div className="text-right">
                     <span className="text-2xl font-bold text-primary">
                       {selectedSubtotal.toLocaleString("vi-VN")}
                       <span className="text-lg">đ</span>
                     </span>
-                    <p className="mt-0.5 text-xs text-gray-500">(Đã bao gồm VAT nếu có)</p>
+                    <p className="mt-0.5 text-xs text-gray-500">{t("cart_page.summary.vat_included")}</p>
                   </div>
                 </div>
               </div>
@@ -262,7 +266,7 @@ export default function CartPage() {
                 <button
                   onClick={() => {
                     if (selectedItems.length === 0) {
-                      toast.error("Vui lòng chọn ít nhất một sản phẩm");
+                      toast.error(t("cart_page.toast.select_required"));
                       return;
                     }
                     navigate("/checkout", { state: { selectedItemIds: selectedItems } });
@@ -271,7 +275,7 @@ export default function CartPage() {
                   className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-8 py-3.5 text-base font-bold text-white shadow-md transition-all hover:bg-primary-dark hover:shadow-lg active:scale-95 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:shadow-none cursor-pointer"
                 >
                   <ShoppingCart className="h-5 w-5" />
-                  Tiến hành thanh toán
+                  {t("cart_page.actions.checkout")}
                 </button>
               </div>
             </div>
@@ -284,34 +288,35 @@ export default function CartPage() {
 
       <Modal
         open={isDeleteModalOpen}
-        title="Xóa tất cả sản phẩm trong giỏ hàng"
+        title={t("cart_page.delete_modal.title")}
         onClose={() => setIsDeleteModalOpen(false)}
       >
         <div className="space-y-4">
           <p className="text-sm text-gray-600">
-            Bạn có chắc chắn muốn xóa tất cả sản phẩm trong giỏ hàng?
+            {t("cart_page.delete_modal.desc")}
           </p>
           <div className="flex gap-3 pt-2">
             <button
               onClick={() => setIsDeleteModalOpen(false)}
               className="flex-1 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 cursor-pointer"
             >
-              Hủy
+              {t("cart_page.actions.cancel")}
             </button>
             <button
               onClick={() => {
                 deleteAll();
-                toast.success("Đã xóa giỏ hàng");
+                toast.success(t("cart_page.toast.cart_deleted"));
                 setIsDeleteModalOpen(false);
               }}
               className="flex-1 rounded-lg bg-red-600 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-red-700 cursor-pointer"
             >
-              Xóa tất cả
+              {t("cart_page.actions.delete_all")}
             </button>
           </div>
         </div>
       </Modal>
       <FeatureBar />
+      <CommitmentPage />
     </div>
   );
 }
