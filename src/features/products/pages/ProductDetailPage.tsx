@@ -22,6 +22,8 @@ import {
 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { toast } from "sonner";
+import confetti from "canvas-confetti";
+import { useTranslation } from "react-i18next";
 import { ProductItem } from "../types/product";
 import { useProductDetail, useProductList } from "../hooks/useProducts";
 import ProductCard, { ProductCardSkeleton } from "../components/ProductCard";
@@ -60,6 +62,7 @@ const ELEMENT_COLORS: Record<string, string> = {
 };
 
 export default function ProductDetailPage() {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { addItem } = useCart();
@@ -115,10 +118,23 @@ export default function ProductDetailPage() {
     }
   }, [product]);
 
-  const handleAddToCart = () => {
+  const handleAddToCart = async (e: React.MouseEvent) => {
+    e.preventDefault();
     if (product && selectedItem) {
       addItem({ productItemId: selectedItem.id, quantity });
-      toast.success("Đã thêm vào giỏ hàng");
+      toast.success(t("product_detail.toast.added_to_cart"));
+
+      // Birthday popper animation
+      const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+      const x = (rect.left + rect.width / 2) / window.innerWidth;
+      const y = (rect.top + rect.height / 2) / window.innerHeight;
+
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { x, y },
+        colors: ['#26aa99', '#f39c12', '#e74c3c', '#9b59b6', '#3498db']
+      });
     }
   };
 
@@ -135,7 +151,7 @@ export default function ProductDetailPage() {
           }
         }
       } catch (error) {
-        toast.error("Lỗi khi mua ngay");
+        toast.error(t("product_detail.toast.buy_now_error"));
       }
     }
   };
@@ -155,7 +171,7 @@ export default function ProductDetailPage() {
     try {
       const res = await chatApi.startStoreSupport(shop.id);
       if (!res.data.isSuccess) {
-        toast.error(res.data.message || "Không mở được cuộc trò chuyện với cửa hàng.");
+        toast.error(res.data.message || t("product_detail.toast.chat_error"));
         return;
       }
       const box = res.data.data;
@@ -169,7 +185,7 @@ export default function ProductDetailPage() {
         dispatch(setMessages({ roomId: box.id, messages: [...msgRes.data.data.items].reverse() }));
       }
     } catch {
-      toast.error("Không mở được cuộc trò chuyện với cửa hàng.");
+      toast.error(t("product_detail.toast.chat_error"));
     } finally {
       openingChatRef.current = false;
       setIsOpeningChat(false);
@@ -324,7 +340,7 @@ export default function ProductDetailPage() {
     return () => clearInterval(intervalId);
   }, [product, sortedImages, isLightboxOpen, isHovering]);
 
-  const error = failed ? "Không thể tải thông tin sản phẩm" : null;
+  const error = failed ? t("product_detail.error.load_failed") : null;
 
   // ── Loading skeleton ──────────────────────────────────────────────────────
   if (loading) {
@@ -363,12 +379,12 @@ export default function ProductDetailPage() {
     return (
       <div className="flex min-h-[50vh] flex-col items-center justify-center gap-4 text-center px-4">
         <AlertCircle className="h-12 w-12 text-red-500" />
-        <p className="text-base font-medium text-gray-800">{error || "Không tìm thấy sản phẩm"}</p>
+        <p className="text-base font-medium text-gray-800">{error || t("product_detail.error.not_found")}</p>
         <button
           onClick={() => navigate(-1)}
-          className="rounded-lg bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200"
+          className="rounded-lg bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 cursor-pointer"
         >
-          Quay lại
+          {t("product_detail.actions.back")}
         </button>
       </div>
     );
@@ -389,11 +405,11 @@ export default function ProductDetailPage() {
       {/* Breadcrumb */}
       <nav className="mb-4 flex items-center gap-2 text-sm font-medium text-gray-500">
         <Link to="/" className="hover:text-primary transition-colors">
-          Trang chủ
+          {t("products_page.breadcrumb.home")}
         </Link>
         <ChevronRight className="h-4 w-4 text-gray-400" />
         <Link to="/products" className="hover:text-primary transition-colors">
-          Sản phẩm
+          {t("products_page.breadcrumb.products")}
         </Link>
         {product && product.categories && product.categories.length > 0 && (
           <>
@@ -432,7 +448,7 @@ export default function ProductDetailPage() {
                 <div
                   className={`absolute top-3 right-3 z-10 rounded-md px-2.5 py-1 text-xs font-bold uppercase tracking-wider text-white shadow-sm pointer-events-none ${elementColor}`}
                 >
-                  Mệnh {elementLabel}
+                  {t("product_detail.labels.element")} {elementLabel}
                 </div>
               )}
               {activeImage ? (
@@ -474,7 +490,7 @@ export default function ProductDetailPage() {
                 </>
               ) : (
                 <div className="flex h-full items-center justify-center text-sm text-gray-300">
-                  Không có ảnh
+                  {t("product_detail.labels.no_image")}
                 </div>
               )}
             </div>
@@ -552,7 +568,7 @@ export default function ProductDetailPage() {
               </h1>
               <div className="mt-1.5 flex flex-wrap items-center gap-3 text-sm text-gray-400">
                 <p>
-                  Cửa hàng:{" "}
+                  {t("product_detail.labels.store")}{" "}
                   <button
                     onClick={() =>
                       product.gardenStoreId && navigate(`/stores/${product.gardenStoreId}`)
@@ -566,7 +582,7 @@ export default function ProductDetailPage() {
                   <>
                     <span className="hidden sm:block h-3 w-px bg-gray-300"></span>
                     <p>
-                      Mã sản phẩm:{" "}
+                      {t("product_detail.labels.sku")}{" "}
                       <span className="font-medium text-gray-600">{selectedItem.sku}</span>
                     </p>
                   </>
@@ -586,10 +602,10 @@ export default function ProductDetailPage() {
             {product.items.length > 0 && (
               <div>
                 <div className="mb-2.5 flex items-center gap-3">
-                  <span className="text-sm font-medium text-gray-700">Phân loại</span>
+                  <span className="text-sm font-medium text-gray-700">{t("product_detail.labels.variant")}</span>
                   {selectedItem && (
                     <span className="text-xs text-gray-400">
-                      Kho: {selectedItem.stock} sản phẩm
+                      {t("product_detail.labels.stock", { stock: selectedItem.stock })}
                     </span>
                   )}
                 </div>
@@ -623,7 +639,7 @@ export default function ProductDetailPage() {
             {product.primaryElement && (
               <div className="flex flex-wrap gap-1.5">
                 <span className="rounded-md bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">
-                  Hành: {ELEMENT_LABELS[product.primaryElement] ?? product.primaryElement}
+                  {t("product_detail.labels.element")} {ELEMENT_LABELS[product.primaryElement] ?? product.primaryElement}
                 </span>
                 {(product.secondaryElements ?? []).map((el) => (
                   <span
@@ -649,15 +665,14 @@ export default function ProductDetailPage() {
               <div className="flex flex-wrap gap-1.5">
                 {selectedItem.weightGram > 0 && (
                   <span className="rounded-md  border border-gray-200 px-2.5 py-1 text-xs font-medium text-gray-500">
-                    Nặng: {selectedItem.weightGram}g
+                    {t("product_detail.labels.weight", { weight: selectedItem.weightGram })}
                   </span>
                 )}
                 {(selectedItem.lengthCm > 0 ||
                   selectedItem.widthCm > 0 ||
                   selectedItem.heightCm > 0) && (
                     <span className="rounded-md  border border-gray-200 px-2.5 py-1 text-xs font-medium text-gray-500">
-                      Kích thước: {selectedItem.lengthCm}x{selectedItem.widthCm}x
-                      {selectedItem.heightCm} cm
+                      {t("product_detail.labels.size", { l: selectedItem.lengthCm, w: selectedItem.widthCm, h: selectedItem.heightCm })}
                     </span>
                   )}
               </div>
@@ -710,7 +725,7 @@ export default function ProductDetailPage() {
                   className="flex flex-1 items-center justify-center gap-2 rounded-lg border-1 border-primary bg-primary/5 px-2 sm:px-4 py-0 text-sm font-semibold text-primary transition-all hover:bg-primary/10 active:scale-95 disabled:cursor-not-allowed disabled:border-gray-200 disabled:text-gray-400 disabled:bg-gray-50 cursor-pointer h-10 sm:h-11 w-full"
                 >
                   <ShoppingCart className="h-4 w-4 shrink-0" />
-                  <span className="truncate">{outOfStock ? "Hết hàng" : "Thêm giỏ hàng"}</span>
+                  <span className="truncate">{outOfStock ? t("product_detail.actions.out_of_stock_sm") : t("product_detail.actions.add_to_cart")}</span>
                 </button>
               </div>
 
@@ -719,7 +734,7 @@ export default function ProductDetailPage() {
                 disabled={!selectedItem || outOfStock}
                 className="flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-0 text-lg font-bold text-white shadow-sm transition-all hover:bg-primary-dark active:scale-95 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:shadow-none cursor-pointer h-11 sm:h-12 w-full"
               >
-                {outOfStock ? "HẾT HÀNG" : "MUA NGAY"}
+                {outOfStock ? t("product_detail.actions.out_of_stock") : t("product_detail.actions.buy_now")}
               </button>
             </div>
 
@@ -730,7 +745,7 @@ export default function ProductDetailPage() {
                   <Truck className="h-4 w-4" />
                 </div>
                 <span className="font-semibold">
-                  Free Ship TP.Hồ Chí Minh cho hoá đơn từ 500.000đ
+                  {t("product_detail.labels.free_ship")}
                 </span>
               </div>
             </div>
@@ -762,14 +777,14 @@ export default function ProductDetailPage() {
                   className="flex items-center gap-1.5 rounded-lg border border-primary px-3 py-1.5 text-xs font-semibold text-primary hover:bg-primary/5 transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   <MessageSquare className="h-3.5 w-3.5" />
-                  Chat ngay
+                  {t("product_detail.actions.chat_now")}
                 </button>
                 <button
                   onClick={() => navigate(`/stores/${shop.id}`)}
                   className="flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
                 >
                   <Store className="h-3.5 w-3.5" />
-                  Xem Shop
+                  {t("product_detail.actions.view_shop")}
                 </button>
               </div>
             </div>
@@ -778,28 +793,28 @@ export default function ProductDetailPage() {
           <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-y-4 gap-x-6 text-sm">
             <div className="flex flex-col gap-1.5 text-gray-500">
               <span className="flex items-center gap-1.5">
-                <Phone className="h-4 w-4" /> Hotline
+                <Phone className="h-4 w-4" /> {t("product_detail.labels.hotline")}
               </span>
-              <span className="font-semibold text-primary">{shop.hotline || "Đang cập nhật"}</span>
+              <span className="font-semibold text-primary">{shop.hotline || t("product_detail.labels.updating")}</span>
             </div>
             <div className="flex flex-col gap-1.5 text-gray-500">
               <span className="flex items-center gap-1.5">
-                <Clock className="h-4 w-4" /> Giờ mở cửa
+                <Clock className="h-4 w-4" /> {t("product_detail.labels.opening_hours")}
               </span>
               <span className="font-medium text-gray-800">
-                {shop.openingHours || "Đang cập nhật"}
+                {shop.openingHours || t("product_detail.labels.updating")}
               </span>
             </div>
             <div className="flex flex-col gap-1.5 text-gray-500 sm:col-span-2 lg:col-span-1">
               <span className="flex items-center gap-1.5">
-                <MapPin className="h-4 w-4" /> Địa chỉ
+                <MapPin className="h-4 w-4" /> {t("product_detail.labels.address")}
               </span>
               <span className="font-medium text-gray-800 line-clamp-2">
                 {typeof shop.address === "object" && shop.address
-                  ? (shop.address as any).streetAddress || "Đang cập nhật"
+                  ? (shop.address as any).streetAddress || t("product_detail.labels.updating")
                   : typeof shop.address === "string"
                     ? shop.address
-                    : "Đang cập nhật"}
+                    : t("product_detail.labels.updating")}
               </span>
             </div>
           </div>
@@ -810,7 +825,7 @@ export default function ProductDetailPage() {
       {product.description && (
         <div className="mt-6 rounded-2xl bg-white shadow-sm ring-1 ring-gray-100 p-4 sm:p-6 overflow-hidden">
           <h2 className="text-lg font-bold text-gray-900 mb-4 pb-4 border-b border-gray-100">
-            Mô tả sản phẩm
+            {t("product_detail.labels.description")}
           </h2>
           <div
             className="text-sm leading-relaxed text-gray-600 quill-content"
@@ -825,7 +840,7 @@ export default function ProductDetailPage() {
       {/* Same Store Products Section */}
       {product.gardenStoreId && (
         <SuggestedProductsSection
-          title="Các sản phẩm khác của shop"
+          title={t("product_detail.suggested.from_shop")}
           currentProductId={product.id}
           storeId={product.gardenStoreId}
         />
@@ -833,7 +848,7 @@ export default function ProductDetailPage() {
 
       {/* Suggested Products Section */}
       <SuggestedProductsSection
-        title="Có thể bạn cũng thích"
+        title={t("product_detail.suggested.you_may_like")}
         currentProductId={product.id}
         categoryId={product.categories?.[0]?.id}
         hideViewAll
@@ -863,7 +878,7 @@ export default function ProductDetailPage() {
                   onClick={handleZoomOut}
                   disabled={scale <= 1}
                   className="p-2 rounded-full bg-white/5 hover:bg-white/10 text-white disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
-                  title="Thu nhỏ"
+                  title={t("product_detail.lightbox.zoom_out")}
                 >
                   <ZoomOut size={18} />
                 </button>
@@ -871,7 +886,7 @@ export default function ProductDetailPage() {
                   onClick={handleZoomIn}
                   disabled={scale >= 4}
                   className="p-2 rounded-full bg-white/5 hover:bg-white/10 text-white disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
-                  title="Phóng to"
+                  title={t("product_detail.lightbox.zoom_in")}
                 >
                   <ZoomIn size={18} />
                 </button>
@@ -879,14 +894,14 @@ export default function ProductDetailPage() {
                   onClick={handleResetZoom}
                   disabled={scale === 1 && panOffset.x === 0 && panOffset.y === 0}
                   className="p-2 rounded-full bg-white/5 hover:bg-white/10 text-white disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
-                  title="Đặt lại"
+                  title={t("product_detail.lightbox.reset")}
                 >
                   <RotateCcw size={18} />
                 </button>
                 <button
                   onClick={() => setIsLightboxOpen(false)}
                   className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white cursor-pointer transition-colors"
-                  title="Đóng (Esc)"
+                  title={t("product_detail.lightbox.close")}
                 >
                   <X size={20} />
                 </button>
@@ -977,6 +992,7 @@ export default function ProductDetailPage() {
 }
 
 function ProductFitSection({ productId }: { productId: string }) {
+  const { t } = useTranslation();
   const dispatch = useAppDispatch();
   const isAuthenticated = useAppSelector((s) => !!s.auth.token);
 
@@ -987,16 +1003,16 @@ function ProductFitSection({ productId }: { productId: string }) {
       ) : (
         <div className="flex flex-col items-center gap-3 py-4 text-center">
           <span className="text-sm font-bold text-gray-900">
-            Độ phù hợp phong thủy với không gian của bạn
+            {t("product_detail.feng_shui.title")}
           </span>
           <p className="max-w-md text-sm text-gray-500">
-            Đăng nhập để xem sản phẩm này hợp đến đâu với bản mệnh và Ngũ hành từng phòng của bạn.
+            {t("product_detail.feng_shui.login_prompt")}
           </p>
           <button
             onClick={() => dispatch(setAuthModal("login"))}
             className="cursor-pointer rounded-lg bg-primary px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary/90"
           >
-            Đăng nhập
+            {t("product_detail.actions.login")}
           </button>
         </div>
       )}
@@ -1013,12 +1029,16 @@ interface SuggestedProductsSectionProps {
 }
 
 function SuggestedProductsSection({
-  title = "Sản phẩm tương tự",
+  title,
   currentProductId,
   categoryId,
   storeId,
   hideViewAll,
 }: SuggestedProductsSectionProps) {
+  const { t } = useTranslation();
+  
+  const displayTitle = title || t("product_detail.suggested.similar");
+
   const { products, loading } = useProductList({
     categoryId: categoryId || undefined,
     storeId: storeId || undefined,
@@ -1043,13 +1063,13 @@ function SuggestedProductsSection({
   return (
     <section className="mt-6 w-full overflow-hidden rounded-2xl bg-white p-4 shadow-sm ring-1 ring-gray-100 sm:p-6">
       <div className="mb-4 flex items-center justify-between gap-2 sm:mb-6">
-        <h2 className="text-lg font-bold text-gray-900">{title}</h2>
+        <h2 className="text-lg font-bold text-gray-900">{displayTitle}</h2>
         {viewAllLink && (
           <Link
             to={viewAllLink}
             className="shrink-0 text-sm font-medium text-primary transition-colors hover:text-primary-dark cursor-pointer"
           >
-            Xem tất cả &rsaquo;
+            {t("product_detail.suggested.view_all")}
           </Link>
         )}
       </div>

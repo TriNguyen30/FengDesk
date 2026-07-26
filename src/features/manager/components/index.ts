@@ -9,3 +9,4 @@ export * from "./ProductImagesSection";
 export * from "./ProductRelationsForm";
 export * from "./ProductFengShuiForm";
 export * from "./ProductElementInputsFields";
+export { default as EditProductModal } from "./EditProductModal";

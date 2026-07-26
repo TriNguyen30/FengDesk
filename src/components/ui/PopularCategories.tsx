@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { getCategoriesRequest } from "@/features/category/api/category.api";
 import type { Category } from "@/features/category/types/category";
 import dragonStatueIcon from "@/assets/icon/DragonStatue.png";
@@ -39,6 +40,7 @@ const getIconForCategory = (name: string, index: number) => {
 };
 
 export default function PopularCategories() {
+  const { t } = useTranslation();
   const [categories, setCategories] = useState<Category[]>([]);
 
   useEffect(() => {
@@ -75,7 +77,7 @@ export default function PopularCategories() {
               clipPath: "polygon(0 0, calc(100% - 28px) 0, 100% 100%, 0 100%)",
             }}
           >
-            Danh mục nổi bật
+            {t("popular_categories.title")}
           </h2>
         </div>
 
@@ -83,7 +85,7 @@ export default function PopularCategories() {
           to="/products"
           className="mr-5 shrink-0 cursor-pointer text-xs font-medium text-primary transition-colors hover:text-primary-dark sm:text-sm"
         >
-          Xem tất cả &rsaquo;
+          {t("popular_categories.view_all")}
         </Link>
       </div>
 

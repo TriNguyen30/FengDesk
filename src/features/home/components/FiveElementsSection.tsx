@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import * as THREE from "three";
+import { useTranslation } from "react-i18next";
 
 const elements = [
   {
@@ -808,6 +809,7 @@ export function ElementCanvas({ elementId }: { elementId: string }) {
 // ─── Component ─────────────────────────────────────────────────────────────────
 export default function FiveElementsSection() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [animatingElement, setAnimatingElement] = useState<string | null>(null);
 
   const handleElementClick = (e: React.MouseEvent, elementId: string) => {
@@ -855,66 +857,69 @@ export default function FiveElementsSection() {
               <div className="mb-6 flex flex-col items-center justify-between gap-4 sm:flex-row sm:mb-8">
                 <div>
                   <h2 className="flex items-center gap-2 text-xl font-extrabold text-gray-900 sm:text-2xl">
-                    FengDesk AI - Ngũ Hành Trọng Không Gian
+                    {t("five_elements.title")}
                   </h2>
                   <p className="mt-1 text-sm text-gray-500 sm:text-base">
-                    Khám phá cây phong thủy phù hợp với bản mệnh của bạn để tối ưu sinh khí và tài lộc.
+                    {t("five_elements.desc")}
                   </p>
                 </div>
                 <Link
                   to="/products"
                   className="shrink-0 rounded-full bg-primary/10 px-5 py-2 text-sm font-semibold text-primary transition-colors hover:bg-primary/20"
                 >
-                  Trải nghiệm AI ngay
+                  {t("five_elements.btn")}
                 </Link>
               </div>
 
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-5">
-                {elements.map((element) => (
-                  <a
-                    key={element.id}
-                    href={`/products?element=${element.id}`}
-                    onClick={(e) => handleElementClick(e, element.id)}
-                    className={`group relative flex flex-col items-center justify-center rounded-2xl text-center transition-all duration-300 ${element.color} ${element.hoverColor} hover:ring-2 hover:ring-offset-2 ${element.ringColor} hover:-translate-y-1 hover:shadow-lg cursor-pointer`}
-                  >
-                <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden rounded-2xl">
-                  <div
-                    className="absolute inset-[-100%] opacity-0 group-hover:opacity-100 animate-[spin_3s_linear_infinite] transition-opacity duration-300"
-                    style={{
-                      background: `conic-gradient(from 0deg, transparent 0 180deg, ${element.overlayColor} 360deg)`,
-                    }}
-                  />
-                  <div
-                    className={`absolute inset-[2px] rounded-[14px] ${element.color} ${element.hoverColor.replace("hover:", "group-hover:")} transition-colors duration-300`}
-                  />
-                  <div
-                    className="absolute inset-[2px] opacity-[0.03] mix-blend-multiply transition-opacity duration-300 group-hover:opacity-[0.08] rounded-[14px]"
-                    style={{
-                      backgroundImage: `url(${element.image})`,
-                      backgroundSize: "cover",
-                      backgroundPosition: "center",
-                    }}
-                  />
-                </div>
-
-                <HoverParticles type={element.id as ElementType} />
-
-                <div className="relative z-10 flex w-full flex-col items-center p-6">
-                  <div
-                    className={`mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-white shadow-sm transition-transform duration-300 group-hover:scale-110 ${element.iconColor}`}
-                  >
-                    {element.icon}
+                {elements.map((element) => {
+                  const elKey = element.id.toLowerCase();
+                  return (
+                    <a
+                      key={element.id}
+                      href={`/products?element=${element.id}`}
+                      onClick={(e) => handleElementClick(e, element.id)}
+                      className={`group relative flex flex-col items-center justify-center rounded-2xl text-center transition-all duration-300 ${element.color} ${element.hoverColor} hover:ring-2 hover:ring-offset-2 ${element.ringColor} hover:-translate-y-1 hover:shadow-lg cursor-pointer`}
+                    >
+                  <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden rounded-2xl">
+                    <div
+                      className="absolute inset-[-100%] opacity-0 group-hover:opacity-100 animate-[spin_3s_linear_infinite] transition-opacity duration-300"
+                      style={{
+                        background: `conic-gradient(from 0deg, transparent 0 180deg, ${element.overlayColor} 360deg)`,
+                      }}
+                    />
+                    <div
+                      className={`absolute inset-[2px] rounded-[14px] ${element.color} ${element.hoverColor.replace("hover:", "group-hover:")} transition-colors duration-300`}
+                    />
+                    <div
+                      className="absolute inset-[2px] opacity-[0.03] mix-blend-multiply transition-opacity duration-300 group-hover:opacity-[0.08] rounded-[14px]"
+                      style={{
+                        backgroundImage: `url(${element.image})`,
+                        backgroundSize: "cover",
+                        backgroundPosition: "center",
+                      }}
+                    />
                   </div>
-                  <h3 className={`text-lg font-bold ${element.textColor}`}>{element.name}</h3>
-                  <p className="mt-1 text-xs font-medium text-gray-500 sm:text-sm">{element.traits}</p>
-                  <span
-                    className={`mt-4 rounded-full bg-white/60 px-3 py-1 text-[10px] font-semibold uppercase tracking-wider ${element.textColor} backdrop-blur-sm transition-colors group-hover:bg-white`}
-                  >
-                    Khám phá
-                  </span>
-                </div>
-              </a>
-                ))}
+  
+                  <HoverParticles type={element.id as ElementType} />
+  
+                  <div className="relative z-10 flex w-full flex-col items-center p-6">
+                    <div
+                      className={`mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-white shadow-sm transition-transform duration-300 group-hover:scale-110 ${element.iconColor}`}
+                    >
+                      {element.icon}
+                    </div>
+                    <h3 className={`text-lg font-bold ${element.textColor}`}>{t(`five_elements.${elKey}.name`)}</h3>
+                    <p className="mt-1 text-xs font-medium text-gray-500 sm:text-sm">{t(`five_elements.${elKey}.traits`)}</p>
+                    <span
+                      className={`mt-4 rounded-full bg-white/60 px-3 py-1 text-[10px] font-semibold uppercase tracking-wider ${element.textColor} backdrop-blur-sm transition-colors group-hover:bg-white`}
+                    >
+                      {t("five_elements.explore")}
+                    </span>
+                  </div>
+                </a>
+                  );
+                })}
             </div>
           </div>
         </div>
@@ -954,10 +959,10 @@ export default function FiveElementsSection() {
               {activeElem.largeIcon}
             </motion.div>
             <h1 className="text-5xl font-black tracking-tight drop-shadow-lg sm:text-7xl">
-              {activeElem.name}
+              {t(`five_elements.${activeElem.id.toLowerCase()}.name`)}
             </h1>
             <p className="text-lg font-medium opacity-90 drop-shadow sm:text-2xl">
-              Khám phá năng lượng {activeElem.traits}
+              {t("five_elements.explore_energy")} {t(`five_elements.${activeElem.id.toLowerCase()}.traits`)}
             </p>
             <motion.div
               initial={{ width: 0 }}

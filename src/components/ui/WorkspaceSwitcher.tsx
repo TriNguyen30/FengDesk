@@ -18,6 +18,7 @@ import {
   type WorkspaceDef,
   type WorkspaceKey,
 } from "@/lib/workspace";
+import { useTranslation } from "react-i18next";
 
 const ICONS: Record<WorkspaceKey, LucideIcon> = {
   shop: ShoppingBag,
@@ -33,6 +34,7 @@ export default function WorkspaceSwitcher() {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const { hasSellerWorkspaceAccess } = useHasSellerWorkspaceAccess(!!user);
+  const { t } = useTranslation();
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -72,10 +74,10 @@ export default function WorkspaceSwitcher() {
         type="button"
         onClick={() => setOpen((o) => !o)}
         className="flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-gray-700 transition-colors hover:bg-gray-100 hover:text-primary cursor-pointer"
-        aria-label="Đổi khu làm việc"
+        aria-label={t("workspace.switch")}
       >
         <CurrentIcon size={18} strokeWidth={1.8} />
-        <span className="hidden text-xs font-semibold md:block">{current.label}</span>
+        <span className="hidden text-xs font-semibold md:block">{t(`workspace.roles.${current.key}`)}</span>
         <ChevronDown size={14} className={`transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
 
@@ -83,7 +85,7 @@ export default function WorkspaceSwitcher() {
         <div className="absolute right-0 top-full z-50 mt-1 w-52 overflow-hidden rounded-lg bg-white shadow-[0_4px_20px_-4px_rgba(0,0,0,0.15)] ring-1 ring-black/5">
           <div className="border-b border-gray-100 bg-gray-50/50 px-3 py-2">
             <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">
-              Đổi khu làm việc
+              {t("workspace.switch")}
             </p>
           </div>
           <div className="flex flex-col gap-1 p-1">
@@ -103,7 +105,7 @@ export default function WorkspaceSwitcher() {
                 >
                   <Icon size={16} />
 
-                  <span className="flex-1">{w.label}</span>
+                  <span className="flex-1">{t(`workspace.roles.${w.key}`)}</span>
 
                   {active && <Check size={15} className="text-primary" />}
                 </button>

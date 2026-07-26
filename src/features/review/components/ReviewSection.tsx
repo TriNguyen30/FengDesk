@@ -4,6 +4,7 @@ import { useAppDispatch, useAppSelector } from "@/app/store";
 import { setAuthModal } from "@/features/auth/store/authSlice";
 import { useReviews } from "../hooks/useReviews";
 import type { Review } from "../types/review";
+import { useTranslation } from "react-i18next";
 
 interface ReviewSectionProps {
   productId: string;
@@ -14,6 +15,7 @@ export default function ReviewSection({ productId }: ReviewSectionProps) {
   const currentUser = useAppSelector((state) => state.auth.user);
   const { reviews, loading, submitting, createReview, updateReview, deleteReview } =
     useReviews(productId);
+  const { t } = useTranslation();
 
   // Form states for creating review
   const [newContent, setNewContent] = useState("");
@@ -54,11 +56,11 @@ export default function ReviewSection({ productId }: ReviewSectionProps) {
     setFormError("");
 
     if (newRating === 0) {
-      setFormError("Vui lòng chọn số sao đánh giá.");
+      setFormError(t("review_section.validation.select_rating"));
       return;
     }
     if (newContent.trim().length < 5) {
-      setFormError("Nội dung đánh giá phải có ít nhất 5 ký tự.");
+      setFormError(t("review_section.validation.min_length"));
       return;
     }
 
@@ -74,11 +76,11 @@ export default function ReviewSection({ productId }: ReviewSectionProps) {
     setEditError("");
 
     if (editRating === 0) {
-      setEditError("Vui lòng chọn số sao đánh giá.");
+      setEditError(t("review_section.validation.select_rating"));
       return;
     }
     if (editContent.trim().length < 5) {
-      setEditError("Nội dung đánh giá phải có ít nhất 5 ký tự.");
+      setEditError(t("review_section.validation.min_length"));
       return;
     }
 
@@ -134,17 +136,17 @@ export default function ReviewSection({ productId }: ReviewSectionProps) {
   const getRatingLabel = (rating: number) => {
     switch (rating) {
       case 1:
-        return "Rất tệ";
+        return t("review_section.rating_labels.terrible");
       case 2:
-        return "Không hài lòng";
+        return t("review_section.rating_labels.bad");
       case 3:
-        return "Bình thường";
+        return t("review_section.rating_labels.normal");
       case 4:
-        return "Hài lòng";
+        return t("review_section.rating_labels.good");
       case 5:
-        return "Tuyệt vời";
+        return t("review_section.rating_labels.excellent");
       default:
-        return "Chọn đánh giá";
+        return t("review_section.rating_labels.select");
     }
   };
 
@@ -153,7 +155,7 @@ export default function ReviewSection({ productId }: ReviewSectionProps) {
       {/* Title */}
       <div className="flex items-center gap-2 border-b border-gray-100 pb-4 mb-6">
         <MessageSquare className="h-5 w-5 text-primary" />
-        <h2 className="text-lg font-bold text-gray-900">Đánh giá sản phẩm ({totalReviews})</h2>
+        <h2 className="text-lg font-bold text-gray-900">{t("review_section.title", { count: totalReviews })}</h2>
       </div>
 
       {/* ── Grid: Summary & Stats ─────────────────────────────────────────── */}
@@ -165,7 +167,7 @@ export default function ReviewSection({ productId }: ReviewSectionProps) {
             <span className="text-lg text-gray-500 font-medium">/5</span>
           </div>
           <div className="mt-2">{renderStars(averageRating, "h-5 w-5")}</div>
-          <p className="mt-1 text-xs text-gray-400">{totalReviews} lượt đánh giá</p>
+          <p className="mt-1 text-xs text-gray-400">{t("review_section.reviews_count", { count: totalReviews })}</p>
         </div>
 
         {/* Rating Bars */}
@@ -197,11 +199,11 @@ export default function ReviewSection({ productId }: ReviewSectionProps) {
             onSubmit={handleCreateSubmit}
             className="bg-gray-50/30 border border-gray-100 rounded-xl p-4 sm:p-5"
           >
-            <h3 className="text-sm font-semibold text-gray-800 mb-3">Viết đánh giá của bạn</h3>
+            <h3 className="text-sm font-semibold text-gray-800 mb-3">{t("review_section.write_review.title")}</h3>
 
             {/* Stars selection */}
             <div className="flex flex-wrap items-center gap-3 mb-4">
-              <span className="text-xs text-gray-500 font-medium">Đánh giá của bạn:</span>
+              <span className="text-xs text-gray-500 font-medium">{t("review_section.write_review.rating_label")}</span>
               <div className="flex items-center gap-2">
                 {renderStars(newRating, "h-7 w-7", true, setNewRating, hoverRating, setHoverRating)}
                 {(hoverRating !== null || newRating > 0) && (
@@ -217,7 +219,7 @@ export default function ReviewSection({ productId }: ReviewSectionProps) {
               <textarea
                 value={newContent}
                 onChange={(e) => setNewContent(e.target.value)}
-                placeholder="Chia sẻ cảm nhận của bạn về sản phẩm (chất lượng, đóng gói, giao hàng...)"
+                placeholder={t("review_section.write_review.placeholder")}
                 rows={3}
                 className="w-full rounded-lg border border-gray-200 bg-white p-3 text-sm text-gray-800 placeholder-gray-400 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/20 transition-all"
               />
@@ -239,21 +241,21 @@ export default function ReviewSection({ productId }: ReviewSectionProps) {
                 className="flex items-center gap-2 rounded-lg bg-primary px-5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-dark transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               >
                 {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
-                Gửi đánh giá
+                {t("review_section.write_review.submit")}
               </button>
             </div>
           </form>
         ) : (
           <div className="border border-dashed border-gray-200 rounded-xl p-6 text-center bg-gray-50/20">
             <p className="text-sm text-gray-500 mb-3">
-              Bạn đã mua sản phẩm này? Đăng nhập để chia sẻ cảm nghĩ của bạn.
+              {t("review_section.write_review.login_prompt")}
             </p>
             <button
               type="button"
               onClick={() => dispatch(setAuthModal("login"))}
               className="inline-flex items-center justify-center rounded-lg border border-primary text-primary px-4 py-2 text-xs font-semibold hover:bg-primary/5 transition-all cursor-pointer"
             >
-              Đăng nhập ngay
+              {t("review_section.write_review.login_now")}
             </button>
           </div>
         )}
@@ -264,11 +266,11 @@ export default function ReviewSection({ productId }: ReviewSectionProps) {
         {loading && reviews.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-10 gap-2">
             <Loader2 className="h-8 w-8 text-primary animate-spin" />
-            <p className="text-sm text-gray-400">Đang tải các đánh giá...</p>
+            <p className="text-sm text-gray-400">{t("review_section.list.loading")}</p>
           </div>
         ) : reviews.length === 0 ? (
           <div className="text-center py-10 text-gray-400 text-sm">
-            Chưa có đánh giá nào cho sản phẩm này. Hãy là người đầu tiên đánh giá!
+            {t("review_section.list.empty")}
           </div>
         ) : (
           reviews.map((review) => {
@@ -277,7 +279,7 @@ export default function ReviewSection({ productId }: ReviewSectionProps) {
             const isDeleting = deletingId === review.id;
 
             const reviewerName =
-              review.user?.fullName || review.user?.email || "Người dùng ẩn danh";
+              review.user?.fullName || review.user?.email || t("review_section.list.anonymous");
 
             return (
               <div
@@ -301,7 +303,7 @@ export default function ReviewSection({ productId }: ReviewSectionProps) {
                           </span>
                           {isOwnReview && (
                             <span className="text-[10px] font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
-                              Bạn
+                              {t("review_section.list.you")}
                             </span>
                           )}
                         </div>
@@ -329,13 +331,13 @@ export default function ReviewSection({ productId }: ReviewSectionProps) {
                             onClick={() => startEditing(review)}
                             className="flex items-center gap-1.5 font-medium text-gray-500 hover:text-primary transition-colors cursor-pointer"
                           >
-                            <Edit2 size={12} /> Sửa
+                            <Edit2 size={12} /> {t("review_section.actions.edit")}
                           </button>
                           <button
                             onClick={() => setDeletingId(review.id)}
                             className="flex items-center gap-1.5 font-medium text-gray-500 hover:text-red-500 transition-colors cursor-pointer"
                           >
-                            <Trash2 size={12} /> Xóa
+                            <Trash2 size={12} /> {t("review_section.actions.delete")}
                           </button>
                         </div>
                       )}
@@ -344,20 +346,20 @@ export default function ReviewSection({ productId }: ReviewSectionProps) {
                       {isOwnReview && isDeleting && (
                         <div className="mt-3 flex items-center gap-3 text-xs bg-red-50/50 p-2.5 rounded-lg border border-red-100 max-w-sm">
                           <span className="font-medium text-red-700">
-                            Xác nhận xóa đánh giá này?
+                            {t("review_section.delete_confirm.message")}
                           </span>
                           <button
                             onClick={() => handleDelete(review.id)}
                             disabled={submitting}
                             className="font-bold text-red-600 hover:text-red-800 transition-colors disabled:opacity-50 cursor-pointer"
                           >
-                            Xóa
+                            {t("review_section.actions.delete")}
                           </button>
                           <button
                             onClick={() => setDeletingId(null)}
                             className="font-bold text-gray-500 hover:text-gray-700 transition-colors cursor-pointer"
                           >
-                            Hủy
+                            {t("review_section.actions.cancel")}
                           </button>
                         </div>
                       )}
@@ -376,7 +378,7 @@ export default function ReviewSection({ productId }: ReviewSectionProps) {
                     <div className="flex-1 bg-primary/5 border border-primary/10 rounded-xl p-4">
                       <div className="flex items-center justify-between mb-3">
                         <span className="text-xs font-semibold text-primary">
-                          Chỉnh sửa đánh giá của bạn
+                          {t("review_section.edit_review.title")}
                         </span>
                         <button
                           onClick={() => setEditingId(null)}
@@ -388,7 +390,7 @@ export default function ReviewSection({ productId }: ReviewSectionProps) {
 
                       {/* Edit Stars */}
                       <div className="flex items-center gap-3 mb-3">
-                        <span className="text-xs text-gray-500 font-medium">Đánh giá:</span>
+                        <span className="text-xs text-gray-500 font-medium">{t("review_section.edit_review.rating_label")}</span>
                         <div className="flex items-center gap-2">
                           {renderStars(
                             editRating,
@@ -426,7 +428,7 @@ export default function ReviewSection({ productId }: ReviewSectionProps) {
                           onClick={() => setEditingId(null)}
                           className="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-3 py-1.5 font-semibold text-gray-600 bg-white hover:bg-gray-50 cursor-pointer transition-colors"
                         >
-                          <X size={12} /> Hủy
+                          <X size={12} /> {t("review_section.actions.cancel")}
                         </button>
                         <button
                           type="button"
@@ -439,7 +441,7 @@ export default function ReviewSection({ productId }: ReviewSectionProps) {
                           ) : (
                             <Check size={12} />
                           )}
-                          Lưu thay đổi
+                          {t("review_section.actions.save")}
                         </button>
                       </div>
                     </div>

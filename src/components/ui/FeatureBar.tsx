@@ -1,29 +1,32 @@
 import { Truck, Sparkles, ShieldCheck, Clock } from "lucide-react";
-
-const features = [
-  {
-    icon: <Sparkles size={36} strokeWidth={1.2} className="text-primary" />,
-    title: "AI Tư vấn phong thủy",
-    sub: "Đề xuất theo bản mệnh",
-  },
-  {
-    icon: <Truck size={36} strokeWidth={1.2} className="text-primary" />,
-    title: "Miễn phí vận chuyển",
-    sub: "Cho đơn từ 500.000đ",
-  },
-  {
-    icon: <ShieldCheck size={36} strokeWidth={1.2} className="text-primary" />,
-    title: "Cây khỏe mạnh",
-    sub: "Bảo hành 7 ngày",
-  },
-  {
-    icon: <Clock size={36} strokeWidth={1.2} className="text-primary" />,
-    title: "Hỗ trợ 24/7",
-    sub: "Chuyên gia tư vấn",
-  },
-];
+import { useTranslation } from "react-i18next";
 
 export default function FeatureBar() {
+  const { t } = useTranslation();
+
+  const features = [
+    {
+      icon: <Sparkles size={36} strokeWidth={1.2} className="text-primary" />,
+      title: t("feature_bar.feature1.title"),
+      sub: t("feature_bar.feature1.sub"),
+    },
+    {
+      icon: <Truck size={36} strokeWidth={1.2} className="text-primary" />,
+      title: t("feature_bar.feature2.title"),
+      sub: t("feature_bar.feature2.sub"),
+    },
+    {
+      icon: <ShieldCheck size={36} strokeWidth={1.2} className="text-primary" />,
+      title: t("feature_bar.feature3.title"),
+      sub: t("feature_bar.feature3.sub"),
+    },
+    {
+      icon: <Clock size={36} strokeWidth={1.2} className="text-primary" />,
+      title: t("feature_bar.feature4.title"),
+      sub: t("feature_bar.feature4.sub"),
+    },
+  ];
+
   return (
     <>
       {/* Desktop Version - Skewed Parallelogram layout */}

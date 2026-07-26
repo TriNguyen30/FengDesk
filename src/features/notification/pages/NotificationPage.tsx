@@ -19,8 +19,10 @@ import {
 } from "../hooks/useNotifications";
 import type { NotificationItem } from "../types/notification";
 import { formatRelativeTime } from "@/utils/date";
+import { useTranslation } from "react-i18next";
 
 export default function NotificationPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [page, setPage] = useState(1);
   const pageSize = 10;
@@ -46,9 +48,9 @@ export default function NotificationPage() {
   const handleMarkAllRead = async () => {
     try {
       await markAllAsReadMutation.mutateAsync();
-      toast.success("Đã đánh dấu tất cả thông báo là đã đọc");
+      toast.success(t("notification.toast.mark_all_success"));
     } catch (error) {
-      toast.error("Không thể cập nhật trạng thái thông báo");
+      toast.error(t("notification.toast.mark_all_error"));
     }
   };
 
@@ -96,10 +98,9 @@ export default function NotificationPage() {
       {/* Header */}
       <div className="flex items-center justify-between border-b border-gray-100 pb-4 mb-4">
         <div>
-          <h1 className="text-xl font-bold text-gray-900">Thông báo của bạn</h1>
+          <h1 className="text-xl font-bold text-gray-900">{t("notification.title")}</h1>
           <p className="mt-1 text-sm text-gray-500">
-            Bạn có <span className="font-semibold text-primary">{unreadCount}</span> thông báo chưa
-            đọc
+            {t("notification.unread_count_1")}<span className="font-semibold text-primary">{unreadCount}</span>{t("notification.unread_count_2")}
           </p>
         </div>
         {unreadCount > 0 && (
@@ -109,7 +110,7 @@ export default function NotificationPage() {
             className="flex items-center gap-1.5 rounded-lg border border-primary px-4 py-2 text-sm font-semibold text-primary hover:bg-primary/5 transition-colors cursor-pointer"
           >
             <Check size={16} />
-            Đánh dấu tất cả đã đọc
+            {t("notification.mark_all_read")}
           </button>
         )}
       </div>
@@ -119,16 +120,16 @@ export default function NotificationPage() {
         {status === "loading" && notifications.length === 0 ? (
           <div className="flex flex-1 flex-col items-center justify-center text-gray-400">
             <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-            <span className="mt-3 text-sm">Đang tải thông báo...</span>
+            <span className="mt-3 text-sm">{t("notification.loading")}</span>
           </div>
         ) : notifications.length === 0 ? (
           <div className="flex flex-1 flex-col items-center justify-center gap-3 text-gray-500">
             <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gray-50 text-gray-400">
               <Bell size={32} strokeWidth={1.5} />
             </div>
-            <p className="text-base font-medium text-gray-700">Chưa có thông báo nào</p>
+            <p className="text-base font-medium text-gray-700">{t("notification.empty.title")}</p>
             <p className="text-sm text-gray-400 max-w-sm text-center">
-              Các thông báo về đơn hàng và hệ thống sẽ xuất hiện ở đây.
+              {t("notification.empty.desc")}
             </p>
           </div>
         ) : (
@@ -138,19 +139,17 @@ export default function NotificationPage() {
                 key={item.id}
                 type="button"
                 onClick={() => handleNotificationClick(item)}
-                className={`flex w-full items-start gap-4 rounded-xl border p-4 text-left transition-all hover:shadow-md cursor-pointer outline-none focus:ring-2 focus:ring-primary/20 ${
-                  !item.isRead
+                className={`flex w-full items-start gap-4 rounded-xl border p-4 text-left transition-all hover:shadow-md cursor-pointer outline-none focus:ring-2 focus:ring-primary/20 ${!item.isRead
                     ? "border-primary/20 bg-primary/[0.02]"
                     : "border-gray-100 bg-white hover:border-gray-200"
-                }`}
+                  }`}
               >
                 {getNotificationIcon(item.type)}
                 <div className="min-w-0 flex-1">
                   <div className="flex items-start justify-between gap-2">
                     <p
-                      className={`text-base leading-snug text-gray-900 ${
-                        !item.isRead ? "font-bold" : "font-semibold"
-                      }`}
+                      className={`text-base leading-snug text-gray-900 ${!item.isRead ? "font-bold" : "font-semibold"
+                        }`}
                     >
                       {item.title}
                     </p>
@@ -178,7 +177,7 @@ export default function NotificationPage() {
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={page === 1}
             className="flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            title="Trang trước"
+            title={t("notification.pagination.prev")}
           >
             <ChevronLeft size={18} />
           </button>
@@ -188,9 +187,8 @@ export default function NotificationPage() {
               <button
                 key={pageNum}
                 onClick={() => setPage(pageNum)}
-                className={`flex h-9 min-w-[36px] items-center justify-center rounded-lg px-2 text-sm font-semibold transition-colors ${
-                  page === pageNum ? "bg-primary text-white" : "text-gray-600 hover:bg-gray-100"
-                }`}
+                className={`flex h-9 min-w-[36px] items-center justify-center rounded-lg px-2 text-sm font-semibold transition-colors ${page === pageNum ? "bg-primary text-white" : "text-gray-600 hover:bg-gray-100"
+                  }`}
               >
                 {pageNum}
               </button>
@@ -201,7 +199,7 @@ export default function NotificationPage() {
             onClick={() => setPage((p) => Math.min(pagination.totalPages, p + 1))}
             disabled={page === pagination.totalPages}
             className="flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            title="Trang sau"
+            title={t("notification.pagination.next")}
           >
             <ChevronRight size={18} />
           </button>
