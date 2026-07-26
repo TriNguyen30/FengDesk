@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import {
   ShoppingCart,
@@ -64,12 +64,16 @@ export default function ProductDetailPage() {
   const navigate = useNavigate();
   const { addItem } = useCart();
   const { product, loading, failed } = useProductDetail(id);
+  const sortedImages = useMemo(() => {
+    return [...(product?.images || [])].sort((a, b) => a.sortOrder - b.sortOrder);
+  }, [product?.images]);
   const dispatch = useAppDispatch();
   const isAuthenticated = useAppSelector((s) => !!s.auth.token);
 
   // Guard chống double-click: ref chặn đồng bộ (2 click cùng tick), state để disable nút cho UX.
   const openingChatRef = useRef(false);
   const [isOpeningChat, setIsOpeningChat] = useState(false);
+  const thumbRef = useRef<HTMLDivElement>(null);
 
   const [selectedItem, setSelectedItem] = useState<ProductItem | null>(null);
   const [activeImage, setActiveImage] = useState<string>("");
@@ -96,7 +100,7 @@ export default function ProductDetailPage() {
     if (!product) return;
 
     setSelectedItem(product.items[0] ?? null);
-    setActiveImage(product.images[0]?.url ?? "");
+    setActiveImage(sortedImages[0]?.url ?? "");
     setQuantity(1);
     setShop(null);
 
@@ -180,8 +184,8 @@ export default function ProductDetailPage() {
   };
 
   const openLightbox = () => {
-    if (!product || product.images.length === 0) return;
-    const idx = product.images.findIndex((img) => img.url === activeImage);
+    if (!product || sortedImages.length === 0) return;
+    const idx = sortedImages.findIndex((img) => img.url === activeImage);
     setLightboxIndex(idx >= 0 ? idx : 0);
     setScale(1);
     setPanOffset({ x: 0, y: 0 });
@@ -189,22 +193,45 @@ export default function ProductDetailPage() {
   };
 
   const handleNextImage = useCallback(() => {
-    if (!product || product.images.length === 0) return;
-    const nextIdx = (lightboxIndex + 1) % product.images.length;
+    if (!product || sortedImages.length === 0) return;
+    const nextIdx = (lightboxIndex + 1) % sortedImages.length;
     setLightboxIndex(nextIdx);
-    setActiveImage(product.images[nextIdx].url);
+    setActiveImage(sortedImages[nextIdx].url);
     setScale(1);
     setPanOffset({ x: 0, y: 0 });
-  }, [lightboxIndex, product, setActiveImage]);
+  }, [lightboxIndex, product, sortedImages, setActiveImage]);
 
   const handlePrevImage = useCallback(() => {
-    if (!product || product.images.length === 0) return;
-    const prevIdx = (lightboxIndex - 1 + product.images.length) % product.images.length;
+    if (!product || sortedImages.length === 0) return;
+    const prevIdx = (lightboxIndex - 1 + sortedImages.length) % sortedImages.length;
     setLightboxIndex(prevIdx);
-    setActiveImage(product.images[prevIdx].url);
+    setActiveImage(sortedImages[prevIdx].url);
     setScale(1);
     setPanOffset({ x: 0, y: 0 });
-  }, [lightboxIndex, product, setActiveImage]);
+  }, [lightboxIndex, product, sortedImages, setActiveImage]);
+
+  const handleMainNextImage = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (sortedImages.length <= 1) return;
+    const currentIndex = sortedImages.findIndex((img) => img.url === activeImage);
+    const nextIndex = (currentIndex + 1) % sortedImages.length;
+    setActiveImage(sortedImages[nextIndex].url);
+  };
+
+  const handleMainPrevImage = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (sortedImages.length <= 1) return;
+    const currentIndex = sortedImages.findIndex((img) => img.url === activeImage);
+    const prevIndex = (currentIndex - 1 + sortedImages.length) % sortedImages.length;
+    setActiveImage(sortedImages[prevIndex].url);
+  };
+
+  const scrollThumbnails = (direction: 'left' | 'right') => {
+    if (thumbRef.current) {
+      const scrollAmount = thumbRef.current.clientWidth / 2; // Scroll half a page for smoother UX
+      thumbRef.current.scrollBy({ left: direction === 'left' ? -scrollAmount : scrollAmount, behavior: 'smooth' });
+    }
+  };
 
   const handleZoomIn = () => {
     setScale((s) => Math.min(s + 0.5, 4));
@@ -284,18 +311,18 @@ export default function ProductDetailPage() {
 
   // Auto swipe main image every 5 seconds
   useEffect(() => {
-    if (!product || product.images.length <= 1 || isLightboxOpen || isHovering) return;
+    if (!product || sortedImages.length <= 1 || isLightboxOpen || isHovering) return;
 
     const intervalId = setInterval(() => {
       setActiveImage((currentImage) => {
-        const currentIndex = product.images.findIndex((img) => img.url === currentImage);
-        const nextIndex = currentIndex === -1 ? 0 : (currentIndex + 1) % product.images.length;
-        return product.images[nextIndex].url;
+        const currentIndex = sortedImages.findIndex((img) => img.url === currentImage);
+        const nextIndex = currentIndex === -1 ? 0 : (currentIndex + 1) % sortedImages.length;
+        return sortedImages[nextIndex].url;
       });
     }, 5000);
 
     return () => clearInterval(intervalId);
-  }, [product, isLightboxOpen, isHovering]);
+  }, [product, sortedImages, isLightboxOpen, isHovering]);
 
   const error = failed ? "Không thể tải thông tin sản phẩm" : null;
 
@@ -358,7 +385,7 @@ export default function ProductDetailPage() {
     : "";
 
   return (
-    <div className="mx-auto max-w-6xl px-3 py-4 sm:px-6 sm:py-6">
+    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       {/* Breadcrumb */}
       <nav className="mb-4 flex items-center gap-2 text-sm font-medium text-gray-500">
         <Link to="/" className="hover:text-primary transition-colors">
@@ -417,16 +444,29 @@ export default function ProductDetailPage() {
                     transition={{ duration: 0.4, ease: "easeOut" }}
                     src={activeImage}
                     alt={product.name}
-                    style={
-                      isHovering
-                        ? {
-                          transformOrigin: `${zoomPos.x}% ${zoomPos.y}%`,
-                          transform: "scale(2.2)",
-                        }
-                        : undefined
-                    }
-                    className="h-full w-full object-contain transition-transform duration-100 ease-out"
+                    style={{
+                      transformOrigin: `${zoomPos.x}% ${zoomPos.y}%`,
+                      transform: isHovering ? "scale(2.2)" : "scale(1)",
+                    }}
+                    className="h-full w-full object-contain transition-transform duration-300 ease-out"
                   />
+                  {/* Slider Controls */}
+                  {sortedImages.length > 1 && (
+                    <>
+                      <button
+                        onClick={handleMainPrevImage}
+                        className="absolute left-3 top-1/2 -translate-y-1/2 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-gray-800 shadow-md backdrop-blur-sm opacity-0 transition-all duration-200 group-hover:opacity-100 hover:bg-white cursor-pointer"
+                      >
+                        <ChevronLeft size={20} />
+                      </button>
+                      <button
+                        onClick={handleMainNextImage}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-gray-800 shadow-md backdrop-blur-sm opacity-0 transition-all duration-200 group-hover:opacity-100 hover:bg-white cursor-pointer"
+                      >
+                        <ChevronRight size={20} />
+                      </button>
+                    </>
+                  )}
                   {/* Zoom hint overlay */}
                   <div className="absolute right-3 bottom-3 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-gray-600 shadow-md backdrop-blur-sm opacity-0 transition-all duration-200 group-hover:opacity-100 scale-95 group-hover:scale-100 pointer-events-none">
                     <Maximize2 size={16} />
@@ -440,20 +480,51 @@ export default function ProductDetailPage() {
             </div>
 
             {/* Thumbnails */}
-            {product.images.length > 1 && (
-              <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
-                {product.images.map((img) => (
+            {sortedImages.length > 1 && (
+              <div className="relative mt-3 group/thumb">
+                {sortedImages.length > 5 && (
                   <button
-                    key={img.id}
-                    onClick={() => setActiveImage(img.url)}
-                    className={`h-16 w-16 shrink-0 overflow-hidden rounded-lg border-2 bg-gray-50 transition-all cursor-pointer ${activeImage === img.url
-                      ? "border-primary"
-                      : "border-transparent hover:border-gray-300"
-                      }`}
+                    onClick={() => scrollThumbnails('left')}
+                    className="absolute left-1 top-1/2 -translate-y-1/2 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-white/90 text-gray-800 shadow-md backdrop-blur-sm opacity-0 transition-all duration-200 group-hover/thumb:opacity-100 hover:bg-white cursor-pointer"
                   >
-                    <img src={img.url} alt="thumb" className="h-full w-full object-contain" />
+                    <ChevronLeft size={16} />
                   </button>
-                ))}
+                )}
+
+                <style>{`
+                  .hide-scrollbar-force::-webkit-scrollbar {
+                    display: none !important;
+                    width: 0 !important;
+                    height: 0 !important;
+                  }
+                `}</style>
+                <div
+                  ref={thumbRef}
+                  className="flex gap-2 sm:gap-3 overflow-x-auto snap-x snap-mandatory pb-1 hide-scrollbar-force"
+                  style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                >
+                  {sortedImages.map((img) => (
+                    <button
+                      key={img.id}
+                      onClick={() => setActiveImage(img.url)}
+                      className={`group aspect-square w-[calc(20%-0.4rem)] sm:w-[calc(20%-0.6rem)] shrink-0 snap-start overflow-hidden rounded-lg border-2 bg-gray-50 transition-all cursor-pointer ${activeImage === img.url
+                        ? "border-primary"
+                        : "border-transparent hover:border-gray-300"
+                        }`}
+                    >
+                      <img src={img.url} alt="thumb" className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110" />
+                    </button>
+                  ))}
+                </div>
+
+                {sortedImages.length > 5 && (
+                  <button
+                    onClick={() => scrollThumbnails('right')}
+                    className="absolute right-1 top-1/2 -translate-y-1/2 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-white/90 text-gray-800 shadow-md backdrop-blur-sm opacity-0 transition-all duration-200 group-hover/thumb:opacity-100 hover:bg-white cursor-pointer"
+                  >
+                    <ChevronRight size={16} />
+                  </button>
+                )}
               </div>
             )}
           </div>
@@ -594,9 +665,9 @@ export default function ProductDetailPage() {
 
             {/* Add to cart */}
             <div className="mt-auto pt-2 flex flex-col gap-3">
-              <div className="flex flex-col sm:flex-row gap-3">
+              <div className="flex flex-row gap-3">
                 {/* Quantity Selector */}
-                <div className="flex items-center rounded-lg border border-gray-200 bg-white p-1 h-10 w-28 shrink-0 shadow-sm">
+                <div className="flex items-center rounded-lg border border-gray-200 bg-white p-1 h-10 sm:h-11 w-24 sm:w-28 shrink-0 shadow-sm">
                   <button
                     onClick={() => setQuantity((q) => Math.max(1, q - 1))}
                     disabled={quantity <= 1 || outOfStock}
@@ -618,7 +689,7 @@ export default function ProductDetailPage() {
                       if (selectedItem && val > selectedItem.stock) val = selectedItem.stock;
                       setQuantity(val);
                     }}
-                    className="flex-1 w-10 text-center text-sm font-semibold tabular-nums text-gray-900 focus:outline-none bg-transparent"
+                    className="flex-1 w-8 sm:w-10 text-center text-sm font-semibold tabular-nums text-gray-900 focus:outline-none bg-transparent"
                   />
                   <button
                     onClick={() =>
@@ -636,25 +707,25 @@ export default function ProductDetailPage() {
                 <button
                   onClick={handleAddToCart}
                   disabled={!selectedItem || outOfStock}
-                  className="flex flex-1 items-center justify-center gap-2 rounded-lg border-1 border-primary bg-primary/5 px-4 py-0 text-sm font-semibold text-primary transition-all hover:bg-primary/10 active:scale-95 disabled:cursor-not-allowed disabled:border-gray-200 disabled:text-gray-400 disabled:bg-gray-50 cursor-pointer h-10 w-full"
+                  className="flex flex-1 items-center justify-center gap-2 rounded-lg border-1 border-primary bg-primary/5 px-2 sm:px-4 py-0 text-sm font-semibold text-primary transition-all hover:bg-primary/10 active:scale-95 disabled:cursor-not-allowed disabled:border-gray-200 disabled:text-gray-400 disabled:bg-gray-50 cursor-pointer h-10 sm:h-11 w-full"
                 >
-                  <ShoppingCart className="h-4 w-4" />
-                  {outOfStock ? "Hết hàng" : "Thêm giỏ hàng"}
+                  <ShoppingCart className="h-4 w-4 shrink-0" />
+                  <span className="truncate">{outOfStock ? "Hết hàng" : "Thêm giỏ hàng"}</span>
                 </button>
               </div>
 
               <button
                 onClick={handleBuyNow}
                 disabled={!selectedItem || outOfStock}
-                className="flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-0 text-sm font-semibold text-white shadow-sm transition-all hover:bg-primary-dark active:scale-95 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:shadow-none cursor-pointer h-10 w-full"
+                className="flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-0 text-lg font-bold text-white shadow-sm transition-all hover:bg-primary-dark active:scale-95 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:shadow-none cursor-pointer h-11 sm:h-12 w-full"
               >
-                {outOfStock ? "Hết hàng" : "Mua ngay"}
+                {outOfStock ? "HẾT HÀNG" : "MUA NGAY"}
               </button>
             </div>
 
             {/* Promotional Banners */}
             <div className="space-y-2.5">
-              <div className="flex items-center gap-3 rounded-xl border border-green-100 p-3 text-sm text-green-700 shadow-sm transition-colors hover:bg-green-100/50">
+              <div className="flex items-center gap-3 text-sm">
                 <div className="flex h-8 w-8 items-center justify-center rounded-full bg-green-100 text-green-600 shrink-0 shadow-sm">
                   <Truck className="h-4 w-4" />
                 </div>
@@ -781,9 +852,9 @@ export default function ProductDetailPage() {
                 <span className="text-sm font-semibold text-gray-300 truncate max-w-[200px] sm:max-w-md">
                   {product.name}
                 </span>
-                {product.images.length > 0 && (
+                {sortedImages.length > 0 && (
                   <span className="text-xs text-gray-400 mt-0.5">
-                    {lightboxIndex + 1} / {product.images.length}
+                    {lightboxIndex + 1} / {sortedImages.length}
                   </span>
                 )}
               </div>
@@ -825,7 +896,7 @@ export default function ProductDetailPage() {
             {/* Main view area */}
             <div className="relative flex-1 w-full flex items-center justify-center overflow-hidden my-4">
               {/* Prev Button */}
-              {product.images.length > 1 && (
+              {sortedImages.length > 1 && (
                 <button
                   onClick={handlePrevImage}
                   className="absolute left-2 sm:left-4 z-10 p-3 rounded-full bg-black/40 hover:bg-black/60 text-white cursor-pointer transition-colors"
@@ -845,9 +916,9 @@ export default function ProductDetailPage() {
                 onTouchMove={handleTouchMove}
                 onTouchEnd={handleMouseUp}
               >
-                {product.images[lightboxIndex] && (
+                {sortedImages[lightboxIndex] && (
                   <img
-                    src={product.images[lightboxIndex].url}
+                    src={sortedImages[lightboxIndex].url}
                     alt="Product preview"
                     onDoubleClick={handleDoubleClick}
                     draggable={false}
@@ -862,7 +933,7 @@ export default function ProductDetailPage() {
               </div>
 
               {/* Next Button */}
-              {product.images.length > 1 && (
+              {sortedImages.length > 1 && (
                 <button
                   onClick={handleNextImage}
                   className="absolute right-2 sm:right-4 z-10 p-3 rounded-full bg-black/40 hover:bg-black/60 text-white cursor-pointer transition-colors"
@@ -873,9 +944,9 @@ export default function ProductDetailPage() {
             </div>
 
             {/* Bottom thumbnail bar */}
-            {product.images.length > 1 && (
+            {sortedImages.length > 1 && (
               <div className="w-full max-w-xl px-4 py-2 overflow-x-auto flex justify-center gap-2 select-none z-10 pb-4">
-                {product.images.map((img, idx) => (
+                {sortedImages.map((img, idx) => (
                   <button
                     key={img.id}
                     onClick={() => {

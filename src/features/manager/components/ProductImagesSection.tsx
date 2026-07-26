@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Upload, RefreshCw, Trash2, Image as ImageIcon } from "lucide-react";
 import { productApi } from "@/features/products/api/product.api";
 import { toast } from "sonner";
@@ -18,6 +18,15 @@ export function ProductImagesSection({
   const [newImageSortOrder, setNewImageSortOrder] = useState(1);
   const [addingImage, setAddingImage] = useState(false);
   const [deletingImageId, setDeletingImageId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (images && images.length > 0) {
+      const maxOrder = Math.max(...images.map((img) => img.sortOrder));
+      setNewImageSortOrder(maxOrder + 1);
+    } else {
+      setNewImageSortOrder(1);
+    }
+  }, [images]);
 
   // Add Product Image (Direct File Upload)
   const handleAddImageFile = async (file: File) => {
@@ -111,11 +120,10 @@ export function ProductImagesSection({
                 await handleDropImage(e.dataTransfer.files);
               }
             }}
-            className={`border-2 border-dashed border-gray-200 rounded-2xl p-6 text-center cursor-pointer transition-all duration-200 flex flex-col items-center justify-center gap-2 group ${
-              addingImage
+            className={`border-2 border-dashed border-gray-200 rounded-2xl p-6 text-center cursor-pointer transition-all duration-200 flex flex-col items-center justify-center gap-2 group ${addingImage
                 ? "opacity-60 cursor-not-allowed bg-gray-50"
                 : "hover:border-primary hover:bg-primary/5"
-            }`}
+              }`}
           >
             <input
               id="edit-file-upload-input"
@@ -158,7 +166,7 @@ export function ProductImagesSection({
           </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-            {images?.map((img) => (
+            {[...(images || [])].sort((a, b) => a.sortOrder - b.sortOrder).map((img) => (
               <div
                 key={img.id}
                 className="relative group rounded-xl overflow-hidden bg-gray-50 ring-1 ring-gray-100 flex flex-col items-center justify-center p-2"
