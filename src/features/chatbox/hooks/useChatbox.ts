@@ -69,10 +69,13 @@ export function useChatbox() {
   const refreshChatboxes = useCallback(async () => {
     const res = await chatApi.getMyChatboxes();
     if (res.data.isSuccess) {
-      // Widget nhỏ CHỈ hiện phòng nhóm/hỗ trợ (người ↔ người) đang HOẠT ĐỘNG. Loại:
-      //  - phòng AI riêng (isGroup=false) → thuộc khung chat lớn (drawer);
+      // Widget nhỏ hiện MỌI phòng người ↔ người đang HOẠT ĐỘNG: nhóm, hỗ trợ VÀ 1-1 trực tiếp
+      // (kể cả phòng do staff/manager chủ động tạo → isGroup=false). Loại:
+      //  - phòng AI riêng (có participant AiBot) → thuộc khung chat lớn (drawer);
       //  - phòng đã đóng (isClosed) → chỉ hiển thị bên staff, KHÔNG hiện cho customer.
-      const widgetRooms = res.data.data.items.filter((c) => c.isGroup && !c.isClosed);
+      const widgetRooms = res.data.data.items.filter(
+        (c) => !c.isClosed && !c.participants.some((p) => p.participantType === "AiBot"),
+      );
       dispatch(setChatboxes(widgetRooms));
       return widgetRooms;
     }

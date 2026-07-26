@@ -25,15 +25,20 @@ export const SURPLUS_COLOR = "#ef4444";
 export const SURPLUS_BG = "#fdecea";
 export const GAP_THRESHOLD = 0.05;
 
+// Ngưỡng riêng cho chip ElementTags — khớp ranh giới "Đạt chuẩn" của radar (xem
+// hoverStyle trong ElementRadarChart.tsx: distance <= 0.1 = Tối ưu/Đạt chuẩn).
+// Nhờ vậy khi hành rơi vào 2 vùng này, chip không còn gắn nhãn "cần bù"/"thừa".
+export const TAG_GAP_THRESHOLD = 0.1;
+
 // Tông màu chip trạng thái "cần bù"/"thừa" (đối lập với "ổn" — chip viền trơn).
 export const ATTENTION_BG = "#f6ead8";
 export const ATTENTION_TEXT = "#8a6a3f";
 
 export type GapStatus = "deficit" | "surplus" | "balanced";
 
-export function gapStatus(gap: number): GapStatus {
-  if (gap > GAP_THRESHOLD) return "deficit";
-  if (gap < -GAP_THRESHOLD) return "surplus";
+export function gapStatus(gap: number, threshold: number = GAP_THRESHOLD): GapStatus {
+  if (gap > threshold) return "deficit";
+  if (gap < -threshold) return "surplus";
   return "balanced";
 }
 
