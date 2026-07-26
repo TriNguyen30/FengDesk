@@ -16,54 +16,55 @@ import {
 import { toast } from "sonner";
 import { returnApi } from "@/features/return/api/return.api";
 import type { ReturnItem, ReturnDetail } from "@/features/return/types/return.d.ts";
+import { useTranslation } from "react-i18next";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const PAGE_SIZE = 10;
 
-const RETURN_TYPE_LABEL: Record<string, string> = {
-  Refund: "Hoàn tiền",
-  Exchange: "Đổi hàng",
-};
+const getReturnTypeLabel = (t: any): Record<string, string> => ({
+  Refund: t("profile_return_order.types.refund"),
+  Exchange: t("profile_return_order.types.exchange"),
+});
 
-const REASON_LABEL: Record<string, string> = {
-  Defective: "Sản phẩm bị lỗi",
-  WrongItem: "Sai sản phẩm",
-  NotAsDescribed: "Không đúng mô tả",
-  DamagedInTransit: "Hư hỏng trong vận chuyển",
-  ChangedMind: "Đổi ý",
-  Other: "Lý do khác",
-};
+const getReasonLabel = (t: any): Record<string, string> => ({
+  Defective: t("profile_return_order.reasons.defective"),
+  WrongItem: t("profile_return_order.reasons.wrong_item"),
+  NotAsDescribed: t("profile_return_order.reasons.not_as_described"),
+  DamagedInTransit: t("profile_return_order.reasons.damaged"),
+  ChangedMind: t("profile_return_order.reasons.changed_mind"),
+  Other: t("profile_return_order.reasons.other"),
+});
 
-const RETURN_STATUS_META: Record<string, { label: string; className: string }> = {
+const getReturnStatusMeta = (t: any): Record<string, { label: string; className: string }> => ({
   Requested: {
-    label: "Đã gửi yêu cầu",
+    label: t("profile_return_order.statuses.requested"),
     className: "bg-amber-50 text-amber-600 border border-amber-200",
   },
   Approved: {
-    label: "Đã duyệt",
+    label: t("profile_return_order.statuses.approved"),
     className: "bg-indigo-50 text-indigo-600 border border-indigo-200",
   },
   ItemReceived: {
-    label: "Đã nhận hàng",
+    label: t("profile_return_order.statuses.item_received"),
     className: "bg-purple-50 text-purple-600 border border-purple-200",
   },
   Refunding: {
-    label: "Đang hoàn tiền",
+    label: t("profile_return_order.statuses.refunding"),
     className: "bg-orange-50 text-orange-600 border border-orange-200",
   },
-  Rejected: { label: "Bị từ chối", className: "bg-red-50 text-red-500 border border-red-200" },
-  Processing: { label: "Đang xử lý", className: "bg-blue-50 text-blue-600 border border-blue-200" },
+  Rejected: { label: t("profile_return_order.statuses.rejected"), className: "bg-red-50 text-red-500 border border-red-200" },
+  Processing: { label: t("profile_return_order.statuses.processing"), className: "bg-blue-50 text-blue-600 border border-blue-200" },
   Completed: {
-    label: "Hoàn tất",
+    label: t("profile_return_order.statuses.completed"),
     className: "bg-emerald-50 text-emerald-600 border border-emerald-200",
   },
-  Cancelled: { label: "Đã hủy", className: "bg-gray-100 text-gray-500 border border-gray-200" },
+  Cancelled: { label: t("profile_return_order.statuses.cancelled"), className: "bg-gray-100 text-gray-500 border border-gray-200" },
   ReturnInTransit: {
-    label: "Đang chuyển hàng trả lại",
+    label: t("profile_return_order.statuses.return_in_transit"),
     className: "bg-sky-50 text-sky-600 border border-sky-200",
   },
-};
+});
 
 const CANCELLABLE_STATUSES = ["Requested"];
 
@@ -81,9 +82,9 @@ function formatDate(iso: string) {
   });
 }
 
-function getStatusMeta(status: string) {
+function getStatusMeta(status: string, t: any) {
   return (
-    RETURN_STATUS_META[status] ?? {
+    getReturnStatusMeta(t)[status] ?? {
       label: status,
       className: "bg-gray-100 text-gray-500 border border-gray-200",
     }
@@ -99,6 +100,7 @@ interface DetailModalState {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function ProfileReturnOrder() {
+  const { t } = useTranslation();
   const [returns, setReturns] = useState<ReturnItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -126,10 +128,10 @@ export default function ProfileReturnOrder() {
         setReturns(res.data.data.items);
         setTotalPages(res.data.data.totalPages);
       } else {
-        toast.error(res.data.message || "Không thể tải danh sách yêu cầu");
+        toast.error(res.data.message || t("profile_return_order.toast.load_list_error"));
       }
     } catch {
-      toast.error("Có lỗi xảy ra khi tải dữ liệu");
+      toast.error(t("profile_return_order.toast.load_list_exception"));
     } finally {
       setLoading(false);
     }
@@ -145,14 +147,14 @@ export default function ProfileReturnOrder() {
     try {
       const res = await returnApi.cancelReturn(cancelId);
       if (res.data.isSuccess) {
-        toast.success("Đã hủy yêu cầu trả hàng");
+        toast.success(t("profile_return_order.toast.cancel_success"));
         setCancelId(null);
         fetchReturns(page);
       } else {
-        toast.error(res.data.message || "Không thể hủy yêu cầu");
+        toast.error(res.data.message || t("profile_return_order.toast.cancel_error"));
       }
     } catch {
-      toast.error("Có lỗi xảy ra khi hủy yêu cầu");
+      toast.error(t("profile_return_order.toast.cancel_exception"));
     } finally {
       setCancelling(false);
     }
@@ -166,15 +168,15 @@ export default function ProfileReturnOrder() {
         trackingCode: trackingCode.trim() || null,
       });
       if (res.data.isSuccess) {
-        toast.success("Xác nhận trả hàng thành công");
+        toast.success(t("profile_return_order.toast.ship_success"));
         setShipBackId(null);
         setTrackingCode("");
         fetchReturns(page);
       } else {
-        toast.error(res.data.message || "Không thể xác nhận trả hàng");
+        toast.error(res.data.message || t("profile_return_order.toast.ship_error"));
       }
     } catch {
-      toast.error("Có lỗi xảy ra khi xác nhận trả hàng");
+      toast.error(t("profile_return_order.toast.ship_exception"));
     } finally {
       setShippingBack(false);
     }
@@ -190,10 +192,10 @@ export default function ProfileReturnOrder() {
       if (res.data.isSuccess) {
         setReturnDetail(res.data.data);
       } else {
-        toast.error(res.data.message || "Không thể tải chi tiết yêu cầu trả hàng");
+        toast.error(res.data.message || t("profile_return_order.toast.load_detail_error"));
       }
     } catch (err: any) {
-      toast.error(err?.response?.data?.message || "Có lỗi xảy ra khi tải chi tiết yêu cầu");
+      toast.error(err?.response?.data?.message || t("profile_return_order.toast.load_detail_exception"));
     } finally {
       setLoadingDetail(false);
     }
@@ -211,15 +213,15 @@ export default function ProfileReturnOrder() {
         <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-orange-50">
           <PackageX className="h-8 w-8 text-orange-300" />
         </div>
-        <p className="text-base font-semibold text-gray-700">Chưa có yêu cầu trả hàng nào</p>
+        <p className="text-base font-semibold text-gray-700">{t("profile_return_order.empty.title")}</p>
         <p className="mt-1 text-sm text-gray-400">
-          Các yêu cầu trả hàng / hoàn tiền sẽ hiện ở đây.
+          {t("profile_return_order.empty.desc")}
         </p>
         <Link
           to="/profile/orders"
           className="mt-5 inline-flex items-center gap-1.5 rounded-lg bg-orange-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-orange-600 transition-colors"
         >
-          Xem đơn hàng
+          {t("profile_return_order.empty.btn")}
         </Link>
       </div>
     );
@@ -229,9 +231,9 @@ export default function ProfileReturnOrder() {
     <div>
       {/* Title row */}
       <div className="mb-5">
-        <h1 className="text-xl font-bold tracking-tight text-gray-900">Yêu cầu trả hàng</h1>
+        <h1 className="text-xl font-bold tracking-tight text-gray-900">{t("profile_return_order.title")}</h1>
         <p className="mt-0.5 text-sm text-gray-500">
-          Quản lý và theo dõi các yêu cầu trả hàng, hoàn tiền của bạn.
+          {t("profile_return_order.desc")}
         </p>
       </div>
 
@@ -243,7 +245,7 @@ export default function ProfileReturnOrder() {
       ) : (
         <div className="space-y-3">
           {returns.map((item) => {
-            const statusMeta = getStatusMeta(item.status);
+            const statusMeta = getStatusMeta(item.status, t);
             const canCancel = CANCELLABLE_STATUSES.includes(item.status);
 
             return (
@@ -259,7 +261,7 @@ export default function ProfileReturnOrder() {
                       #{item.id.slice(0, 8).toUpperCase()}
                     </p>
                     <p className="mt-0.5 text-sm font-semibold text-gray-700">
-                      Đơn #{item.deliveryId.slice(0, 8).toUpperCase()}
+                      {t("profile_return_order.list.order_num")}{item.deliveryId.slice(0, 8).toUpperCase()}
                     </p>
                   </div>
                   <span
@@ -273,10 +275,10 @@ export default function ProfileReturnOrder() {
                 <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-gray-500">
                   <span className="flex items-center gap-1">
                     <RefreshCw className="h-3 w-3 text-orange-400" />
-                    {RETURN_TYPE_LABEL[item.type] ?? item.type}
+                    {getReturnTypeLabel(t)[item.type] ?? item.type}
                   </span>
-                  <span>Lý do: {REASON_LABEL[item.reason] ?? item.reason}</span>
-                  <span>{item.itemCount} sản phẩm</span>
+                  <span>{t("profile_return_order.list.reason")}{getReasonLabel(t)[item.reason] ?? item.reason}</span>
+                  <span>{item.itemCount}{t("profile_return_order.list.products")}</span>
                   {item.refundAmount > 0 && (
                     <span className="font-semibold text-orange-600">
                       {formatVnd(item.refundAmount)}
@@ -295,7 +297,7 @@ export default function ProfileReturnOrder() {
                     className="flex items-center gap-1.5 rounded-lg border border-gray-200 bg-gray-50 px-3 py-1.5 text-xs font-semibold text-gray-600 hover:bg-gray-100 transition-colors cursor-pointer"
                   >
                     <Eye className="h-3.5 w-3.5" />
-                    Xem chi tiết
+                    {t("profile_return_order.list.view_detail")}
                   </button>
                   {canCancel && (
                     <button
@@ -303,7 +305,7 @@ export default function ProfileReturnOrder() {
                       className="flex items-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-500 hover:bg-red-100 transition-colors cursor-pointer"
                     >
                       <Ban className="h-3.5 w-3.5" />
-                      Hủy yêu cầu
+                      {t("profile_return_order.list.cancel_req")}
                     </button>
                   )}
                   {item.status === "Approved" && (
@@ -315,14 +317,14 @@ export default function ProfileReturnOrder() {
                       className="flex items-center gap-1.5 rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-1.5 text-xs font-semibold text-indigo-600 hover:bg-indigo-100 transition-colors cursor-pointer"
                     >
                       <Truck className="h-3.5 w-3.5" />
-                      Trả hàng
+                      {t("profile_return_order.list.ship_back")}
                     </button>
                   )}
                   <Link
                     to={`/profile/orders/${item.orderId}`}
                     className="flex items-center gap-1 rounded-lg border border-gray-200 bg-gray-50 px-3 py-1.5 text-xs font-semibold text-gray-600 hover:bg-gray-100 transition-colors"
                   >
-                    Xem đơn hàng
+                    {t("profile_return_order.list.view_order")}
                     <ChevronRight className="h-3.5 w-3.5" />
                   </Link>
                 </div>
@@ -340,7 +342,7 @@ export default function ProfileReturnOrder() {
             disabled={page === 1}
             className="rounded-lg border border-gray-200 px-3 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-40 cursor-pointer"
           >
-            Trước
+            {t("profile_return_order.pagination.prev")}
           </button>
           {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
             <button
@@ -360,7 +362,7 @@ export default function ProfileReturnOrder() {
             disabled={page === totalPages}
             className="rounded-lg border border-gray-200 px-3 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-40 cursor-pointer"
           >
-            Sau
+            {t("profile_return_order.pagination.next")}
           </button>
         </div>
       )}
@@ -370,9 +372,9 @@ export default function ProfileReturnOrder() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
           <div className="w-full max-w-sm rounded-2xl bg-white shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
             <div className="px-6 py-5 border-b border-gray-100">
-              <h3 className="text-base font-bold text-gray-900">Hủy yêu cầu trả hàng?</h3>
+              <h3 className="text-base font-bold text-gray-900">{t("profile_return_order.cancel_modal.title")}</h3>
               <p className="mt-1 text-sm text-gray-500">
-                Bạn có chắc muốn hủy yêu cầu này không? Hành động này không thể hoàn tác.
+                {t("profile_return_order.cancel_modal.desc")}
               </p>
             </div>
             <div className="flex gap-3 px-6 py-4">
@@ -380,7 +382,7 @@ export default function ProfileReturnOrder() {
                 onClick={() => setCancelId(null)}
                 className="flex-1 rounded-lg border border-gray-200 px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
               >
-                Không
+                {t("profile_return_order.cancel_modal.no")}
               </button>
               <button
                 onClick={handleCancelReturn}
@@ -390,10 +392,10 @@ export default function ProfileReturnOrder() {
                 {cancelling ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    Đang hủy...
+                    {t("profile_return_order.cancel_modal.cancelling")}
                   </>
                 ) : (
-                  "Xác nhận hủy"
+                  t("profile_return_order.cancel_modal.confirm")
                 )}
               </button>
             </div>
@@ -406,15 +408,15 @@ export default function ProfileReturnOrder() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
           <div className="w-full max-w-sm rounded-2xl bg-white shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
             <div className="px-6 py-5 border-b border-gray-100">
-              <h3 className="text-base font-bold text-gray-900">Xác nhận trả hàng</h3>
+              <h3 className="text-base font-bold text-gray-900">{t("profile_return_order.ship_modal.title")}</h3>
               <p className="mt-1 text-sm text-gray-500">
-                Nhập mã vận đơn (tracking code) nếu bạn có (không bắt buộc).
+                {t("profile_return_order.ship_modal.desc")}
               </p>
             </div>
             <div className="px-6 py-4">
               <input
                 type="text"
-                placeholder="Mã vận đơn..."
+                placeholder={t("profile_return_order.ship_modal.placeholder")}
                 value={trackingCode}
                 onChange={(e) => setTrackingCode(e.target.value)}
                 className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
@@ -428,7 +430,7 @@ export default function ProfileReturnOrder() {
                 }}
                 className="flex-1 rounded-lg border border-gray-200 px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
               >
-                Đóng
+                {t("profile_return_order.ship_modal.close")}
               </button>
               <button
                 onClick={handleShipBack}
@@ -438,10 +440,10 @@ export default function ProfileReturnOrder() {
                 {shippingBack ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    Đang xử lý...
+                    {t("profile_return_order.ship_modal.processing")}
                   </>
                 ) : (
-                  "Xác nhận"
+                  t("profile_return_order.ship_modal.confirm")
                 )}
               </button>
             </div>
@@ -457,10 +459,10 @@ export default function ProfileReturnOrder() {
             <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4 bg-orange-50/60">
               <div>
                 <span className="text-xs font-bold text-orange-500 uppercase tracking-wide">
-                  Chi tiết yêu cầu trả hàng
+                  {t("profile_return_order.detail_modal.tag")}
                 </span>
                 <h3 className="text-base font-bold text-gray-900 mt-0.5 font-mono">
-                  {returnDetail ? `#${returnDetail.id.slice(0, 8).toUpperCase()}` : "Đang tải..."}
+                  {returnDetail ? `#${returnDetail.id.slice(0, 8).toUpperCase()}` : t("profile_return_order.detail_modal.loading")}
                 </h3>
               </div>
               <button
@@ -478,27 +480,27 @@ export default function ProfileReturnOrder() {
                   <Loader2 className="h-8 w-8 animate-spin text-orange-400" />
                 </div>
               ) : !returnDetail ? (
-                <p className="py-10 text-center text-sm text-gray-400">Không tìm thấy thông tin.</p>
+                <p className="py-10 text-center text-sm text-gray-400">{t("profile_return_order.detail_modal.not_found")}</p>
               ) : (
                 <>
                   {/* Overview */}
                   <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                     <div className="rounded-lg border border-gray-100 bg-gray-50/50 p-3">
-                      <p className="text-xs text-gray-400">Trạng thái</p>
+                      <p className="text-xs text-gray-400">{t("profile_return_order.detail_modal.status")}</p>
                       <span
-                        className={`mt-1 inline-block rounded-full px-2.5 py-1 text-xs font-semibold ${getStatusMeta(returnDetail.status).className}`}
+                        className={`mt-1 inline-block rounded-full px-2.5 py-1 text-xs font-semibold ${getStatusMeta(returnDetail.status, t).className}`}
                       >
-                        {getStatusMeta(returnDetail.status).label}
+                        {getStatusMeta(returnDetail.status, t).label}
                       </span>
                     </div>
                     <div className="rounded-lg border border-gray-100 bg-gray-50/50 p-3">
-                      <p className="text-xs text-gray-400">Hình thức</p>
+                      <p className="text-xs text-gray-400">{t("profile_return_order.detail_modal.type")}</p>
                       <p className="mt-1 text-sm font-semibold text-gray-800">
-                        {RETURN_TYPE_LABEL[returnDetail.type] ?? returnDetail.type}
+                        {getReturnTypeLabel(t)[returnDetail.type] ?? returnDetail.type}
                       </p>
                     </div>
                     <div className="rounded-lg border border-gray-100 bg-gray-50/50 p-3">
-                      <p className="text-xs text-gray-400">Số tiền hoàn</p>
+                      <p className="text-xs text-gray-400">{t("profile_return_order.detail_modal.refund_amount")}</p>
                       <p className="mt-1 text-sm font-bold text-orange-600">
                         {returnDetail.refundAmount > 0 ? formatVnd(returnDetail.refundAmount) : "-"}
                       </p>
@@ -507,7 +509,7 @@ export default function ProfileReturnOrder() {
 
                   {/* Ngày tạo */}
                   <p className="text-xs text-gray-500">
-                    Ngày tạo:{" "}
+                    {t("profile_return_order.detail_modal.created_at")} {" "}
                     <span className="text-gray-700 font-medium">
                       {formatDate(returnDetail.createdAt)}
                     </span>
@@ -515,16 +517,16 @@ export default function ProfileReturnOrder() {
 
                   {/* Reason */}
                   <div className="rounded-xl border border-gray-100 p-4">
-                    <p className="text-xs font-semibold text-gray-600 mb-1">Lý do</p>
+                    <p className="text-xs font-semibold text-gray-600 mb-1">{t("profile_return_order.detail_modal.reason")}</p>
                     <p className="text-sm font-medium text-gray-800">
-                      {REASON_LABEL[returnDetail.reason] ?? returnDetail.reason}
+                      {getReasonLabel(t)[returnDetail.reason] ?? returnDetail.reason}
                     </p>
                     {returnDetail.reasonDetail && (
                       <p className="mt-1.5 text-sm text-gray-500">{returnDetail.reasonDetail}</p>
                     )}
                     {returnDetail.rejectedReason && (
                       <div className="mt-2 rounded-lg border border-red-100 bg-red-50/50 px-3 py-2">
-                        <p className="text-xs font-semibold text-red-500">Lý do từ chối</p>
+                        <p className="text-xs font-semibold text-red-500">{t("profile_return_order.detail_modal.rejected_reason")}</p>
                         <p className="text-sm text-red-600 mt-0.5">{returnDetail.rejectedReason}</p>
                       </div>
                     )}
@@ -532,7 +534,7 @@ export default function ProfileReturnOrder() {
 
                   {/* Items */}
                   <div>
-                    <p className="text-xs font-semibold text-gray-600 mb-2">Sản phẩm trả</p>
+                    <p className="text-xs font-semibold text-gray-600 mb-2">{t("profile_return_order.detail_modal.return_items")}</p>
                     <div className="rounded-xl border border-gray-100 overflow-hidden divide-y divide-gray-100">
                       {returnDetail.items.map((it) => (
                         <div key={it.id} className="flex items-center gap-3 p-3">
@@ -562,25 +564,25 @@ export default function ProfileReturnOrder() {
                       returnDetail.bankName) && (
                       <div className="rounded-xl border border-blue-100 bg-blue-50/40 p-4 space-y-1.5">
                         <p className="text-xs font-bold text-blue-700 uppercase tracking-wide mb-1">
-                          Thông tin tài khoản ngân hàng
+                          {t("profile_return_order.detail_modal.bank_info")}
                         </p>
                         <p className="text-sm text-gray-700">
-                          Chủ tài khoản:{" "}
+                          {t("profile_return_order.detail_modal.account_name")} {" "}
                           <span className="font-medium">{returnDetail.bankAccountName || "-"}</span>
                         </p>
                         <p className="text-sm text-gray-700">
-                          Số tài khoản:{" "}
+                          {t("profile_return_order.detail_modal.account_number")} {" "}
                           <span className="font-medium">
                             {returnDetail.bankAccountNumber || "-"}
                           </span>
                         </p>
                         <p className="text-sm text-gray-700">
-                          Ngân hàng:{" "}
+                          {t("profile_return_order.detail_modal.bank_name")} {" "}
                           <span className="font-medium">{returnDetail.bankName || "-"}</span>
                         </p>
                         {returnDetail.refundMethod && (
                           <p className="text-sm text-gray-700">
-                            Phương thức hoàn tiền:{" "}
+                            {t("profile_return_order.detail_modal.refund_method")} {" "}
                             <span className="font-medium">{returnDetail.refundMethod}</span>
                           </p>
                         )}
@@ -590,7 +592,7 @@ export default function ProfileReturnOrder() {
                   {/* Images */}
                   {returnDetail.imageUrls.length > 0 && (
                     <div>
-                      <p className="text-xs font-semibold text-gray-600 mb-2">Hình ảnh</p>
+                      <p className="text-xs font-semibold text-gray-600 mb-2">{t("profile_return_order.detail_modal.images")}</p>
                       <div className="flex flex-wrap gap-2">
                         {returnDetail.imageUrls.map((url, idx) => (
                           <a key={idx} href={url} target="_blank" rel="noopener noreferrer">
@@ -607,7 +609,7 @@ export default function ProfileReturnOrder() {
 
                   {/* Status logs / timeline */}
                   <div>
-                    <p className="text-xs font-semibold text-gray-600 mb-2">Lịch sử trạng thái</p>
+                    <p className="text-xs font-semibold text-gray-600 mb-2">{t("profile_return_order.detail_modal.history")}</p>
                     <div className="space-y-3">
                       {returnDetail.statusLogs.map((log, idx) => (
                         <div key={idx} className="flex gap-3">
@@ -622,8 +624,8 @@ export default function ProfileReturnOrder() {
                           <div className="pb-3">
                             <p className="text-sm font-semibold text-gray-800">
                               {log.fromStatus
-                                ? `${RETURN_STATUS_META[log.fromStatus]?.label ?? log.fromStatus} → ${RETURN_STATUS_META[log.toStatus]?.label ?? log.toStatus}`
-                                : (RETURN_STATUS_META[log.toStatus]?.label ?? log.toStatus)}
+                                ? `${getReturnStatusMeta(t)[log.fromStatus]?.label ?? log.fromStatus} → ${getReturnStatusMeta(t)[log.toStatus]?.label ?? log.toStatus}`
+                                : (getReturnStatusMeta(t)[log.toStatus]?.label ?? log.toStatus)}
                             </p>
                             {log.note && <p className="text-xs text-gray-500 mt-0.5">{log.note}</p>}
                             <p className="text-xs text-gray-400 mt-0.5">
@@ -649,7 +651,7 @@ export default function ProfileReturnOrder() {
                   className="flex-1 flex items-center justify-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-semibold text-red-500 hover:bg-red-100 transition-colors cursor-pointer"
                 >
                   <Ban className="h-4 w-4" />
-                  Hủy yêu cầu
+                  {t("profile_return_order.detail_modal.cancel")}
                 </button>
               )}
               {returnDetail && returnDetail.status === "Approved" && (
@@ -661,14 +663,14 @@ export default function ProfileReturnOrder() {
                   className="flex-1 flex items-center justify-center gap-1.5 rounded-lg border border-indigo-200 bg-indigo-50 px-4 py-2.5 text-sm font-semibold text-indigo-600 hover:bg-indigo-100 transition-colors cursor-pointer"
                 >
                   <Truck className="h-4 w-4" />
-                  Trả hàng
+                  {t("profile_return_order.detail_modal.ship_back")}
                 </button>
               )}
               <button
                 onClick={closeDetailModal}
                 className="flex-1 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
               >
-                Đóng
+                {t("profile_return_order.detail_modal.close")}
               </button>
             </div>
           </div>

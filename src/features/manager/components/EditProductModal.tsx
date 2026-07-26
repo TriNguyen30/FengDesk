@@ -1,7 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import { useParams, useNavigate } from "react-router-dom";
 import {
-  ChevronLeft,
   RefreshCw,
   Image as ImageIcon,
   Layers,
@@ -25,6 +23,7 @@ import {
   ProductFengShuiForm,
   type FengShuiValues,
 } from "@/features/manager/components";
+import Modal from "@/components/ui/Modal";
 
 type TabType = "basic" | "variants" | "images" | "categories" | "feng-shui";
 
@@ -36,12 +35,19 @@ const EMPTY_FENG_SHUI: FengShuiValues = {
   styles: [],
 };
 
-export default function EditProductPage() {
-  // Mở từ /seller/:storeId/products/:id/edit (trang shop) → quay lại trang shop thay vì /manager/products.
-  const { id, storeId: lockedStoreId } = useParams<{ id: string; storeId?: string }>();
-  const navigate = useNavigate();
-  const backTo = lockedStoreId ? `/stores/${lockedStoreId}` : "/manager/products";
+interface EditProductModalProps {
+  productId: string;
+  open: boolean;
+  onClose: () => void;
+  onSuccess: () => void;
+}
 
+export default function EditProductModal({
+  productId,
+  open,
+  onClose,
+  onSuccess,
+}: EditProductModalProps) {
   const [activeTab, setActiveTab] = useState<TabType>("basic");
   const [product, setProduct] = useState<ProductDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -67,10 +73,10 @@ export default function EditProductPage() {
 
   // Fetch product detail
   const fetchProductDetail = useCallback(async () => {
-    if (!id) return;
+    if (!productId || !open) return;
     setLoading(true);
     try {
-      const res = await productApi.getProductById(id);
+      const res = await productApi.getProductById(productId);
       if (res.data.isSuccess && res.data.data) {
         const p = res.data.data;
         setProduct(p);
@@ -83,7 +89,7 @@ export default function EditProductPage() {
         // Populate categories
         setSelectedCategoryIds(p.categories?.map((c) => c.id) || []);
 
-        // Populate Feng Shui từ detail (BE đã phơi primaryElement/secondaryElements/sizeClass/vibes/styles)
+        // Populate Feng Shui
         setFengShui({
           primaryElement: p.primaryElement || "Kim",
           secondaryElements: p.secondaryElements || [],
@@ -93,7 +99,7 @@ export default function EditProductPage() {
         });
       } else {
         toast.error("Không thể tải chi tiết sản phẩm");
-        navigate(backTo);
+        onClose();
       }
     } catch (err) {
       console.error(err);
@@ -101,14 +107,19 @@ export default function EditProductPage() {
     } finally {
       setLoading(false);
     }
-  }, [id, navigate, backTo]);
+  }, [productId, open, onClose]);
 
   // Load product detail and global options
   useEffect(() => {
-    window.scrollTo(0, 0);
-    fetchProductDetail();
+    if (open) {
+      setActiveTab("basic");
+      fetchProductDetail();
+    } else {
+      setProduct(null);
+    }
 
     const fetchOptions = async () => {
+      if (!open) return;
       try {
         const [categoriesRes, vibesRes, stylesRes] = await Promise.all([
           getCategoriesRequest(),
@@ -125,12 +136,12 @@ export default function EditProductPage() {
       }
     };
     fetchOptions();
-  }, [fetchProductDetail]);
+  }, [open, fetchProductDetail]);
 
   // Update Basic Info
   const handleSaveBasic = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!id || !product) return;
+    if (!productId || !product) return;
     if (!basicName.trim()) {
       toast.error("Tên sản phẩm không được trống");
       return;
@@ -138,7 +149,7 @@ export default function EditProductPage() {
 
     setSavingBasic(true);
     try {
-      const res = await productApi.updateProduct(id, {
+      const res = await productApi.updateProduct(productId, {
         name: basicName.trim(),
         description: basicDescription.trim(),
         isActive: basicIsActive,
@@ -147,6 +158,7 @@ export default function EditProductPage() {
       if (res.data.isSuccess) {
         toast.success("Đã cập nhật thông tin cơ bản");
         fetchProductDetail();
+        onSuccess(); // Refresh parent list
       } else {
         toast.error(res.data.message || "Cập nhật thất bại");
       }
@@ -160,15 +172,16 @@ export default function EditProductPage() {
 
   // Update Categories
   const handleSaveRelations = async () => {
-    if (!id) return;
+    if (!productId) return;
     setSavingRelations(true);
     try {
-      const res = await productApi.updateProductCategories(id, {
+      const res = await productApi.updateProductCategories(productId, {
         categoryIds: selectedCategoryIds,
       });
       if (res.data.isSuccess) {
         toast.success("Đã cập nhật danh mục thành công");
         fetchProductDetail();
+        onSuccess();
       } else {
         toast.error(res.data.message || "Cập nhật danh mục thất bại");
       }
@@ -180,14 +193,14 @@ export default function EditProductPage() {
     }
   };
 
-  // Update Feng Shui (PUT /products/{id}/feng-shui)
+  // Update Feng Shui
   const handleSaveFengShui = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!id) return;
+    if (!productId) return;
 
     setSavingFengShui(true);
     try {
-      const res = await productApi.updateProductFengShui(id, {
+      const res = await productApi.updateProductFengShui(productId, {
         primaryElement: fengShui.primaryElement,
         secondaryElements: fengShui.secondaryElements,
         sizeClass: fengShui.sizeClass,
@@ -198,6 +211,7 @@ export default function EditProductPage() {
       if (res.data.isSuccess) {
         toast.success("Đã cập nhật thông tin phong thủy");
         fetchProductDetail();
+        onSuccess();
       } else {
         toast.error(res.data.message || "Cập nhật thất bại");
       }
@@ -209,140 +223,144 @@ export default function EditProductPage() {
     }
   };
 
+  const handleRefresh = () => {
+    fetchProductDetail();
+    onSuccess();
+  };
+
+  let content;
+
   if (loading) {
-    return (
+    content = (
       <div className="flex flex-col items-center justify-center py-40 gap-3">
         <RefreshCw className="h-8 w-8 text-primary animate-spin" />
         <p className="text-sm font-medium text-gray-500">Đang tải thông tin sản phẩm...</p>
       </div>
     );
-  }
-
-  if (!product) {
-    return (
-      <div className="flex min-h-[50vh] flex-col items-center justify-center gap-4 text-center px-4">
+  } else if (!product) {
+    content = (
+      <div className="flex min-h-[40vh] flex-col items-center justify-center gap-4 text-center px-4">
         <AlertCircle className="h-12 w-12 text-red-500" />
         <p className="text-base font-medium text-gray-800">Không tìm thấy sản phẩm</p>
-        <button
-          onClick={() => navigate(backTo)}
-          className="rounded-xl bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 cursor-pointer"
-        >
-          Quay lại danh sách
-        </button>
+      </div>
+    );
+  } else {
+    content = (
+      <div className="space-y-6 max-w-5xl mx-auto pb-6">
+
+        {/* Tabs list */}
+        <div className="border-b border-gray-200 bg-white">
+          <nav className="flex flex-wrap gap-4 -mb-px">
+            {(
+              [
+                { id: "basic", label: "Thông tin cơ bản", icon: Info },
+                {
+                  id: "variants",
+                  label: `Biến thể (${product.items?.length || 0})`,
+                  icon: DollarSign,
+                },
+                { id: "images", label: `Hình ảnh (${product.images?.length || 0})`, icon: ImageIcon },
+                { id: "categories", label: "Danh mục", icon: Layers },
+                { id: "feng-shui", label: "Phong thủy", icon: Sparkles },
+              ] as const
+            ).map((t) => {
+              const isSelected = activeTab === t.id;
+              return (
+                <button
+                  key={t.id}
+                  onClick={() => setActiveTab(t.id)}
+                  className={`flex items-center gap-2 border-b-2 py-3 px-1 text-sm font-semibold cursor-pointer transition-all ${isSelected
+                      ? "border-primary text-primary"
+                      : "border-transparent text-gray-550 hover:border-gray-300 hover:text-gray-700"
+                    }`}
+                >
+                  <t.icon size={16} />
+                  {t.label}
+                </button>
+              );
+            })}
+          </nav>
+        </div>
+
+        {/* ── TAB CONTENT: BASIC INFO ───────────────────────────────────────── */}
+        {activeTab === "basic" && (
+          <ProductBasicForm
+            name={basicName}
+            setName={setBasicName}
+            description={basicDescription}
+            setDescription={setBasicDescription}
+            isActive={basicIsActive}
+            setIsActive={setBasicIsActive}
+            storeName={product.storeName}
+            onSubmit={handleSaveBasic}
+            saving={savingBasic}
+          />
+        )}
+
+        {/* ── TAB CONTENT: VARIANTS ─────────────────────────────────────────── */}
+        {activeTab === "variants" && (
+          <ProductVariantsSection
+            productId={product.id}
+            productName={product.name}
+            items={product.items || []}
+            onRefreshProduct={handleRefresh}
+          />
+        )}
+
+        {/* ── TAB CONTENT: IMAGES ───────────────────────────────────────────── */}
+        {activeTab === "images" && (
+          <ProductImagesSection
+            productId={product.id}
+            images={product.images || []}
+            onRefreshProduct={handleRefresh}
+          />
+        )}
+
+        {/* ── TAB CONTENT: CATEGORIES ───────────────────────────────────────── */}
+        {activeTab === "categories" && (
+          <ProductRelationsForm
+            categories={categories}
+            selectedCategoryIds={selectedCategoryIds}
+            setSelectedCategoryIds={setSelectedCategoryIds}
+            onSubmit={handleSaveRelations}
+            saving={savingRelations}
+          />
+        )}
+
+        {/* ── TAB CONTENT: FENG SHUI ────────────────────────────────────────── */}
+        {activeTab === "feng-shui" && (
+          <ProductFengShuiForm
+            value={fengShui}
+            onChange={setFengShui}
+            vibeOptions={vibeOptions}
+            styleOptions={styleOptions}
+            onSubmit={handleSaveFengShui}
+            saving={savingFengShui}
+          />
+        )}
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 max-w-5xl mx-auto pb-12 mt-5 px-4 md:px-0">
-      {/* Header */}
-      <div className="flex items-center gap-3">
-        <button
-          onClick={() => navigate(backTo)}
-          className="flex h-9 w-9 items-center justify-center rounded-4xl hover:bg-gray-100 hover:text-gray-700 cursor-pointer transition-colors"
-          title="Quay lại danh sách"
-        >
-          <ChevronLeft size={18} />
-        </button>
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-gray-900 truncate max-w-md md:max-w-xl">
-            Chỉnh sửa: {product.name}
-          </h1>
-          <p className="text-xs text-gray-400 mt-0.5 font-mono">ID: {product.id}</p>
-        </div>
-      </div>
-
-      {/* Tabs list */}
-      <div className="border-b border-gray-200">
-        <nav className="flex flex-wrap gap-4 -mb-px">
-          {(
-            [
-              { id: "basic", label: "Thông tin cơ bản", icon: Info },
-              {
-                id: "variants",
-                label: `Biến thể (${product.items?.length || 0})`,
-                icon: DollarSign,
-              },
-              { id: "images", label: `Hình ảnh (${product.images?.length || 0})`, icon: ImageIcon },
-              { id: "categories", label: "Danh mục", icon: Layers },
-              { id: "feng-shui", label: "Phong thủy", icon: Sparkles },
-            ] as const
-          ).map((t) => {
-            const isSelected = activeTab === t.id;
-            return (
-              <button
-                key={t.id}
-                onClick={() => setActiveTab(t.id)}
-                className={`flex items-center gap-2 border-b-2 py-3 px-1 text-sm font-semibold cursor-pointer transition-all ${
-                  isSelected
-                    ? "border-primary text-primary"
-                    : "border-transparent text-gray-550 hover:border-gray-300 hover:text-gray-700"
-                }`}
-              >
-                <t.icon size={16} />
-                {t.label}
-              </button>
-            );
-          })}
-        </nav>
-      </div>
-
-      {/* ── TAB CONTENT: BASIC INFO ───────────────────────────────────────── */}
-      {activeTab === "basic" && (
-        <ProductBasicForm
-          name={basicName}
-          setName={setBasicName}
-          description={basicDescription}
-          setDescription={setBasicDescription}
-          isActive={basicIsActive}
-          setIsActive={setBasicIsActive}
-          storeName={product.storeName}
-          onSubmit={handleSaveBasic}
-          saving={savingBasic}
-        />
-      )}
-
-      {/* ── TAB CONTENT: VARIANTS ─────────────────────────────────────────── */}
-      {activeTab === "variants" && (
-        <ProductVariantsSection
-          productId={product.id}
-          productName={product.name}
-          items={product.items || []}
-          onRefreshProduct={fetchProductDetail}
-        />
-      )}
-
-      {/* ── TAB CONTENT: IMAGES ───────────────────────────────────────────── */}
-      {activeTab === "images" && (
-        <ProductImagesSection
-          productId={product.id}
-          images={product.images || []}
-          onRefreshProduct={fetchProductDetail}
-        />
-      )}
-
-      {/* ── TAB CONTENT: CATEGORIES ───────────────────────────────────────── */}
-      {activeTab === "categories" && (
-        <ProductRelationsForm
-          categories={categories}
-          selectedCategoryIds={selectedCategoryIds}
-          setSelectedCategoryIds={setSelectedCategoryIds}
-          onSubmit={handleSaveRelations}
-          saving={savingRelations}
-        />
-      )}
-
-      {/* ── TAB CONTENT: FENG SHUI ────────────────────────────────────────── */}
-      {activeTab === "feng-shui" && (
-        <ProductFengShuiForm
-          value={fengShui}
-          onChange={setFengShui}
-          vibeOptions={vibeOptions}
-          styleOptions={styleOptions}
-          onSubmit={handleSaveFengShui}
-          saving={savingFengShui}
-        />
-      )}
-    </div>
+    <Modal
+      open={open}
+      onClose={onClose}
+      size="max-w-5xl"
+      title={
+        product ? (
+          <div>
+            <h1 className="text-xl font-bold tracking-tight text-gray-900 truncate max-w-[200px] sm:max-w-md lg:max-w-3xl">
+              {product.name}
+            </h1>
+            <p className="text-xs text-gray-400 mt-0.5 font-mono font-normal">ID: {product.id}</p>
+          </div>
+        ) : (
+          "Chỉnh sửa sản phẩm"
+        )
+      }
+    >
+      {content}
+    </Modal>
   );
 }

@@ -82,9 +82,9 @@ export default function NotificationDropdown() {
   const handleMarkAllRead = async () => {
     try {
       await markAllAsReadMutation.mutateAsync();
-      toast.success(t("notification.mark_all_read_success"));
+      toast.success(t("notification.toast.mark_all_success"));
     } catch (error) {
-      toast.error(t("notification.mark_all_read_error"));
+      toast.error(t("notification.toast.mark_all_error"));
     }
   };
 
@@ -200,7 +200,7 @@ export default function NotificationDropdown() {
           <div className="absolute right-0 top-full z-50 pt-2">
             <div
               role="dialog"
-              aria-label={t("notification.your_notifications")}
+              aria-label={t("notification.title")}
               className={`w-[min(calc(100vw-1.5rem),24rem)] overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xl sm:w-96 ${
                 closing ? "notification-dropdown-exit" : "notification-dropdown-enter"
               }`}
@@ -225,16 +225,16 @@ export default function NotificationDropdown() {
                 {status === "loading" && notifications.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-12 text-gray-400">
                     <div className="size-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                    <span className="mt-2 text-xs">{t("notification.loading_notifications")}</span>
+                    <span className="mt-2 text-xs">{t("notification.loading")}</span>
                   </div>
                 ) : notifications.length === 0 ? (
                   <div className="flex flex-col items-center gap-2 px-4 py-12 text-center text-gray-500">
                     <div className="flex size-12 items-center justify-center rounded-full bg-gray-50 text-gray-400">
                       <Bell size={24} strokeWidth={1.5} />
                     </div>
-                    <p className="text-sm font-medium text-gray-700">{t("notification.no_notifications")}</p>
+                    <p className="text-sm font-medium text-gray-700">{t("notification.empty.title")}</p>
                     <p className="text-xs text-gray-400">
-                      {t("notification.no_notifications_desc")}
+                      {t("notification.empty.desc")}
                     </p>
                   </div>
                 ) : (

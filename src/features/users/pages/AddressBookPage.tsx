@@ -5,8 +5,10 @@ import { Address } from "../types/address";
 import { toast } from "sonner";
 import AddressModal from "../components/AddressModal";
 import Modal from "@/components/ui/Modal";
+import { useTranslation } from "react-i18next";
 
 export default function AddressBookPage() {
+  const { t } = useTranslation();
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -24,7 +26,7 @@ export default function AddressBookPage() {
       const data = await getAddresses();
       setAddresses(data || []);
     } catch (error) {
-      toast.error("Không thể tải danh sách địa chỉ");
+      toast.error(t("address_book.toast.load_error"));
       console.error(error);
     } finally {
       setLoading(false);
@@ -50,10 +52,10 @@ export default function AddressBookPage() {
     if (!addressToDelete) return;
     try {
       await deleteAddress(addressToDelete);
-      toast.success("Xóa địa chỉ thành công");
+      toast.success(t("address_book.toast.delete_success"));
       fetchAddresses();
     } catch (error) {
-      toast.error("Không thể xóa địa chỉ");
+      toast.error(t("address_book.toast.delete_error"));
       console.error(error);
     } finally {
       setIsDeleteModalOpen(false);
@@ -64,10 +66,10 @@ export default function AddressBookPage() {
   const handleSetDefault = async (id: string) => {
     try {
       await setDefaultAddress(id);
-      toast.success("Đã thiết lập địa chỉ mặc định");
+      toast.success(t("address_book.toast.set_default_success"));
       fetchAddresses();
     } catch (error) {
-      toast.error("Không thể thiết lập địa chỉ mặc định");
+      toast.error(t("address_book.toast.set_default_error"));
       console.error(error);
     }
   };
@@ -76,9 +78,9 @@ export default function AddressBookPage() {
     <div>
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h1 className="text-xl font-bold tracking-tight text-gray-900">Địa chỉ của tôi</h1>
+          <h1 className="text-xl font-bold tracking-tight text-gray-900">{t("address_book.title")}</h1>
           <p className="mt-0.5 text-sm text-gray-500">
-            Quản lý địa chỉ nhận hàng để thanh toán nhanh chóng hơn.
+            {t("address_book.subtitle")}
           </p>
         </div>
         <button
@@ -86,7 +88,7 @@ export default function AddressBookPage() {
           className="flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90 transition-colors cursor-pointer"
         >
           <Plus size={16} />
-          Thêm địa chỉ mới
+          {t("address_book.add_new")}
         </button>
       </div>
 
@@ -99,8 +101,8 @@ export default function AddressBookPage() {
           <div className="mb-4 rounded-full bg-gray-50 p-3 text-gray-400">
             <Plus size={24} />
           </div>
-          <h3 className="text-sm font-medium text-gray-900">Chưa có địa chỉ nào</h3>
-          <p className="mt-1 text-sm text-gray-500">Thêm địa chỉ để nhận hàng thuận tiện hơn</p>
+          <h3 className="text-sm font-medium text-gray-900">{t("address_book.empty.title")}</h3>
+          <p className="mt-1 text-sm text-gray-500">{t("address_book.empty.desc")}</p>
         </div>
       ) : (
         <div className="space-y-4">
@@ -114,7 +116,7 @@ export default function AddressBookPage() {
                   <span className="font-semibold text-gray-900">{address.recipientName}</span>
                   {address.isDefault && (
                     <span className="rounded bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
-                      Mặc định
+                      {t("address_book.item.default_badge")}
                     </span>
                   )}
                   {address.label && (
@@ -124,7 +126,7 @@ export default function AddressBookPage() {
                   )}
                 </div>
                 <div className="text-sm text-gray-500">
-                  <p>Số điện thoại: {address.recipientPhone}</p>
+                  <p>{t("address_book.item.phone")} {address.recipientPhone}</p>
                   <p className="mt-1">{address.streetAddress}</p>
                 </div>
               </div>
@@ -134,7 +136,7 @@ export default function AddressBookPage() {
                   className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-blue-600 transition-colors hover:bg-blue-50 cursor-pointer"
                 >
                   <Edit2 size={14} />
-                  Cập nhật
+                  {t("address_book.actions.update")}
                 </button>
                 {!address.isDefault && (
                   <>
@@ -143,14 +145,14 @@ export default function AddressBookPage() {
                       className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-green-600 transition-colors hover:bg-green-50 cursor-pointer"
                     >
                       <CheckCircle size={14} />
-                      Mặc định
+                      {t("address_book.actions.set_default")}
                     </button>
                     <button
                       onClick={() => handleDeleteClick(address.id)}
                       className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 cursor-pointer"
                     >
                       <Trash2 size={14} />
-                      Xóa
+                      {t("address_book.actions.delete")}
                     </button>
                   </>
                 )}
@@ -169,25 +171,25 @@ export default function AddressBookPage() {
 
       <Modal
         open={isDeleteModalOpen}
-        title="Xóa địa chỉ"
+        title={t("address_book.delete_modal.title")}
         onClose={() => setIsDeleteModalOpen(false)}
       >
         <div className="space-y-4">
           <p className="text-sm text-gray-600">
-            Bạn có chắc chắn muốn xóa địa chỉ này? Hành động này không thể hoàn tác.
+            {t("address_book.delete_modal.desc")}
           </p>
           <div className="flex gap-3 pt-2">
             <button
               onClick={() => setIsDeleteModalOpen(false)}
               className="flex-1 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 cursor-pointer"
             >
-              Hủy
+              {t("address_book.delete_modal.cancel", t("address_book.actions.cancel"))}
             </button>
             <button
               onClick={handleConfirmDelete}
               className="flex-1 rounded-lg bg-red-600 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-red-700 cursor-pointer"
             >
-              Xóa địa chỉ
+              {t("address_book.delete_modal.confirm")}
             </button>
           </div>
         </div>

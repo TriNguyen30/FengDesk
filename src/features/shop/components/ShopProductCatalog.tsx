@@ -2,6 +2,8 @@ import { Link } from "react-router-dom";
 import { Plus, Search, SearchX } from "lucide-react";
 import ProductCard, { ProductCardSkeleton } from "@/features/products/components/ProductCard";
 import { Product } from "@/features/products/types/product";
+import { useState } from "react";
+import { EditProductModal } from "@/features/manager/components";
 
 interface ShopProductCatalogProps {
   products: Product[];
@@ -13,6 +15,7 @@ interface ShopProductCatalogProps {
   shopId?: string;
   isShopMember?: boolean;
   canAddProduct?: boolean;
+  onRefresh?: () => void;
 }
 
 export function ShopProductCatalog({
@@ -24,7 +27,10 @@ export function ShopProductCatalog({
   shopId,
   isShopMember,
   canAddProduct = false,
+  onRefresh,
 }: ShopProductCatalogProps) {
+  const [editingProductId, setEditingProductId] = useState<string | null>(null);
+
   return (
     <section className="lg:col-span-3 space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-100 pb-4">
@@ -83,8 +89,8 @@ export function ShopProductCatalog({
             <ProductCard
               key={p.id}
               product={p}
-              editHref={
-                isShopMember && shopId ? `/seller/${shopId}/products/${p.id}/edit` : undefined
+              onEdit={
+                canAddProduct && shopId ? () => setEditingProductId(p.id) : undefined
               }
             />
           ))}
@@ -105,6 +111,18 @@ export function ShopProductCatalog({
             </button>
           )}
         </div>
+      )}
+
+      {/* Edit Product Modal */}
+      {editingProductId && (
+        <EditProductModal
+          open={!!editingProductId}
+          productId={editingProductId}
+          onClose={() => setEditingProductId(null)}
+          onSuccess={() => {
+            if (onRefresh) onRefresh();
+          }}
+        />
       )}
     </section>
   );

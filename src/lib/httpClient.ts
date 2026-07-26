@@ -38,7 +38,7 @@ export class FetchHttpClient {
   private setupResponseInterceptor() {
     this.axiosInstance.interceptors.response.use(
       (response) => {
-        console.log("API Response:", response.status, response.config.url);
+        // console.log("API Response:", response.status, response.config.url);
         return response;
       },
       async (error) => {

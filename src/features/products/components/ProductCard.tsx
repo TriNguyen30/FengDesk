@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { ChevronLeft, ChevronRight, Loader2, Pencil, ShoppingCart } from "lucide-react";
 import { useProductList } from "../hooks/useProducts";
 import { Product } from "../types/product";
@@ -34,11 +35,12 @@ interface ProductCardProps {
   product: Product;
   soldCount?: number;
   /** Chỉ truyền khi người xem là chủ/co-owner của shop — hiện nút sửa nhanh ở góc thẻ. */
-  editHref?: string;
+  onEdit?: () => void;
 }
 
-export default function ProductCard({ product, soldCount, editHref }: ProductCardProps) {
+export default function ProductCard({ product, soldCount, onEdit }: ProductCardProps) {
   const { addItem } = useCart();
+  const { t } = useTranslation();
 
   const handleAddToCart = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -51,9 +53,9 @@ export default function ProductCard({ product, soldCount, editHref }: ProductCar
 
     try {
       await addItem({ productItemId: product.items[0].id, quantity: 1 });
-      toast.success("Đã thêm vào giỏ hàng");
+      toast.success(t("product_card.toast.add_success"));
     } catch (err: any) {
-      toast.error(err.message || "Không thể thêm vào giỏ hàng");
+      toast.error(err.message || t("product_card.toast.add_error"));
     }
   };
 
@@ -71,19 +73,23 @@ export default function ProductCard({ product, soldCount, editHref }: ProductCar
         <div
           className={`absolute top-2 left-2 z-10 rounded-sm px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white shadow-sm ${elementColor}`}
         >
-          Mệnh {elementLabel}
+          {t("product_card.labels.element")} {elementLabel}
         </div>
       )}
 
       {/* Nút sửa nhanh (owner/co-owner) — sibling đè lên trên, không lồng trong Link chính bên dưới */}
-      {editHref && (
-        <Link
-          to={editHref}
-          title="Sửa sản phẩm"
-          className="absolute top-2 right-2 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-white/90 text-gray-600 shadow-sm hover:bg-primary hover:text-white transition-colors"
+      {onEdit && (
+        <button
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onEdit();
+          }}
+          title={t("product_card.labels.edit")}
+          className="absolute top-2 right-2 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-white/90 text-gray-600 shadow-sm hover:bg-primary hover:text-white transition-colors cursor-pointer"
         >
           <Pencil size={12} />
-        </Link>
+        </button>
       )}
 
       <Link to={`/products/${product.id}`} className="flex flex-col">
@@ -105,7 +111,7 @@ export default function ProductCard({ product, soldCount, editHref }: ProductCar
           <div className="mt-2 mb-3">
             <p className="text-base font-bold text-primary">{formatPrice(product.minPrice)}</p>
             {soldCount !== undefined && (
-              <p className="text-[11px] text-gray-400 mt-0.5">Đã bán {soldCount}</p>
+              <p className="text-[11px] text-gray-400 mt-0.5">{t("product_card.labels.sold", { count: soldCount })}</p>
             )}
           </div>
 
@@ -118,11 +124,11 @@ export default function ProductCard({ product, soldCount, editHref }: ProductCar
                 <ShoppingCart size={14} strokeWidth={2.5} />
               </div>
               <div className="text-[10px] font-bold leading-[1.1] text-primary text-left uppercase overflow-hidden whitespace-nowrap transition-all duration-300 max-w-0 opacity-0 -translate-x-3 group-hover:max-w-[100px] group-hover:opacity-100 group-hover:translate-x-0 group-hover:ml-1.5">
-                Thêm vào giỏ
+                {t("product_card.labels.add_to_cart")}
               </div>
             </button>
             <span className="bg-gray-100/80 text-primary text-[10px] px-2 py-1 rounded shadow-sm font-medium whitespace-nowrap">
-              Còn hàng
+              {t("product_card.labels.in_stock")}
             </span>
           </div>
         </div>
@@ -160,6 +166,7 @@ function useProducts(pageSize: number) {
 // ─── BestSellersSection ───────────────────────────────────────────────────────
 
 export function BestSellersSection() {
+  const { t } = useTranslation();
   const { products, loading } = useProducts(12);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -251,7 +258,7 @@ export function BestSellersSection() {
                 "polygon(0 0, calc(100% - 28px) 0, 100% 100%, 0 100%)",
             }}
           >
-            Sản phẩm bán chạy
+            {t("best_sellers.title")}
           </h2>
         </div>
 
@@ -259,7 +266,7 @@ export function BestSellersSection() {
           to="/products"
           className="shrink-0 text-xs font-medium text-primary transition-colors hover:text-primary-dark sm:text-sm cursor-pointer mr-5"
         >
-          Xem tất cả &rsaquo;
+          {t("best_sellers.view_all")}
         </Link>
       </div>
 
@@ -333,6 +340,7 @@ export function BestSellersSection() {
 
 export function YouMightAlsoLikeSection() {
   const { products, loading } = useProducts(5);
+  const { t } = useTranslation();
 
   if (!loading && products.length === 0) {
     return null;
@@ -341,12 +349,12 @@ export function YouMightAlsoLikeSection() {
   return (
     <section className="mt-6 w-full overflow-hidden rounded-2xl bg-white p-4 shadow-sm ring-1 ring-gray-100 sm:p-6">
       <div className="mb-4 flex items-center justify-between gap-2 sm:mb-6">
-        <h2 className="text-lg font-bold text-gray-900">Có thể bạn cũng thích</h2>
+        <h2 className="text-lg font-bold text-gray-900">{t("product_detail.suggested.you_may_like")}</h2>
         <Link
           to="/products"
           className="shrink-0 text-sm font-medium text-primary transition-colors hover:text-primary-dark cursor-pointer"
         >
-          Xem tất cả &rsaquo;
+          {t("product_detail.suggested.view_all")}
         </Link>
       </div>
 

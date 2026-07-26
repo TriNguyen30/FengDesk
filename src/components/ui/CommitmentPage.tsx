@@ -1,35 +1,33 @@
 import { useState } from "react";
 import { ShieldCheck, Leaf, Truck, HeartHandshake, Plus, Minus } from "lucide-react";
-
-const commitments = [
-    {
-        icon: <Leaf className="text-green-600" size={24} strokeWidth={1.5} />,
-        title: "100% Cây Khỏe Mạnh & Tuyển Chọn Khắt Khe",
-        description:
-            "Mỗi chậu cây đều trải qua quy trình 5 bước kiểm tra chất lượng từ vườn ươm. Chúng tôi cam kết không giao cây có dấu hiệu sâu bệnh, héo úa hoặc hư hỏng. Cây luôn đạt trạng thái sinh trưởng tốt nhất khi đến tay bạn.",
-    },
-    {
-        icon: <ShieldCheck className="text-green-600" size={24} strokeWidth={1.5} />,
-        title: "Bảo Hành Sinh Trưởng & Đổi Trả Miễn Phí",
-        description:
-            "Sự an tâm của bạn là ưu tiên hàng đầu. FengDesk bảo hành 1 đổi 1 trong vòng 7 ngày đầu tiên nếu cây có bất kỳ dấu hiệu suy yếu nào do nguyên nhân khách quan hoặc do quá trình vận chuyển.",
-    },
-    {
-        icon: <HeartHandshake className="text-green-600" size={24} strokeWidth={1.5} />,
-        title: "Đồng Hành & Tư Vấn Tận Tâm Trọn Đời",
-        description:
-            "Bạn không chỉ mua một cái cây, bạn nhận được sự đồng hành. Đội ngũ chuyên gia phong thủy và kỹ sư nông nghiệp của chúng tôi luôn sẵn sàng hỗ trợ bạn cách chăm sóc cây phù hợp với từng không gian sống.",
-    },
-    {
-        icon: <Truck className="text-green-600" size={24} strokeWidth={1.5} />,
-        title: "Đóng Gói Tiêu Chuẩn & Giao Hàng An Toàn",
-        description:
-            "Hệ thống đóng gói độc quyền với nhiều lớp bảo vệ giúp cố định chậu và cành lá. Chúng tôi đảm bảo cây luôn an toàn, không dập nát, gãy cành hay đổ đất trong suốt chặng đường vận chuyển.",
-    },
-];
+import { useTranslation } from "react-i18next";
 
 export default function CommitmentPage() {
+    const { t } = useTranslation();
     const [openIndices, setOpenIndices] = useState<number[]>([]);
+
+    const commitments = [
+        {
+            icon: <Leaf className="text-green-600" size={24} strokeWidth={1.5} />,
+            title: t("commitment.c1.title"),
+            description: t("commitment.c1.desc"),
+        },
+        {
+            icon: <ShieldCheck className="text-green-600" size={24} strokeWidth={1.5} />,
+            title: t("commitment.c2.title"),
+            description: t("commitment.c2.desc"),
+        },
+        {
+            icon: <HeartHandshake className="text-green-600" size={24} strokeWidth={1.5} />,
+            title: t("commitment.c3.title"),
+            description: t("commitment.c3.desc"),
+        },
+        {
+            icon: <Truck className="text-green-600" size={24} strokeWidth={1.5} />,
+            title: t("commitment.c4.title"),
+            description: t("commitment.c4.desc"),
+        },
+    ];
 
     const toggleAccordion = (idx: number) => {
         setOpenIndices((prev) =>
@@ -42,10 +40,10 @@ export default function CommitmentPage() {
             <div className="mx-auto max-w-6xl">
                 <div className="mb-8 text-center">
                     <h2 className="mb-3 text-2xl font-semibold tracking-tight text-gray-900 sm:text-3xl">
-                        Cam Kết Từ <span className="text-green-600">FengDesk</span>
+                        {t("commitment.title1")} <span className="text-green-600">{t("commitment.title2")}</span>
                     </h2>
                     <p className="mx-auto max-w-2xl text-xm text-gray-600">
-                        Chúng tôi tin rằng mỗi chậu cây không chỉ là một vật trang trí, mà còn là một người bạn đồng hành mang lại may mắn và năng lượng tích cực cho bạn.
+                        {t("commitment.desc")}
                     </p>
                 </div>
 

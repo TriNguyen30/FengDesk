@@ -50,6 +50,7 @@ export default function ShopDetailPage() {
     products,
     loading: loadingProducts,
     totalCount,
+    query,
   } = useProductList({
     storeId: id || undefined,
     search: searchQuery || undefined,
@@ -286,6 +287,7 @@ export default function ShopDetailPage() {
             shopId={shop.id}
             isShopMember={isShopMember}
             canAddProduct={isOwnerView}
+            onRefresh={() => query.refetch()}
           />
         </div>
       )}
