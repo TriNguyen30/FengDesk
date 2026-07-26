@@ -14,5 +14,46 @@
     "logout_success": "Đăng xuất thành công",
     "login_required_ai": "Vui lòng đăng nhập để dùng trợ lý AI",
     "default_user": "Người dùng"
+  },
+  "cart": {
+    "decrease_quantity": "Giảm số lượng",
+    "increase_quantity": "Tăng số lượng",
+    "remove_from_cart": "Xóa khỏi giỏ",
+    "cart_with_items_count": "Giỏ hàng, {{count}} sản phẩm",
+    "cart": "Giỏ hàng",
+    "cart_cleared": "Đã xóa giỏ hàng",
+    "clear_all": "Xóa tất cả",
+    "close": "Đóng",
+    "empty_cart": "Chưa có sản phẩm nào",
+    "shop_now": "Mua sắm ngay",
+    "subtotal": "Tạm tính",
+    "view_cart": "Xem giỏ hàng"
+  },
+  "notification": {
+    "mark_all_read_success": "Đã đánh dấu tất cả thông báo là đã đọc",
+    "mark_all_read_error": "Không thể cập nhật trạng thái thông báo",
+    "notification_with_unread_count": "Thông báo, {{count}} tin chưa đọc",
+    "notification": "Thông báo",
+    "your_notifications": "Thông báo của bạn",
+    "mark_all_read": "Đánh dấu tất cả đã đọc",
+    "loading_notifications": "Đang tải thông báo...",
+    "no_notifications": "Chưa có thông báo nào",
+    "no_notifications_desc": "Chúng tôi sẽ thông báo cho bạn khi có cập nhật mới."
+  },
+  "search": {
+    "search_placeholder_1": "Bạn cần tìm cây gì?",
+    "search_placeholder_2": "Tìm cây phong thủy theo mệnh...",
+    "search_placeholder_3": "Cây cảnh để bàn làm việc...",
+    "search_placeholder_4": "Tìm kiếm vật phẩm may mắn...",
+    "search_placeholder_5": "Cây quà tặng ý nghĩa...",
+    "search_button_aria_label": "Tìm kiếm"
+  },
+  "category_bar": {
+    "home": "Trang chủ",
+    "products": "Sản phẩm",
+    "about": "Giới thiệu",
+    "news": "Tin tức",
+    "contact": "Liên Hệ",
+    "categories": "Danh mục"
   }
 }

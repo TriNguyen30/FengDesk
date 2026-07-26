@@ -171,7 +171,7 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl px-3 py-4 sm:px-6 sm:py-6">
+    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       <button
         onClick={() => navigate("/cart")}
         className="mb-4 flex items-center gap-1.5 text-sm font-medium text-gray-500 hover:text-primary cursor-pointer transition-colors"

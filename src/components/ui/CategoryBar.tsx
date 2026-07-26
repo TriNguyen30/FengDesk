@@ -1,15 +1,16 @@
 import { useEffect, useRef, useState } from "react";
 import { TextAlignJustify, ChevronDown } from "lucide-react";
 import { useNavigate, NavLink } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { getCategoriesRequest } from "@/features/category/api/category.api";
 import type { Category } from "@/features/category/types/category";
 
 const navItems = [
-  { label: "Trang chủ", to: "/" },
-  { label: "Sản phẩm", to: "/products" },
-  { label: "Giới thiệu", to: "/about" },
-  { label: "Tin tức", to: "/news" },
-  { label: "Liên Hệ", to: "/contact" },
+  { labelKey: "home", to: "/" },
+  { labelKey: "products", to: "/products" },
+  { labelKey: "about", to: "/about" },
+  { labelKey: "news", to: "/news" },
+  { labelKey: "contact", to: "/contact" },
 ] as const;
 
 const navLinkClass = ({ isActive }: { isActive: boolean }) =>
@@ -24,6 +25,7 @@ const navLinkClass = ({ isActive }: { isActive: boolean }) =>
   ].join(" ");
 
 export default function CategoryBar() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -67,7 +69,7 @@ export default function CategoryBar() {
           >
             <span className="flex items-center gap-2">
               <TextAlignJustify size={18} className="shrink-0" />
-              <span>Danh mục</span>
+              <span>{t("category_bar.categories")}</span>
             </span>
             <ChevronDown
               size={16}
@@ -101,7 +103,7 @@ export default function CategoryBar() {
           {navItems.map((item) => (
             <li key={item.to} className="shrink-0">
               <NavLink to={item.to} end={item.to === "/"} className={navLinkClass}>
-                {item.label}
+                {t(`category_bar.${item.labelKey}`)}
               </NavLink>
             </li>
           ))}

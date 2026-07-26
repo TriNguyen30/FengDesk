@@ -217,13 +217,15 @@ export default function Navbar() {
             <div className="flex-1 md:hidden" />
 
             {/* Icon group — always visible */}
-            <div className="flex shrink-0 items-center gap-1 sm:gap-3">
-              {user && <WorkspaceSwitcher />}
+            <div className="flex shrink-0 items-center gap-0.5 sm:gap-3">
+              <div className="hidden sm:block">
+                {user && <WorkspaceSwitcher />}
+              </div>
 
               <button
                 type="button"
                 onClick={openAiAssistant}
-                className="flex min-w-[44px] flex-col items-center gap-0.5 rounded-lg px-1 py-1 text-gray-700 transition-colors hover:text-primary cursor-pointer"
+                className="flex min-w-[36px] sm:min-w-[44px] flex-col items-center gap-0.5 rounded-lg px-1 py-1 text-gray-700 transition-colors hover:text-primary cursor-pointer"
                 aria-label="Trợ lý AI"
               >
                 <Bot size={22} strokeWidth={1.8} />
@@ -243,7 +245,7 @@ export default function Navbar() {
                 >
                   <button
                     type="button"
-                    className="flex min-w-[44px] flex-col items-center gap-0.5 rounded-lg px-1 py-1 text-gray-700 transition-colors hover:text-primary cursor-pointer"
+                    className="flex min-w-[36px] sm:min-w-[44px] flex-col items-center gap-0.5 rounded-lg px-1 py-1 text-gray-700 transition-colors hover:text-primary cursor-pointer"
                     aria-label="Tài khoản"
                     onClick={() => {
                       closeUserDropdown();
@@ -329,7 +331,7 @@ export default function Navbar() {
                 <button
                   type="button"
                   onClick={() => dispatch(setAuthModal("login"))}
-                  className="flex min-w-[44px] flex-col items-center gap-0.5 rounded-lg px-1 py-1 text-gray-700 transition-colors hover:text-primary active:bg-gray-100 cursor-pointer"
+                  className="flex min-w-[36px] sm:min-w-[44px] flex-col items-center gap-0.5 rounded-lg px-1 py-1 text-gray-700 transition-colors hover:text-primary active:bg-gray-100 cursor-pointer"
                   aria-label="Tài khoản"
                 >
                   <User size={22} strokeWidth={1.8} />
@@ -339,7 +341,7 @@ export default function Navbar() {
                 </button>
               )}
 
-              <div className="h-6 w-px bg-gray-200" />
+              <div className="hidden sm:block h-6 w-px bg-gray-200" />
 
               <CartDropDown />
             </div>

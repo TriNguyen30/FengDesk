@@ -14,5 +14,46 @@
     "logout_success": "Logged out successfully",
     "login_required_ai": "Please login to use AI Assistant",
     "default_user": "User"
+  },
+  "cart": {
+    "decrease_quantity": "Decrease quantity",
+    "increase_quantity": "Increase quantity",
+    "remove_from_cart": "Remove from cart",
+    "cart_with_items_count": "Cart, {{count}} items",
+    "cart": "Cart",
+    "cart_cleared": "Cart cleared",
+    "clear_all": "Clear all",
+    "close": "Close",
+    "empty_cart": "No products yet",
+    "shop_now": "Shop now",
+    "subtotal": "Subtotal",
+    "view_cart": "View cart"
+  },
+  "notification": {
+    "mark_all_read_success": "Marked all notifications as read",
+    "mark_all_read_error": "Failed to update notification status",
+    "notification_with_unread_count": "Notifications, {{count}} unread messages",
+    "notification": "Notifications",
+    "your_notifications": "Your notifications",
+    "mark_all_read": "Mark all as read",
+    "loading_notifications": "Loading notifications...",
+    "no_notifications": "No notifications yet",
+    "no_notifications_desc": "We will notify you when there are new updates."
+  },
+  "search": {
+    "search_placeholder_1": "What plant are you looking for?",
+    "search_placeholder_2": "Find feng shui plants by element...",
+    "search_placeholder_3": "Desk plants for workspace...",
+    "search_placeholder_4": "Search for lucky items...",
+    "search_placeholder_5": "Meaningful gift plants...",
+    "search_button_aria_label": "Search"
+  },
+  "category_bar": {
+    "home": "Home",
+    "products": "Products",
+    "about": "About",
+    "news": "News",
+    "contact": "Contact",
+    "categories": "Categories"
   }
 }
