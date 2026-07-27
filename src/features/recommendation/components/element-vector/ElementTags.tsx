@@ -2,6 +2,7 @@ import type { ElementAnalysisRow } from "@/features/users/types/workspace";
 import {
   ATTENTION_BG,
   ATTENTION_TEXT,
+  TAG_GAP_THRESHOLD,
   elementColor,
   elementVi,
   gapStatus,
@@ -23,7 +24,7 @@ export default function ElementTags({ rows }: ElementTagsProps) {
   return (
     <div className="flex flex-wrap gap-2">
       {rows.map((row) => {
-        const status = gapStatus(row.gap);
+        const status = gapStatus(row.gap, TAG_GAP_THRESHOLD);
         const attention = status !== "balanced";
         return (
           <span

@@ -12,19 +12,22 @@ type AppProvidersProps = {
   children: ReactNode;
 };
 
-export default function AppProviders({ children }: AppProvidersProps) {
-  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || "";
+const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined;
 
-  return (
-    <GoogleOAuthProvider clientId={googleClientId}>
-      <Provider store={store}>
-        <QueryClientProvider client={queryClient}>
-          <BrowserRouter>
-            <SearchProvider>{children}</SearchProvider>
-          </BrowserRouter>
-          {/* <ReactQueryDevtools initialIsOpen={false} /> */}
-        </QueryClientProvider>
-      </Provider>
-    </GoogleOAuthProvider>
+export default function AppProviders({ children }: AppProvidersProps) {
+  const content = (
+    <Provider store={store}>
+      <QueryClientProvider client={queryClient}>
+        <BrowserRouter>
+          <SearchProvider>{children}</SearchProvider>
+        </BrowserRouter>
+        {/* <ReactQueryDevtools initialIsOpen={false} /> */}
+      </QueryClientProvider>
+    </Provider>
   );
+
+  // Chưa cấu hình VITE_GOOGLE_CLIENT_ID → bỏ qua provider, nút Google sẽ tự ẩn/báo lỗi khi bấm.
+  if (!googleClientId) return content;
+
+  return <GoogleOAuthProvider clientId={googleClientId}>{content}</GoogleOAuthProvider>;
 }

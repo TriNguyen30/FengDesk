@@ -1,7 +1,6 @@
-import { useState } from "react";
-import { useGoogleLogin } from "@react-oauth/google";
+import { GoogleLogin, type CredentialResponse } from "@react-oauth/google";
 import { toast } from "sonner";
-import { loginGoogleRequest } from "@/features/auth/api/auth.api";
+import { loginWithGoogleRequest } from "@/features/auth/api/auth.api";
 import { useAuthSession } from "@/features/auth/hooks/useAuthSession";
 import { getAuthErrorMessage } from "@/features/auth/utils/getAuthErrorMessage";
 
@@ -28,42 +27,44 @@ function GoogleIcon() {
   );
 }
 
+const googleConfigured = Boolean(import.meta.env.VITE_GOOGLE_CLIENT_ID);
+
 type SocialAuthButtonsProps = {
   dividerLabel?: string;
+  /** Gọi sau khi đăng nhập Google thành công — dùng để đóng modal/chuyển hướng ở component cha. */
   onSuccess?: () => void;
 };
 
 export default function SocialAuthButtons({ dividerLabel = "HOẶC", onSuccess }: SocialAuthButtonsProps) {
-  const [isLoading, setIsLoading] = useState(false);
   const { persistSession } = useAuthSession();
 
-  const handleGoogle = useGoogleLogin({
-    onSuccess: async (tokenResponse) => {
-      setIsLoading(true);
-      try {
-        const response = await loginGoogleRequest({ token: tokenResponse.access_token });
-        
-        if (!response.isSuccess || !response.data) {
-          toast.error(response.message || "Đăng nhập Google thất bại");
-          return;
-        }
+  const handleGoogleSuccess = async (credentialResponse: CredentialResponse) => {
+    if (!credentialResponse.credential) {
+      toast.error("Không lấy được thông tin đăng nhập từ Google.");
+      return;
+    }
 
-        persistSession(response.data);
-        toast.success(response.message || "Đăng nhập thành công");
-        onSuccess?.();
+    try {
+      const response = await loginWithGoogleRequest({ idToken: credentialResponse.credential });
 
-        const roles = (response.data.user.role ?? "").split(",").map((r) => r.trim());
-        if (roles.some((r) => r === "Staff" || r === "Manager" || r === "Admin")) {
-          window.location.assign("/manager");
-        }
-      } catch (error) {
-        toast.error(getAuthErrorMessage(error, "Đăng nhập Google thất bại. Vui lòng thử lại."));
-      } finally {
-        setIsLoading(false);
+      if (!response.isSuccess || !response.data) {
+        toast.error(response.message || "Đăng nhập Google thất bại");
+        return;
       }
-    },
-    onError: () => toast.error("Đăng nhập Google thất bại"),
-  });
+
+      persistSession(response.data);
+      toast.success(response.message || "Đăng nhập thành công");
+      onSuccess?.();
+
+      // Staff/Manager/Admin → vào khu điều hành. role có thể là chuỗi nhiều giá trị ("Customer, Staff").
+      const roles = (response.data.user.role ?? "").split(",").map((r) => r.trim());
+      if (roles.some((r) => r === "Staff" || r === "Manager" || r === "Admin")) {
+        window.location.assign("/manager");
+      }
+    } catch (error) {
+      toast.error(getAuthErrorMessage(error, "Đăng nhập Google thất bại. Vui lòng thử lại."));
+    }
+  };
 
   return (
     <>
@@ -76,17 +77,30 @@ export default function SocialAuthButtons({ dividerLabel = "HOẶC", onSuccess }
       </div>
 
       <div className="flex flex-col gap-2.5">
-        <button
-          type="button"
-          onClick={() => handleGoogle()}
-          disabled={isLoading}
-          className="flex min-h-11 w-full items-center justify-center rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm transition hover:bg-gray-50 active:bg-gray-100 cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          <div className="flex items-center gap-2">
-            <GoogleIcon />
-            <span>{isLoading ? "Đang xử lý..." : "Tiếp tục với Google"}</span>
+        {googleConfigured ? (
+          <div className="flex w-full justify-center">
+            <GoogleLogin
+              onSuccess={handleGoogleSuccess}
+              onError={() => toast.error("Đăng nhập Google thất bại. Vui lòng thử lại.")}
+              theme="outline"
+              size="large"
+              shape="rectangular"
+              text="continue_with"
+              locale="vi"
+            />
           </div>
-        </button>
+        ) : (
+          <button
+            type="button"
+            onClick={() => toast.info("Đăng nhập Google chưa được cấu hình.")}
+            className="flex min-h-11 w-full items-center justify-center rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm transition hover:bg-gray-50 active:bg-gray-100 cursor-pointer"
+          >
+            <div className="flex items-center gap-2">
+              <GoogleIcon />
+              <span>Tiếp tục với Google</span>
+            </div>
+          </button>
+        )}
       </div>
     </>
   );
