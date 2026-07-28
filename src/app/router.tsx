@@ -24,6 +24,12 @@ import ContactPage from "@/features/home/pages/ContactPage";
 import NewsPage from "@/features/home/pages/NewsPage";
 import ShopReturnsPage from "@/features/shop/pages/ShopReturnsPage";
 
+// Admin Pages
+import AdminLayout from "@/components/layouts/AdminLayout";
+import AdminDashboardPage from "@/features/admin/pages/AdminDashboardPage";
+import AdminUsersPage from "@/features/admin/pages/AdminUsersPage";
+import AdminUserDetailPage from "@/features/admin/pages/AdminUserDetailPage";
+
 // Profile Pages
 import ProfileLayout from "@/components/layouts/ProfileLayout";
 import ProfileInfoPage from "@/features/users/pages/ProfileInfoPage";
@@ -160,6 +166,19 @@ export default function AppRoutes() {
         <Route path="orders" element={<ManageOrdersPage />} />
         <Route path="order-returns" element={<ManageOrderReturnPage />} />
         <Route path="customers" element={<StaffSupportPage />} />
+      </Route>
+      <Route
+        path="/admin"
+        element={
+          <ProtectedRoute requireAdmin>
+            <AdminLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<Navigate to="dashboard" replace />} />
+        <Route path="dashboard" element={<AdminDashboardPage />} />
+        <Route path="users" element={<AdminUsersPage />} />
+        <Route path="users/:id" element={<AdminUserDetailPage />} />
       </Route>
       {/* 404 Fallback */}
       <Route path="*" element={<NotFoundPage />} />

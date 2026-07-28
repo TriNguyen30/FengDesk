@@ -1,0 +1,37 @@
+export interface AdminUser {
+  id: string;
+  email: string;
+  fullName: string;
+  phone: string | null;
+  roles: string[];
+  isActive: boolean;
+  tokenVersion: number;
+  createdAt: string;
+}
+
+export interface AdminPaginatedResponse<T> {
+  items: T[];
+  page: number;
+  pageSize: number;
+  totalCount: number;
+  totalPages: number;
+}
+
+export interface UpdateUserRolesPayload {
+  roles: string[];
+  reason: string;
+}
+
+export interface UpdateUserStatusPayload {
+  isActive: boolean;k
+  reason: string;
+}
+
+export interface AdminUserAuditLog {
+  id: string;
+  userId: string;
+  action: string;
+  details: string;
+  ipAddress: string | null;
+  createdAt: string;
+}

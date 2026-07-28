@@ -187,7 +187,7 @@ export default function SearchBar({
         type="button"
         onClick={handleSearch}
         aria-label="Search"
-        className="absolute right-0 top-0 z-10 flex h-10 min-h-10 w-10 min-w-10 items-center justify-center rounded-r-lg bg-primary transition-colors hover:bg-green-700 cursor-pointer sm:w-11 sm:min-w-11"
+        className="absolute right-0 top-0 z-10 flex h-10 min-h-10 w-10 min-w-10 items-center justify-center rounded-r-lg bg-primary transition-colors hover:bg-primary/90 cursor-pointer sm:w-11 sm:min-w-11"
       >
         <Search size={17} className="text-white" />
       </button>
