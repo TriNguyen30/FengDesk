@@ -1,5 +1,5 @@
 import Modal from "@/components/ui/Modal";
-import { AlertCircle, RefreshCw } from "lucide-react";
+import { AlertCircle, Loader2 } from "lucide-react";
 
 interface DeleteStoreModalProps {
   open: boolean;
@@ -57,7 +57,7 @@ export function DeleteStoreModal({
           >
             {deleting ? (
               <>
-                <RefreshCw size={14} className="animate-spin" />
+                <Loader2 size={14} className="animate-spin" />
                 Đang xử lý...
               </>
             ) : (

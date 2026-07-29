@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { X, Loader2 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { CreateAddressDto, UpdateAddressDto, Address } from "../types/address";
 import { createAddress, updateAddress, setDefaultAddress } from "../api/address.api";
 import { getProvinces, getDistrictsByProvinceId, getWardsByDistrictId } from "../api/location.api";
@@ -286,7 +287,33 @@ export default function AddressModal({ isOpen, onClose, onSuccess, address }: Ad
     [provinces, changeLocation],
   );
 
-  if (!isOpen) return null;
+  // Animation variants
+  const backdropVariants = {
+    hidden: { opacity: 0 },
+    visible: { opacity: 1, transition: { duration: 0.2 } },
+  };
+
+  const modalVariants = {
+    hidden: { opacity: 0, scale: 0.95, y: 20 },
+    visible: {
+      opacity: 1,
+      scale: 1,
+      y: 0,
+      transition: {
+        type: "spring",
+        damping: 25,
+        stiffness: 300,
+      },
+    },
+    exit: {
+      opacity: 0,
+      scale: 0.95,
+      y: 20,
+      transition: {
+        duration: 0.2,
+      },
+    },
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target as HTMLInputElement;
@@ -339,9 +366,25 @@ export default function AddressModal({ isOpen, onClose, onSuccess, address }: Ad
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4">
-      <div className="w-full max-w-2xl rounded-2xl bg-white shadow-xl max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4 sticky top-0 bg-white z-[500]">
+    <AnimatePresence>
+      {isOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <motion.div
+            variants={backdropVariants}
+            initial="hidden"
+            animate="visible"
+            exit="hidden"
+            className="absolute inset-0 bg-black/50 backdrop-blur-[2px]"
+            onClick={onClose}
+          />
+          <motion.div
+            variants={modalVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            className="relative z-[101] w-full max-w-2xl rounded-2xl bg-white shadow-xl max-h-[90vh] overflow-y-auto"
+          >
+            <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4 sticky top-0 bg-white z-[500]">
           <h2 className="text-lg font-bold text-gray-900">
             {address ? "Cập nhật địa chỉ" : "Thêm địa chỉ mới"}
           </h2>
@@ -475,7 +518,9 @@ export default function AddressModal({ isOpen, onClose, onSuccess, address }: Ad
             </button>
           </div>
         </form>
-      </div>
-    </div>
+          </motion.div>
+        </div>
+      )}
+    </AnimatePresence>
   );
 }

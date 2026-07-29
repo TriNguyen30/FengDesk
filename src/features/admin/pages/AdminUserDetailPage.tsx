@@ -272,7 +272,7 @@ export default function AdminUserDetailPage() {
                 <thead className="bg-slate-50 border-b border-slate-200 text-xs font-semibold uppercase tracking-wider text-slate-700 sticky top-0">
                   <tr>
                     <th className="px-5 py-3">Hành động</th>
-                    <th className="px-5 py-3">Chi tiết</th>
+                    <th className="px-5 py-3">Lý do / Chi tiết</th>
                     <th className="px-5 py-3">IP Address</th>
                     <th className="px-5 py-3">Thời gian</th>
                   </tr>
@@ -296,8 +296,12 @@ export default function AdminUserDetailPage() {
                         <td className="px-5 py-3 font-medium text-slate-900">
                           {log.action}
                         </td>
-                        <td className="px-5 py-3 text-slate-500 max-w-xs truncate" title={log.details}>
-                          {log.details}
+                        <td className="px-5 py-3 text-slate-500 max-w-xs truncate" title={log.reason || "Không có thông tin"}>
+                          {log.reason ? (
+                            <span>{log.reason}</span>
+                          ) : (
+                            <span className="italic text-slate-400">Không có</span>
+                          )}
                         </td>
                         <td className="px-5 py-3 whitespace-nowrap">
                           {log.ipAddress || "N/A"}
@@ -335,7 +339,7 @@ export default function AdminUserDetailPage() {
             <button
               onClick={() => setReasonModalOpen(false)}
               disabled={updateRoles.isPending || updateStatus.isPending}
-              className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50 transition-colors"
+              className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50 transition-colors cursor-pointer"
             >
               Hủy
             </button>
@@ -345,7 +349,7 @@ export default function AdminUserDetailPage() {
               className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-dark disabled:opacity-50 transition-colors"
             >
               {(updateRoles.isPending || updateStatus.isPending) && (
-                <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent cursor-pointer" />
               )}
               Xác nhận
             </button>

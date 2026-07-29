@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import { returnApi } from "@/features/return/api/return.api";
 import type { ReturnItem, ReturnDetail } from "@/features/return/types/return.d.ts";
 import { useTranslation } from "react-i18next";
+import { motion, AnimatePresence } from "framer-motion";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -119,6 +120,34 @@ export default function ProfileReturnOrder() {
   const [shipBackId, setShipBackId] = useState<string | null>(null);
   const [shippingBack, setShippingBack] = useState(false);
   const [trackingCode, setTrackingCode] = useState("");
+
+  // Animation variants
+  const backdropVariants = {
+    hidden: { opacity: 0 },
+    visible: { opacity: 1, transition: { duration: 0.2 } },
+  };
+
+  const modalVariants = {
+    hidden: { opacity: 0, scale: 0.95, y: 20 },
+    visible: {
+      opacity: 1,
+      scale: 1,
+      y: 0,
+      transition: {
+        type: "spring",
+        damping: 25,
+        stiffness: 300,
+      },
+    },
+    exit: {
+      opacity: 0,
+      scale: 0.95,
+      y: 20,
+      transition: {
+        duration: 0.2,
+      },
+    },
+  };
 
   const fetchReturns = useCallback(async (p: number) => {
     setLoading(true);
@@ -368,9 +397,24 @@ export default function ProfileReturnOrder() {
       )}
 
       {/* Cancel confirm modal */}
-      {cancelId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="w-full max-w-sm rounded-2xl bg-white shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+      <AnimatePresence>
+        {cancelId && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <motion.div
+              variants={backdropVariants}
+              initial="hidden"
+              animate="visible"
+              exit="hidden"
+              className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+              onClick={() => setCancelId(null)}
+            />
+            <motion.div
+              variants={modalVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              className="relative z-[101] w-full max-w-sm rounded-2xl bg-white shadow-xl overflow-hidden"
+            >
             <div className="px-6 py-5 border-b border-gray-100">
               <h3 className="text-base font-bold text-gray-900">{t("profile_return_order.cancel_modal.title")}</h3>
               <p className="mt-1 text-sm text-gray-500">
@@ -399,14 +443,33 @@ export default function ProfileReturnOrder() {
                 )}
               </button>
             </div>
+            </motion.div>
           </div>
-        </div>
-      )}
+        )}
+      </AnimatePresence>
 
       {/* Ship back confirm modal */}
-      {shipBackId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="w-full max-w-sm rounded-2xl bg-white shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+      <AnimatePresence>
+        {shipBackId && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <motion.div
+              variants={backdropVariants}
+              initial="hidden"
+              animate="visible"
+              exit="hidden"
+              className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+              onClick={() => {
+                setShipBackId(null);
+                setTrackingCode("");
+              }}
+            />
+            <motion.div
+              variants={modalVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              className="relative z-[101] w-full max-w-sm rounded-2xl bg-white shadow-xl overflow-hidden"
+            >
             <div className="px-6 py-5 border-b border-gray-100">
               <h3 className="text-base font-bold text-gray-900">{t("profile_return_order.ship_modal.title")}</h3>
               <p className="mt-1 text-sm text-gray-500">
@@ -447,14 +510,30 @@ export default function ProfileReturnOrder() {
                 )}
               </button>
             </div>
+            </motion.div>
           </div>
-        </div>
-      )}
+        )}
+      </AnimatePresence>
 
       {/* ── Detail Modal ───────────────────────────────────────────────────── */}
-      {detailModal.open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="relative w-full max-w-2xl bg-white rounded-2xl shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+      <AnimatePresence>
+        {detailModal.open && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <motion.div
+              variants={backdropVariants}
+              initial="hidden"
+              animate="visible"
+              exit="hidden"
+              className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+              onClick={closeDetailModal}
+            />
+            <motion.div
+              variants={modalVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              className="relative z-[101] w-full max-w-2xl bg-white rounded-2xl shadow-xl overflow-hidden"
+            >
             {/* Header */}
             <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4 bg-orange-50/60">
               <div>
@@ -673,9 +752,10 @@ export default function ProfileReturnOrder() {
                 {t("profile_return_order.detail_modal.close")}
               </button>
             </div>
+            </motion.div>
           </div>
-        </div>
-      )}
+        )}
+      </AnimatePresence>
     </div>
   );
 }

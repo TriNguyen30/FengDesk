@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import {
-  RefreshCw,
+  Loader2,
   Image as ImageIcon,
   Layers,
   Sparkles,
@@ -232,9 +232,9 @@ export default function EditProductModal({
 
   if (loading) {
     content = (
-      <div className="flex flex-col items-center justify-center py-40 gap-3">
-        <RefreshCw className="h-8 w-8 text-primary animate-spin" />
-        <p className="text-sm font-medium text-gray-500">Đang tải thông tin sản phẩm...</p>
+      <div className="flex flex-col items-center justify-center py-20 gap-3">
+        <Loader2 className="h-8 w-8 text-primary animate-spin" />
+        <p className="text-sm text-gray-400 font-medium">Đang tải thông tin sản phẩm...</p>
       </div>
     );
   } else if (!product) {

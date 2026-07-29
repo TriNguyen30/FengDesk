@@ -23,15 +23,19 @@ export interface UpdateUserRolesPayload {
 }
 
 export interface UpdateUserStatusPayload {
-  isActive: boolean;k
+  isActive: boolean;
   reason: string;
 }
 
 export interface AdminUserAuditLog {
   id: string;
-  userId: string;
+  actorUserId: string;
   action: string;
-  details: string;
+  resourceType: string;
+  resourceId: string;
+  oldValueJson: string | null;
+  newValueJson: string | null;
+  reason: string | null;
   ipAddress: string | null;
   createdAt: string;
 }
