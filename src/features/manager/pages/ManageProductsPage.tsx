@@ -13,6 +13,7 @@ import {
   XCircle,
   AlertCircle,
   Package,
+  Loader2,
 } from "lucide-react";
 import { useProductList, useDeleteProduct } from "@/features/products";
 import { getAllShopRequest } from "@/features/shop/api/shop.api";
@@ -225,8 +226,8 @@ export default function ManageProductsPage() {
         <div className="overflow-x-auto">
           {loading ? (
             <div className="flex flex-col items-center justify-center py-20 gap-3">
-              <RefreshCw className="h-8 w-8 text-primary animate-spin" />
-              <p className="text-sm font-medium text-gray-500">Đang tải danh sách sản phẩm...</p>
+              <Loader2 className="h-8 w-8 text-primary animate-spin" />
+              <p className="text-sm text-gray-400 font-medium">Đang tải danh sách sản phẩm...</p>
             </div>
           ) : products.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center px-4">
@@ -399,7 +400,7 @@ export default function ManageProductsPage() {
             >
               {deleting ? (
                 <>
-                  <RefreshCw size={14} className="animate-spin" />
+                  <Loader2 size={14} className="animate-spin" />
                   Đang xóa...
                 </>
               ) : (

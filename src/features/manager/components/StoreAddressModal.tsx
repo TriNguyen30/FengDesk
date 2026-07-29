@@ -1,6 +1,6 @@
 import React from "react";
 import Modal from "@/components/ui/Modal";
-import { RefreshCw } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import AddressLocationFields from "@/features/users/components/AddressLocationFields";
 import type { Provinces, District, Ward } from "@/features/users/types/location";
 import type { StoreAddress } from "@/features/shop/types/shop";
@@ -109,7 +109,7 @@ export function StoreAddressModal({
             disabled={submitting}
             className="flex-1 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white hover:bg-primary-dark transition-colors disabled:opacity-50 flex items-center justify-center gap-1.5 cursor-pointer"
           >
-            {submitting && <RefreshCw size={14} className="animate-spin" />}
+            {submitting && <Loader2 size={14} className="animate-spin" />}
             Lưu địa chỉ
           </button>
         </div>

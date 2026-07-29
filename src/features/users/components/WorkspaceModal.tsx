@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { X } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { getElementInputVocabulary, getStyles, getWorkspaceTypes } from "../api/workspace.api";
 import { useWorkspaceIntake } from "../hooks/useWorkspaceIntake";
@@ -79,7 +80,33 @@ export default function WorkspaceModal({
     fetchOptions();
   }, [isOpen]);
 
-  if (!isOpen) return null;
+  // Animation variants
+  const backdropVariants = {
+    hidden: { opacity: 0 },
+    visible: { opacity: 1, transition: { duration: 0.2 } },
+  };
+
+  const modalVariants = {
+    hidden: { opacity: 0, scale: 0.95, y: 20 },
+    visible: {
+      opacity: 1,
+      scale: 1,
+      y: 0,
+      transition: {
+        type: "spring",
+        damping: 25,
+        stiffness: 300,
+      },
+    },
+    exit: {
+      opacity: 0,
+      scale: 0.95,
+      y: 20,
+      transition: {
+        duration: 0.2,
+      },
+    },
+  };
 
   const handleAnalyze = async (description: string, imageUrls?: string[], think?: boolean) => {
     try {
@@ -98,9 +125,25 @@ export default function WorkspaceModal({
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4">
-      <div className="w-full max-w-lg rounded-2xl bg-white shadow-xl max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4 sticky top-0 bg-white z-10">
+    <AnimatePresence>
+      {isOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <motion.div
+            variants={backdropVariants}
+            initial="hidden"
+            animate="visible"
+            exit="hidden"
+            className="absolute inset-0 bg-black/50 backdrop-blur-[2px]"
+            onClick={onClose}
+          />
+          <motion.div
+            variants={modalVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            className="relative z-[101] w-full max-w-lg rounded-2xl bg-white shadow-xl max-h-[90vh] overflow-y-auto"
+          >
+            <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4 sticky top-0 bg-white z-10">
           <h2 className="text-lg font-bold text-gray-900">
             {isEditMode
               ? "Chỉnh sửa không gian làm việc"
@@ -149,7 +192,9 @@ export default function WorkspaceModal({
             />
           </>
         )}
-      </div>
-    </div>
+          </motion.div>
+        </div>
+      )}
+    </AnimatePresence>
   );
 }

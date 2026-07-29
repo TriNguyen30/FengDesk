@@ -1,5 +1,5 @@
 import React from "react";
-import { MapPin, Plus, Info, Users, Shield, UserMinus, UserPlus, RefreshCw } from "lucide-react";
+import { MapPin, Plus, Info, Users, Shield, UserMinus, UserPlus, Loader2 } from "lucide-react";
 import type { Shop, StoreAddress, StoreStaff } from "@/features/shop/types/shop";
 
 interface StoreDetailCardProps {
@@ -250,7 +250,7 @@ export function StoreDetailCard({
                       disabled={submittingStaff}
                       className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-dark transition-colors disabled:opacity-50 flex items-center justify-center cursor-pointer min-w-fit"
                     >
-                      {submittingStaff ? <RefreshCw className="animate-spin" size={16} /> : "Thêm"}
+                      {submittingStaff ? <Loader2 className="animate-spin" size={16} /> : "Thêm"}
                     </button>
                   </div>
                 </div>
@@ -260,9 +260,9 @@ export function StoreDetailCard({
             {/* Staff List Table */}
             <div className="rounded-xl border border-gray-100 overflow-hidden">
               {loadingStaff ? (
-                <div className="flex flex-col items-center justify-center py-10 gap-2">
-                  <RefreshCw className="h-5 w-5 text-primary animate-spin" />
-                  <span className="text-xs text-gray-400">Đang tải nhân viên...</span>
+                <div className="flex flex-col items-center justify-center py-20 gap-3">
+                  <Loader2 className="h-8 w-8 text-primary animate-spin" />
+                  <span className="text-sm text-gray-400 font-medium">Đang tải nhân viên...</span>
                 </div>
               ) : staff.length === 0 ? (
                 <div className="text-center py-10 text-gray-400 text-sm bg-white">
@@ -313,7 +313,7 @@ export function StoreDetailCard({
                             title="Gỡ nhân viên khỏi chi nhánh"
                           >
                             {deletingStaffId === member.id ? (
-                              <RefreshCw className="animate-spin" size={14} />
+                              <Loader2 className="animate-spin" size={14} />
                             ) : (
                               <UserMinus size={14} />
                             )}
