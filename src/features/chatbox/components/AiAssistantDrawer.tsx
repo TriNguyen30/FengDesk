@@ -102,11 +102,12 @@ export default function AiAssistantDrawer({ open, onClose, productId }: AiAssist
   // (không smooth) và scroll-event bị bỏ qua — vì smooth animation đi ngang vùng scrollTop < 60 sẽ
   // kích hoạt load-more, prepend tin cũ hủy animation giữa chừng → kẹt lơ lửng trước đáy.
   const initialScrolledRef = useRef(false);
-  const pointerStartXRef = useRef<number | null>(null);
-  const resizeTargetWidthRef = useRef<number>(DEFAULT_DRAWER_WIDTH);
-  const resizeFrameRef = useRef<number | null>(null);
-  const clickStartRef = useRef<{ x: number; y: number } | null>(null);
-  const clickTriggeredRef = useRef(false);
+  // Kéo resize ghi thẳng width vào DOM node này (không qua state) — xem `startResize`.
+  const asideRef = useRef<HTMLElement>(null);
+  /** Vị trí chuột lúc bấm xuống viền: vừa để tính width, vừa để phân biệt "click" với "kéo". */
+  const resizeStartRef = useRef<{ x: number; y: number } | null>(null);
+  /** Width mới nhất trong lúc kéo — chỉ đẩy vào React state một lần khi thả chuột. */
+  const resizeWidthRef = useRef<number>(DEFAULT_DRAWER_WIDTH);
 
   // Rewind (sửa & gửi lại tin của mình): id tin đang sửa + nội dung nháp.
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -197,37 +198,34 @@ export default function AiAssistantDrawer({ open, onClose, productId }: AiAssist
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  // Kéo resize: KHÔNG setState mỗi lần chuột nhích. Mỗi lần setState ở đây sẽ render lại toàn bộ
+  // khung chat (danh sách tin + Markdown) — đó là nguyên nhân kéo bị lag. Trong lúc kéo chỉ ghi
+  // thẳng `style.width` vào DOM node; React chỉ được biết một lần duy nhất lúc thả chuột.
   useEffect(() => {
     if (!isResizing) return;
 
     const handlePointerMove = (event: globalThis.MouseEvent) => {
-      if (pointerStartXRef.current == null) return;
-      resizeTargetWidthRef.current = clampDrawerWidth(
-        window.innerWidth - event.clientX,
-        window.innerWidth,
-      );
-
-      if (resizeFrameRef.current != null) {
-        cancelAnimationFrame(resizeFrameRef.current);
-      }
-
-      resizeFrameRef.current = requestAnimationFrame(() => {
-        setDrawerWidth((prev) => {
-          const nextWidth = prev + (resizeTargetWidthRef.current - prev) * 0.22;
-          return clampDrawerWidth(nextWidth, window.innerWidth);
-        });
-      });
+      const aside = asideRef.current;
+      if (!aside || resizeStartRef.current == null) return;
+      // Bám 1:1 theo con trỏ. Bản cũ nội suy 22%/frame nên viền luôn chạy sau tay → cảm giác ì.
+      const next = clampDrawerWidth(window.innerWidth - event.clientX, window.innerWidth);
+      resizeWidthRef.current = next;
+      aside.style.width = `${next}px`;
     };
 
-    const handlePointerUp = () => {
-      if (resizeFrameRef.current != null) {
-        cancelAnimationFrame(resizeFrameRef.current);
-        resizeFrameRef.current = null;
-      }
+    const handlePointerUp = (event: globalThis.MouseEvent) => {
+      const start = resizeStartRef.current;
       setIsResizing(false);
-      pointerStartXRef.current = null;
+      resizeStartRef.current = null;
       document.body.style.cursor = "";
       document.body.style.userSelect = "";
+
+      // Bấm vào viền mà gần như không di chuyển = click → nhảy sang mốc rộng kế tiếp.
+      if (start && Math.hypot(event.clientX - start.x, event.clientY - start.y) <= 8) {
+        cycleDrawerWidth();
+        return;
+      }
+      setDrawerWidth(resizeWidthRef.current);
     };
 
     document.body.style.cursor = "ew-resize";
@@ -236,10 +234,6 @@ export default function AiAssistantDrawer({ open, onClose, productId }: AiAssist
     window.addEventListener("mouseup", handlePointerUp);
 
     return () => {
-      if (resizeFrameRef.current != null) {
-        cancelAnimationFrame(resizeFrameRef.current);
-        resizeFrameRef.current = null;
-      }
       window.removeEventListener("mousemove", handlePointerMove);
       window.removeEventListener("mouseup", handlePointerUp);
       document.body.style.cursor = "";
@@ -277,9 +271,8 @@ export default function AiAssistantDrawer({ open, onClose, productId }: AiAssist
 
   const startResize = (event: MouseEvent<HTMLDivElement>) => {
     event.preventDefault();
-    clickTriggeredRef.current = false;
-    pointerStartXRef.current = event.clientX;
-    clickStartRef.current = { x: event.clientX, y: event.clientY };
+    resizeStartRef.current = { x: event.clientX, y: event.clientY };
+    resizeWidthRef.current = drawerWidth;
     setIsResizing(true);
   };
 
@@ -293,33 +286,6 @@ export default function AiAssistantDrawer({ open, onClose, productId }: AiAssist
       if (Math.abs(current - midWidth) <= 8) return maxWidth;
       return minWidth;
     });
-  };
-
-  const handleDrawerMouseDown = (event: MouseEvent<HTMLElement>) => {
-    clickTriggeredRef.current = true;
-    clickStartRef.current = { x: event.clientX, y: event.clientY };
-  };
-
-  const handleDrawerClick = (event: MouseEvent<HTMLElement>) => {
-    const target = event.target as HTMLElement | null;
-    if (
-      target?.closest(
-        '[data-drawer-interaction="resize-handle"], button, input, textarea, select, a, [role="button"], [data-drawer-interaction="message-bubble"]',
-      )
-    ) {
-      return;
-    }
-
-    const start = clickStartRef.current;
-    if (!start) return;
-    const movedEnough = Math.hypot(event.clientX - start.x, event.clientY - start.y) > 8;
-    if (movedEnough || !clickTriggeredRef.current) {
-      clickTriggeredRef.current = false;
-      return;
-    }
-
-    clickTriggeredRef.current = false;
-    cycleDrawerWidth();
   };
 
   const isEmpty = messages.length === 0;
@@ -337,23 +303,26 @@ export default function AiAssistantDrawer({ open, onClose, productId }: AiAssist
 
       {/* Drawer trượt từ phải — viền trái sáng xanh (khung AI). */}
       <aside
+        ref={asideRef}
         role="dialog"
         aria-label="Trợ lý Phong Thủy"
         aria-hidden={!open}
         style={{
           width: `${drawerWidth}px`,
-          transition:
-            "width 300ms cubic-bezier(0, 0, 0.2, 1), translate 300ms cubic-bezier(0, 0, 0.2, 1), transform 300ms cubic-bezier(0, 0, 0.2, 1)",
+          // Đang kéo thì TẮT transition width: mỗi lần ghi width sẽ khởi động lại một animation 300ms,
+          // viền không bao giờ đuổi kịp con trỏ. Chỉ giữ transition cho lúc click nhảy mốc.
+          transition: isResizing
+            ? "translate 300ms cubic-bezier(0, 0, 0.2, 1), transform 300ms cubic-bezier(0, 0, 0.2, 1)"
+            : "width 300ms cubic-bezier(0, 0, 0.2, 1), translate 300ms cubic-bezier(0, 0, 0.2, 1), transform 300ms cubic-bezier(0, 0, 0.2, 1)",
         }}
         className={`fixed right-0 top-0 z-50 flex h-dvh flex-col border-l-2 border-primary/40 bg-white shadow-2xl ring-1 ring-primary/10 transition-transform duration-300 ease-out ${
           open ? "translate-x-0" : "translate-x-full"
         }`}
-        onMouseDown={handleDrawerMouseDown}
-        onClick={handleDrawerClick}
       >
         <div
           data-drawer-interaction="resize-handle"
-          className={`absolute left-0 top-0 h-full w-4 cursor-ew-resize touch-none transition-colors duration-200 ${
+          // z-10: phải nằm trên nội dung, vì giờ đây CHỈ dải viền này mới kích hoạt resize.
+          className={`absolute left-0 top-0 z-10 h-full w-4 cursor-ew-resize touch-none transition-colors duration-200 ${
             isResizing
               ? "bg-primary/10"
               : isHoveringResizeHandle

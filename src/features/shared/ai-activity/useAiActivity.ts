@@ -1,16 +1,21 @@
 import { useEffect, useState } from "react";
 import { chatHub } from "@/features/chatbox/lib/chatHub";
+import { sanitizeStreamText } from "./sanitizeStreamText";
+import { usePacedAiActivity } from "./usePacedAiActivity";
 import type { AiActivity } from "./types";
 
 /**
  * Lắng nghe trạng thái AI realtime của 1 operation (vd "chat-{chatboxId}").
  * `operationId` null → idle, không kết nối. Best-effort: lỗi realtime không throw.
+ *
+ * `activity` trả về đã qua `usePacedAiActivity` — chậm hơn model một nhịp để chuỗi suy luận kịp gõ hết
+ * trước khi đổi phase. Mọi nơi tiêu thụ (chat lớn, widget, workspace intake) hưởng chung nhịp này.
  */
 export function useAiActivity(operationId: string | null) {
   // Reset khi đổi operationId (mẫu React "adjusting state when a prop changes" — setState
   // ngay trong render, KHÔNG phải trong effect, để tránh cascading render).
   const [trackedId, setTrackedId] = useState(operationId);
-  const [activity, setActivity] = useState<AiActivity | null>(null);
+  const [rawActivity, setActivity] = useState<AiActivity | null>(null);
   // Lời dẫn trung gian (phase="narration") — dồn theo lượt, xóa khi done/error/đổi operation.
   const [narrations, setNarrations] = useState<string[]>([]);
   if (operationId !== trackedId) {
@@ -24,8 +29,11 @@ export function useAiActivity(operationId: string | null) {
 
     let cancelled = false;
     let turnActive = false; // đang trong 1 lượt xử lý AI (giữa phase đầu và done/error)
-    const onStatus = (a: AiActivity) => {
-      if (a.operationId !== operationId) return;
+    const onStatus = (raw: AiActivity) => {
+      if (raw.operationId !== operationId) return;
+      // Choke point FE: mọi text ephemeral đi qua bộ lọc TRƯỚC khi vào state, nên không component nào
+      // hiển thị bản thô — kể cả chỗ dùng sau này. BE đã lọc rồi; đây là lớp phòng thủ thứ hai.
+      const a: AiActivity = raw.note ? { ...raw, note: sanitizeStreamText(raw.note) } : raw;
       if (a.phase === "narration") {
         if (a.note) setNarrations((p) => [...p, a.note!]);
         return; // không đè indicator phase hiện tại
@@ -60,6 +68,8 @@ export function useAiActivity(operationId: string | null) {
       void chatHub.leaveAiOperation(operationId).catch(() => {});
     };
   }, [operationId]);
+
+  const activity = usePacedAiActivity(rawActivity, operationId);
 
   return { activity, isActive: activity !== null, narrations };
 }
