@@ -1,6 +1,5 @@
 import HeroSlider, { HeroSlide } from "@/components/ui/HeroSlider";
 import FeatureBar from "@/components/ui/FeatureBar";
-import CategoryBar from "@/components/ui/CategoryBar";
 import PopularCategories from "@/components/ui/PopularCategories";
 import { BestSellersSection } from "@/features/products/components/ProductCard";
 import FiveElementsSection from "../components/FiveElementsSection";
@@ -52,7 +51,6 @@ export default function HomePage() {
   return (
     <>
       <main className="mx-auto w-full min-w-0 max-w-screen-xl px-3 py-4 sm:px-4 sm:py-6 lg:px-10">
-        <CategoryBar />
         <HeroSlider slides={slides} />
         <ImageCollections />
         <FiveElementsSection />

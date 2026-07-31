@@ -192,6 +192,212 @@ body {
 }
 
 /* =========================
+   Ambient background — mảng mây màu + lớp fluid ASCII (trang chủ)
+   Mây là khối màu ĐẶC, viền sắc nét (không blur, không gradient mờ);
+   nhiều mảng chồng nhau qua mix-blend-mode: multiply → chỗ đậm chỗ nhạt.
+   Chỉ animate transform nên toàn bộ chạy trên GPU compositing.
+========================= */
+
+.fd-ambient {
+  overflow: hidden;
+  isolation: isolate;
+  background: linear-gradient(
+    180deg,
+    color-mix(in oklab, var(--color-neutral) 87%, var(--color-primary)) 0%,
+    color-mix(in oklab, var(--color-neutral) 84%, var(--color-secondary)) 55%,
+    color-mix(in oklab, var(--color-neutral) 86%, var(--color-primary)) 100%
+  );
+}
+
+.fd-cloud {
+  position: absolute;
+  display: block;
+  mix-blend-mode: multiply;
+  will-change: transform;
+}
+
+/* Nền tối: chồng mảng phải làm SÁNG lên thay vì tối đi. */
+:root[data-theme="dark"] .fd-cloud {
+  mix-blend-mode: screen;
+}
+
+.fd-cloud-1 {
+  top: -14rem;
+  left: -10rem;
+  width: 42rem;
+  height: 34rem;
+  background: color-mix(in oklab, var(--color-primary) 26%, transparent);
+  border-radius: 58% 42% 47% 53% / 52% 46% 54% 48%;
+  animation: fd-cloud-a 64s linear infinite;
+}
+
+.fd-cloud-2 {
+  top: 6%;
+  right: -16rem;
+  width: 38rem;
+  height: 38rem;
+  background: color-mix(in oklab, var(--color-secondary) 24%, transparent);
+  border-radius: 44% 56% 63% 37% / 46% 58% 42% 54%;
+  animation: fd-cloud-b 82s linear infinite;
+}
+
+.fd-cloud-3 {
+  top: 34%;
+  left: 12%;
+  width: 30rem;
+  height: 22rem;
+  background: color-mix(in oklab, var(--color-primary) 20%, transparent);
+  border-radius: 62% 38% 41% 59% / 55% 43% 57% 45%;
+  animation: fd-cloud-c 71s linear infinite;
+}
+
+.fd-cloud-4 {
+  bottom: -12rem;
+  left: 30%;
+  width: 34rem;
+  height: 28rem;
+  background: color-mix(in oklab, var(--color-info) 18%, transparent);
+  border-radius: 49% 51% 58% 42% / 61% 39% 61% 39%;
+  animation: fd-cloud-d 93s linear infinite;
+}
+
+.fd-cloud-5 {
+  top: 52%;
+  right: 6%;
+  width: 24rem;
+  height: 20rem;
+  background: color-mix(in oklab, var(--color-secondary) 22%, transparent);
+  border-radius: 53% 47% 36% 64% / 42% 57% 43% 58%;
+  animation: fd-cloud-e 57s linear infinite;
+}
+
+.fd-cloud-6 {
+  top: -6rem;
+  left: 42%;
+  width: 26rem;
+  height: 24rem;
+  background: color-mix(in oklab, var(--color-primary) 16%, transparent);
+  border-radius: 40% 60% 55% 45% / 50% 50% 50% 50%;
+  animation: fd-cloud-f 76s linear infinite;
+}
+
+/* Xoay chậm làm mép mảng mây biến đổi hình dáng mà vẫn giữ viền sắc nét. */
+@keyframes fd-cloud-a {
+  0% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+  50% {
+    transform: translate3d(8rem, 4rem, 0) rotate(180deg);
+  }
+  100% {
+    transform: translate3d(0, 0, 0) rotate(360deg);
+  }
+}
+
+@keyframes fd-cloud-b {
+  0% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+  50% {
+    transform: translate3d(-9rem, 6rem, 0) rotate(-180deg);
+  }
+  100% {
+    transform: translate3d(0, 0, 0) rotate(-360deg);
+  }
+}
+
+@keyframes fd-cloud-c {
+  0% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+  50% {
+    transform: translate3d(12rem, -5rem, 0) rotate(200deg);
+  }
+  100% {
+    transform: translate3d(0, 0, 0) rotate(360deg);
+  }
+}
+
+@keyframes fd-cloud-d {
+  0% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+  50% {
+    transform: translate3d(-10rem, -7rem, 0) rotate(-160deg);
+  }
+  100% {
+    transform: translate3d(0, 0, 0) rotate(-360deg);
+  }
+}
+
+@keyframes fd-cloud-e {
+  0% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+  50% {
+    transform: translate3d(-7rem, -9rem, 0) rotate(180deg);
+  }
+  100% {
+    transform: translate3d(0, 0, 0) rotate(360deg);
+  }
+}
+
+@keyframes fd-cloud-f {
+  0% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+  50% {
+    transform: translate3d(6rem, 9rem, 0) rotate(-180deg);
+  }
+  100% {
+    transform: translate3d(0, 0, 0) rotate(-360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fd-cloud {
+    animation: none;
+  }
+}
+
+/* Dải nội dung: làm đục phần nền nằm giữa hai viền dọc, canh đúng bề rộng
+   max-w-screen-xl (80rem) của Navbar / CategoryBar / main → viền trùng đúng
+   mép các mảng mây nhìn thấy ở hai bên. */
+.fd-rail {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  max-width: 80rem;
+  margin-inline: auto;
+  /* Không phủ màu — chỉ làm đục phần nền nằm dưới. */
+  backdrop-filter: blur(8px) saturate(1.05);
+}
+
+.fd-rail::before,
+.fd-rail::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    color-mix(in oklab, var(--color-border-dark) 85%, transparent) 10%,
+    color-mix(in oklab, var(--color-border-dark) 85%, transparent) 90%,
+    transparent 100%
+  );
+}
+
+.fd-rail::before {
+  left: 0;
+}
+
+.fd-rail::after {
+  right: 0;
+}
+
+/* =========================
    Splide — mobile-friendly hero
 ========================= */
 
