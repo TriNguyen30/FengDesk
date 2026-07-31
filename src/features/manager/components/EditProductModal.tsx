@@ -7,6 +7,7 @@ import {
   Info,
   DollarSign,
   AlertCircle,
+  Box,
 } from "lucide-react";
 import { productApi } from "@/features/products/api/product.api";
 import { getCategoriesRequest } from "@/features/category/api/category.api";
@@ -21,11 +22,12 @@ import {
   ProductImagesSection,
   ProductRelationsForm,
   ProductFengShuiForm,
+  ProductModel3DSection,
   type FengShuiValues,
 } from "@/features/manager/components";
 import Modal from "@/components/ui/Modal";
 
-type TabType = "basic" | "variants" | "images" | "categories" | "feng-shui";
+type TabType = "basic" | "variants" | "images" | "categories" | "feng-shui" | "model-3d";
 
 const EMPTY_FENG_SHUI: FengShuiValues = {
   primaryElement: "Kim",
@@ -262,6 +264,7 @@ export default function EditProductModal({
                 { id: "images", label: `Hình ảnh (${product.images?.length || 0})`, icon: ImageIcon },
                 { id: "categories", label: "Danh mục", icon: Layers },
                 { id: "feng-shui", label: "Phong thủy", icon: Sparkles },
+                { id: "model-3d", label: "Mô hình 3D", icon: Box },
               ] as const
             ).map((t) => {
               const isSelected = activeTab === t.id;
@@ -336,6 +339,15 @@ export default function EditProductModal({
             styleOptions={styleOptions}
             onSubmit={handleSaveFengShui}
             saving={savingFengShui}
+          />
+        )}
+
+        {/* ── TAB CONTENT: MODEL 3D ─────────────────────────────────────────── */}
+        {activeTab === "model-3d" && (
+          <ProductModel3DSection
+            productId={product.id}
+            images={product.images || []}
+            onRefreshProduct={handleRefresh}
           />
         )}
       </div>

@@ -18,6 +18,7 @@ import {
   TicketX,
   Tags,
   ChevronDown,
+  Box,
 } from "lucide-react";
 import { useAppSelector, useAppDispatch } from "@/app/store";
 import { logout } from "@/features/auth/store/authSlice";
@@ -36,6 +37,7 @@ const navigation = [
     children: [
       { name: "Danh mục", href: "/manager/categories", icon: Tags },
       { name: "Sản phẩm", href: "/manager/products", icon: Package },
+      { name: "Hàng chờ Model 3D", href: "/manager/model3d-queue", icon: Box },
     ],
   },
   {

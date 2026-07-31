@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { X, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { CreateAddressDto, UpdateAddressDto, Address } from "../types/address";
@@ -7,7 +7,8 @@ import { getProvinces, getDistrictsByProvinceId, getWardsByDistrictId } from "..
 import { Provinces, District, Ward } from "../types/location";
 import { toast } from "sonner";
 import AddressLocationFields from "./AddressLocationFields";
-import { geocodeLocation, reverseGeocode, findBestMatch } from "../api/geocoding";
+import { geocodeLocation } from "../api/geocoding";
+import { resolveLocationFromCoordinates, loadSelectionForWard } from "../utils/location-autofill";
 
 interface AddressModalProps {
   isOpen: boolean;
@@ -39,8 +40,6 @@ export default function AddressModal({ isOpen, onClose, onSuccess, address }: Ad
   const [selectedDistrictId, setSelectedDistrictId] = useState<string>("");
   const [selectedWardId, setSelectedWardId] = useState<string>("");
 
-  const [changeLocation, setChangeLocation] = useState(false); // Used in edit mode to toggle location change
-
   // Bidirectional sync states
   const [zoomToLocation, setZoomToLocation] = useState<{
     lat: number;
@@ -48,7 +47,7 @@ export default function AddressModal({ isOpen, onClose, onSuccess, address }: Ad
     zoom: number;
   } | null>(null);
   const [isReverseGeocoding, setIsReverseGeocoding] = useState(false);
-  const isMapTriggeredRef = useRef(false); // Prevents infinite loop: map→dropdown→geocode→map
+  const [isLoadingRegion, setIsLoadingRegion] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -66,22 +65,9 @@ export default function AddressModal({ isOpen, onClose, onSuccess, address }: Ad
   };
 
   useEffect(() => {
-    if (address && isOpen) {
-      setFormData({
-        recipientName: address.recipientName,
-        recipientPhone: address.recipientPhone,
-        streetAddress: address.streetAddress,
-        wardId: address.wardId || "",
-        label: address.label || "Nhà riêng",
-        isDefault: address.isDefault,
-        latitude: address.latitude || 0,
-        longitude: address.longitude || 0,
-      });
-      setSelectedProvinceId("");
-      setSelectedDistrictId("");
-      setSelectedWardId("");
-      setChangeLocation(false);
-    } else if (isOpen) {
+    if (!isOpen) return;
+
+    if (!address) {
       // Reset form on new add
       setFormData({
         recipientName: "",
@@ -96,21 +82,52 @@ export default function AddressModal({ isOpen, onClose, onSuccess, address }: Ad
       setSelectedProvinceId("");
       setSelectedDistrictId("");
       setSelectedWardId("");
-      setChangeLocation(true); // Always true for new address
+      return;
     }
+
+    setFormData({
+      recipientName: address.recipientName,
+      recipientPhone: address.recipientPhone,
+      streetAddress: address.streetAddress,
+      wardId: address.wardId || "",
+      label: address.label || "Nhà riêng",
+      isDefault: address.isDefault,
+      latitude: address.latitude || 0,
+      longitude: address.longitude || 0,
+    });
+
+    // Bản ghi chỉ lưu wardId → tra ngược để 3 dropdown hiện đúng khu vực cũ.
+    // Bỏ qua nếu modal đã đóng/đổi bản ghi trước khi request về.
+    let stale = false;
+    setSelectedProvinceId("");
+    setSelectedDistrictId("");
+    setSelectedWardId("");
+    setIsLoadingRegion(true);
+    loadSelectionForWard(address.wardId || "").then((selection) => {
+      if (stale) return;
+      setIsLoadingRegion(false);
+      if (!selection) return;
+      setProvinces(selection.provinces);
+      setDistricts(selection.districts);
+      setWards(selection.wards);
+      setSelectedProvinceId(selection.provinceId);
+      setSelectedDistrictId(selection.districtId);
+      setSelectedWardId(selection.wardId);
+    });
+    return () => {
+      stale = true;
+    };
   }, [address, isOpen]);
 
+  // Cascade Tỉnh → Quận: chỉ xoá lựa chọn cũ khi nó KHÔNG thuộc danh sách mới.
+  // Không dùng cờ "thay đổi này đến từ bản đồ" nữa — cờ đó phụ thuộc thời điểm
+  // effect chạy so với lúc autofill kết thúc, nên lúc được lúc không.
   useEffect(() => {
     if (selectedProvinceId) {
-      // Snapshot: ref may be reset before this fetch resolves (race fix)
-      const fromMap = isMapTriggeredRef.current;
       getDistrictsByProvinceId(selectedProvinceId).then((data) => {
-        setDistricts(data || []);
-        if (!fromMap) {
-          setSelectedDistrictId("");
-          setWards([]);
-          setSelectedWardId("");
-        }
+        const list = data || [];
+        setDistricts(list);
+        setSelectedDistrictId((prev) => (list.some((d) => d.id === prev) ? prev : ""));
       });
     } else {
       setDistricts([]);
@@ -122,13 +139,10 @@ export default function AddressModal({ isOpen, onClose, onSuccess, address }: Ad
 
   useEffect(() => {
     if (selectedDistrictId) {
-      // Snapshot: ref may be reset before this fetch resolves (race fix)
-      const fromMap = isMapTriggeredRef.current;
       getWardsByDistrictId(selectedDistrictId).then((data) => {
-        setWards(data || []);
-        if (!fromMap) {
-          setSelectedWardId("");
-        }
+        const list = data || [];
+        setWards(list);
+        setSelectedWardId((prev) => (list.some((w) => w.id === prev) ? prev : ""));
       });
     } else {
       setWards([]);
@@ -136,19 +150,10 @@ export default function AddressModal({ isOpen, onClose, onSuccess, address }: Ad
     }
   }, [selectedDistrictId]);
 
-  useEffect(() => {
-    if (selectedWardId) {
-      setFormData((prev) => ({ ...prev, wardId: selectedWardId }));
-    } else if (changeLocation && !address) {
-      setFormData((prev) => ({ ...prev, wardId: "" }));
-    }
-  }, [selectedWardId, changeLocation, address]);
 
   // ── Dropdown → Map: geocode selected location and zoom map ────────────
   const handleDropdownGeocode = useCallback(
     async (provinceName: string, districtName: string, wardName: string) => {
-      if (isMapTriggeredRef.current) return; // Skip if change came from map click
-
       let query = "";
       let zoom = 11;
 
@@ -180,7 +185,6 @@ export default function AddressModal({ isOpen, onClose, onSuccess, address }: Ad
   // Trigger geocode when province changes (user-driven only)
   const handleProvinceChange = useCallback(
     (provinceId: string) => {
-      isMapTriggeredRef.current = false;
       setSelectedProvinceId(provinceId);
       const province = provinces.find((p) => p.id === provinceId);
       if (province) {
@@ -193,7 +197,6 @@ export default function AddressModal({ isOpen, onClose, onSuccess, address }: Ad
   // Trigger geocode when district changes (user-driven only)
   const handleDistrictChange = useCallback(
     (districtId: string) => {
-      isMapTriggeredRef.current = false;
       setSelectedDistrictId(districtId);
       const province = provinces.find((p) => p.id === selectedProvinceId);
       const district = districts.find((d) => d.id === districtId);
@@ -207,7 +210,6 @@ export default function AddressModal({ isOpen, onClose, onSuccess, address }: Ad
   // Trigger geocode when ward changes (user-driven only)
   const handleWardChange = useCallback(
     (wardId: string) => {
-      isMapTriggeredRef.current = false;
       setSelectedWardId(wardId);
       const province = provinces.find((p) => p.id === selectedProvinceId);
       const district = districts.find((d) => d.id === selectedDistrictId);
@@ -223,68 +225,31 @@ export default function AddressModal({ isOpen, onClose, onSuccess, address }: Ad
   const handleMapLocationChange = useCallback(
     async (lat: number, lng: number) => {
       setFormData((prev) => ({ ...prev, latitude: lat, longitude: lng }));
-
-      if (!changeLocation) return; // Don't reverse geocode in edit mode without changing location
-
       setIsReverseGeocoding(true);
-      isMapTriggeredRef.current = true;
 
       try {
-        const result = await reverseGeocode(lat, lng);
-        if (!result) {
-          isMapTriggeredRef.current = false;
-          setIsReverseGeocoding(false);
-          return;
-        }
+        const resolved = await resolveLocationFromCoordinates(lat, lng, provinces);
+        if (!resolved) return;
 
-        // Auto-fill house number + street name from reverse geocoding
-        if (result.street) {
-          setFormData((prev) => ({ ...prev, streetAddress: result.street ?? "" }));
-        }
-
-        // Ensure provinces are loaded
-        let currentProvinces = provinces;
-        if (currentProvinces.length === 0) {
-          currentProvinces = await getProvinces();
-          setProvinces(currentProvinces || []);
-        }
-
-        // Match province
-        const matchedProvinceId = findBestMatch(currentProvinces, result.province);
-        if (matchedProvinceId) {
-          setSelectedProvinceId(matchedProvinceId);
-
-          // Fetch and match district
-          const districtData = await getDistrictsByProvinceId(matchedProvinceId);
-          setDistricts(districtData || []);
-
-          const matchedDistrictId = findBestMatch(districtData || [], result.district);
-          if (!matchedDistrictId)
-            console.warn("[Geocode] Không khớp được quận/huyện:", result.district);
-          if (matchedDistrictId) {
-            setSelectedDistrictId(matchedDistrictId);
-
-            // Fetch and match ward
-            const wardData = await getWardsByDistrictId(matchedDistrictId);
-            setWards(wardData || []);
-
-            const matchedWardId = findBestMatch(wardData || [], result.ward);
-            if (!matchedWardId)
-              console.warn("[Geocode] Không khớp được phường:", result.ward, "— DB có", (wardData || []).length, "phường");
-            if (matchedWardId) {
-              setSelectedWardId(matchedWardId);
-              setFormData((prev) => ({ ...prev, wardId: matchedWardId }));
-            }
-          }
-        }
+        // Set một lượt: danh mục + lựa chọn cùng nằm trong một batch render nên
+        // cascade effect luôn thấy id mới hợp lệ và giữ nguyên, không xoá ngược.
+        if (resolved.provinces.length) setProvinces(resolved.provinces);
+        setDistricts(resolved.districts);
+        setWards(resolved.wards);
+        setSelectedProvinceId(resolved.provinceId);
+        setSelectedDistrictId(resolved.districtId);
+        setSelectedWardId(resolved.wardId);
+        setFormData((prev) => ({
+          ...prev,
+          streetAddress: resolved.street || prev.streetAddress,
+        }));
       } catch (error) {
         console.error("Reverse geocoding error:", error);
       } finally {
-        isMapTriggeredRef.current = false;
         setIsReverseGeocoding(false);
       }
     },
-    [provinces, changeLocation],
+    [provinces],
   );
 
   // Animation variants
@@ -328,28 +293,26 @@ export default function AddressModal({ isOpen, onClose, onSuccess, address }: Ad
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (changeLocation && !selectedWardId) {
+    if (!selectedWardId) {
       toast.error("Vui lòng chọn đầy đủ Tỉnh/Thành, Quận/Huyện, Phường/Xã");
       return;
     }
 
-    // In edit mode, if not changing location, wardId remains the original one
-    if (!formData.wardId) {
-      toast.error("Thiếu thông tin Phường/Xã");
-      return;
-    }
+    // Dropdown là nguồn sự thật duy nhất cho wardId — tránh gửi phường cũ trong
+    // khi khu vực hiển thị đã đổi (đơn GHN sẽ về sai quận/phường).
+    const payload = { ...formData, wardId: selectedWardId };
 
     setIsLoading(true);
 
     try {
       if (address) {
-        await updateAddress(address.id, formData as UpdateAddressDto);
+        await updateAddress(address.id, payload as UpdateAddressDto);
         if (formData.isDefault && !address.isDefault) {
           await setDefaultAddress(address.id);
         }
         toast.success("Cập nhật địa chỉ thành công");
       } else {
-        const newAddress = await createAddress(formData as CreateAddressDto);
+        const newAddress = await createAddress(payload as CreateAddressDto);
         if (formData.isDefault) {
           await setDefaultAddress(newAddress.id);
         }
@@ -428,45 +391,35 @@ export default function AddressModal({ isOpen, onClose, onSuccess, address }: Ad
               />
             </div>
 
-            {/* Location Section */}
-            {address && !changeLocation ? (
-              <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
-                <p className="mb-2 text-sm text-gray-700">Đang sử dụng khu vực của địa chỉ cũ.</p>
-                <button
-                  type="button"
-                  onClick={() => setChangeLocation(true)}
-                  className="cursor-pointer text-sm font-medium text-primary hover:underline"
-                >
-                  Thay đổi khu vực (Tỉnh/Thành, Quận/Huyện)
-                </button>
-              </div>
-            ) : (
-              <AddressLocationFields
-                streetAddress={formData.streetAddress}
-                wardId={formData.wardId}
-                latitude={formData.latitude}
-                longitude={formData.longitude}
-                provinces={provinces}
-                districts={districts}
-                wards={wards}
-                selectedProvinceId={selectedProvinceId}
-                selectedDistrictId={selectedDistrictId}
-                selectedWardId={selectedWardId}
-                onProvinceChange={handleProvinceChange}
-                onDistrictChange={handleDistrictChange}
-                onWardChange={handleWardChange}
-                onStreetAddressChange={(value) =>
-                  setFormData((prev) => ({ ...prev, streetAddress: value }))
-                }
-                zoomToLocation={zoomToLocation}
-                onMapLocationChange={handleMapLocationChange}
-                isReverseGeocoding={isReverseGeocoding}
-                areaTitle="Khu vực"
-                streetLabel="Địa chỉ cụ thể"
-                streetPlaceholder="Số nhà, tên đường..."
-                mapLabel="Vị trí trên bản đồ"
-                mapNote="Chạm vào bản đồ để chọn vị trí chính xác của địa chỉ nhận hàng"
-              />
+            {/* Location Section — khi sửa, khu vực cũ được nạp sẵn từ wardId đã lưu */}
+            <AddressLocationFields
+              streetAddress={formData.streetAddress}
+              wardId={selectedWardId}
+              latitude={formData.latitude}
+              longitude={formData.longitude}
+              provinces={provinces}
+              districts={districts}
+              wards={wards}
+              selectedProvinceId={selectedProvinceId}
+              selectedDistrictId={selectedDistrictId}
+              selectedWardId={selectedWardId}
+              onProvinceChange={handleProvinceChange}
+              onDistrictChange={handleDistrictChange}
+              onWardChange={handleWardChange}
+              onStreetAddressChange={(value) =>
+                setFormData((prev) => ({ ...prev, streetAddress: value }))
+              }
+              zoomToLocation={zoomToLocation}
+              onMapLocationChange={handleMapLocationChange}
+              isReverseGeocoding={isReverseGeocoding}
+              areaTitle="Khu vực"
+              streetLabel="Địa chỉ cụ thể"
+              streetPlaceholder="Số nhà, tên đường..."
+              mapLabel="Vị trí trên bản đồ"
+              mapNote="Chạm vào bản đồ để chọn vị trí chính xác của địa chỉ nhận hàng"
+            />
+            {isLoadingRegion && (
+              <p className="text-xs text-gray-400">Đang tải khu vực của địa chỉ...</p>
             )}
 
             <div>

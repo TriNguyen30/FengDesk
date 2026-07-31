@@ -20,18 +20,18 @@ export default function AiActivityIndicator({ activity }: AiActivityIndicatorPro
     if (phase === "calling_tool") {
       return {
         icon: <Wrench size={13} className="shrink-0" />,
-        label: note ?? "Đang tra cứu dữ liệu…",
+        label: (note ?? "Looking up data") + "...",
       };
     }
     if (phase === "writing") {
-      return { icon: <PenLine size={13} className="shrink-0" />, label: "Đang tạo kết quả…" };
+      return { icon: <PenLine size={13} className="shrink-0" />, label: "Generating response..." };
     }
     if (phase === "error") {
-      return { icon: <AlertTriangle size={13} className="shrink-0" />, label: "Có lỗi xảy ra" };
+      return { icon: <AlertTriangle size={13} className="shrink-0" />, label: "Something went wrong"};
     }
     return {
       icon: <Loader2 size={13} className="shrink-0 animate-spin" />,
-      label: "AI đang xử lý",
+      label: "Thinking...",
     };
   })();
 
@@ -46,7 +46,6 @@ export default function AiActivityIndicator({ activity }: AiActivityIndicatorPro
           {/* Thinking: 1 dòng, cắt gọn (note đã là phần đuôi từ BE → cảm giác chữ chạy). Khác: thêm "…". */}
           <span className={isThinkingStream ? "truncate italic opacity-80" : ""}>
             {label}
-            {!isThinkingStream && "..."}
           </span>
         </span>
       </div>

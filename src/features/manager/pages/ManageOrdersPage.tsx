@@ -44,6 +44,7 @@ const TABS = [
   { value: "Pending", label: "Đang chờ thanh toán" },
   { value: "Paid", label: "Đã thanh toán" },
   { value: "Processing", label: "Đang xử lý" },
+  { value: "Shipping", label: "Đang vận chuyển" },
   { value: "Completed", label: "Đã hoàn thành" },
   { value: "Cancelled", label: "Đã hủy" },
   { value: "Expired", label: "Đã hết hạn" },
