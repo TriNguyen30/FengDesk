@@ -2,7 +2,7 @@ import { Outlet, NavLink } from "react-router-dom";
 import { User, MapPin, Package, HousePlus, Bell, RefreshCw, Mail } from "lucide-react";
 import { useEffect } from "react";
 import { useMyStoreInvitations } from "@/features/shop/hooks/useShopStaff";
-import ThemeToggle from "@/components/ui/ThemeToggle";
+import AppearanceSettings from "@/components/ui/AppearanceSettings";
 import FeatureBar from "@/components/ui/FeatureBar";
 import CommitmentPage from "@/components/ui/CommitmentPage";
 import { useTranslation } from "react-i18next";
@@ -69,7 +69,7 @@ export default function ProfileLayout() {
                   </NavLink>
                 );
               })}
-              <ThemeToggle variant="sidebar" />
+              <AppearanceSettings />
             </nav>
           </div>
         </aside>
