@@ -42,8 +42,8 @@ const BURST_SPEED = 26;
  */
 const DRIFT_RADIUS = [3.5, 5] as const; // ô lưới (vệt chuột chỉ ~2.2)
 const DRIFT_ATTACK = [0.4, 0.6] as const; // giây hiện dần
-const DRIFT_HOLD = [0, 0] as const; // giây giữ nguyên độ đậm
-const DRIFT_RELEASE = [2, 2.8] as const; // giây ngừng bơm để tự tan
+const DRIFT_HOLD = [0, 0.2] as const; // giây giữ nguyên độ đậm
+const DRIFT_RELEASE = [1.8, 2.6] as const; // giây ngừng bơm để tự tan
 const DRIFT_SPEED = 6; // ô/giây — chỉ đủ để cụm lững lờ trôi
 /**
  * Mực bơm mỗi giây ở đỉnh bao hình. Vì tâm cụm là vùng đậm nên nó tiêu tán theo
