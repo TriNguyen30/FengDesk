@@ -61,13 +61,17 @@ export default function ThemeToggle({
           {isDark ? "Chế độ tối" : "Chế độ sáng"}
         </span>
 
+        {/* Rãnh gạt phải khác màu nền hover của cả hàng (hover:bg-neutral-dark),
+            không thì lúc rê chuột rãnh tan vào nền và chỉ còn trơ cái nút tròn. */}
         <div
-          className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors duration-200 ${isDark ? "bg-primary" : "bg-neutral-dark"
-            }`}
+          className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors duration-200 ${
+            isDark ? "bg-primary" : "bg-border-dark"
+          }`}
         >
           <span
-            className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition duration-200 ${isDark ? "translate-x-4.5" : "translate-x-0.5"
-              }`}
+            className={`inline-block h-4 w-4 transform rounded-full bg-neutral shadow transition duration-200 ${
+              isDark ? "translate-x-4.5" : "translate-x-0.5"
+            }`}
           />
         </div>
       </button>

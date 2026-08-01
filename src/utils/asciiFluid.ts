@@ -72,7 +72,11 @@ export class FluidSolver {
     }
   }
 
-  step(dt: number, velocityDecay: number, densityDecay: number) {
+  /**
+   * densityDecayFaint / densityDecayDense: phần mực còn lại sau frame này, tra
+   * theo chính độ đậm của ô — nhạt tan chậm, đậm tan nhanh (xem dissipate).
+   */
+  step(dt: number, velocityDecay: number, densityDecayFaint: number, densityDecayDense: number) {
     this.project();
 
     this.uPrev.set(this.u);
@@ -85,7 +89,7 @@ export class FluidSolver {
     this.densityPrev.set(this.density);
     this.advect(this.density, this.densityPrev, this.u, this.v, dt);
 
-    this.dissipate(velocityDecay, densityDecay);
+    this.dissipate(velocityDecay, densityDecayFaint, densityDecayDense);
   }
 
   /** Truy ngược nửa Lagrange: mỗi ô lấy giá trị tại vị trí nó "đến từ". */
@@ -164,15 +168,28 @@ export class FluidSolver {
     }
   }
 
-  /** Tiêu tán dần để vệt chuột tự tan, tránh lưới "đọng" mực vĩnh viễn. */
-  private dissipate(velocityDecay: number, densityDecay: number) {
+  /**
+   * Tiêu tán dần để vệt chuột tự tan, tránh lưới "đọng" mực vĩnh viễn.
+   *
+   * Hệ số tiêu tán nội suy theo chính độ đậm của ô: ô nhạt dùng
+   * densityDecayFaint (giữ lại nhiều → sống dai), ô đậm dùng densityDecayDense
+   * (tan nhanh). Nhờ vậy lõi đậm của mỗi cụm xẹp nhanh còn quầng nhạt quanh nó
+   * còn lưu lại lâu, thay vì cả cụm mờ đi cùng một nhịp.
+   */
+  private dissipate(velocityDecay: number, densityDecayFaint: number, densityDecayDense: number) {
     const { u, v, density } = this;
+    const span = densityDecayDense - densityDecayFaint;
 
     for (let i = 0; i < density.length; i++) {
       u[i] *= velocityDecay;
       v[i] *= velocityDecay;
 
-      const d = density[i] * densityDecay;
+      const current = density[i];
+
+      if (current === 0) continue;
+
+      const weight = current > 1 ? 1 : current;
+      const d = current * (densityDecayFaint + span * weight);
 
       density[i] = d < 0.004 ? 0 : d;
     }

@@ -11,6 +11,8 @@ import { Bot, ImagePlus, Loader2, Pencil, Send, Sparkles, User, X } from "lucide
 import { useAiChat, type AiMessage } from "@/features/chatbox/hooks/useAiChat";
 import { useImageAttachments } from "@/features/chatbox/hooks/useImageAttachments";
 import { AiActivityIndicator } from "@/features/shared/ai-activity";
+import LiquidMeshBackground from "@/components/ui/LiquidMeshBackground";
+import { useLiquidChat } from "@/utils/appearance";
 import AttachmentPreviewRow from "./AttachmentPreviewRow";
 import ConfirmDeleteButton from "./ConfirmDeleteButton";
 import Markdown from "./Markdown";
@@ -289,6 +291,7 @@ export default function AiAssistantDrawer({ open, onClose, productId }: AiAssist
   };
 
   const isEmpty = messages.length === 0;
+  const liquidChat = useLiquidChat();
 
   return (
     <>
@@ -305,7 +308,7 @@ export default function AiAssistantDrawer({ open, onClose, productId }: AiAssist
       <aside
         ref={asideRef}
         role="dialog"
-        aria-label="Trợ lý Phong Thủy"
+        aria-label="Lumi AI Assistant "
         aria-hidden={!open}
         style={{
           width: `${drawerWidth}px`,
@@ -341,8 +344,8 @@ export default function AiAssistantDrawer({ open, onClose, productId }: AiAssist
               <Sparkles size={18} />
             </span>
             <div>
-              <h2 className="text-sm font-bold leading-tight">Trợ lý Phong Thủy</h2>
-              <p className="text-[11px] text-white/80">FengDesk AI</p>
+              <h2 className="text-sm font-bold leading-tight">Lumi AI Assistant</h2>
+              <p className="text-[11px] text-white/80">FengDesk</p>
             </div>
           </div>
           <div className="flex items-center gap-1">
@@ -364,194 +367,208 @@ export default function AiAssistantDrawer({ open, onClose, productId }: AiAssist
           </div>
         </header>
 
-        {/* Khu hội thoại — nền nhẹ #f9fafb */}
-        <div
-          ref={scrollRef}
-          onScroll={handleMessagesScroll}
-          className="scrollbar-none flex-1 overflow-y-auto bg-[#f9fafb] px-4 py-5"
-        >
-          {isEmpty ? (
-            <div className="flex h-full flex-col items-center justify-center text-center">
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-linear-to-br from-primary to-primary-dark text-white shadow-lg shadow-primary/30">
-                <Sparkles size={26} />
-              </div>
-              <h3 className="mt-4 text-lg font-bold text-gray-900">Trợ lý Phong Thủy FengDesk</h3>
-              <p className="mt-2 max-w-xs text-xs leading-relaxed text-gray-500">
-                Hỏi mình về cây phong thủy, sản phẩm hợp mệnh, hay cách bố trí không gian làm việc.
-              </p>
-              <div className="mt-5 grid w-full gap-2">
-                {SUGGESTIONS.map((s) => (
-                  <button
-                    key={s}
-                    type="button"
-                    onClick={() => send(s)}
-                    className="rounded-xl border border-gray-200 bg-white px-4 py-3 text-left text-sm text-gray-700 transition-colors hover:border-primary/40 hover:bg-primary/5 cursor-pointer"
-                  >
-                    {s}
-                  </button>
-                ))}
-              </div>
-            </div>
-          ) : (
-            <div className="flex flex-col gap-4">
-              {/* Nạp lịch sử cũ hơn: tự động khi kéo lên đỉnh, kèm nút bấm dự phòng chắc chắn. */}
-              {hasMore && (
-                <div className="flex justify-center py-1">
-                  <button
-                    type="button"
-                    onClick={triggerLoadMore}
-                    disabled={loadingMore}
-                    className="flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3 py-1 text-xs font-medium text-gray-500 transition-colors hover:border-primary/40 hover:text-primary disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"
-                  >
-                    {loadingMore && (
-                      <span className="h-3 w-3 animate-spin rounded-full border-2 border-primary/40 border-t-transparent" />
-                    )}
-                    {loadingMore ? "Đang tải..." : "Tải tin nhắn cũ hơn"}
-                  </button>
-                </div>
-              )}
-              {messages.map((m, idx) => {
-                if (m.role === "system") return null;
-                const isUser = m.role === "user";
-                const isEditingThis = editingId === m.id;
-                const isDimmed = editingIndex >= 0 && idx > editingIndex;
-                return (
-                  <Fragment key={m.id}>
-                    {idx === contextBoundaryIdx && (
-                      <div className="flex items-center gap-2 py-2 text-[12px] font-medium tracking-wide text-primary/80 select-none">
-                        <span className="flex-1 border-t border-dashed border-primary/30" />
-                        AI Context limit here
-                        <span className="flex-1 border-t border-dashed border-primary/30" />
-                      </div>
-                    )}
-                    <div
-                      data-drawer-interaction="message-bubble-wrapper"
-                      className={`group flex items-start gap-2.5 transition-opacity duration-200 ${
-                        isUser ? "flex-row-reverse" : ""
-                      } ${isDimmed ? "pointer-events-none opacity-40" : ""}`}
-                    >
-                      <span
-                        className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${
-                          isUser ? "bg-gray-200 text-gray-600" : "bg-primary/15 text-primary"
-                        }`}
-                      >
-                        {isUser ? <User size={16} /> : <Bot size={16} />}
-                      </span>
+        {/* Khu hội thoại — nền là mặt chất lỏng WebGL khúc xạ lớp ambient
+            (mảng mây + fluid ASCII) đang nằm sau drawer.
+            Canvas nằm ngoài vùng cuộn (nếu để bên trong thì nó trôi theo nội
+            dung); bg-gray-50 của lớp bọc là nền dự phòng khi WebGL không dựng
+            được hoặc người dùng bật "giảm chuyển động". */}
+        <div className="relative isolate flex-1 overflow-hidden bg-gray-50">
+          {liquidChat && <LiquidMeshBackground active={open} className="absolute inset-0 -z-10" />}
 
-                      {isEditingThis ? (
-                        <div className="w-full max-w-[92%] rounded-2xl border border-primary bg-white p-2 shadow-sm">
-                          <textarea
-                            value={editText}
-                            onChange={(e) => setEditText(e.target.value)}
-                            onKeyDown={handleEditKeyDown}
-                            rows={2}
-                            autoFocus
-                            className="max-h-32 w-full resize-none bg-transparent text-sm text-gray-800 outline-none"
-                          />
-                          <div className="mt-1 flex justify-end gap-1.5">
-                            <button
-                              type="button"
-                              onClick={cancelEdit}
-                              className="rounded-lg px-2.5 py-1 text-xs text-gray-500 transition-colors hover:bg-gray-100 cursor-pointer"
-                            >
-                              Hủy
-                            </button>
-                            <button
-                              type="button"
-                              onClick={submitEdit}
-                              disabled={!editText.trim()}
-                              className="rounded-lg bg-primary px-2.5 py-1 text-xs font-medium text-white transition-colors hover:bg-primary-dark disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
-                            >
-                              Gửi
-                            </button>
-                          </div>
+          <div
+            ref={scrollRef}
+            onScroll={handleMessagesScroll}
+            className="scrollbar-none h-full overflow-y-auto px-4 py-5"
+          >
+            {isEmpty ? (
+              <div className="flex h-full flex-col items-center justify-center text-center">
+                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-linear-to-br from-primary to-primary-dark text-white shadow-lg shadow-primary/30">
+                  <Sparkles size={26} />
+                </div>
+                {/* Nền mờ cục bộ: đây là hai dòng chữ DUY NHẤT nằm trực tiếp trên
+                    lớp liquid (tin nhắn thì đã có bong bóng đặc che). Lớp liquid
+                    cố ý để tương phản cao nên phải kê chân đế riêng cho chúng. */}
+                <div className="mt-4 rounded-2xl bg-neutral/70 px-4 py-3 backdrop-blur-sm">
+                  <h3 className="text-lg font-bold text-gray-900">Trợ lý Phong Thủy FengDesk</h3>
+                  <p className="mt-2 max-w-xs text-xs leading-relaxed text-gray-600">
+                    Hỏi mình về cây phong thủy, sản phẩm hợp mệnh, hay cách bố trí không gian làm
+                    việc.
+                  </p>
+                </div>
+                <div className="mt-5 grid w-full gap-2">
+                  {SUGGESTIONS.map((s) => (
+                    <button
+                      key={s}
+                      type="button"
+                      onClick={() => send(s)}
+                      className="rounded-xl border border-gray-200 bg-white px-4 py-3 text-left text-sm text-gray-700 transition-colors hover:border-primary/40 hover:bg-primary/5 cursor-pointer"
+                    >
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-4">
+                {/* Nạp lịch sử cũ hơn: tự động khi kéo lên đỉnh, kèm nút bấm dự phòng chắc chắn. */}
+                {hasMore && (
+                  <div className="flex justify-center py-1">
+                    <button
+                      type="button"
+                      onClick={triggerLoadMore}
+                      disabled={loadingMore}
+                      className="flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3 py-1 text-xs font-medium text-gray-500 transition-colors hover:border-primary/40 hover:text-primary disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"
+                    >
+                      {loadingMore && (
+                        <span className="h-3 w-3 animate-spin rounded-full border-2 border-primary/40 border-t-transparent" />
+                      )}
+                      {loadingMore ? "Đang tải..." : "Tải tin nhắn cũ hơn"}
+                    </button>
+                  </div>
+                )}
+                {messages.map((m, idx) => {
+                  if (m.role === "system") return null;
+                  const isUser = m.role === "user";
+                  const isEditingThis = editingId === m.id;
+                  const isDimmed = editingIndex >= 0 && idx > editingIndex;
+                  return (
+                    <Fragment key={m.id}>
+                      {idx === contextBoundaryIdx && (
+                        <div className="flex items-center gap-2 py-2 text-[12px] font-medium tracking-wide text-primary/80 select-none">
+                          <span className="flex-1 border-t border-dashed border-primary/30" />
+                          AI Context limit here
+                          <span className="flex-1 border-t border-dashed border-primary/30" />
                         </div>
-                      ) : (
-                        <div
-                          data-drawer-interaction="message-bubble"
-                          className={`max-w-[92%] min-w-0 rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed ${
-                            isUser
-                              ? "rounded-tr-md bg-primary text-white"
-                              : "rounded-tl-md border border-gray-200 bg-white text-gray-800"
+                      )}
+                      <div
+                        data-drawer-interaction="message-bubble-wrapper"
+                        className={`group flex items-start gap-2.5 transition-opacity duration-200 ${
+                          isUser ? "flex-row-reverse" : ""
+                        } ${isDimmed ? "pointer-events-none opacity-40" : ""}`}
+                      >
+                        <span
+                          className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${
+                            isUser ? "bg-gray-200 text-gray-600" : "bg-primary/15 text-primary"
                           }`}
                         >
-                          {m.images.length > 0 && (
-                            <div className="mb-2 flex flex-wrap gap-1.5">
-                              {m.images.map((url) => (
-                                <img
-                                  key={url}
-                                  src={url}
-                                  alt="Ảnh"
-                                  className="max-h-40 rounded-lg border border-black/10 object-cover"
-                                  onLoad={() => {
-                                    // Ảnh nạp xong mới biết chiều cao → danh sách dài ra SAU khi đã cuộn đáy.
-                                    // Nếu đang ở gần đáy thì neo lại đáy, không thì để yên (user đang đọc tin cũ).
-                                    const el = scrollRef.current;
-                                    if (
-                                      el &&
-                                      el.scrollHeight - el.scrollTop - el.clientHeight < 200
-                                    ) {
-                                      bottomRef.current?.scrollIntoView();
-                                    }
-                                  }}
-                                />
-                              ))}
+                          {isUser ? <User size={16} /> : <Bot size={16} />}
+                        </span>
+
+                        {isEditingThis ? (
+                          <div className="w-full max-w-[92%] rounded-2xl border border-primary bg-white p-2 shadow-sm">
+                            <textarea
+                              value={editText}
+                              onChange={(e) => setEditText(e.target.value)}
+                              onKeyDown={handleEditKeyDown}
+                              rows={2}
+                              autoFocus
+                              className="max-h-32 w-full resize-none bg-transparent text-sm text-gray-800 outline-none"
+                            />
+                            <div className="mt-1 flex justify-end gap-1.5">
+                              <button
+                                type="button"
+                                onClick={cancelEdit}
+                                className="rounded-lg px-2.5 py-1 text-xs text-gray-500 transition-colors hover:bg-gray-100 cursor-pointer"
+                              >
+                                Hủy
+                              </button>
+                              <button
+                                type="button"
+                                onClick={submitEdit}
+                                disabled={!editText.trim()}
+                                className="rounded-lg bg-primary px-2.5 py-1 text-xs font-medium text-white transition-colors hover:bg-primary-dark disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
+                              >
+                                Gửi
+                              </button>
                             </div>
-                          )}
-                          {m.content &&
-                            (m.role === "ai" ? (
-                              (() => {
-                                // Tin AI có thể kèm block thanh toán (confirm_order) → tách render card riêng.
-                                const { text, payment } = extractPaymentBlock(m.content);
-                                return (
-                                  <>
-                                    {text && <Markdown text={text} />}
-                                    {payment && <PaymentAttachment payment={payment} />}
-                                  </>
-                                );
-                              })()
-                            ) : (
-                              <p className="whitespace-pre-wrap break-words">{m.content}</p>
-                            ))}
-                        </div>
-                      )}
+                          </div>
+                        ) : (
+                          <div
+                            data-drawer-interaction="message-bubble"
+                            className={`max-w-[92%] min-w-0 rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed ${
+                              isUser
+                                ? "rounded-tr-md bg-primary text-white"
+                                : "rounded-tl-md border border-gray-200 bg-white text-gray-800"
+                            }`}
+                          >
+                            {m.images.length > 0 && (
+                              <div className="mb-2 flex flex-wrap gap-1.5">
+                                {m.images.map((url) => (
+                                  <img
+                                    key={url}
+                                    src={url}
+                                    alt="Ảnh"
+                                    className="max-h-40 rounded-lg border border-black/10 object-cover"
+                                    onLoad={() => {
+                                      // Ảnh nạp xong mới biết chiều cao → danh sách dài ra SAU khi đã cuộn đáy.
+                                      // Nếu đang ở gần đáy thì neo lại đáy, không thì để yên (user đang đọc tin cũ).
+                                      const el = scrollRef.current;
+                                      if (
+                                        el &&
+                                        el.scrollHeight - el.scrollTop - el.clientHeight < 200
+                                      ) {
+                                        bottomRef.current?.scrollIntoView();
+                                      }
+                                    }}
+                                  />
+                                ))}
+                              </div>
+                            )}
+                            {m.content &&
+                              (m.role === "ai" ? (
+                                (() => {
+                                  // Tin AI có thể kèm block thanh toán (confirm_order) → tách render card riêng.
+                                  const { text, payment } = extractPaymentBlock(m.content);
+                                  return (
+                                    <>
+                                      {text && <Markdown text={text} />}
+                                      {payment && <PaymentAttachment payment={payment} />}
+                                    </>
+                                  );
+                                })()
+                              ) : (
+                                <p className="whitespace-pre-wrap break-words">{m.content}</p>
+                              ))}
+                          </div>
+                        )}
 
-                      {isUser && !isEditingThis && !sending && (
-                        <button
-                          type="button"
-                          onClick={() => startEdit(m)}
-                          className="flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center self-center rounded-full text-gray-400 opacity-0 transition-opacity hover:bg-gray-100 hover:text-primary group-hover:opacity-100"
-                          aria-label="Sửa & gửi lại"
-                          title="Sửa & gửi lại"
-                        >
-                          <Pencil size={14} />
-                        </button>
-                      )}
-                    </div>
+                        {isUser && !isEditingThis && !sending && (
+                          <button
+                            type="button"
+                            onClick={() => startEdit(m)}
+                            className="flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center self-center rounded-full text-gray-400 opacity-0 transition-opacity hover:bg-gray-100 hover:text-primary group-hover:opacity-100"
+                            aria-label="Sửa & gửi lại"
+                            title="Sửa & gửi lại"
+                          >
+                            <Pencil size={14} />
+                          </button>
+                        )}
+                      </div>
 
-                    {/* Lời dẫn trung gian (narration) — ephemeral, không lưu DB: không bọc khung,
+                      {/* Lời dẫn trung gian (narration) — ephemeral, không lưu DB: không bọc khung,
                       chỉ 2 gạch trên/dưới, chữ mờ, giới hạn chiều cao + scroll. Neo sau tin user
                       của lượt hiện tại → câu trả lời cuối về vẫn đứng đúng thứ tự thời gian. */}
-                    {idx === lastUserIdx && narrations.length > 0 && (
-                      <div className="pl-10">
-                        <div className="max-h-30 overflow-y-auto border-y border-gray-200 py-2 font-medium text-gray-500 opacity-90 [&_.fd-md]:text-xs [&_.fd-md]:text-gray-400">
-                          {narrations.map((n, i) => (
-                            <Markdown key={i} text={n} />
-                          ))}
+                      {idx === lastUserIdx && narrations.length > 0 && (
+                        <div className="pl-10">
+                          <div className="max-h-30 overflow-y-auto border-y border-gray-200 py-2 font-medium text-gray-500 opacity-90 [&_.fd-md]:text-xs [&_.fd-md]:text-gray-400">
+                            {narrations.map((n, i) => (
+                              <Markdown key={i} text={n} />
+                            ))}
+                          </div>
                         </div>
-                      </div>
-                    )}
-                  </Fragment>
-                );
-              })}
-              {activity && (
-                <div className="pl-10">
-                  <AiActivityIndicator activity={activity} />
-                </div>
-              )}
-              <div ref={bottomRef} />
-            </div>
-          )}
+                      )}
+                    </Fragment>
+                  );
+                })}
+                {activity && (
+                  <div className="pl-10">
+                    <AiActivityIndicator activity={activity} />
+                  </div>
+                )}
+                <div ref={bottomRef} />
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Composer */}

@@ -144,7 +144,7 @@ export default function WorkspacePlacementSection({ workspaceId, placedProducts 
               ))}
             </ul>
           ) : (
-            <div className="flex h-full min-h-16 items-center justify-center rounded-lg border border-dashed border-gray-200 bg-white/60 px-3 py-4 text-xs text-gray-400">
+            <div className="flex h-full min-h-16 items-center justify-center rounded-lg border border-dashed border-gray-200 bg-white px-3 py-4 text-xs text-gray-400">
               Chưa có vật phẩm nào trong phòng
             </div>
           )}

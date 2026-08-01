@@ -6,7 +6,9 @@ import { useClouds, useFluidDrift } from "@/utils/appearance";
 const CLOUD_LAYERS = [1, 2, 3, 4, 5, 6];
 
 /** Kích thước một ô lưới (px CSS) — ô càng lớn thì càng ít ký tự phải vẽ. */
-const CELL_SIZE = 16;
+const CELL_SIZE = 19;
+/** Cỡ chữ so với ô lưới; quá 0.9 là các ký tự bắt đầu dính nhau. */
+const GLYPH_SCALE = 0.82;
 /** Bậc đậm nhạt: nhạt → đậm. */
 const RAMP = ["·", "-", "+", "*"] as const;
 /** Ngưỡng mật độ tương ứng từng ký tự trong RAMP. */
@@ -18,7 +20,13 @@ const MAX_ALPHA = 0.62;
 
 /** Phần vận tốc / mật độ còn lại sau mỗi giây (dùng luỹ thừa theo dt). */
 const VELOCITY_RETENTION = 0.5;
-const DENSITY_RETENTION = 0.45;
+/**
+ * Mực tiêu tán theo độ đậm chứ không đồng loạt: ô nhạt (ký tự "·") giữ lại
+ * nhiều nên sống dai, ô đậm (ký tự "*") tan nhanh hơn. Ô có độ đậm ở giữa thì
+ * nội suy tuyến tính giữa hai mốc này.
+ */
+const DENSITY_RETENTION_FAINT = 0.62;
+const DENSITY_RETENTION_DENSE = 0.42;
 
 const POINTER_MAX_SPEED = 55; // ô/giây
 const POINTER_FORCE_GAIN = 0.8;
@@ -38,12 +46,13 @@ const DRIFT_HOLD = [0, 0] as const; // giây giữ nguyên độ đậm
 const DRIFT_RELEASE = [2, 2.8] as const; // giây ngừng bơm để tự tan
 const DRIFT_SPEED = 6; // ô/giây — chỉ đủ để cụm lững lờ trôi
 /**
- * Mực bơm mỗi giây ở đỉnh bao hình. Mật độ cân bằng ở tâm cụm ≈ FEED / |ln(DENSITY_RETENTION)|,
- * nên 0.45 cho ra tâm ~0.88 — vừa đủ chạm bậc ký tự đậm nhất rồi loang nhạt dần ra rìa.
+ * Mực bơm mỗi giây ở đỉnh bao hình. Vì tâm cụm là vùng đậm nên nó tiêu tán theo
+ * DENSITY_RETENTION_DENSE: mật độ cân bằng ≈ FEED / |ln(DENSITY_RETENTION_DENSE)|,
+ * và luôn bị chặn ở trần cứng 1.6 trong FluidSolver.splat().
  */
-const DRIFT_FEED = 3.8;
+const DRIFT_FEED = 5.8;
 /** Số cụm sống đồng thời ứng với 1 bậc cường độ (bậc 0 = tắt hẳn). */
-const DRIFT_PUFFS_PER_LEVEL = 5;
+const DRIFT_PUFFS_PER_LEVEL = 3;
 
 type Rgb = [number, number, number];
 
@@ -196,7 +205,7 @@ export default function AsciiFluidBackground({ className = "" }: { className?: s
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
-      ctx.font = `${Math.round(cellPx * 0.78)}px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace`;
+      ctx.font = `${Math.round(cellPx * GLYPH_SCALE)}px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace`;
     };
 
     const onPointerMove = (event: PointerEvent) => {
@@ -436,7 +445,12 @@ export default function AsciiFluidBackground({ className = "" }: { className?: s
 
       updateDrift(dt);
       emitFromPointer(dt);
-      solver.step(dt, VELOCITY_RETENTION ** dt, DENSITY_RETENTION ** dt);
+      solver.step(
+        dt,
+        VELOCITY_RETENTION ** dt,
+        DENSITY_RETENTION_FAINT ** dt,
+        DENSITY_RETENTION_DENSE ** dt,
+      );
       render();
     };
 

@@ -10,6 +10,7 @@ import { useSyncExternalStore } from "react";
 
 const CLOUDS_KEY = "fd-clouds";
 const DRIFT_KEY = "fd-fluid-drift";
+const LIQUID_CHAT_KEY = "fd-liquid-chat";
 
 /** Thang cường độ fluid trôi nổi ngẫu nhiên: 0 = tắt hẳn. */
 export const FLUID_DRIFT_MAX = 5;
@@ -31,8 +32,13 @@ function readDrift(): number {
     : FLUID_DRIFT_DEFAULT;
 }
 
+function readLiquidChat(): boolean {
+  return localStorage.getItem(LIQUID_CHAT_KEY) !== "off";
+}
+
 let clouds = readClouds();
 let drift = readDrift();
+let liquidChat = readLiquidChat();
 let listeners: Array<() => void> = [];
 
 function subscribe(listener: () => void) {
@@ -69,8 +75,24 @@ export function setFluidDrift(next: number) {
   emit();
 }
 
+export function getLiquidChat() {
+  return liquidChat;
+}
+
+export function setLiquidChat(next: boolean) {
+  liquidChat = next;
+
+  localStorage.setItem(LIQUID_CHAT_KEY, next ? "on" : "off");
+  emit();
+}
+
 export function useClouds() {
   return useSyncExternalStore(subscribe, getClouds);
+}
+
+/** Nền chất lỏng sau khung hội thoại của trợ lý AI. */
+export function useLiquidChat() {
+  return useSyncExternalStore(subscribe, getLiquidChat);
 }
 
 export function useFluidDrift() {

@@ -1,22 +1,51 @@
 import { useState } from "react";
-import { ChevronDown, Cloud, Settings, Waves } from "lucide-react";
+import { ChevronDown, Cloud, Droplet, Settings, Waves } from "lucide-react";
 import ThemeToggle from "@/components/ui/ThemeToggle";
 import {
   FLUID_DRIFT_MAX,
   setClouds,
   setFluidDrift,
+  setLiquidChat,
   useClouds,
   useFluidDrift,
+  useLiquidChat,
 } from "@/utils/appearance";
 
 const rowClass =
   "flex w-full cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-text-secondary transition-colors hover:bg-neutral-dark hover:text-text-primary";
+
+/**
+ * Nút gạt dùng chung cho panel này.
+ *
+ * Rãnh lúc TẮT dùng border-dark chứ không phải neutral-dark: cả hàng có
+ * hover:bg-neutral-dark, trùng màu thì lúc rê chuột rãnh biến mất, chỉ còn trơ
+ * nút tròn.
+ */
+function Switch({ on, label }: { on: boolean; label: string }) {
+  return (
+    <span
+      role="switch"
+      aria-checked={on}
+      aria-label={label}
+      className={`relative block h-5 w-9 shrink-0 rounded-full transition-colors duration-200 ${
+        on ? "bg-primary" : "bg-border-dark"
+      }`}
+    >
+      <span
+        className={`absolute top-0.5 block h-4 w-4 rounded-full bg-neutral shadow transition-transform duration-200 ${
+          on ? "translate-x-4.5" : "translate-x-0.5"
+        }`}
+      />
+    </span>
+  );
+}
 
 /** Khối cài đặt giao diện dạng expand trong sidebar Hồ sơ. */
 export default function AppearanceSettings() {
   const [open, setOpen] = useState(false);
   const clouds = useClouds();
   const drift = useFluidDrift();
+  const liquidChat = useLiquidChat();
 
   return (
     <div className="flex flex-col">
@@ -48,17 +77,15 @@ export default function AppearanceSettings() {
 
           <span className="flex-1 text-left">Mảng mây</span>
 
-          <span
-            className={`relative block h-5 w-9 shrink-0 rounded-full transition-colors duration-200 ${
-              clouds ? "bg-primary" : "bg-neutral-dark"
-            }`}
-          >
-            <span
-              className={`absolute top-0.5 block h-4 w-4 rounded-full bg-white shadow transition-transform duration-200 ${
-                clouds ? "translate-x-4.5" : "translate-x-0.5"
-              }`}
-            />
-          </span>
+          <Switch on={clouds} label="Mảng mây" />
+        </button>
+
+        <button type="button" onClick={() => setLiquidChat(!liquidChat)} className={rowClass}>
+          <Droplet size={18} />
+
+          <span className="flex-1 text-left">Nền chất lỏng (chat AI)</span>
+
+          <Switch on={liquidChat} label="Nền chất lỏng trong khung chat AI" />
         </button>
 
         <div className="px-3 py-2.5">
