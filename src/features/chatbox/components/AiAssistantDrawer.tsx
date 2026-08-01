@@ -12,7 +12,7 @@ import { useAiChat, type AiMessage } from "@/features/chatbox/hooks/useAiChat";
 import { useImageAttachments } from "@/features/chatbox/hooks/useImageAttachments";
 import { AiActivityIndicator } from "@/features/shared/ai-activity";
 import LiquidMeshBackground from "@/components/ui/LiquidMeshBackground";
-import { useLiquidChat } from "@/utils/appearance";
+import { useChatSurface } from "@/utils/appearance";
 import AttachmentPreviewRow from "./AttachmentPreviewRow";
 import ConfirmDeleteButton from "./ConfirmDeleteButton";
 import Markdown from "./Markdown";
@@ -291,7 +291,7 @@ export default function AiAssistantDrawer({ open, onClose, productId }: AiAssist
   };
 
   const isEmpty = messages.length === 0;
-  const liquidChat = useLiquidChat();
+  const chatSurface = useChatSurface();
 
   return (
     <>
@@ -318,7 +318,7 @@ export default function AiAssistantDrawer({ open, onClose, productId }: AiAssist
             ? "translate 300ms cubic-bezier(0, 0, 0.2, 1), transform 300ms cubic-bezier(0, 0, 0.2, 1)"
             : "width 300ms cubic-bezier(0, 0, 0.2, 1), translate 300ms cubic-bezier(0, 0, 0.2, 1), transform 300ms cubic-bezier(0, 0, 0.2, 1)",
         }}
-        className={`fixed right-0 top-0 z-50 flex h-dvh flex-col border-l-2 border-primary/40 bg-white shadow-2xl ring-1 ring-primary/10 transition-transform duration-300 ease-out ${
+        className={`fixed right-0 top-0 z-50 flex h-dvh flex-col border-l-2 border-primary/40 shadow-2xl ring-1 ring-primary/10 transition-transform duration-300 ease-out ${
           open ? "translate-x-0" : "translate-x-full"
         }`}
       >
@@ -372,8 +372,20 @@ export default function AiAssistantDrawer({ open, onClose, productId }: AiAssist
             Canvas nằm ngoài vùng cuộn (nếu để bên trong thì nó trôi theo nội
             dung); bg-gray-50 của lớp bọc là nền dự phòng khi WebGL không dựng
             được hoặc người dùng bật "giảm chuyển động". */}
-        <div className="relative isolate flex-1 overflow-hidden bg-gray-50">
-          {liquidChat && <LiquidMeshBackground active={open} className="absolute inset-0 -z-10" />}
+        <div
+          className={`relative isolate flex-1 overflow-hidden ${
+            chatSurface === "blur"
+              ? // Kính mờ KHÔNG PHỦ MÀU — cùng công thức với dải .fd-rail ở trang
+                // chính: chỉ làm đục thứ nằm dưới, không đắp thêm lớp màu nào.
+                // Rẻ hơn hẳn chế độ nước: không WebGL, không vòng lặp mỗi khung
+                // hình, chỉ một lượt hợp thành do trình duyệt lo.
+                "backdrop-blur-[8px] backdrop-saturate-[1.05]"
+              : "bg-gray-50"
+          }`}
+        >
+          {chatSurface === "liquid" && (
+            <LiquidMeshBackground active={open} className="absolute inset-0 -z-10" />
+          )}
 
           <div
             ref={scrollRef}

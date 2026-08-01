@@ -6,9 +6,9 @@ import { useClouds, useFluidDrift } from "@/utils/appearance";
 const CLOUD_LAYERS = [1, 2, 3, 4, 5, 6];
 
 /** Kích thước một ô lưới (px CSS) — ô càng lớn thì càng ít ký tự phải vẽ. */
-const CELL_SIZE = 19;
+const CELL_SIZE = 20;
 /** Cỡ chữ so với ô lưới; quá 0.9 là các ký tự bắt đầu dính nhau. */
-const GLYPH_SCALE = 0.82;
+const GLYPH_SCALE = 0.86;
 /** Bậc đậm nhạt: nhạt → đậm. */
 const RAMP = ["·", "-", "+", "*"] as const;
 /** Ngưỡng mật độ tương ứng từng ký tự trong RAMP. */
@@ -25,12 +25,12 @@ const VELOCITY_RETENTION = 0.5;
  * nhiều nên sống dai, ô đậm (ký tự "*") tan nhanh hơn. Ô có độ đậm ở giữa thì
  * nội suy tuyến tính giữa hai mốc này.
  */
-const DENSITY_RETENTION_FAINT = 0.62;
-const DENSITY_RETENTION_DENSE = 0.42;
+const DENSITY_RETENTION_FAINT = 0.58;
+const DENSITY_RETENTION_DENSE = 0.12;
 
 const POINTER_MAX_SPEED = 55; // ô/giây
-const POINTER_FORCE_GAIN = 0.8;
-const SPLAT_RADIUS = 1.8;
+const POINTER_FORCE_GAIN = 1;
+const SPLAT_RADIUS = 1.4;
 
 /** Click → vòng lực toả tròn: số nhánh và tốc độ bắn ra (ô/giây). */
 const BURST_ARMS = 8;

@@ -2,13 +2,14 @@ import { useState } from "react";
 import { ChevronDown, Cloud, Droplet, Settings, Waves } from "lucide-react";
 import ThemeToggle from "@/components/ui/ThemeToggle";
 import {
+  CHAT_SURFACES,
   FLUID_DRIFT_MAX,
+  setChatSurface,
   setClouds,
   setFluidDrift,
-  setLiquidChat,
+  useChatSurface,
   useClouds,
   useFluidDrift,
-  useLiquidChat,
 } from "@/utils/appearance";
 
 const rowClass =
@@ -45,7 +46,7 @@ export default function AppearanceSettings() {
   const [open, setOpen] = useState(false);
   const clouds = useClouds();
   const drift = useFluidDrift();
-  const liquidChat = useLiquidChat();
+  const chatSurface = useChatSurface();
 
   return (
     <div className="flex flex-col">
@@ -80,13 +81,40 @@ export default function AppearanceSettings() {
           <Switch on={clouds} label="Mảng mây" />
         </button>
 
-        <button type="button" onClick={() => setLiquidChat(!liquidChat)} className={rowClass}>
-          <Droplet size={18} />
+        <div className="px-3 py-2.5">
+          <div className="flex items-center gap-3 text-sm font-medium text-text-secondary">
+            <Droplet size={18} />
 
-          <span className="flex-1 text-left">Nền chất lỏng (chat AI)</span>
+            <span className="flex-1">Nền khung chat AI</span>
+          </div>
 
-          <Switch on={liquidChat} label="Nền chất lỏng trong khung chat AI" />
-        </button>
+          <div
+            role="radiogroup"
+            aria-label="Chất liệu nền khung chat AI"
+            className="mt-2 flex gap-1 rounded-lg bg-neutral-dark/60 p-1"
+          >
+            {CHAT_SURFACES.map(({ value, label }) => {
+              const selected = chatSurface === value;
+
+              return (
+                <button
+                  key={value}
+                  type="button"
+                  role="radio"
+                  aria-checked={selected}
+                  onClick={() => setChatSurface(value)}
+                  className={`flex-1 cursor-pointer rounded-md px-2 py-1.5 text-xs font-semibold transition-colors ${
+                    selected
+                      ? "bg-primary text-white"
+                      : "text-text-secondary hover:bg-neutral-dark hover:text-text-primary"
+                  }`}
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
 
         <div className="px-3 py-2.5">
           <div className="flex items-center gap-3 text-sm font-medium text-text-secondary">

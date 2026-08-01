@@ -2,25 +2,17 @@ import { useEffect, useRef } from "react";
 import * as THREE from "three";
 
 /**
- * Nền "liquid mesh" KHÚC XẠ: một mặt chất lỏng đặc phủ kín khung, bẻ cong lớp
- * ambient (mảng mây + fluid ASCII) đang nằm phía sau.
+ * Nền "liquid mesh": một mặt giọt nước phủ kín khung, bẻ cong lớp nền phía sau.
  *
- * Khác bản tự phát sáng ở chỗ shader không tự bịa ra màu: nó dựng lại đúng lớp
- * ambient rồi lấy mẫu tại toạ độ đã bị pháp tuyến của mặt nước đẩy lệch — nên
- * cái ta thấy méo đi là các mảng mây và vệt fluid thật.
+ * Thứ bị bẻ gồm gradient của .fd-ambient và lớp fluid ASCII. Mảng mây CỐ Ý
+ * không nằm trong đó: viền của chúng sắc nên khi đi qua trường pháp tuyến sẽ vỡ
+ * thành vệt lấm tấm chói mắt, mà làm mềm viền đủ để hết nhiễu thì chúng cũng
+ * nhạt tới mức không còn nhìn ra. Bỏ hẳn còn gỡ được cả phần đọc DOM mỗi khung
+ * hình để bám theo animation CSS của chúng.
  *
- * Vì sao phải DỰNG LẠI thay vì chụp thẳng: mây là phần tử DOM có `mix-blend-mode`
- * và animation CSS, không có cách nào lấy ra thành texture theo từng khung hình
- * (html2canvas quá chậm cho 60fps). Bù lại, hình học của chúng thì đọc được:
- * mỗi khung hình lấy ma trận transform đang chạy của từng mảng rồi truyền vào
- * shader, nên chuyển động luôn khớp với lớp CSS thật, không phải chép lại
- * keyframe. Hình dạng thì xấp xỉ bằng ellipse xoay — mây gốc là superellipse có
- * `border-radius` 8 giá trị, nhưng qua khúc xạ thì sai khác đó không đọc ra được.
- *
- * Riêng lớp fluid ASCII vốn đã là <canvas> nên lấy thẳng làm texture.
+ * Lớp fluid ASCII vốn đã là <canvas> nên lấy thẳng làm texture — đây là nguồn
+ * chi tiết duy nhất đủ sắc để nhìn ra là đang bị khúc xạ.
  */
-
-const MAX_CLOUDS = 6;
 
 /** Lề lấy dư quanh khung, để tia bị bẻ ra ngoài mép vẫn có dữ liệu để lấy mẫu. */
 const SAMPLE_MARGIN = 56;
@@ -37,8 +29,6 @@ const VERTEX = /* glsl */ `
 const FRAGMENT = /* glsl */ `
   precision highp float;
 
-  #define MAX_CLOUDS ${MAX_CLOUDS}
-
   uniform vec2  uViewport;      // kích thước khung nhìn (px)
   uniform vec2  uRegionOrigin;  // góc trái-trên của khung chat trong khung nhìn (px)
   uniform vec2  uRegionSize;    // kích thước khung chat (px)
@@ -48,12 +38,7 @@ const FRAGMENT = /* glsl */ `
   uniform vec3  uGrad1;
   uniform vec3  uGrad2;
 
-  uniform vec4  uCloudGeom[MAX_CLOUDS];   // tâm.xy (px) + bán trục.zw (px)
-  uniform vec2  uCloudRot[MAX_CLOUDS];    // cos, sin của góc xoay
-  uniform vec4  uCloudColor[MAX_CLOUDS];  // rgb + độ đục
-  uniform int   uCloudCount;
-  uniform float uBlendScreen;   // 0 = multiply (theme sáng), 1 = screen (theme tối)
-  uniform float uCloudBoost;    // nhân độ đục của mảng mây khi dựng lại
+  uniform float uDark;          // 1 khi đang ở theme tối
 
   uniform sampler2D uFluid;     // lớp ASCII fluid, đã cắt đúng vùng + lề
   uniform vec4  uFluidRect;     // origin.xy + size.zw của vùng đã cắt (px)
@@ -62,6 +47,11 @@ const FRAGMENT = /* glsl */ `
   uniform float uRefract;       // biên độ bẻ tia (px)
   uniform float uDispersion;    // độ lệch giữa các kênh màu (tỉ lệ so với uRefract)
   uniform float uScale;
+  uniform float uBump;          // độ nổi của mặt giọt (nhân vào pháp tuyến)
+  uniform float uIridescence;   // biên độ chuyển màu phân cực
+  uniform float uGrain;         // biên độ hạt nhiễu tĩnh
+  uniform vec3  uTintA;         // hai cực của dải màu phân cực
+  uniform vec3  uTintB;
   uniform float uVeil;          // pha thêm bao nhiêu phần màu nền cho dễ đọc chữ
   uniform vec3  uVeilColor;
 
@@ -106,46 +96,65 @@ const FRAGMENT = /* glsl */ `
     return sum;
   }
 
-  /** Trường độ cao của mặt chất lỏng: fbm lồng hai tầng (domain warp). */
-  float height(vec2 p) {
-    float t = uTime;
-    vec2 q = vec2(fbm(p + vec2(0.0, 0.9 * t)),
-                  fbm(p + vec2(5.2, 1.3) + 0.7 * t));
-    vec2 r = vec2(fbm(p + 3.0 * q + vec2(1.7, 9.2) - 0.5 * t),
-                  fbm(p + 3.0 * q + vec2(8.3, 2.8) + 0.4 * t));
-    return fbm(p + 3.0 * r);
+  /**
+   * Trường metaball: vài tâm trôi chậm cộng lại thành một khối liền có eo thắt —
+   * đúng cách các giọt nước nhập vào nhau. Đường đồng mức của trường này là các
+   * đường cong khép kín trơn, và đó mới là nguồn của "sức căng bề mặt"; nhiễu
+   * rải đều thì không bao giờ ra được cảm giác đó.
+   */
+  float dropletField(vec2 p) {
+    // Bóp méo miền ở tần số RẤT thấp và biên độ nhỏ so với bán kính: đủ để đường
+    // đồng mức uốn lượn như chất lỏng, chưa đủ để xé chúng thành nhiễu.
+    vec2 w = p + 0.11 * vec2(fbm(p * 0.5 + vec2(0.0, uTime)),
+                             fbm(p * 0.5 + vec2(4.7, -uTime)));
+    float f = 0.0;
+
+    for (int i = 0; i < 3; i++) {
+      float fi = float(i);
+      vec2 c = vec2(sin(uTime * (0.85 + fi * 0.27) + fi * 2.1),
+                    cos(uTime * (0.65 + fi * 0.33) + fi * 1.3)) * (0.10 + fi * 0.07);
+      float r = 0.22 - fi * 0.05;
+      vec2 d = w - c;
+
+      f += r * r / max(dot(d, d), 1e-4);
+    }
+
+    return f;
   }
 
-  /** Dựng lại màu của lớp ambient tại một điểm bất kỳ trong khung nhìn. */
+  /** Trường metaball quy về khoảng (0,1): 0 ở lõi khối, 1 ở xa. */
+  float surfaceDepth(vec2 p) {
+    return 1.0 / (1.0 + dropletField(p));
+  }
+
+  /**
+   * Độ cao mặt chất lỏng — TRƠN, không gấp nếp.
+   *
+   * Đã thử hai kiểu tạo gờ trước đó và bỏ cả hai: một đường biên duy nhất thì
+   * hiệu ứng co cụm vào giữa khung, còn gấp trường thành nhiều đường đồng mức
+   * thì ra những gờ cứng chạy song song, nhìn ra ngay là đồ hoạ chứ không phải
+   * chất lỏng. Ở đây độ cao chỉ là bề dày lớp chất lỏng biến thiên đều, nên độ
+   * nghiêng đổi từ từ khắp mặt — lượng bẻ tia và sắc phân cực chuyển thành
+   * những dải rộng mượt thay vì bám vào một đường nào.
+   */
+  float dropletHeight(vec2 p) {
+    return surfaceDepth(p) + 0.40 * fbm(p * 0.7 + vec2(uTime * 0.6, -uTime * 0.4));
+  }
+
+  /** Hạt nhiễu tĩnh, biên độ rất nhỏ — phủ đều mặt cho đỡ bệt, không nhấp nháy. */
+  float grain(vec2 vp) {
+    return fract(sin(dot(vp, vec2(12.9898, 78.233))) * 43758.5453) - 0.5;
+  }
+
+  /**
+   * Màu của lớp nền tại một điểm bất kỳ trong khung nhìn: gradient .fd-ambient
+   * cộng lớp fluid ASCII. Không có mảng mây — xem ghi chú ở đầu tệp.
+   */
   vec3 ambientAt(vec2 vp) {
     float ty = clamp(vp.y / max(uViewport.y, 1.0), 0.0, 1.0);
     vec3 col = ty < 0.55
       ? mix(uGrad0, uGrad1, ty / 0.55)
       : mix(uGrad1, uGrad2, (ty - 0.55) / 0.45);
-
-    for (int i = 0; i < MAX_CLOUDS; i++) {
-      if (i >= uCloudCount) break;
-
-      vec4  geom = uCloudGeom[i];
-      vec2  rot  = uCloudRot[i];
-      vec4  cc   = uCloudColor[i];
-
-      vec2 d = vp - geom.xy;
-      // Về hệ trục riêng của mảng mây (quay ngược lại góc của nó).
-      vec2 local = vec2(d.x * rot.x + d.y * rot.y, -d.x * rot.y + d.y * rot.x);
-      float e = length(local / max(geom.zw, vec2(1.0)));
-
-      // Mây gốc là khối màu ĐẶC viền sắc — chỉ khử răng cưa một dải rất hẹp.
-      // uCloudBoost: mây thật chỉ đục 16–26% trên một nền gần như phẳng, bẻ cong
-      // chừng đó thì mắt không thấy gì. Khuếch đại lên trong phạm vi khung chat
-      // là cách ĐỔI LẤY hiệu ứng nhìn thấy được — cố ý lệch khỏi nền thật.
-      float a = (1.0 - smoothstep(0.985, 1.0, e)) * clamp(cc.a * uCloudBoost, 0.0, 1.0);
-
-      vec3 multiplied = col * cc.rgb;
-      vec3 screened   = 1.0 - (1.0 - col) * (1.0 - cc.rgb);
-
-      col = mix(col, mix(multiplied, screened, uBlendScreen), a);
-    }
 
     if (uFluidAmount > 0.0) {
       vec2 fuv = (vp - uFluidRect.xy) / max(uFluidRect.zw, vec2(1.0));
@@ -165,41 +174,66 @@ const FRAGMENT = /* glsl */ `
     float aspect = uRegionSize.x / max(uRegionSize.y, 1.0);
     vec2 p = (vUv - 0.5) * vec2(aspect, 1.0) * uScale;
 
-    // Pháp tuyến mặt nước, suy từ sai phân hữu hạn của trường độ cao.
-    float e = 0.004 * uScale;
-    float hx = height(p + vec2(e, 0.0)) - height(p - vec2(e, 0.0));
-    float hy = height(p + vec2(0.0, e)) - height(p - vec2(0.0, e));
-    vec3 normal = normalize(vec3(-hx, -hy, 0.5));
+    // Pháp tuyến từ sai phân hữu hạn. Bước lấy mẫu để RỘNG (không bám theo từng
+    // điểm ảnh) để pháp tuyến trơn — bước hẹp sẽ khuếch đại chi tiết li ti và
+    // biến mặt chất lỏng thành mặt nhiễu.
+    float e = 0.02;
+    float hx = dropletHeight(p + vec2(e, 0.0)) - dropletHeight(p - vec2(e, 0.0));
+    float hy = dropletHeight(p + vec2(0.0, e)) - dropletHeight(p - vec2(0.0, e));
+    vec3 normal = normalize(vec3(-hx * uBump, -hy * uBump, 1.0));
 
-    // Khúc xạ: đẩy điểm lấy mẫu theo phương nghiêng của mặt nước. Đây là chỗ
-    // duy nhất tạo ra hiệu ứng — mọi thứ khác chỉ là dựng lại nền cho đúng.
+    // Khúc xạ theo độ nghiêng mặt. Mặt trơn nên độ nghiêng đổi từ từ, lượng bẻ
+    // trải đều khắp khung — không có chỗ nào bị dồn thành đường gấp.
     vec2 bend = normal.xy * uRefract * vec2(1.0, -1.0);
 
-    // Tán sắc: ba kênh màu lệch nhau một chút, đúng như thuỷ tinh thật bẻ mỗi
-    // bước sóng một khác. Nền ambient vốn rất mượt nên nếu cả ba kênh lệch như
-    // nhau thì mắt gần như không thấy gì; viền màu mảnh ở chỗ dốc mới là thứ
-    // khiến người xem đọc ra "đang nhìn qua một lớp chất lỏng".
+    // Tán sắc: ba kênh màu lệch nhau chút ít, như thuỷ tinh bẻ mỗi bước sóng một khác.
     vec3 color = vec3(
       ambientAt(vp + bend * (1.0 - uDispersion)).r,
       ambientAt(vp + bend).g,
       ambientAt(vp + bend * (1.0 + uDispersion)).b
     );
 
-    // Vệt sáng trên mặt chất lỏng — thứ khiến mắt đọc ra "đây là mặt nước"
-    // chứ không phải một bức ảnh bị méo.
-    vec3 lightDir = normalize(vec3(-0.45, 0.75, 0.62));
-    float specular = pow(clamp(dot(reflect(-lightDir, normal), vec3(0.0, 0.0, 1.0)), 0.0, 1.0), 28.0);
-    float fresnel  = pow(1.0 - clamp(normal.z, 0.0, 1.0), 2.0);
+    float fresnel = pow(1.0 - clamp(normal.z, 0.0, 1.0), 1.5);
 
-    // Màn phủ kéo ảnh về phía màu nền của khung — vừa để chữ đọc được, vừa để
-    // lớp mây méo phía sau đọc ra là "nhìn qua mặt nước" chứ không phải hình nền.
-    color = mix(color, uVeilColor, clamp(uVeil, 0.0, 1.0));
-    color = mix(color, uVeilColor, fresnel * 0.12);
+    // Phân cực (giao thoa màng mỏng). Pha phụ thuộc BỀ DÀY lớp chất lỏng và góc
+    // nhìn; bề dày biến thiên nhẹ ở tần số thấp nên lòng giọt không bệt một màu.
+    //
+    // Màu quét trong DẢI HẸP giữa hai tông brand, cộng chút ánh cầu vồng ở tần số
+    // gấp đôi. Quét trọn phổ thì rực như váng dầu, quá ồn cho khung chat; còn nội
+    // suy trơn giữa đúng hai màu brand lại ra mấy mảng xanh–nâu trông y hệt mảng
+    // mây của trang — đó chính là thứ bị nhầm là "mây trong nước".
+    //
+    // Bề dày lấy theo trường TRƠN (không theo gờ), nên màu chuyển mượt cắt ngang
+    // các gờ thay vì bám dính vào từng gờ một.
+    float thickness = surfaceDepth(p) * 2.2 + 0.45 * fbm(p * 0.95 + vec2(uTime * 0.8, -uTime * 0.5));
+    float phase = fresnel * 1.1 + thickness * 2.4 + dot(normal.xy, vec2(0.8, 0.6)) * 0.8;
 
-    // Vệt sáng: kéo về phía trắng ở theme sáng, về phía tối ở theme tối — cả hai
-    // trường hợp đều là "tách khỏi nền", không phải luôn luôn làm sáng lên.
-    vec3 glintTarget = mix(vec3(1.0), vec3(0.0), uBlendScreen);
-    color = mix(color, glintTarget, specular * 0.22);
+    vec3 iridescent = mix(uTintA, uTintB, 0.5 + 0.5 * cos(6.2831853 * phase))
+      + 0.09 * cos(6.2831853 * (phase * 2.0 + vec3(0.0, 0.33, 0.67)));
+
+    // Phủ TOÀN BỘ khung — không còn cổng theo thân giọt, vì giờ chất lỏng trải
+    // kín mặt chứ không phải một khối nằm giữa nền trống.
+    float coat = uIridescence * (0.80 + 0.20 * fresnel);
+
+    color = mix(color, iridescent, clamp(coat, 0.0, 1.0));
+
+    // Màn phủ chỉ tác động lên ĐỘ SÁNG, không đụng vào sắc độ.
+    //
+    // Bản trước pha thẳng color → uVeilColor nên vừa nâng sáng vừa xoá luôn màu:
+    // kéo đủ để đọc chữ thì mặt giọt cũng bạc trắng hết. Mà tương phản chữ chỉ
+    // phụ thuộc độ sáng — nên chỉ cần nén độ sáng về gần nền, còn các dải màu
+    // phân cực thì giữ nguyên biên độ.
+    const vec3 LUMA = vec3(0.2126, 0.7152, 0.0722);
+    float lum = dot(color, LUMA);
+    float targetLum = mix(lum, dot(uVeilColor, LUMA), clamp(uVeil, 0.0, 1.0));
+
+    color = clamp(color + (targetLum - lum), 0.0, 1.0);
+
+    // Viền sáng mảnh bám đúng mép giọt — dấu hiệu thị giác của sức căng bề mặt.
+    vec3 rimTarget = mix(vec3(1.0), vec3(0.0), uDark);
+    color = mix(color, rimTarget, pow(fresnel, 3.0) * 0.30);
+
+    color += vec3(grain(vp) * uGrain);
 
     gl_FragColor = vec4(color, 1.0);
   }
@@ -252,8 +286,12 @@ export interface LiquidMeshBackgroundProps {
   refract?: number;
   /** Độ lệch giữa 3 kênh màu, tính theo tỉ lệ của `refract`. 0 = không tán sắc. */
   dispersion?: number;
-  /** Nhân độ đục mảng mây khi dựng lại. 1 = đúng như nền thật (gần như không thấy khúc xạ). */
-  cloudBoost?: number;
+  /** Độ nổi của mặt giọt. Càng lớn viền càng cong gắt. */
+  bump?: number;
+  /** Biên độ dải màu phân cực (xanh ↔ vàng). 0 = tắt. */
+  iridescence?: number;
+  /** Biên độ hạt nhiễu phủ mặt. */
+  grain?: number;
   /** Số ô vân trên chiều cao khung. Nhỏ = khối lớn, lững lờ. */
   scale?: number;
   /** Nhân tốc độ chảy. */
@@ -265,19 +303,45 @@ export interface LiquidMeshBackgroundProps {
 
 export default function LiquidMeshBackground({
   active = true,
-  refract = 42,
-  dispersion = 0.35,
-  cloudBoost = 2.2,
-  scale = 2.2,
+  refract = 130,
+  dispersion = 0.22,
+  bump = 2.4,
+  iridescence = 0.55,
+  grain = 0.016,
+  scale = 0.38,
   speed = 1,
-  veil = 0.3,
+  veil = 0.55,
   className = "",
 }: LiquidMeshBackgroundProps) {
   const hostRef = useRef<HTMLDivElement | null>(null);
   // Đọc qua ref để đổi thông số không phải dựng lại cả scene WebGL.
-  const knobs = useRef({ active, refract, dispersion, cloudBoost, scale, speed, veil });
+  const knobs = useRef({
+    active,
+    refract,
+    dispersion,
+    bump,
+    iridescence,
+    grain,
+    scale,
+    speed,
+    veil,
+  });
 
-  knobs.current = { active, refract, dispersion, cloudBoost, scale, speed, veil };
+  // Đồng bộ trong effect chứ không phải giữa lúc render: ghi vào ref khi đang
+  // render là tác dụng phụ, React có thể dựng lại rồi bỏ kết quả đi.
+  useEffect(() => {
+    knobs.current = {
+      active,
+      refract,
+      dispersion,
+      bump,
+      iridescence,
+      grain,
+      scale,
+      speed,
+      veil,
+    };
+  });
 
   useEffect(() => {
     const host = hostRef.current;
@@ -321,15 +385,15 @@ export default function LiquidMeshBackground({
       uGrad0: { value: new THREE.Color(0.96, 0.96, 0.94) },
       uGrad1: { value: new THREE.Color(0.96, 0.95, 0.93) },
       uGrad2: { value: new THREE.Color(0.96, 0.96, 0.94) },
-      uCloudGeom: { value: Array.from({ length: MAX_CLOUDS }, () => new THREE.Vector4()) },
-      uCloudRot: { value: Array.from({ length: MAX_CLOUDS }, () => new THREE.Vector2(1, 0)) },
-      uCloudColor: { value: Array.from({ length: MAX_CLOUDS }, () => new THREE.Vector4()) },
-      uCloudCount: { value: 0 },
-      uBlendScreen: { value: 0 },
-      uCloudBoost: { value: cloudBoost },
+      uDark: { value: 0 },
       uFluid: { value: fluidTexture },
       uFluidRect: { value: new THREE.Vector4(0, 0, 1, 1) },
       uFluidAmount: { value: 0 },
+      uBump: { value: bump },
+      uIridescence: { value: iridescence },
+      uGrain: { value: grain },
+      uTintA: { value: new THREE.Color(0.49, 0.56, 0.41) },
+      uTintB: { value: new THREE.Color(0.65, 0.54, 0.39) },
       uRefract: { value: refract },
       uDispersion: { value: dispersion },
       uScale: { value: scale },
@@ -368,7 +432,7 @@ export default function LiquidMeshBackground({
 
       const isDark = document.documentElement.getAttribute("data-theme") === "dark";
 
-      uniforms.uBlendScreen.value = isDark ? 1 : 0;
+      uniforms.uDark.value = isDark ? 1 : 0;
 
       const surfaceRaw = getComputedStyle(document.documentElement)
         .getPropertyValue("--color-gray-50")
@@ -376,63 +440,18 @@ export default function LiquidMeshBackground({
       const [vr, vg, vb] = readColor(surfaceRaw, isDark ? "#22261f" : "#f9fafb");
 
       uniforms.uVeilColor.value.setRGB(vr, vg, vb, THREE.LinearSRGBColorSpace);
-    };
 
-    /**
-     * Hình học của từng mảng mây, đọc lại theo từng khung hình.
-     *
-     * `offsetLeft/Top/Width/Height` cho hộp bố cục CHƯA biến đổi (mây nằm trong
-     * .fd-ambient vốn là fixed inset-0 nên trùng hệ toạ độ khung nhìn), còn ma
-     * trận transform cho phần tịnh tiến + góc xoay đang chạy. Gốc xoay mặc định
-     * là tâm phần tử, nên tâm sau biến đổi = tâm bố cục + phần tịnh tiến.
-     */
-    const cloudAlpha: number[] = [];
-    const cloudRgb: Array<[number, number, number]> = [];
-    let cloudEls: HTMLElement[] = [];
-
-    const collectClouds = () => {
-      cloudEls = Array.from(document.querySelectorAll<HTMLElement>(".fd-cloud")).slice(
-        0,
-        MAX_CLOUDS,
+      // Hai cực của dải phân cực: sage ↔ nâu ấm của brand — trùng đúng cặp
+      // xanh/vàng ở bản mẫu monopo.
+      const cssVars = getComputedStyle(document.documentElement);
+      const [ar, ag, ab] = readColor(cssVars.getPropertyValue("--color-primary").trim(), "#7d8f69");
+      const [br, bg2, bb] = readColor(
+        cssVars.getPropertyValue("--color-secondary").trim(),
+        "#a68a64",
       );
-      cloudRgb.length = 0;
-      cloudAlpha.length = 0;
 
-      cloudEls.forEach((el) => {
-        const cs = getComputedStyle(el);
-        const [r, g, b, a] = readColor(cs.backgroundColor, "#00000000");
-
-        cloudRgb.push([r, g, b]);
-        // .fd-cloud ở theme tối còn bị hạ opacity — nhân vào luôn.
-        cloudAlpha.push(a * Number(cs.opacity || 1));
-      });
-
-      uniforms.uCloudCount.value = cloudEls.length;
-    };
-
-    const updateClouds = () => {
-      cloudEls.forEach((el, i) => {
-        // `transform: none` (mảng chưa vào animation) làm DOMMatrix ném lỗi cú pháp.
-        const raw = getComputedStyle(el).transform;
-        const matrix = raw && raw !== "none" ? new DOMMatrixReadOnly(raw) : new DOMMatrixReadOnly();
-        const w = el.offsetWidth;
-        const h = el.offsetHeight;
-
-        uniforms.uCloudGeom.value[i].set(
-          el.offsetLeft + w / 2 + matrix.e,
-          el.offsetTop + h / 2 + matrix.f,
-          w / 2,
-          h / 2,
-        );
-
-        const norm = Math.hypot(matrix.a, matrix.b) || 1;
-
-        uniforms.uCloudRot.value[i].set(matrix.a / norm, matrix.b / norm);
-
-        const [r, g, b] = cloudRgb[i];
-
-        uniforms.uCloudColor.value[i].set(r, g, b, cloudAlpha[i]);
-      });
+      uniforms.uTintA.value.setRGB(ar, ag, ab, THREE.LinearSRGBColorSpace);
+      uniforms.uTintB.value.setRGB(br, bg2, bb, THREE.LinearSRGBColorSpace);
     };
 
     /** Cắt phần lớp fluid ASCII nằm sau khung (kèm lề) vào texture. */
@@ -500,25 +519,17 @@ export default function LiquidMeshBackground({
       uniforms.uRegionSize.value.set(rect.width, rect.height);
     };
 
-    collectClouds();
     syncPalette();
     resize();
 
     const themeObserver = new MutationObserver(() => {
       syncPalette();
-      collectClouds();
     });
 
     themeObserver.observe(document.documentElement, {
       attributes: true,
       attributeFilter: ["data-theme"],
     });
-
-    // Bật/tắt mảng mây trong Cài đặt giao diện làm thay đổi số phần tử .fd-cloud.
-    const ambientRoot = document.querySelector(".fd-ambient");
-    const ambientObserver = new MutationObserver(collectClouds);
-
-    if (ambientRoot) ambientObserver.observe(ambientRoot, { childList: true });
 
     const resizeObserver = new ResizeObserver(() => {
       resize();
@@ -546,12 +557,13 @@ export default function LiquidMeshBackground({
       uniforms.uTime.value = clock;
       uniforms.uRefract.value = knobs.current.refract;
       uniforms.uDispersion.value = knobs.current.dispersion;
-      uniforms.uCloudBoost.value = knobs.current.cloudBoost;
+      uniforms.uBump.value = knobs.current.bump;
+      uniforms.uIridescence.value = knobs.current.iridescence;
+      uniforms.uGrain.value = knobs.current.grain;
       uniforms.uScale.value = knobs.current.scale;
       uniforms.uVeil.value = knobs.current.veil;
 
       syncRegion();
-      updateClouds();
       updateFluid();
 
       renderer.render(scene, camera);
@@ -562,7 +574,6 @@ export default function LiquidMeshBackground({
     return () => {
       cancelAnimationFrame(raf);
       themeObserver.disconnect();
-      ambientObserver.disconnect();
       resizeObserver.disconnect();
       fluidTexture.dispose();
       mesh.geometry.dispose();
