@@ -18,11 +18,11 @@ const MAX_ALPHA = 0.62;
 
 /** Phần vận tốc / mật độ còn lại sau mỗi giây (dùng luỹ thừa theo dt). */
 const VELOCITY_RETENTION = 0.5;
-const DENSITY_RETENTION = 0.45;
+const DENSITY_RETENTION = 0.38;
 
 const POINTER_MAX_SPEED = 55; // ô/giây
-const POINTER_FORCE_GAIN = 0.8;
-const SPLAT_RADIUS = 1.8;
+const POINTER_FORCE_GAIN = 1;
+const SPLAT_RADIUS = 1.4;
 
 /** Click → vòng lực toả tròn: số nhánh và tốc độ bắn ra (ô/giây). */
 const BURST_ARMS = 8;
@@ -34,16 +34,16 @@ const BURST_SPEED = 26;
  */
 const DRIFT_RADIUS = [3.5, 5] as const; // ô lưới (vệt chuột chỉ ~2.2)
 const DRIFT_ATTACK = [0.4, 0.6] as const; // giây hiện dần
-const DRIFT_HOLD = [0, 0] as const; // giây giữ nguyên độ đậm
-const DRIFT_RELEASE = [2, 2.8] as const; // giây ngừng bơm để tự tan
+const DRIFT_HOLD = [0, 0.2] as const; // giây giữ nguyên độ đậm
+const DRIFT_RELEASE = [1.8, 2.6] as const; // giây ngừng bơm để tự tan
 const DRIFT_SPEED = 6; // ô/giây — chỉ đủ để cụm lững lờ trôi
 /**
  * Mực bơm mỗi giây ở đỉnh bao hình. Mật độ cân bằng ở tâm cụm ≈ FEED / |ln(DENSITY_RETENTION)|,
  * nên 0.45 cho ra tâm ~0.88 — vừa đủ chạm bậc ký tự đậm nhất rồi loang nhạt dần ra rìa.
  */
-const DRIFT_FEED = 3.8;
+const DRIFT_FEED = 5;
 /** Số cụm sống đồng thời ứng với 1 bậc cường độ (bậc 0 = tắt hẳn). */
-const DRIFT_PUFFS_PER_LEVEL = 5;
+const DRIFT_PUFFS_PER_LEVEL = 3;
 
 type Rgb = [number, number, number];
 
