@@ -35,7 +35,12 @@ export default function AboutPage() {
       </div>
 
       {/* Hero Section */}
-      <section className="relative flex h-[60vh] min-h-[400px] items-center justify-center overflow-hidden">
+      {/* Nền là ảnh phủ lớp đen — chữ ở đây luôn là tông sáng, nên đánh dấu để
+          theme tối không lật thang màu trong phạm vi này. */}
+      <section
+        data-fd-chrome="dark"
+        className="relative flex h-[60vh] min-h-[400px] items-center justify-center overflow-hidden"
+      >
         <div className="absolute inset-0 z-0">
           <img
             src="https://hips.hearstapps.com/hmg-prod/images/laptop-on-wooden-table-in-home-interior-with-many-royalty-free-image-1737491671.pjpeg?crop=1.00xw:0.752xh;0,0.183xh&resize=1200:*"
@@ -193,8 +198,8 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* Call to action */}
-      <section className="relative overflow-hidden py-20">
+      {/* Call to action — dải nền brand đặc, chữ luôn tông sáng ở cả hai theme. */}
+      <section data-fd-chrome="dark" className="relative overflow-hidden py-20">
         <div className="absolute inset-0 bg-primary"></div>
 
         <div className="relative z-10 mx-auto max-w-4xl px-4 text-center">

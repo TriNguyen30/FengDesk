@@ -37,7 +37,11 @@ export default function ElementTags({ rows }: ElementTagsProps) {
                     color: ATTENTION_TEXT,
                     borderColor: "transparent",
                   }
-                : { backgroundColor: "#fff", color: "#6b7280", borderColor: "#e5e7eb" }
+                : {
+                    backgroundColor: "var(--fd-surface)",
+                    color: "var(--color-gray-500)",
+                    borderColor: "var(--color-gray-200)",
+                  }
             }
           >
             <span

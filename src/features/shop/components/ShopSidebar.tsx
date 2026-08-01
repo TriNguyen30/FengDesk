@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { toast } from "sonner";
 import { Clock, Loader2, MapPin, Pencil, Phone, Power, Store, X } from "lucide-react";
-import { Shop } from "../types/shop";
+import { Shop, StoreAddress } from "../types/shop";
 import { updateShopRequest } from "../api/shop.api";
 import { joinOpeningHours, normalizeOpeningHours, splitOpeningHours } from "../utils/opening-hours";
 import AddressLocationFields from "@/features/users/components/AddressLocationFields";
@@ -10,7 +10,11 @@ import {
   getDistrictsByProvinceId,
   getWardsByDistrictId,
 } from "@/features/users/api/location.api";
-import { geocodeLocation, reverseGeocode, findBestMatch } from "@/features/users/api/geocoding";
+import { geocodeLocation } from "@/features/users/api/geocoding";
+import {
+  resolveLocationFromCoordinates,
+  loadSelectionForWard,
+} from "@/features/users/utils/location-autofill";
 import type { Provinces, District, Ward } from "@/features/users/types/location";
 
 interface ShopSidebarProps {
@@ -140,11 +144,19 @@ function EditShopProfileModal({ shop, onClose, onSaved }: EditShopProfileModalPr
   const [isReverseGeocoding, setIsReverseGeocoding] = useState(false);
   const [isActive, setIsActive] = useState(shop.isActive);
   const [submitting, setSubmitting] = useState(false);
-  const isMapTriggeredRef = useRef(false);
+
+  // BE trả `address` dạng chuỗi (store chưa có địa chỉ chi tiết) hoặc object
+  // StoreAddressResponse. Chỉ trường hợp object mới có wardId để dựng lại khu vực.
+  const savedAddress = useMemo(
+    () => (typeof shop.address === "object" && shop.address ? (shop.address as StoreAddress) : null),
+    [shop.address],
+  );
 
   useEffect(() => {
-    setStreetAddress(typeof shop.address === "string" ? shop.address : "");
-  }, [shop.address]);
+    setStreetAddress(
+      savedAddress?.streetAddress ?? (typeof shop.address === "string" ? shop.address : ""),
+    );
+  }, [shop.address, savedAddress]);
 
   useEffect(() => {
     getProvinces()
@@ -152,16 +164,36 @@ function EditShopProfileModal({ shop, onClose, onSaved }: EditShopProfileModalPr
       .catch((err) => console.error(err));
   }, []);
 
+  // Nạp lại Tỉnh/Quận/Phường đã lưu để form sửa không mở ra với 3 dropdown trống.
+  useEffect(() => {
+    const wardId = savedAddress?.wardId;
+    if (!wardId) return;
+
+    let stale = false;
+    loadSelectionForWard(wardId).then((selection) => {
+      if (stale || !selection) return;
+      setProvinces(selection.provinces);
+      setDistricts(selection.districts);
+      setWards(selection.wards);
+      setSelectedProvinceId(selection.provinceId);
+      setSelectedDistrictId(selection.districtId);
+      setSelectedWardId(selection.wardId);
+    });
+    return () => {
+      stale = true;
+    };
+  }, [savedAddress?.wardId]);
+
+  // Cascade Tỉnh → Quận → Phường: chỉ xoá lựa chọn cũ khi nó KHÔNG thuộc danh
+  // sách mới. Cờ "thay đổi đến từ bản đồ" trước đây phụ thuộc thời điểm effect
+  // chạy so với lúc autofill kết thúc nên xoá nhầm kết quả vừa điền.
   useEffect(() => {
     if (selectedProvinceId) {
       getDistrictsByProvinceId(selectedProvinceId)
         .then((data) => {
-          setDistricts(data || []);
-          if (!isMapTriggeredRef.current) {
-            setSelectedDistrictId("");
-            setWards([]);
-            setSelectedWardId("");
-          }
+          const list = data || [];
+          setDistricts(list);
+          setSelectedDistrictId((prev) => (list.some((d) => d.id === prev) ? prev : ""));
         })
         .catch((err) => console.error(err));
     } else {
@@ -176,10 +208,9 @@ function EditShopProfileModal({ shop, onClose, onSaved }: EditShopProfileModalPr
     if (selectedDistrictId) {
       getWardsByDistrictId(selectedDistrictId)
         .then((data) => {
-          setWards(data || []);
-          if (!isMapTriggeredRef.current) {
-            setSelectedWardId("");
-          }
+          const list = data || [];
+          setWards(list);
+          setSelectedWardId((prev) => (list.some((w) => w.id === prev) ? prev : ""));
         })
         .catch((err) => console.error(err));
     } else {
@@ -190,7 +221,6 @@ function EditShopProfileModal({ shop, onClose, onSaved }: EditShopProfileModalPr
 
   const handleDropdownGeocode = useCallback(
     async (provinceName: string, districtName: string, wardName: string) => {
-      if (isMapTriggeredRef.current) return;
       let query = "";
       let zoom = 11;
       if (wardName) {
@@ -216,7 +246,6 @@ function EditShopProfileModal({ shop, onClose, onSaved }: EditShopProfileModalPr
 
   const handleProvinceChange = useCallback(
     (provinceId: string) => {
-      isMapTriggeredRef.current = false;
       setSelectedProvinceId(provinceId);
       const province = provinces.find((p) => p.id === provinceId);
       if (province) handleDropdownGeocode(province.name, "", "");
@@ -226,7 +255,6 @@ function EditShopProfileModal({ shop, onClose, onSaved }: EditShopProfileModalPr
 
   const handleDistrictChange = useCallback(
     (districtId: string) => {
-      isMapTriggeredRef.current = false;
       setSelectedDistrictId(districtId);
       const province = provinces.find((p) => p.id === selectedProvinceId);
       const district = districts.find((d) => d.id === districtId);
@@ -237,7 +265,6 @@ function EditShopProfileModal({ shop, onClose, onSaved }: EditShopProfileModalPr
 
   const handleWardChange = useCallback(
     (wardId: string) => {
-      isMapTriggeredRef.current = false;
       setSelectedWardId(wardId);
       const province = provinces.find((p) => p.id === selectedProvinceId);
       const district = districts.find((d) => d.id === selectedDistrictId);
@@ -251,33 +278,22 @@ function EditShopProfileModal({ shop, onClose, onSaved }: EditShopProfileModalPr
   const handleMapLocationChange = useCallback(
     async (lat: number, lng: number) => {
       setIsReverseGeocoding(true);
-      isMapTriggeredRef.current = true;
       try {
-        const result = await reverseGeocode(lat, lng);
-        if (!result) return;
-        let currentProvinces = provinces;
-        if (currentProvinces.length === 0) {
-          currentProvinces = await getProvinces();
-          setProvinces(currentProvinces || []);
-        }
-        const matchedProvinceId = findBestMatch(currentProvinces, result.province);
-        if (matchedProvinceId) {
-          setSelectedProvinceId(matchedProvinceId);
-          const districtData = await getDistrictsByProvinceId(matchedProvinceId);
-          setDistricts(districtData || []);
-          const matchedDistrictId = findBestMatch(districtData || [], result.district);
-          if (matchedDistrictId) {
-            setSelectedDistrictId(matchedDistrictId);
-            const wardData = await getWardsByDistrictId(matchedDistrictId);
-            setWards(wardData || []);
-            const matchedWardId = findBestMatch(wardData || [], result.ward);
-            if (matchedWardId) setSelectedWardId(matchedWardId);
-          }
-        }
+        const resolved = await resolveLocationFromCoordinates(lat, lng, provinces);
+        if (!resolved) return;
+
+        // Set một lượt: danh mục + lựa chọn cùng nằm trong một batch render nên
+        // cascade effect luôn thấy id mới hợp lệ và giữ nguyên, không xoá ngược.
+        if (resolved.provinces.length) setProvinces(resolved.provinces);
+        setDistricts(resolved.districts);
+        setWards(resolved.wards);
+        setSelectedProvinceId(resolved.provinceId);
+        setSelectedDistrictId(resolved.districtId);
+        setSelectedWardId(resolved.wardId);
+        if (resolved.street) setStreetAddress(resolved.street);
       } catch (err) {
         console.error(err);
       } finally {
-        isMapTriggeredRef.current = false;
         setIsReverseGeocoding(false);
       }
     },

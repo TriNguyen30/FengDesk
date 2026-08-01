@@ -12,6 +12,7 @@ import ShopStaffPage from "@/features/shop/pages/ShopStaffPage";
 import DashboardPage from "@/features/manager/pages/DashboardPage";
 import ManageCategoriesPage from "@/features/manager/pages/ManageCategoriesPage";
 import ManageProductsPage from "@/features/manager/pages/ManageProductsPage";
+import Model3DQueuePage from "@/features/manager/pages/Model3DQueuePage";
 import CreateProductPage from "@/features/manager/pages/CreateProductPage";
 import ManageStoresPage from "@/features/manager/pages/ManageStoresPage";
 import ManageOrdersPage from "@/features/manager/pages/ManageOrdersPage";
@@ -162,6 +163,7 @@ export default function AppRoutes() {
         <Route path="categories" element={<ManageCategoriesPage />} />
         <Route path="products" element={<ManageProductsPage />} />
         <Route path="products/new" element={<CreateProductPage />} />
+        <Route path="model3d-queue" element={<Model3DQueuePage />} />
         <Route path="stores" element={<ManageStoresPage />} />
         <Route path="orders" element={<ManageOrdersPage />} />
         <Route path="order-returns" element={<ManageOrderReturnPage />} />

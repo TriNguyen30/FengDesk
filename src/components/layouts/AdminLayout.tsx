@@ -66,6 +66,9 @@ export default function AdminLayout() {
 
       {/* Sidebar */}
       <aside
+        // Mảng tối có chủ đích ở cả hai theme — đánh dấu để dark theme không lật
+        // thang slate ở đây (xem :root[data-theme="dark"] [data-fd-chrome] trong index.css).
+        data-fd-chrome="dark"
         className={`fixed inset-y-0 left-0 z-30 flex w-64 flex-col border-r border-slate-200 bg-slate-900 text-slate-100 transition-all duration-300 lg:static lg:inset-0 ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         } lg:translate-x-0 ${collapsed ? "lg:w-20" : "lg:w-64"}`}

@@ -274,6 +274,13 @@
       "zoom_in": "Zoom in",
       "reset": "Reset",
       "close": "Close (Esc)"
+    },
+    "model_3d": {
+      "badge": "3D",
+      "view_3d": "View 3D model",
+      "hint": "Drag to rotate, scroll to zoom",
+      "loading": "Loading 3D model...",
+      "load_error": "Failed to load 3D model"
     }
   },
   "cart_page": {
@@ -545,6 +552,7 @@
       "pending": "Pending",
       "paid": "Paid",
       "processing": "Processing",
+      "shipping": "Shipping",
       "completed": "Completed",
       "cancelled": "Cancelled",
       "expired": "Expired"
@@ -560,6 +568,7 @@
     "card": {
       "chat": "Chat",
       "view_shop": "View Shop",
+      "store_fallback": "Store",
       "delivery_success": "Delivered successfully",
       "variant": "Variation:",
       "order_id": "Order #",
@@ -609,6 +618,7 @@
       "expired": "Expired",
       "paid": "Paid",
       "processing": "Processing",
+      "shipping": "Shipping",
       "completed": "Completed"
     },
     "product": {

@@ -1,13 +1,17 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
-import { ArrowLeft, Users } from "lucide-react";
+import { Link, Navigate, useParams } from "react-router-dom";
+import { ArrowLeft, Loader2, Users } from "lucide-react";
 import { ShopStaffSection } from "@/features/shop/components/ShopStaffSection";
 import { getShopRequestById } from "@/features/shop/api/shop.api";
+import { useStoreMembership } from "@/features/shop/hooks/useStoreMembership";
 import type { Shop } from "@/features/shop/types/shop";
 
 export default function ShopStaffPage() {
   const { storeId = "" } = useParams<{ storeId: string }>();
   const [shop, setShop] = useState<Shop | null>(null);
+  // Route này không được guard bởi ShopDetailPage nên phải tự chặn: garden staff mở thẳng URL
+  // sẽ thấy màn quản lý nhân viên (BE trả 403 nhưng khung trang + nút "Mời" vẫn hiện).
+  const { isOwnerView, loading: loadingMembership } = useStoreMembership(storeId);
 
   useEffect(() => {
     let active = true;
@@ -25,6 +29,18 @@ export default function ShopStaffPage() {
       active = false;
     };
   }, [storeId]);
+
+  if (loadingMembership) {
+    return (
+      <div className="flex min-h-[50vh] items-center justify-center text-gray-400">
+        <Loader2 size={28} className="animate-spin" />
+      </div>
+    );
+  }
+
+  if (!isOwnerView) {
+    return <Navigate to={`/stores/${storeId}`} replace />;
+  }
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-8">

@@ -28,6 +28,14 @@ export default function LocationPickerMap({
   const mapRef = useRef<vietmapgl.Map | null>(null);
   const markerRef = useRef<vietmapgl.Marker | null>(null);
 
+  // Map chỉ khởi tạo một lần, nên handler `map.on("click")` sẽ đóng băng prop
+  // `onChange` của lần render đầu. Giữ qua ref để luôn gọi bản mới nhất — nếu
+  // không, callback cha (đọc state như changeLocation/provinces) mãi là bản cũ.
+  const onChangeRef = useRef(onChange);
+  useEffect(() => {
+    onChangeRef.current = onChange;
+  }, [onChange]);
+
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<VietMapSearchResult[]>([]);
@@ -53,30 +61,15 @@ export default function LocationPickerMap({
 
     map.on("load", () => {
       if (latitude !== 0 && longitude !== 0) {
-        const el = document.createElement("div");
-        el.className = "custom-marker";
-        el.innerHTML = getPinHtml();
-
-        markerRef.current = new vietmapgl.Marker({ element: el })
-          .setLngLat([longitude, latitude])
-          .addTo(map);
+        placeMarker(map, markerRef, longitude, latitude);
       }
     });
 
     map.on("click", (e) => {
       const { lng, lat } = e.lngLat;
-      onChange(lat, lng);
+      onChangeRef.current(lat, lng);
 
-      if (!markerRef.current) {
-        const el = document.createElement("div");
-        el.className = "custom-marker";
-        el.innerHTML = getPinHtml();
-
-        markerRef.current = new vietmapgl.Marker({ element: el }).setLngLat([lng, lat]).addTo(map);
-      } else {
-        markerRef.current.setLngLat([lng, lat]);
-      }
-
+      placeMarker(map, markerRef, lng, lat);
       map.flyTo({ center: [lng, lat], speed: 1.5 });
     });
 
@@ -86,11 +79,13 @@ export default function LocationPickerMap({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Run only once
 
-  // Update marker when props change (externally)
+  // Update marker when props change (externally).
+  // Tạo ghim nếu chưa có: toạ độ ban đầu có thể là 0 (form trống) và chỉ được
+  // set sau khi user chọn vị trí ở nơi khác — lúc đó vẫn phải hiện ghim.
   useEffect(() => {
-    if (!mapRef.current || !markerRef.current) return;
+    if (!mapRef.current) return;
     if (latitude !== 0 && longitude !== 0) {
-      markerRef.current.setLngLat([longitude, latitude]);
+      placeMarker(mapRef.current, markerRef, longitude, latitude);
     }
   }, [latitude, longitude]);
 
@@ -120,11 +115,9 @@ export default function LocationPickerMap({
         const lat = position.coords.latitude;
         const lng = position.coords.longitude;
         mapRef.current?.flyTo({ center: [lng, lat], zoom: 15 });
-        onChange(lat, lng);
+        onChangeRef.current(lat, lng);
 
-        if (markerRef.current) {
-          markerRef.current.setLngLat([lng, lat]);
-        }
+        if (mapRef.current) placeMarker(mapRef.current, markerRef, lng, lat);
       });
     }
   };
@@ -161,24 +154,13 @@ export default function LocationPickerMap({
     if (!coords) return;
     const { lat, lng } = coords;
 
-    onChange(lat, lng);
+    onChangeRef.current(lat, lng);
     setSearchQuery(result.display);
     setSearchResults([]);
 
     if (mapRef.current) {
       mapRef.current.flyTo({ center: [lng, lat], zoom: 15 });
-
-      if (!markerRef.current) {
-        const el = document.createElement("div");
-        el.className = "custom-marker";
-        el.innerHTML = getPinHtml();
-
-        markerRef.current = new vietmapgl.Marker({ element: el })
-          .setLngLat([lng, lat])
-          .addTo(mapRef.current);
-      } else {
-        markerRef.current.setLngLat([lng, lat]);
-      }
+      placeMarker(mapRef.current, markerRef, lng, lat);
     }
   };
 
@@ -193,7 +175,7 @@ export default function LocationPickerMap({
               right: 0,
               bottom: 0,
               zIndex: 9999,
-              backgroundColor: "white",
+              backgroundColor: "var(--fd-surface)",
               display: "flex",
               flexDirection: "column",
             }
@@ -202,7 +184,7 @@ export default function LocationPickerMap({
               height: 300,
               borderRadius: 12,
               overflow: "hidden",
-              border: "1px solid #e0e0e0",
+              border: "1px solid var(--color-border-light)",
             }
       }
     >
@@ -443,6 +425,25 @@ const locateBtnStyle: React.CSSProperties = {
   cursor: "pointer",
   marginTop: 4,
 };
+
+/** Di chuyển ghim tới toạ độ, tạo mới nếu chưa có. */
+function placeMarker(
+  map: vietmapgl.Map,
+  markerRef: React.MutableRefObject<vietmapgl.Marker | null>,
+  lng: number,
+  lat: number,
+) {
+  if (markerRef.current) {
+    markerRef.current.setLngLat([lng, lat]);
+    return;
+  }
+
+  const el = document.createElement("div");
+  el.className = "custom-marker";
+  el.innerHTML = getPinHtml();
+
+  markerRef.current = new vietmapgl.Marker({ element: el }).setLngLat([lng, lat]).addTo(map);
+}
 
 function getPinHtml() {
   return `

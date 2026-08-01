@@ -144,18 +144,18 @@ export default function DashboardPage() {
           <div className="h-[300px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-gray-200)" />
                 <XAxis
                   dataKey="name"
                   axisLine={false}
                   tickLine={false}
-                  tick={{ fill: "#6B7280", fontSize: 12 }}
+                  tick={{ fill: "var(--color-gray-500)", fontSize: 12 }}
                   dy={10}
                 />
                 <YAxis
                   axisLine={false}
                   tickLine={false}
-                  tick={{ fill: "#6B7280", fontSize: 12 }}
+                  tick={{ fill: "var(--color-gray-500)", fontSize: 12 }}
                   tickFormatter={(value) => {
                     if (value === 0) return "0";
                     if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M`;
@@ -165,9 +165,11 @@ export default function DashboardPage() {
                   width={60}
                 />
                 <Tooltip
-                  cursor={{ fill: "#F3F4F6" }}
+                  cursor={{ fill: "var(--color-gray-100)" }}
                   contentStyle={{
                     borderRadius: "8px",
+                    background: "var(--fd-surface)",
+                    color: "var(--color-gray-900)",
                     border: "none",
                     boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
                   }}

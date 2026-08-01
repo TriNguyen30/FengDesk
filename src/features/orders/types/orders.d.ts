@@ -35,11 +35,19 @@ export interface OrdersItem {
 export interface OrderLineItem {
   id: string;
   productItemId: string;
+  /** Id sản phẩm gốc (Product) — dùng để đánh giá / mở trang sản phẩm, KHÔNG phải productItemId. */
+  productId: string;
   deliveryId: string | null;
   productName: string;
   unitPrice: number;
   quantity: number;
   lineTotal: number;
+}
+
+/** Cửa hàng có hàng trong đơn. Tương ứng <c>OrderStoreResponse</c> BE. */
+export interface OrderStore {
+  storeId: string;
+  storeName: string | null;
 }
 
 export interface StatusLog {
@@ -59,6 +67,8 @@ export interface Order {
   totalAmount: number;
   deliveryCount?: number;
   createdAt: string;
+  /** Cửa hàng bán trong đơn — suy ra từ delivery, hoặc từ sản phẩm khi đơn chưa có delivery. */
+  stores?: OrderStore[];
 }
 
 export interface OrderDetail extends Order {

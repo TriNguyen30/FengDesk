@@ -43,15 +43,18 @@ function cacheSet(key: string, value: unknown): void {
 
 // ── Vietnamese text helpers ─────────────────────────────────────────────────
 
+// So khớp trên dạng đã normalize (bỏ dấu + lowercase) nên viết hoa kiểu gì cũng
+// khớp — VietMap trả "Thành Phố Hồ Chí Minh" còn DB lưu "Thành phố Hồ Chí Minh".
 const ADMINISTRATIVE_PREFIXES = [
-  "Tỉnh ",
-  "Thành phố ",
-  "Quận ",
-  "Huyện ",
-  "Phường ",
-  "Xã ",
-  "Thị trấn ",
-  "Thị xã ",
+  "tinh ",
+  "thanh pho ",
+  "tp ",
+  "quan ",
+  "huyen ",
+  "phuong ",
+  "xa ",
+  "thi tran ",
+  "thi xa ",
 ];
 
 /**
@@ -65,16 +68,20 @@ export function normalizeVietnamese(str: string): string {
     .replace(/đ/g, "d")
     .replace(/Đ/g, "D")
     .toLowerCase()
+    .replace(/\./g, " ")
+    .replace(/\s+/g, " ")
     .trim();
 }
 
-function stripPrefixes(value: string): string {
+/** Normalize rồi bỏ tiền tố hành chính: "Thành Phố Hồ Chí Minh" → "ho chi minh". */
+function normalizeWithoutPrefix(value: string): string {
+  const normalized = normalizeVietnamese(value);
   for (const prefix of ADMINISTRATIVE_PREFIXES) {
-    if (value.startsWith(prefix)) {
-      return value.slice(prefix.length);
+    if (normalized.startsWith(prefix)) {
+      return normalized.slice(prefix.length).trim();
     }
   }
-  return value;
+  return normalized;
 }
 
 // ── VietMap API types ───────────────────────────────────────────────────────
@@ -108,8 +115,37 @@ interface VietMapPlaceResult {
   ward: string;
 }
 
-function boundaryByType(boundaries: VietMapBoundary[], type: 0 | 1 | 2): string {
-  return boundaries.find((b) => b.type === type)?.full_name ?? "";
+function boundaryByType(boundaries: VietMapBoundary[] | undefined, type: 0 | 1 | 2): string {
+  const boundary = boundaries?.find((b) => b.type === type);
+  if (!boundary) return "";
+  return boundary.full_name || `${boundary.prefix ?? ""} ${boundary.name ?? ""}`.trim();
+}
+
+/**
+ * Lấy 1 cấp hành chính từ danh sách kết quả reverse.
+ *
+ * Kết quả đầu tiên (gần điểm click nhất) đôi khi thiếu boundary phường hoặc
+ * thiếu số nhà. Khi đó lấy từ kết quả kế tiếp, nhưng chỉ chấp nhận kết quả có
+ * các cấp cao hơn trùng khớp — tránh nhặt nhầm phường của quận bên cạnh.
+ */
+function pickBoundary(
+  results: VietMapSearchResult[],
+  type: 0 | 1 | 2,
+  higherLevels: { type: 0 | 1; value: string }[],
+): string {
+  for (const result of results) {
+    const value = boundaryByType(result.boundaries, type);
+    if (!value) continue;
+
+    const consistent = higherLevels.every(
+      (level) =>
+        !level.value ||
+        normalizeVietnamese(boundaryByType(result.boundaries, level.type)) ===
+          normalizeVietnamese(level.value),
+    );
+    if (consistent) return value;
+  }
+  return "";
 }
 
 // ── Provider abstraction ────────────────────────────────────────────────────
@@ -153,17 +189,22 @@ const VietMapProvider: GeocodingProvider = {
     }
 
     const data: VietMapSearchResult[] = await res.json();
-    if (!data.length) return null;
+    if (!Array.isArray(data) || !data.length) return null;
 
-    const first = data[0];
-    const province = boundaryByType(first.boundaries, 0);
-    const district = boundaryByType(first.boundaries, 1);
-    const ward = boundaryByType(first.boundaries, 2);
+    const province = pickBoundary(data, 0, []);
+    const district = pickBoundary(data, 1, [{ type: 0, value: province }]);
+    const ward = pickBoundary(data, 2, [
+      { type: 0, value: province },
+      { type: 1, value: district },
+    ]);
 
     if (!province && !district && !ward) return null;
 
-    // `name` holds house number + street (e.g. "948 Trường Chinh")
-    const result = { province, district, ward, street: first.name || "" };
+    // `name` giữ số nhà + tên đường (vd. "948 Trường Chinh"); kết quả gần nhất
+    // có thể chỉ là một boundary không tên → lấy kết quả đầu tiên có `name`.
+    const street = data.find((r) => r.name?.trim())?.name?.trim() ?? "";
+
+    const result = { province, district, ward, street };
     cacheSet(cacheKey, result);
     return result;
   },
@@ -268,29 +309,27 @@ export function findBestMatch<T extends { id: string; name: string }>(
 
   const normalizedTarget = normalizeVietnamese(target);
 
-  // 1. Exact normalized match
+  // 1. Trùng khít sau khi normalize
   const exact = items.find((item) => normalizeVietnamese(item.name) === normalizedTarget);
   if (exact) return exact.id;
 
-  // 2. Includes match
+  // 2. Trùng khít sau khi bỏ tiền tố hành chính ("Quận 1" ↔ "1", "TP HCM" ↔ "Hồ Chí Minh")
+  const strippedTarget = normalizeWithoutPrefix(target);
+  const stripped = items.find((item) => normalizeWithoutPrefix(item.name) === strippedTarget);
+  if (stripped) return stripped.id;
+
+  // 3. Khớp một phần — chỉ khi cả hai vế đều KHÔNG thuần số. Với đơn vị hành
+  //    chính đánh số ("Phường 1" vs "Phường 12", "Quận 3" vs "Quận 3B") thì
+  //    substring luôn khớp sai, thà bỏ trống cho user tự chọn còn hơn điền bậy.
+  const isNumeric = (value: string) => /^\d+$/.test(value);
+  if (isNumeric(strippedTarget)) return "";
+
   const included = items.find((item) => {
-    const normalizedName = normalizeVietnamese(item.name);
-    return normalizedName.includes(normalizedTarget) || normalizedTarget.includes(normalizedName);
+    const strippedName = normalizeWithoutPrefix(item.name);
+    if (!strippedName || isNumeric(strippedName)) return false;
+    return strippedName.includes(strippedTarget) || strippedTarget.includes(strippedName);
   });
   if (included) return included.id;
-
-  // 3. Match with common administrative prefixes removed
-  const strippedTarget = normalizeVietnamese(stripPrefixes(target));
-
-  const stripped = items.find((item) => {
-    const strippedName = normalizeVietnamese(stripPrefixes(item.name));
-    return (
-      strippedName === strippedTarget ||
-      strippedName.includes(strippedTarget) ||
-      strippedTarget.includes(strippedName)
-    );
-  });
-  if (stripped) return stripped.id;
 
   return "";
 }

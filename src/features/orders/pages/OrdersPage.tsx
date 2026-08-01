@@ -19,6 +19,7 @@ export default function OrdersPage() {
     { label: t("orders_page.tabs.pending"), value: "Pending" },
     { label: t("orders_page.tabs.paid"), value: "Paid" },
     { label: t("orders_page.tabs.processing"), value: "Processing" },
+    { label: t("orders_page.tabs.shipping"), value: "Shipping" },
     { label: t("orders_page.tabs.completed"), value: "Completed" },
     { label: t("orders_page.tabs.cancelled"), value: "Cancelled" },
     { label: t("orders_page.tabs.expired"), value: "Expired" },
@@ -115,6 +116,10 @@ export default function OrdersPage() {
           {filteredOrders.map((order) => {
             const statusMeta = getOrderStatusMeta(order.status, order.paymentMethod);
             const items = (order as any).items || [];
+            // Đơn có thể gồm hàng của nhiều store (mỗi store 1 delivery) → hiện store đầu + "+N".
+            const stores = order.stores ?? [];
+            const primaryStore = stores[0];
+            const storeLabel = primaryStore?.storeName ?? t("orders_page.card.store_fallback");
 
             return (
               <div
@@ -124,7 +129,12 @@ export default function OrdersPage() {
                 {/* Header */}
                 <div className="flex items-center justify-between border-b border-gray-50 px-4 py-3 sm:px-6">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-bold text-gray-900">FengShuiGarden</span>
+                    <span className="text-sm font-bold text-gray-900">{storeLabel}</span>
+                    {stores.length > 1 && (
+                      <span className="rounded bg-gray-100 px-1.5 py-0.5 text-xs font-medium text-gray-600">
+                        +{stores.length - 1}
+                      </span>
+                    )}
                     <div className="hidden gap-1 sm:flex ml-2">
                       <button
                         onClick={(e) => {
@@ -138,17 +148,7 @@ export default function OrdersPage() {
                       <button
                         onClick={(e) => {
                           e.preventDefault();
-                          const orderItems = (order as any).items || [];
-                          const deliveries = (order as any).deliveries || [];
-                          const storeId =
-                            orderItems[0]?.gardenStoreId ||
-                            orderItems[0]?.storeId ||
-                            deliveries[0]?.storeId;
-                          if (storeId) {
-                            navigate(`/stores/${storeId}`);
-                          } else {
-                            navigate("/products");
-                          }
+                          navigate(primaryStore ? `/stores/${primaryStore.storeId}` : "/products");
                         }}
                         className="flex items-center gap-1 rounded border border-gray-200 px-2 py-1 text-xs font-medium text-gray-600 hover:bg-gray-50 transition-colors cursor-pointer"
                       >
@@ -259,8 +259,8 @@ export default function OrdersPage() {
                             }
                           }
                           setReviewModal({ open: true, orderId: order.id, items });
-                          if (items.length > 0)
-                            setSelectedProductId(items[0].productItemId || items[0].productId);
+                          // API /Review nhận productId (Product), KHÔNG phải productItemId (biến thể).
+                          if (items.length > 0) setSelectedProductId(items[0].productId);
                           setRating(5);
                           setReviewContent("");
                         }}
@@ -321,7 +321,7 @@ export default function OrdersPage() {
                     onChange={(e) => setSelectedProductId(e.target.value)}
                   >
                     {reviewModal.items.map((item: any) => (
-                      <option key={item.id} value={item.productItemId || item.productId}>
+                      <option key={item.id} value={item.productId}>
                         {item.productName}
                       </option>
                     ))}

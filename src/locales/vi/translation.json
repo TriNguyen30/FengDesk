@@ -274,6 +274,13 @@
       "zoom_in": "Phóng to",
       "reset": "Đặt lại",
       "close": "Đóng (Esc)"
+    },
+    "model_3d": {
+      "badge": "3D",
+      "view_3d": "Xem mô hình 3D",
+      "hint": "Kéo để xoay, cuộn để phóng to/thu nhỏ",
+      "loading": "Đang tải mô hình 3D...",
+      "load_error": "Không thể tải mô hình 3D"
     }
   },
   "cart_page": {
@@ -545,6 +552,7 @@
       "pending": "Đang chờ",
       "paid": "Đã thanh toán",
       "processing": "Đang xử lý",
+      "shipping": "Đang vận chuyển",
       "completed": "Đã hoàn thành",
       "cancelled": "Đã hủy",
       "expired": "Đã hết hạn"
@@ -560,6 +568,7 @@
     "card": {
       "chat": "Chat",
       "view_shop": "Xem Shop",
+      "store_fallback": "Cửa hàng",
       "delivery_success": "Giao hàng thành công",
       "variant": "Phân loại hàng:",
       "order_id": "Đơn hàng #",
@@ -609,6 +618,7 @@
       "expired": "Đã hết hạn",
       "paid": "Đã thanh toán",
       "processing": "Đang xử lý",
+      "shipping": "Đang vận chuyển",
       "completed": "Hoàn thành"
     },
     "product": {

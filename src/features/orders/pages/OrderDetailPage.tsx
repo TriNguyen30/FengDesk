@@ -341,6 +341,7 @@ export default function OrderDetailPage() {
       steps.push({ id: "Paid", label: t("order_detail.steps.paid"), icon: <CreditCard className="h-4 w-4" /> });
     }
     steps.push({ id: "Processing", label: t("order_detail.steps.processing"), icon: <Package className="h-4 w-4" /> });
+    steps.push({ id: "Shipping", label: t("order_detail.steps.shipping"), icon: <Truck className="h-4 w-4" /> });
     steps.push({ id: "Completed", label: t("order_detail.steps.completed"), icon: <CheckCircle className="h-4 w-4" /> });
 
     let currentIdx = steps.findIndex((s) => s.id === order.status);
@@ -364,8 +365,11 @@ export default function OrderDetailPage() {
 
   const steps = getSteps();
 
-  // Determine active step index (first incomplete, or last if all done)
-  const activeIdx = steps.findIndex((s, i) => s.completed && !steps[i + 1]?.completed);
+  // Bước "đang tiến hành" = bước ĐẦU TIÊN chưa hoàn thành (ngay sau bước cuối đã xong).
+  // Nếu không còn bước nào dang dở (đã Completed, hoặc Cancelled/Expired đã chốt) → không có bước active.
+  const activeIdx = steps.findIndex((s) => !s.completed);
+  // Mốc đã "đi qua" (đã xong hoặc đang là bước active) — dùng để tô màu đường nối giữa các bước.
+  const reachedIdx = activeIdx === -1 ? steps.length - 1 : activeIdx;
 
   return (
     <div>
@@ -427,25 +431,27 @@ export default function OrderDetailPage() {
               {steps.map((step, idx) => {
                 const isLast = idx === steps.length - 1;
                 const isActive = idx === activeIdx;
-                const lineRight = !isLast && steps[idx + 1]?.completed;
+                // Đường nối tô màu primary nếu cả 2 đầu đều đã "đi qua" (đã xong hoặc là bước active).
+                const leftReached = idx <= reachedIdx;
+                const rightReached = idx < reachedIdx;
 
                 return (
                   <div key={idx} className="flex-1 flex flex-col items-center gap-2">
                     <div className="w-full flex items-center">
                       {/* left line */}
                       <div
-                        className={`flex-1 h-0.5 ${idx === 0 ? "invisible" : step.isError ? "bg-red-400" : step.completed ? "bg-primary" : "bg-gray-100"}`}
+                        className={`flex-1 h-0.5 ${idx === 0 ? "invisible" : step.isError ? "bg-red-400" : leftReached ? "bg-primary" : "bg-gray-100"}`}
                       />
-                      {/* dot */}
+                      {/* dot: đã xong (tô đậm) ưu tiên trước — đang tiến hành (viền sáng) chỉ áp dụng cho bước kế tiếp chưa xong */}
                       <div
                         className={[
                           "w-9 h-9 rounded-full flex items-center justify-center shrink-0 z-10 transition-all",
                           step.isError
                             ? "bg-red-500 text-white"
-                            : isActive
-                              ? "bg-white border-2 border-primary text-primary shadow-[0_0_0_4px_#ede9fe]"
-                              : step.completed
-                                ? "bg-primary text-white"
+                            : step.completed
+                              ? "bg-primary text-white"
+                              : isActive
+                                ? "bg-white border-2 border-primary text-primary shadow-[0_0_0_4px_#ede9fe]"
                                 : "bg-gray-100 text-gray-400 border border-gray-200",
                         ].join(" ")}
                       >
@@ -453,7 +459,7 @@ export default function OrderDetailPage() {
                       </div>
                       {/* right line */}
                       <div
-                        className={`flex-1 h-0.5 ${isLast ? "invisible" : step.isError ? "bg-red-400" : lineRight ? "bg-primary" : "bg-gray-100"}`}
+                        className={`flex-1 h-0.5 ${isLast ? "invisible" : step.isError ? "bg-red-400" : rightReached ? "bg-primary" : "bg-gray-100"}`}
                       />
                     </div>
                     <div className="text-center px-1">

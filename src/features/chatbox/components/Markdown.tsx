@@ -1,3 +1,4 @@
+import { memo } from "react";
 import ReactMarkdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 
@@ -16,8 +17,14 @@ const COMPONENTS: Components = {
   ),
 };
 
-/** Render nội dung tin nhắn AI dạng Markdown (đậm, tiêu đề, danh sách, link). An toàn — không innerHTML. */
-export default function Markdown({ text }: { text: string }) {
+/**
+ * Render nội dung tin nhắn AI dạng Markdown (đậm, tiêu đề, danh sách, link). An toàn — không innerHTML.
+ *
+ * `memo` là bắt buộc, không phải tối ưu vặt: khung chat re-render liên tục (animation suy luận, kéo
+ * resize), mà mỗi lần render `ReactMarkdown` sẽ chạy lại cả pipeline remark/rehype cho TỪNG tin nhắn.
+ * Prop chỉ có `text` nên so sánh nông là đủ và luôn đúng.
+ */
+function Markdown({ text }: { text: string }) {
   return (
     <div className="fd-md text-sm leading-relaxed break-words">
       <ReactMarkdown remarkPlugins={[remarkGfm]} components={COMPONENTS}>
@@ -26,3 +33,5 @@ export default function Markdown({ text }: { text: string }) {
     </div>
   );
 }
+
+export default memo(Markdown);

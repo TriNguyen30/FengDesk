@@ -26,6 +26,8 @@ import confetti from "canvas-confetti";
 import { useTranslation } from "react-i18next";
 import { ProductItem } from "../types/product";
 import { useProductDetail, useProductList } from "../hooks/useProducts";
+import { useProductModel3D } from "../hooks/useProductModel3D";
+import Product3DViewer, { Model3DToggleBadge } from "@/components/ui/3DSection";
 import ProductCard, { ProductCardSkeleton } from "../components/ProductCard";
 import { useCart } from "@/features/cart";
 import { getShopRequestById } from "@/features/shop/api/shop.api";
@@ -67,9 +69,11 @@ export default function ProductDetailPage() {
   const navigate = useNavigate();
   const { addItem } = useCart();
   const { product, loading, failed } = useProductDetail(id);
+  const { model3D } = useProductModel3D(product?.id);
   const sortedImages = useMemo(() => {
     return [...(product?.images || [])].sort((a, b) => a.sortOrder - b.sortOrder);
   }, [product?.images]);
+  const [viewMode, setViewMode] = useState<"image" | "3d">("image");
   const dispatch = useAppDispatch();
   const isAuthenticated = useAppSelector((s) => !!s.auth.token);
 
@@ -106,6 +110,7 @@ export default function ProductDetailPage() {
     setActiveImage(sortedImages[0]?.url ?? "");
     setQuantity(1);
     setShop(null);
+    setViewMode("image");
 
     if (product.gardenStoreId) {
       getShopRequestById(product.gardenStoreId)
@@ -327,7 +332,7 @@ export default function ProductDetailPage() {
 
   // Auto swipe main image every 5 seconds
   useEffect(() => {
-    if (!product || sortedImages.length <= 1 || isLightboxOpen || isHovering) return;
+    if (!product || sortedImages.length <= 1 || isLightboxOpen || isHovering || viewMode === "3d") return;
 
     const intervalId = setInterval(() => {
       setActiveImage((currentImage) => {
@@ -338,7 +343,7 @@ export default function ProductDetailPage() {
     }, 5000);
 
     return () => clearInterval(intervalId);
-  }, [product, sortedImages, isLightboxOpen, isHovering]);
+  }, [product, sortedImages, isLightboxOpen, isHovering, viewMode]);
 
   const error = failed ? t("product_detail.error.load_failed") : null;
 
@@ -436,13 +441,14 @@ export default function ProductDetailPage() {
         <div className="flex flex-col sm:flex-row">
           {/* ── Left: Images ─────────────────────────────────────────────── */}
           <div className="relative w-full shrink-0 p-4 sm:w-[440px] sm:p-6 lg:w-[520px]">
-            {/* Main image */}
+            {/* Main image / 3D viewer */}
             <div
-              className="relative aspect-square w-full overflow-hidden shadow-inner cursor-zoom-in group select-none"
-              onMouseMove={handleMouseMove}
-              onMouseEnter={() => setIsHovering(true)}
-              onMouseLeave={() => setIsHovering(false)}
-              onClick={openLightbox}
+              className={`relative aspect-square w-full overflow-hidden shadow-inner group select-none ${viewMode === "3d" ? "" : "cursor-zoom-in"
+                }`}
+              onMouseMove={viewMode === "3d" ? undefined : handleMouseMove}
+              onMouseEnter={viewMode === "3d" ? undefined : () => setIsHovering(true)}
+              onMouseLeave={viewMode === "3d" ? undefined : () => setIsHovering(false)}
+              onClick={viewMode === "3d" ? undefined : openLightbox}
             >
               {elementLabel && (
                 <div
@@ -451,7 +457,17 @@ export default function ProductDetailPage() {
                   {t("product_detail.labels.element")} {elementLabel}
                 </div>
               )}
-              {activeImage ? (
+
+              {model3D && (
+                <Model3DToggleBadge
+                  active={viewMode === "3d"}
+                  onClick={() => setViewMode((m) => (m === "3d" ? "image" : "3d"))}
+                />
+              )}
+
+              {viewMode === "3d" && model3D ? (
+                <Product3DViewer modelUrl={model3D.modelUrl!} thumbnailUrl={model3D.thumbnailUrl} />
+              ) : activeImage ? (
                 <>
                   <motion.img
                     key={activeImage}
