@@ -27,7 +27,7 @@ import { useTranslation } from "react-i18next";
 import { ProductItem } from "../types/product";
 import { useProductDetail, useProductList } from "../hooks/useProducts";
 import { useProductModel3D } from "../hooks/useProductModel3D";
-import Product3DViewer, { Model3DToggleBadge } from "@/components/ui/3DSection";
+import Product3DViewer, { Model3DViewSwitcher } from "@/components/ui/3DSection";
 import ProductCard, { ProductCardSkeleton } from "../components/ProductCard";
 import { useCart } from "@/features/cart";
 import { getShopRequestById } from "@/features/shop/api/shop.api";
@@ -441,10 +441,21 @@ export default function ProductDetailPage() {
         <div className="flex flex-col sm:flex-row">
           {/* ── Left: Images ─────────────────────────────────────────────── */}
           <div className="relative w-full shrink-0 p-4 sm:w-[440px] sm:p-6 lg:w-[520px]">
+            {model3D && (
+              <div className="mb-3 flex flex-wrap items-center justify-between gap-3 px-0.5">
+                <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-gray-400">
+                  {t("product_detail.model_3d.view_mode")}
+                </span>
+                <Model3DViewSwitcher activeMode={viewMode} onChange={setViewMode} />
+              </div>
+            )}
+
             {/* Main image / 3D viewer */}
             <div
-              className={`relative aspect-square w-full overflow-hidden shadow-inner group select-none ${viewMode === "3d" ? "" : "cursor-zoom-in"
-                }`}
+              id="product-media-viewer"
+              className={`relative aspect-square w-full overflow-hidden rounded-2xl shadow-inner ring-1 ring-black/5 group select-none ${
+                viewMode === "3d" ? "" : "cursor-zoom-in"
+              }`}
               onMouseMove={viewMode === "3d" ? undefined : handleMouseMove}
               onMouseEnter={viewMode === "3d" ? undefined : () => setIsHovering(true)}
               onMouseLeave={viewMode === "3d" ? undefined : () => setIsHovering(false)}
@@ -458,15 +469,12 @@ export default function ProductDetailPage() {
                 </div>
               )}
 
-              {model3D && (
-                <Model3DToggleBadge
-                  active={viewMode === "3d"}
-                  onClick={() => setViewMode((m) => (m === "3d" ? "image" : "3d"))}
-                />
-              )}
-
               {viewMode === "3d" && model3D ? (
-                <Product3DViewer modelUrl={model3D.modelUrl!} thumbnailUrl={model3D.thumbnailUrl} />
+                <Product3DViewer
+                  modelUrl={model3D.modelUrl!}
+                  thumbnailUrl={model3D.thumbnailUrl}
+                  backgroundImageUrl={activeImage || model3D.sourceImageUrl}
+                />
               ) : activeImage ? (
                 <>
                   <motion.img
@@ -538,7 +546,10 @@ export default function ProductDetailPage() {
                   {sortedImages.map((img) => (
                     <button
                       key={img.id}
-                      onClick={() => setActiveImage(img.url)}
+                      onClick={() => {
+                        setActiveImage(img.url);
+                        setViewMode("image");
+                      }}
                       className={`group aspect-square w-[calc(20%-0.4rem)] sm:w-[calc(20%-0.6rem)] shrink-0 snap-start overflow-hidden rounded-lg border-2 bg-gray-50 transition-all cursor-pointer ${activeImage === img.url
                         ? "border-primary"
                         : "border-transparent hover:border-gray-300"
