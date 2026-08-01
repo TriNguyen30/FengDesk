@@ -175,7 +175,7 @@ export default function LocationPickerMap({
               right: 0,
               bottom: 0,
               zIndex: 9999,
-              backgroundColor: "white",
+              backgroundColor: "var(--fd-surface)",
               display: "flex",
               flexDirection: "column",
             }
@@ -184,7 +184,7 @@ export default function LocationPickerMap({
               height: 300,
               borderRadius: 12,
               overflow: "hidden",
-              border: "1px solid #e0e0e0",
+              border: "1px solid var(--color-border-light)",
             }
       }
     >

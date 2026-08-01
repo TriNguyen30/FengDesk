@@ -96,9 +96,9 @@ export default function PopularCategories() {
               <Link
                 key={cat.id}
                 to={`/products?categoryId=${cat.id}`}
-                className="group flex flex-col items-center justify-between gap-3 rounded-2xl bg-gray-50/80 p-4 transition-all duration-300 hover:-translate-y-1.5 hover:bg-white hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] sm:p-5 w-28 sm:w-36 border border-transparent hover:border-primary/20"
+                className="group flex flex-col items-center justify-between gap-3 rounded-2xl bg-gray-50 p-4 transition-all duration-300 hover:-translate-y-1.5 hover:bg-white hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] sm:p-5 w-28 sm:w-36 border border-gray-200 hover:border-primary/40"
               >
-                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white shadow-sm ring-1 ring-gray-100 transition-transform duration-500 group-hover:scale-110 sm:h-16 sm:w-16">
+                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white shadow-sm ring-1 ring-gray-200 transition-transform duration-500 group-hover:scale-110 sm:h-16 sm:w-16">
                   <img
                     src={icon}
                     alt={cat.name}

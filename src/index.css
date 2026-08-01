@@ -50,6 +50,43 @@
 }
 
 /* =========================
+   Biến phụ (ngoài @theme) — dùng ở những chỗ CSS không với tới được:
+   style inline của React, và các mảng bề mặt cần đổi theo theme.
+========================= */
+
+:root {
+  /* Bề mặt nổi (thẻ / card / popover). Theme tối định nghĩa lại bên dưới. */
+  --fd-surface: #ffffff;
+
+  /* Thang gray-50/100 mặc định của Tailwind (98.5% / 96.7%) gần như trùng nền
+     trắng, làm các thẻ lồng bên trong bị "chìm". Hạ xuống một nhịp để mảng nền
+     phụ và chip đọc ra được rìa. Theme tối ghi đè lại bên dưới. */
+  --color-gray-50: oklch(97.3% 0.002 247.839);
+  --color-gray-100: oklch(95.4% 0.003 264.542);
+
+  /* Chip trạng thái ngũ hành (cụm element-vector) */
+  --fd-ev-surplus-bg: #fdecea;
+  --fd-ev-surplus-text: #ef4444;
+  --fd-ev-attention-bg: #f6ead8;
+  --fd-ev-attention-text: #8a6a3f;
+}
+
+/* Hairline: gray-100 dùng làm VIỀN thì phải đậm hơn khi dùng làm NỀN, không thì
+   viền thẻ tan vào nền trắng. Ghim riêng vai trò viền ở theme sáng; theme tối đã
+   có thang riêng nên loại trừ. */
+:root:not([data-theme="dark"]) .border-gray-100 {
+  border-color: oklch(92.4% 0.004 264.542);
+}
+
+:root:not([data-theme="dark"]) .ring-gray-100 {
+  --tw-ring-color: oklch(92.4% 0.004 264.542);
+}
+
+:root:not([data-theme="dark"]) .divide-gray-100 > :not(:last-child) {
+  border-color: oklch(92.4% 0.004 264.542);
+}
+
+/* =========================
    Theme: Jade (china teal · jade green · gray)
    ĐANG ẨN — không còn xuất hiện trong ThemeToggle, giữ lại token để
    tham khảo. Kích hoạt thủ công bằng <html data-theme="jade"> nếu cần.
@@ -92,33 +129,544 @@
 ========================= */
 
 :root[data-theme="dark"] {
-  /* Brand — sage sáng hơn để nổi trên nền tối */
+  /* Brand — sage sáng hơn để nổi trên nền tối.
+     Lưu ý vai trò: *-dark chỉ được dùng cho trạng thái hover/nhấn mạnh
+     (100% chỗ dùng là hover:bg-primary-dark / hover:text-primary-dark), nên ở
+     nền tối nó phải SÁNG hơn màu gốc — không thì hover lại làm nút chìm đi.
+     Ngược lại *-light là nền tint nhạt nên ở đây phải tối đi. */
   --color-primary: #93a67e;
-  --color-primary-dark: #7d8f69;
+  --color-primary-dark: #b0c39a;
   --color-primary-light: #3a4433;
 
   --color-secondary: #b59f7f;
-  --color-secondary-dark: #8f7a5c;
+  --color-secondary-dark: #d0ba9a;
   --color-secondary-light: #423a2e;
 
   /* Neutral — nền tối ấm */
   --color-neutral: #191c16;
   --color-neutral-dark: #242821;
 
-  /* Text */
-  --color-text-primary: #e8ebe2;
-  --color-text-secondary: #a6ad9c;
-  --color-text-light: #fcfaf7;
+  /* Text — dừng dưới mức trắng để không loá khi nhìn đêm (~11:1 thay vì 15:1). */
+  --color-text-primary: #dadfd0;
+  --color-text-secondary: #98a08c;
+  --color-text-light: #f2efe9;
 
   /* Borders */
   --color-border-light: #333a2e;
   --color-border-dark: #49523f;
 
-  /* Semantic */
-  --color-success: #8fb07a;
-  --color-warning: #d1a25e;
-  --color-danger: #e57373;
-  --color-info: #7d99ab;
+  /* Semantic — hạ bão hoà so với bản sáng: màu quá rực trên nền tối gây quầng
+     sáng (halation) quanh chữ, nhìn lâu rất mỏi mắt. */
+  --color-success: #86a473;
+  --color-warning: #c2975a;
+  --color-danger: #d47b7b;
+  --color-info: #7891a1;
+}
+
+/* =========================
+   Dark — ánh xạ BẢNG MÀU MẶC ĐỊNH của Tailwind
+   ---------------------------------------------
+   Phần lớn giao diện đang viết bằng class Tailwind gốc (bg-white, text-gray-500,
+   border-gray-200, bg-red-50 …) chứ không qua design token, nên đổi token brand ở
+   trên là chưa đủ — nền vẫn trắng, chữ vẫn xám đậm.
+
+   Tailwind v4 biên dịch mọi utility màu thành var(--color-<họ>-<bậc>) đặt trên
+   :root, nên chỉ cần định nghĩa lại đúng các biến đó ở phạm vi [data-theme="dark"]
+   là toàn bộ 4000+ chỗ dùng tự đổi theo — không phải sửa file component nào.
+
+   Quy ước lật thang màu:
+   - Thang trung tính (gray/slate/neutral): lật hoàn toàn. Bậc nhạt = nền → hoá tối,
+     bậc đậm = chữ → hoá sáng. Quan hệ tương phản giữ nguyên nên bố cục không đổi.
+   - Thang màu nhấn (red/amber/green/…): chỉ lật bậc 50–300 (nền/viền badge) và
+     600–950 (chữ). Bậc 400/500 giữ nguyên vì đủ tương phản trên cả hai nền.
+   - Chỗ nào bậc ≥600 lại dùng làm NỀN ĐẶC của nút bấm thì ghim lại ở cuối file.
+========================= */
+
+:root[data-theme="dark"] {
+  /* Bề mặt nổi (thẻ / card) — chỉ sáng hơn nền trang vừa đủ để đọc ra độ cao.
+     Chênh lệch nhỏ là cố ý: nền tối dịu mắt nhờ TỔNG thể ít tương phản. */
+  --fd-surface: #1e2219;
+
+  --fd-ev-surplus-bg: #3a201e;
+  --fd-ev-surplus-text: #f08b8b;
+  --fd-ev-attention-bg: #3a2f1e;
+  --fd-ev-attention-text: #d9b884;
+
+  /* Trung tính ấm, ngả sage theo brand — thay cho thang gray của Tailwind.
+     Đầu sáng của thang cố tình DỪNG dưới mức trắng: tiêu đề ~11:1 thay vì 15:1.
+     Đủ rõ để đọc nhưng không hắt sáng vào mắt khi dùng buổi tối. */
+  --color-gray-50: #22261f;
+  --color-gray-100: #2a2f26;
+  --color-gray-200: #333a2f;
+  --color-gray-300: #3f4638;
+  --color-gray-400: #7b8371;
+  --color-gray-500: #8f9784;
+  --color-gray-600: #a4ab98;
+  --color-gray-700: #b9c0ae;
+  --color-gray-800: #cbd1c1;
+  --color-gray-900: #dadfd0;
+  --color-gray-950: #e6eadd;
+
+  /* Thang slate — vẫn lạnh hơn gray để khu Admin giữ nhận diện riêng, nhưng đã
+     rút bớt sắc lam: ánh xanh là thứ gây mỏi mắt nhất khi nhìn đêm. */
+  /* slate-50/100 khớp cao độ với các mảng tint màu (l ≈ 0.265) vì chúng đứng
+     cạnh nhau trong lưới ngũ hành — lệch nhịp là thẻ Kim sẽ tối hơn 4 thẻ kia. */
+  --color-slate-50: #26282d;
+  --color-slate-100: #2e3136;
+  --color-slate-200: #35383d;
+  --color-slate-300: #43464b;
+  --color-slate-400: #80858c;
+  --color-slate-500: #989ea5;
+  --color-slate-600: #adb2b9;
+  --color-slate-700: #c0c5cb;
+  --color-slate-800: #d0d4d9;
+  --color-slate-900: #dcdfe3;
+  --color-slate-950: #e7e9ec;
+
+  /* Thang neutral của Tailwind (khác --color-neutral của brand ở trên). */
+  --color-neutral-50: #232322;
+  --color-neutral-100: #2b2b28;
+  --color-neutral-200: #34342f;
+  --color-neutral-300: #404039;
+  --color-neutral-400: #7d7e74;
+  --color-neutral-500: #91928a;
+  --color-neutral-600: #a5a69c;
+  --color-neutral-700: #babbb0;
+  --color-neutral-800: #cccdc2;
+  --color-neutral-900: #dbdcd1;
+  --color-neutral-950: #e7e8de;
+
+  /* Màu nhấn: sinh từ bậc 500 (không bị ghi đè) bằng cú pháp màu tương đối. */
+  --color-red-50: oklch(from var(--color-red-500) 0.265 calc(c * 0.19) h);
+  --color-red-100: oklch(from var(--color-red-500) 0.305 calc(c * 0.24) h);
+  --color-red-200: oklch(from var(--color-red-500) 0.375 calc(c * 0.34) h);
+  --color-red-300: oklch(from var(--color-red-500) 0.45 calc(c * 0.44) h);
+  --color-red-600: oklch(from var(--color-red-500) 0.745 calc(c * 0.55) h);
+  --color-red-700: oklch(from var(--color-red-500) 0.79 calc(c * 0.46) h);
+  --color-red-800: oklch(from var(--color-red-500) 0.835 calc(c * 0.37) h);
+  --color-red-900: oklch(from var(--color-red-500) 0.875 calc(c * 0.29) h);
+  --color-red-950: oklch(from var(--color-red-500) 0.91 calc(c * 0.21) h);
+  --color-orange-50: oklch(from var(--color-orange-500) 0.265 calc(c * 0.19) h);
+  --color-orange-100: oklch(from var(--color-orange-500) 0.305 calc(c * 0.24) h);
+  --color-orange-200: oklch(from var(--color-orange-500) 0.375 calc(c * 0.34) h);
+  --color-orange-300: oklch(from var(--color-orange-500) 0.45 calc(c * 0.44) h);
+  --color-orange-600: oklch(from var(--color-orange-500) 0.745 calc(c * 0.55) h);
+  --color-orange-700: oklch(from var(--color-orange-500) 0.79 calc(c * 0.46) h);
+  --color-orange-800: oklch(from var(--color-orange-500) 0.835 calc(c * 0.37) h);
+  --color-orange-900: oklch(from var(--color-orange-500) 0.875 calc(c * 0.29) h);
+  --color-orange-950: oklch(from var(--color-orange-500) 0.91 calc(c * 0.21) h);
+  --color-amber-50: oklch(from var(--color-amber-500) 0.265 calc(c * 0.19) h);
+  --color-amber-100: oklch(from var(--color-amber-500) 0.305 calc(c * 0.24) h);
+  --color-amber-200: oklch(from var(--color-amber-500) 0.375 calc(c * 0.34) h);
+  --color-amber-300: oklch(from var(--color-amber-500) 0.45 calc(c * 0.44) h);
+  --color-amber-600: oklch(from var(--color-amber-500) 0.745 calc(c * 0.55) h);
+  --color-amber-700: oklch(from var(--color-amber-500) 0.79 calc(c * 0.46) h);
+  --color-amber-800: oklch(from var(--color-amber-500) 0.835 calc(c * 0.37) h);
+  --color-amber-900: oklch(from var(--color-amber-500) 0.875 calc(c * 0.29) h);
+  --color-amber-950: oklch(from var(--color-amber-500) 0.91 calc(c * 0.21) h);
+  --color-yellow-50: oklch(from var(--color-yellow-500) 0.265 calc(c * 0.19) h);
+  --color-yellow-100: oklch(from var(--color-yellow-500) 0.305 calc(c * 0.24) h);
+  --color-yellow-200: oklch(from var(--color-yellow-500) 0.375 calc(c * 0.34) h);
+  --color-yellow-300: oklch(from var(--color-yellow-500) 0.45 calc(c * 0.44) h);
+  --color-yellow-600: oklch(from var(--color-yellow-500) 0.745 calc(c * 0.55) h);
+  --color-yellow-700: oklch(from var(--color-yellow-500) 0.79 calc(c * 0.46) h);
+  --color-yellow-800: oklch(from var(--color-yellow-500) 0.835 calc(c * 0.37) h);
+  --color-yellow-900: oklch(from var(--color-yellow-500) 0.875 calc(c * 0.29) h);
+  --color-yellow-950: oklch(from var(--color-yellow-500) 0.91 calc(c * 0.21) h);
+  --color-lime-50: oklch(from var(--color-lime-500) 0.265 calc(c * 0.19) h);
+  --color-lime-100: oklch(from var(--color-lime-500) 0.305 calc(c * 0.24) h);
+  --color-lime-200: oklch(from var(--color-lime-500) 0.375 calc(c * 0.34) h);
+  --color-lime-300: oklch(from var(--color-lime-500) 0.45 calc(c * 0.44) h);
+  --color-lime-600: oklch(from var(--color-lime-500) 0.745 calc(c * 0.55) h);
+  --color-lime-700: oklch(from var(--color-lime-500) 0.79 calc(c * 0.46) h);
+  --color-lime-800: oklch(from var(--color-lime-500) 0.835 calc(c * 0.37) h);
+  --color-lime-900: oklch(from var(--color-lime-500) 0.875 calc(c * 0.29) h);
+  --color-lime-950: oklch(from var(--color-lime-500) 0.91 calc(c * 0.21) h);
+  --color-green-50: oklch(from var(--color-green-500) 0.265 calc(c * 0.19) h);
+  --color-green-100: oklch(from var(--color-green-500) 0.305 calc(c * 0.24) h);
+  --color-green-200: oklch(from var(--color-green-500) 0.375 calc(c * 0.34) h);
+  --color-green-300: oklch(from var(--color-green-500) 0.45 calc(c * 0.44) h);
+  --color-green-600: oklch(from var(--color-green-500) 0.745 calc(c * 0.55) h);
+  --color-green-700: oklch(from var(--color-green-500) 0.79 calc(c * 0.46) h);
+  --color-green-800: oklch(from var(--color-green-500) 0.835 calc(c * 0.37) h);
+  --color-green-900: oklch(from var(--color-green-500) 0.875 calc(c * 0.29) h);
+  --color-green-950: oklch(from var(--color-green-500) 0.91 calc(c * 0.21) h);
+  --color-emerald-50: oklch(from var(--color-emerald-500) 0.265 calc(c * 0.19) h);
+  --color-emerald-100: oklch(from var(--color-emerald-500) 0.305 calc(c * 0.24) h);
+  --color-emerald-200: oklch(from var(--color-emerald-500) 0.375 calc(c * 0.34) h);
+  --color-emerald-300: oklch(from var(--color-emerald-500) 0.45 calc(c * 0.44) h);
+  --color-emerald-600: oklch(from var(--color-emerald-500) 0.745 calc(c * 0.55) h);
+  --color-emerald-700: oklch(from var(--color-emerald-500) 0.79 calc(c * 0.46) h);
+  --color-emerald-800: oklch(from var(--color-emerald-500) 0.835 calc(c * 0.37) h);
+  --color-emerald-900: oklch(from var(--color-emerald-500) 0.875 calc(c * 0.29) h);
+  --color-emerald-950: oklch(from var(--color-emerald-500) 0.91 calc(c * 0.21) h);
+  --color-teal-50: oklch(from var(--color-teal-500) 0.265 calc(c * 0.19) h);
+  --color-teal-100: oklch(from var(--color-teal-500) 0.305 calc(c * 0.24) h);
+  --color-teal-200: oklch(from var(--color-teal-500) 0.375 calc(c * 0.34) h);
+  --color-teal-300: oklch(from var(--color-teal-500) 0.45 calc(c * 0.44) h);
+  --color-teal-600: oklch(from var(--color-teal-500) 0.745 calc(c * 0.55) h);
+  --color-teal-700: oklch(from var(--color-teal-500) 0.79 calc(c * 0.46) h);
+  --color-teal-800: oklch(from var(--color-teal-500) 0.835 calc(c * 0.37) h);
+  --color-teal-900: oklch(from var(--color-teal-500) 0.875 calc(c * 0.29) h);
+  --color-teal-950: oklch(from var(--color-teal-500) 0.91 calc(c * 0.21) h);
+  --color-cyan-50: oklch(from var(--color-cyan-500) 0.265 calc(c * 0.19) h);
+  --color-cyan-100: oklch(from var(--color-cyan-500) 0.305 calc(c * 0.24) h);
+  --color-cyan-200: oklch(from var(--color-cyan-500) 0.375 calc(c * 0.34) h);
+  --color-cyan-300: oklch(from var(--color-cyan-500) 0.45 calc(c * 0.44) h);
+  --color-cyan-600: oklch(from var(--color-cyan-500) 0.745 calc(c * 0.55) h);
+  --color-cyan-700: oklch(from var(--color-cyan-500) 0.79 calc(c * 0.46) h);
+  --color-cyan-800: oklch(from var(--color-cyan-500) 0.835 calc(c * 0.37) h);
+  --color-cyan-900: oklch(from var(--color-cyan-500) 0.875 calc(c * 0.29) h);
+  --color-cyan-950: oklch(from var(--color-cyan-500) 0.91 calc(c * 0.21) h);
+  --color-sky-50: oklch(from var(--color-sky-500) 0.265 calc(c * 0.19) h);
+  --color-sky-100: oklch(from var(--color-sky-500) 0.305 calc(c * 0.24) h);
+  --color-sky-200: oklch(from var(--color-sky-500) 0.375 calc(c * 0.34) h);
+  --color-sky-300: oklch(from var(--color-sky-500) 0.45 calc(c * 0.44) h);
+  --color-sky-600: oklch(from var(--color-sky-500) 0.745 calc(c * 0.55) h);
+  --color-sky-700: oklch(from var(--color-sky-500) 0.79 calc(c * 0.46) h);
+  --color-sky-800: oklch(from var(--color-sky-500) 0.835 calc(c * 0.37) h);
+  --color-sky-900: oklch(from var(--color-sky-500) 0.875 calc(c * 0.29) h);
+  --color-sky-950: oklch(from var(--color-sky-500) 0.91 calc(c * 0.21) h);
+  --color-blue-50: oklch(from var(--color-blue-500) 0.265 calc(c * 0.19) h);
+  --color-blue-100: oklch(from var(--color-blue-500) 0.305 calc(c * 0.24) h);
+  --color-blue-200: oklch(from var(--color-blue-500) 0.375 calc(c * 0.34) h);
+  --color-blue-300: oklch(from var(--color-blue-500) 0.45 calc(c * 0.44) h);
+  --color-blue-600: oklch(from var(--color-blue-500) 0.745 calc(c * 0.55) h);
+  --color-blue-700: oklch(from var(--color-blue-500) 0.79 calc(c * 0.46) h);
+  --color-blue-800: oklch(from var(--color-blue-500) 0.835 calc(c * 0.37) h);
+  --color-blue-900: oklch(from var(--color-blue-500) 0.875 calc(c * 0.29) h);
+  --color-blue-950: oklch(from var(--color-blue-500) 0.91 calc(c * 0.21) h);
+  --color-indigo-50: oklch(from var(--color-indigo-500) 0.265 calc(c * 0.19) h);
+  --color-indigo-100: oklch(from var(--color-indigo-500) 0.305 calc(c * 0.24) h);
+  --color-indigo-200: oklch(from var(--color-indigo-500) 0.375 calc(c * 0.34) h);
+  --color-indigo-300: oklch(from var(--color-indigo-500) 0.45 calc(c * 0.44) h);
+  --color-indigo-600: oklch(from var(--color-indigo-500) 0.745 calc(c * 0.55) h);
+  --color-indigo-700: oklch(from var(--color-indigo-500) 0.79 calc(c * 0.46) h);
+  --color-indigo-800: oklch(from var(--color-indigo-500) 0.835 calc(c * 0.37) h);
+  --color-indigo-900: oklch(from var(--color-indigo-500) 0.875 calc(c * 0.29) h);
+  --color-indigo-950: oklch(from var(--color-indigo-500) 0.91 calc(c * 0.21) h);
+  --color-violet-50: oklch(from var(--color-violet-500) 0.265 calc(c * 0.19) h);
+  --color-violet-100: oklch(from var(--color-violet-500) 0.305 calc(c * 0.24) h);
+  --color-violet-200: oklch(from var(--color-violet-500) 0.375 calc(c * 0.34) h);
+  --color-violet-300: oklch(from var(--color-violet-500) 0.45 calc(c * 0.44) h);
+  --color-violet-600: oklch(from var(--color-violet-500) 0.745 calc(c * 0.55) h);
+  --color-violet-700: oklch(from var(--color-violet-500) 0.79 calc(c * 0.46) h);
+  --color-violet-800: oklch(from var(--color-violet-500) 0.835 calc(c * 0.37) h);
+  --color-violet-900: oklch(from var(--color-violet-500) 0.875 calc(c * 0.29) h);
+  --color-violet-950: oklch(from var(--color-violet-500) 0.91 calc(c * 0.21) h);
+  --color-purple-50: oklch(from var(--color-purple-500) 0.265 calc(c * 0.19) h);
+  --color-purple-100: oklch(from var(--color-purple-500) 0.305 calc(c * 0.24) h);
+  --color-purple-200: oklch(from var(--color-purple-500) 0.375 calc(c * 0.34) h);
+  --color-purple-300: oklch(from var(--color-purple-500) 0.45 calc(c * 0.44) h);
+  --color-purple-600: oklch(from var(--color-purple-500) 0.745 calc(c * 0.55) h);
+  --color-purple-700: oklch(from var(--color-purple-500) 0.79 calc(c * 0.46) h);
+  --color-purple-800: oklch(from var(--color-purple-500) 0.835 calc(c * 0.37) h);
+  --color-purple-900: oklch(from var(--color-purple-500) 0.875 calc(c * 0.29) h);
+  --color-purple-950: oklch(from var(--color-purple-500) 0.91 calc(c * 0.21) h);
+  --color-fuchsia-50: oklch(from var(--color-fuchsia-500) 0.265 calc(c * 0.19) h);
+  --color-fuchsia-100: oklch(from var(--color-fuchsia-500) 0.305 calc(c * 0.24) h);
+  --color-fuchsia-200: oklch(from var(--color-fuchsia-500) 0.375 calc(c * 0.34) h);
+  --color-fuchsia-300: oklch(from var(--color-fuchsia-500) 0.45 calc(c * 0.44) h);
+  --color-fuchsia-600: oklch(from var(--color-fuchsia-500) 0.745 calc(c * 0.55) h);
+  --color-fuchsia-700: oklch(from var(--color-fuchsia-500) 0.79 calc(c * 0.46) h);
+  --color-fuchsia-800: oklch(from var(--color-fuchsia-500) 0.835 calc(c * 0.37) h);
+  --color-fuchsia-900: oklch(from var(--color-fuchsia-500) 0.875 calc(c * 0.29) h);
+  --color-fuchsia-950: oklch(from var(--color-fuchsia-500) 0.91 calc(c * 0.21) h);
+  --color-pink-50: oklch(from var(--color-pink-500) 0.265 calc(c * 0.19) h);
+  --color-pink-100: oklch(from var(--color-pink-500) 0.305 calc(c * 0.24) h);
+  --color-pink-200: oklch(from var(--color-pink-500) 0.375 calc(c * 0.34) h);
+  --color-pink-300: oklch(from var(--color-pink-500) 0.45 calc(c * 0.44) h);
+  --color-pink-600: oklch(from var(--color-pink-500) 0.745 calc(c * 0.55) h);
+  --color-pink-700: oklch(from var(--color-pink-500) 0.79 calc(c * 0.46) h);
+  --color-pink-800: oklch(from var(--color-pink-500) 0.835 calc(c * 0.37) h);
+  --color-pink-900: oklch(from var(--color-pink-500) 0.875 calc(c * 0.29) h);
+  --color-pink-950: oklch(from var(--color-pink-500) 0.91 calc(c * 0.21) h);
+  --color-rose-50: oklch(from var(--color-rose-500) 0.265 calc(c * 0.19) h);
+  --color-rose-100: oklch(from var(--color-rose-500) 0.305 calc(c * 0.24) h);
+  --color-rose-200: oklch(from var(--color-rose-500) 0.375 calc(c * 0.34) h);
+  --color-rose-300: oklch(from var(--color-rose-500) 0.45 calc(c * 0.44) h);
+  --color-rose-600: oklch(from var(--color-rose-500) 0.745 calc(c * 0.55) h);
+  --color-rose-700: oklch(from var(--color-rose-500) 0.79 calc(c * 0.46) h);
+  --color-rose-800: oklch(from var(--color-rose-500) 0.835 calc(c * 0.37) h);
+  --color-rose-900: oklch(from var(--color-rose-500) 0.875 calc(c * 0.29) h);
+  --color-rose-950: oklch(from var(--color-rose-500) 0.91 calc(c * 0.21) h);
+}
+
+/* -------------------------------------------------------------------------
+   bg-white → bề mặt tối
+   Cố tình KHÔNG ghi đè biến --color-white, vì cùng một biến đó còn phục vụ
+   text-white (chữ trên nút màu), border-white, ring-white và các lớp kính mờ
+   bg-white/5…/40 — những chỗ đó phải ở lại màu trắng thật.
+------------------------------------------------------------------------- */
+
+:root[data-theme="dark"] .bg-white,
+:root[data-theme="dark"] .hover\:bg-white:hover,
+:root[data-theme="dark"] .focus\:bg-white:focus,
+:root[data-theme="dark"] .focus-within\:bg-white:focus-within,
+:root[data-theme="dark"] .group:hover .group-hover\:bg-white,
+:root[data-theme="dark"] .after\:bg-white::after {
+  background-color: var(--fd-surface);
+}
+
+:root[data-theme="dark"] .bg-white\/90 {
+  background-color: color-mix(in oklab, var(--fd-surface) 90%, transparent);
+}
+
+:root[data-theme="dark"] .bg-white\/80 {
+  background-color: color-mix(in oklab, var(--fd-surface) 80%, transparent);
+}
+
+/* -------------------------------------------------------------------------
+   Ghim lại những chỗ bậc đậm được dùng làm NỀN TỐI có chủ đích
+   (tooltip, backdrop, nút gỡ ảnh) — thang trung tính đã bị lật ở trên nên nếu
+   không ghim thì chúng sẽ hoá sáng.
+------------------------------------------------------------------------- */
+
+:root[data-theme="dark"] .bg-gray-900,
+:root[data-theme="dark"] .hover\:bg-gray-900:hover {
+  background-color: #12150e;
+}
+
+:root[data-theme="dark"] .bg-gray-900\/70 {
+  background-color: color-mix(in oklab, #12150e 70%, transparent);
+}
+
+:root[data-theme="dark"] .bg-gray-900\/30 {
+  background-color: color-mix(in oklab, #12150e 30%, transparent);
+}
+
+:root[data-theme="dark"] .text-orange-300 {
+  color: #ffb86a;
+}
+
+/* -------------------------------------------------------------------------
+   Lối thoát: data-fd-chrome="dark"
+   Đặt lên những mảng vốn ĐÃ TỐI ở cả hai theme — sidebar Admin, hero phủ ảnh —
+   nơi bậc nhạt của thang màu đang đóng vai CHỮ SÁNG chứ không phải nền. Trong
+   phạm vi này, thang trung tính được trả về đúng giá trị gốc của Tailwind nên
+   mảng đó không bị lật ngược.
+------------------------------------------------------------------------- */
+
+:root[data-theme="dark"] [data-fd-chrome="dark"] {
+  --color-gray-50: oklch(98.5% 0.002 247.839);
+  --color-gray-100: oklch(96.7% 0.003 264.542);
+  --color-gray-200: oklch(92.8% 0.006 264.531);
+  --color-gray-300: oklch(87.2% 0.01 258.338);
+  --color-gray-400: oklch(70.7% 0.022 261.325);
+  --color-gray-500: oklch(55.1% 0.027 264.364);
+  --color-gray-600: oklch(44.6% 0.03 256.802);
+  --color-gray-700: oklch(37.3% 0.034 259.733);
+  --color-gray-800: oklch(27.8% 0.033 256.848);
+  --color-gray-900: oklch(21% 0.034 264.665);
+  --color-gray-950: oklch(13% 0.028 261.692);
+
+  --color-slate-50: oklch(98.4% 0.003 247.858);
+  --color-slate-100: oklch(96.8% 0.007 247.896);
+  --color-slate-200: oklch(92.9% 0.013 255.508);
+  --color-slate-300: oklch(86.9% 0.022 252.894);
+  --color-slate-400: oklch(70.4% 0.04 256.788);
+  --color-slate-500: oklch(55.4% 0.046 257.417);
+  --color-slate-600: oklch(44.6% 0.043 257.281);
+  --color-slate-700: oklch(37.2% 0.044 257.287);
+  --color-slate-800: oklch(27.9% 0.041 260.031);
+  --color-slate-900: oklch(20.8% 0.042 265.755);
+  --color-slate-950: oklch(12.9% 0.042 264.695);
+
+  --color-green-100: oklch(96.2% 0.044 156.743);
+  --color-green-900: oklch(39.3% 0.095 152.535);
+  --color-red-300: oklch(80.8% 0.114 19.571);
+  --color-red-400: oklch(70.4% 0.191 22.216);
+}
+
+/* bg-white được lật bằng luật class (không phải qua biến) nên phải trả lại
+   riêng — trong mảng tối, nút nền trắng vẫn phải trắng. */
+:root[data-theme="dark"] [data-fd-chrome="dark"] .bg-white,
+:root[data-theme="dark"] [data-fd-chrome="dark"] .hover\:bg-white:hover {
+  background-color: #ffffff;
+}
+
+/* -------------------------------------------------------------------------
+   Đổ bóng: bóng đen mặc định gần như tàng hình trên nền tối → tăng độ đậm để
+   thẻ vẫn tách khỏi nền.
+------------------------------------------------------------------------- */
+
+:root[data-theme="dark"] .shadow-sm {
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.45), 0 1px 2px -1px rgb(0 0 0 / 0.45);
+}
+
+:root[data-theme="dark"] .shadow-md {
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.5), 0 2px 4px -2px rgb(0 0 0 / 0.5);
+}
+
+:root[data-theme="dark"] .shadow-lg {
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.55), 0 4px 6px -4px rgb(0 0 0 / 0.55);
+}
+
+:root[data-theme="dark"] .shadow-xl {
+  box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.6), 0 8px 10px -6px rgb(0 0 0 / 0.6);
+}
+
+:root[data-theme="dark"] .shadow-2xl {
+  box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.7);
+}
+
+:root[data-theme="dark"] .shadow-inner {
+  box-shadow: inset 0 2px 4px 0 rgb(0 0 0 / 0.4);
+}
+
+/* -------------------------------------------------------------------------
+   Nút nền brand đặc
+   --color-primary ở theme tối được làm sáng lên để dùng làm CHỮ (text-primary)
+   trên nền tối, nhưng cùng biến đó cũng là nền của ~200 nút `bg-primary
+   text-white` — trắng trên sage sáng chỉ đạt 2.6:1. Ghim riêng phần nền đặc về
+   sắc sage sâu hơn (4.7:1 với chữ trắng); các lớp tint bg-primary/5…/20 vẫn
+   dùng biến sáng nên không bị ảnh hưởng.
+------------------------------------------------------------------------- */
+
+:root[data-theme="dark"] .bg-primary,
+:root[data-theme="dark"] .peer:checked ~ .peer-checked\:bg-primary,
+:root[data-theme="dark"] .sm\:after\:bg-primary::after {
+  background-color: #5c7049;
+}
+
+/* Hover sáng lên một bậc (nền tối thì "nổi lên" mới đúng cảm giác), vẫn giữ
+   ≥4:1 với chữ trắng. primary-dark ở đây đóng vai nền hover chứ không phải chữ. */
+:root[data-theme="dark"] .hover\:bg-primary:hover,
+:root[data-theme="dark"] .hover\:bg-primary-dark:hover {
+  background-color: #6d8459;
+}
+
+:root[data-theme="dark"] .hover\:bg-primary\/90:hover {
+  background-color: color-mix(in oklab, #6d8459 90%, transparent);
+}
+
+/* Các ghim trên nâng độ ưu tiên lên (0,2,1) nên sẽ chặn mất những utility vốn
+   sinh ra để ghi đè bg-primary ở breakpoint lớn — trả lại quyền cho chúng. */
+@media (min-width: 40rem) {
+  :root[data-theme="dark"] .sm\:bg-transparent,
+  :root[data-theme="dark"] .sm\:hover\:bg-transparent:hover {
+    background-color: transparent;
+  }
+}
+
+:root[data-theme="dark"] .bg-danger {
+  background-color: #a83232;
+}
+
+/* primary-light là token nền tint (đã hoá tối), nhưng HeroSlider dùng nó làm
+   chữ nhấn trên ảnh — trả lại sắc sáng cho riêng vai trò chữ. */
+:root[data-theme="dark"] .text-primary-light {
+  color: #c8d7b0;
+}
+
+/* -------------------------------------------------------------------------
+   Giá trị màu ghi cứng trong class arbitrary (bg-[#…]) không đi qua biến nào
+   nên phải ánh xạ tay.
+------------------------------------------------------------------------- */
+
+:root[data-theme="dark"] .bg-\[\#f9fafb\],
+:root[data-theme="dark"] .bg-\[\#fafbf9\] {
+  background-color: #232720;
+}
+
+:root[data-theme="dark"] .border-\[\#e5e7eb\],
+:root[data-theme="dark"] .border-\[\#d5ddc9\],
+:root[data-theme="dark"] .border-\[\#cdd3c4\],
+:root[data-theme="dark"] .border-\[\#a8a29e\] {
+  border-color: #343a30;
+}
+
+:root[data-theme="dark"] .text-\[\#111827\] {
+  color: #e8ebe2;
+}
+
+:root[data-theme="dark"] .text-\[\#6b7280\] {
+  color: #98a08d;
+}
+
+:root[data-theme="dark"] .text-\[\#1f3a24\] {
+  color: #b7d3bd;
+}
+
+:root[data-theme="dark"] .bg-\[\#dbe9c9\],
+:root[data-theme="dark"] .bg-\[\#cde0b4\],
+:root[data-theme="dark"] .group:hover .group-hover\:bg-\[\#cde0b4\],
+:root[data-theme="dark"] .group:hover .group-hover\:bg-\[\#bdd49f\] {
+  background-color: #33402a;
+}
+
+:root[data-theme="dark"] .bg-\[\#fdecea\] {
+  background-color: #3a201e;
+}
+:root[data-theme="dark"] .bg-red-600,
+:root[data-theme="dark"] .hover\:bg-red-600:hover {
+  background-color: oklch(from oklch(57.7% 0.245 27.325) calc(l * 0.88) calc(c * 0.75) h);
+}
+
+:root[data-theme="dark"] .hover\:bg-red-700:hover {
+  background-color: oklch(from oklch(50.5% 0.213 27.518) calc(l * 0.88) calc(c * 0.75) h);
+}
+
+:root[data-theme="dark"] .hover\:bg-teal-600:hover {
+  background-color: oklch(from oklch(60% 0.118 184.704) calc(l * 0.88) calc(c * 0.75) h);
+}
+
+:root[data-theme="dark"] .bg-teal-900 {
+  background-color: oklch(from oklch(38.6% 0.063 188.416) calc(l * 0.88) calc(c * 0.75) h);
+}
+
+:root[data-theme="dark"] .hover\:bg-purple-600:hover {
+  background-color: oklch(from oklch(55.8% 0.288 302.321) calc(l * 0.88) calc(c * 0.75) h);
+}
+
+:root[data-theme="dark"] .bg-green-600 {
+  background-color: oklch(from oklch(62.7% 0.194 149.214) calc(l * 0.88) calc(c * 0.75) h);
+}
+
+:root[data-theme="dark"] .hover\:bg-green-700:hover {
+  background-color: oklch(from oklch(52.7% 0.154 150.069) calc(l * 0.88) calc(c * 0.75) h);
+}
+
+:root[data-theme="dark"] .active\:bg-green-800:active {
+  background-color: oklch(from oklch(44.8% 0.119 151.328) calc(l * 0.88) calc(c * 0.75) h);
+}
+
+:root[data-theme="dark"] .bg-emerald-600,
+:root[data-theme="dark"] .hover\:bg-emerald-600:hover {
+  background-color: oklch(from oklch(59.6% 0.145 163.225) calc(l * 0.88) calc(c * 0.75) h);
+}
+
+:root[data-theme="dark"] .hover\:bg-emerald-700:hover {
+  background-color: oklch(from oklch(50.8% 0.118 165.612) calc(l * 0.88) calc(c * 0.75) h);
+}
+
+:root[data-theme="dark"] .bg-indigo-600,
+:root[data-theme="dark"] .hover\:bg-indigo-600:hover {
+  background-color: oklch(from oklch(51.1% 0.262 276.966) calc(l * 0.88) calc(c * 0.75) h);
+}
+
+:root[data-theme="dark"] .hover\:bg-indigo-700:hover {
+  background-color: oklch(from oklch(45.7% 0.24 277.023) calc(l * 0.88) calc(c * 0.75) h);
+}
+
+:root[data-theme="dark"] .hover\:bg-blue-600:hover {
+  background-color: oklch(from oklch(54.6% 0.245 262.881) calc(l * 0.88) calc(c * 0.75) h);
+}
+
+:root[data-theme="dark"] .bg-amber-600 {
+  background-color: oklch(from oklch(66.6% 0.179 58.318) calc(l * 0.88) calc(c * 0.75) h);
+}
+
+:root[data-theme="dark"] .hover\:bg-orange-600:hover {
+  background-color: oklch(from oklch(64.6% 0.222 41.116) calc(l * 0.88) calc(c * 0.75) h);
+}
+
+:root[data-theme="dark"] .bg-yellow-600 {
+  background-color: oklch(from oklch(68.1% 0.162 75.834) calc(l * 0.88) calc(c * 0.75) h);
+}
+
+:root[data-theme="dark"] .hover\:bg-yellow-700:hover {
+  background-color: oklch(from oklch(55.4% 0.135 66.442) calc(l * 0.88) calc(c * 0.75) h);
 }
 
 /* =========================
@@ -216,9 +764,12 @@ body {
   will-change: transform;
 }
 
-/* Nền tối: chồng mảng phải làm SÁNG lên thay vì tối đi. */
+/* Nền tối: chồng mảng phải làm SÁNG lên thay vì tối đi. Kèm giảm độ đục vì
+   `screen` trên nền tối đẩy các mảng lên rất chói — nguồn loá lớn nhất của
+   trang khi xem ban đêm. */
 :root[data-theme="dark"] .fd-cloud {
   mix-blend-mode: screen;
+  opacity: 0.5;
 }
 
 .fd-cloud-1 {
@@ -486,6 +1037,10 @@ body {
   border-radius: 0.25rem;
   padding: 0 0.25rem;
   font-size: 0.85em;
+}
+/* Nền đen 5% tàng hình trên bong bóng chat tối → đổi sang phủ sáng. */
+:root[data-theme="dark"] .fd-md code {
+  background: rgba(255, 255, 255, 0.09);
 }
 .fd-md hr {
   margin: 0.5rem 0;

@@ -10,6 +10,18 @@ import { useSyncExternalStore } from "react";
 
 const CLOUDS_KEY = "fd-clouds";
 const DRIFT_KEY = "fd-fluid-drift";
+const CHAT_SURFACE_KEY = "fd-chat-surface";
+/** Khoá bật/tắt kiểu boolean của bản trước — chỉ còn dùng để chuyển đổi dữ liệu cũ. */
+const LEGACY_LIQUID_CHAT_KEY = "fd-liquid-chat";
+
+/** Chất liệu nền khung hội thoại của trợ lý AI. */
+export type ChatSurface = "liquid" | "blur" | "off";
+
+export const CHAT_SURFACES: ReadonlyArray<{ value: ChatSurface; label: string }> = [
+  { value: "liquid", label: "Nước" },
+  { value: "blur", label: "Mờ" },
+  { value: "off", label: "Tắt" },
+];
 
 /** Thang cường độ fluid trôi nổi ngẫu nhiên: 0 = tắt hẳn. */
 export const FLUID_DRIFT_MAX = 5;
@@ -31,8 +43,21 @@ function readDrift(): number {
     : FLUID_DRIFT_DEFAULT;
 }
 
+const CHAT_SURFACE_DEFAULT: ChatSurface = "liquid";
+
+function readChatSurface(): ChatSurface {
+  const raw = localStorage.getItem(CHAT_SURFACE_KEY);
+
+  if (raw === "liquid" || raw === "blur" || raw === "off") return raw;
+
+  // Ai từng chủ động TẮT bằng công tắc boolean của bản trước thì giữ nguyên ý đó;
+  // còn lại coi như chưa chọn gì và rơi về mặc định mới.
+  return localStorage.getItem(LEGACY_LIQUID_CHAT_KEY) === "off" ? "off" : CHAT_SURFACE_DEFAULT;
+}
+
 let clouds = readClouds();
 let drift = readDrift();
+let chatSurface = readChatSurface();
 let listeners: Array<() => void> = [];
 
 function subscribe(listener: () => void) {
@@ -69,8 +94,24 @@ export function setFluidDrift(next: number) {
   emit();
 }
 
+export function getChatSurface() {
+  return chatSurface;
+}
+
+export function setChatSurface(next: ChatSurface) {
+  chatSurface = next;
+
+  localStorage.setItem(CHAT_SURFACE_KEY, next);
+  emit();
+}
+
 export function useClouds() {
   return useSyncExternalStore(subscribe, getClouds);
+}
+
+/** Chất liệu nền sau khung hội thoại của trợ lý AI. */
+export function useChatSurface() {
+  return useSyncExternalStore(subscribe, getChatSurface);
 }
 
 export function useFluidDrift() {

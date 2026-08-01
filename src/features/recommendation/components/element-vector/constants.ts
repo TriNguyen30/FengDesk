@@ -21,8 +21,10 @@ export const ELEMENT_COLOR: Record<string, string> = {
 // Nếu cần thay đổi màu dot và icon, sửa trực tiếp trong ELEMENT_COLOR.
 export const ELEMENT_DOT_COLOR = ELEMENT_COLOR;
 
-export const SURPLUS_COLOR = "#ef4444";
-export const SURPLUS_BG = "#fdecea";
+// Đi qua biến CSS để theme tối ánh xạ lại được — cả bốn hằng dưới đây chỉ dùng
+// trong style inline của React, nơi CSS không chen vào ghi đè được.
+export const SURPLUS_COLOR = "var(--fd-ev-surplus-text)";
+export const SURPLUS_BG = "var(--fd-ev-surplus-bg)";
 export const GAP_THRESHOLD = 0.05;
 
 // Ngưỡng riêng cho chip ElementTags — khớp ranh giới "Đạt chuẩn" của radar (xem
@@ -31,8 +33,8 @@ export const GAP_THRESHOLD = 0.05;
 export const TAG_GAP_THRESHOLD = 0.1;
 
 // Tông màu chip trạng thái "cần bù"/"thừa" (đối lập với "ổn" — chip viền trơn).
-export const ATTENTION_BG = "#f6ead8";
-export const ATTENTION_TEXT = "#8a6a3f";
+export const ATTENTION_BG = "var(--fd-ev-attention-bg)";
+export const ATTENTION_TEXT = "var(--fd-ev-attention-text)";
 
 export type GapStatus = "deficit" | "surplus" | "balanced";
 

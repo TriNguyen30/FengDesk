@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { X, Loader2 } from "lucide-react";
+import { X, Loader2, CheckCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { CreateAddressDto, UpdateAddressDto, Address } from "../types/address";
 import { createAddress, updateAddress, setDefaultAddress } from "../api/address.api";
@@ -30,6 +30,7 @@ export default function AddressModal({ isOpen, onClose, onSuccess, address }: Ad
   });
 
   const [isLoading, setIsLoading] = useState(false);
+  const [isSettingDefault, setIsSettingDefault] = useState(false);
 
   // Location states
   const [provinces, setProvinces] = useState<Provinces[]>([]);
@@ -290,6 +291,24 @@ export default function AddressModal({ isOpen, onClose, onSuccess, address }: Ad
     }));
   };
 
+  // Đặt mặc định ngay khi bấm (API set-default riêng), không đợi Save.
+  // Chỉ gọi được khi address đã tồn tại (có id) và chưa phải mặc định.
+  const handleSetDefaultInModal = async () => {
+    if (!address || formData.isDefault) return;
+    setIsSettingDefault(true);
+    try {
+      await setDefaultAddress(address.id);
+      setFormData((prev) => ({ ...prev, isDefault: true }));
+      toast.success("Đã đặt làm địa chỉ mặc định");
+      onSuccess();
+    } catch (error) {
+      toast.error("Lỗi khi đặt địa chỉ mặc định");
+      console.error(error);
+    } finally {
+      setIsSettingDefault(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -306,10 +325,10 @@ export default function AddressModal({ isOpen, onClose, onSuccess, address }: Ad
 
     try {
       if (address) {
+        // isDefault không còn gửi qua update: backend cố tình bỏ qua field này
+        // (chỉ endpoint set-default mới được đổi mặc định), việc đặt mặc định
+        // đã xảy ra ngay khi bấm nút ở trên (handleSetDefaultInModal).
         await updateAddress(address.id, payload as UpdateAddressDto);
-        if (formData.isDefault && !address.isDefault) {
-          await setDefaultAddress(address.id);
-        }
         toast.success("Cập nhật địa chỉ thành công");
       } else {
         const newAddress = await createAddress(payload as CreateAddressDto);
@@ -436,22 +455,52 @@ export default function AddressModal({ isOpen, onClose, onSuccess, address }: Ad
               </select>
             </div>
 
-            <div className="flex items-center gap-2 pt-2">
-              <input
-                type="checkbox"
-                id="isDefault"
-                name="isDefault"
-                checked={formData.isDefault}
-                onChange={handleChange}
-                className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
-              />
-              <label
-                htmlFor="isDefault"
-                className="text-sm font-medium text-gray-700 cursor-pointer"
-              >
-                Đặt làm địa chỉ mặc định
-              </label>
-            </div>
+            {/* Không dùng checkbox: hệ thống luôn cần đúng 1 địa chỉ mặc định,
+                nên "bỏ tick" (un-default) không phải thao tác hợp lệ — chỉ có
+                thể "đặt địa chỉ khác làm mặc định" (một chiều). */}
+            {!address ? (
+              // Thêm mới: chưa có id nên chỉ đánh dấu cục bộ, áp dụng khi Lưu.
+              <div className="pt-2">
+                <button
+                  type="button"
+                  onClick={() =>
+                    setFormData((prev) => ({ ...prev, isDefault: !prev.isDefault }))
+                  }
+                  className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors cursor-pointer ${
+                    formData.isDefault
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-gray-300 text-gray-700 hover:bg-gray-50"
+                  }`}
+                >
+                  <CheckCircle size={14} />
+                  {formData.isDefault ? "Sẽ đặt làm địa chỉ mặc định" : "Đặt làm địa chỉ mặc định"}
+                </button>
+              </div>
+            ) : address.isDefault ? (
+              // Đang sửa chính địa chỉ mặc định: ẩn nút, chỉ hiện badge tĩnh.
+              <div className="flex items-center gap-2 pt-2 text-sm font-medium text-primary">
+                <CheckCircle size={16} />
+                Đây là địa chỉ mặc định
+              </div>
+            ) : formData.isDefault ? (
+              // Vừa bấm đặt mặc định thành công trong phiên sửa này.
+              <div className="flex items-center gap-2 pt-2 text-sm font-medium text-primary">
+                <CheckCircle size={16} />
+                Đã đặt làm địa chỉ mặc định
+              </div>
+            ) : (
+              <div className="pt-2">
+                <button
+                  type="button"
+                  onClick={handleSetDefaultInModal}
+                  disabled={isSettingDefault}
+                  className="flex items-center gap-1.5 rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <CheckCircle size={14} />
+                  {isSettingDefault ? "Đang đặt làm mặc định..." : "Đặt làm địa chỉ mặc định"}
+                </button>
+              </div>
+            )}
           </div>
 
           <div className="mt-8 flex gap-3">
