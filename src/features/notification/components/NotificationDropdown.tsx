@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Bell, Check, ShoppingBag, XCircle, Package, Mail } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import {
   useNotificationsList,
@@ -12,6 +13,7 @@ import type { NotificationItem } from "../types/notification";
 import { formatRelativeTime } from "@/utils/date";
 
 export default function NotificationDropdown() {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [closing, setClosing] = useState(false);
   const navigate = useNavigate();
@@ -80,9 +82,9 @@ export default function NotificationDropdown() {
   const handleMarkAllRead = async () => {
     try {
       await markAllAsReadMutation.mutateAsync();
-      toast.success("Đã đánh dấu tất cả thông báo là đã đọc");
+      toast.success(t("notification.toast.mark_all_success"));
     } catch (error) {
-      toast.error("Không thể cập nhật trạng thái thông báo");
+      toast.error(t("notification.toast.mark_all_error"));
     }
   };
 
@@ -181,7 +183,7 @@ export default function NotificationDropdown() {
           className="flex min-w-[44px] flex-col items-center gap-0.5 rounded-lg px-1 py-1 text-gray-700 transition-colors hover:text-primary cursor-pointer relative"
           aria-haspopup="true"
           aria-expanded={open}
-          aria-label={`Thông báo, ${unreadCount} tin chưa đọc`}
+          aria-label={t("notification.notification_with_unread_count", { count: unreadCount })}
         >
           <div className="relative flex size-[22px] items-center justify-center">
             <Bell size={20} strokeWidth={1.8} className={unreadCount > 0 ? "text-gray-900" : ""} />
@@ -191,21 +193,21 @@ export default function NotificationDropdown() {
               </span>
             )}
           </div>
-          <span className="hidden text-[10px] font-medium sm:block sm:text-xs">Thông báo</span>
+          <span className="hidden text-[10px] font-medium sm:block sm:text-xs">{t("notification.notification")}</span>
         </button>
 
         {open && (
           <div className="absolute right-0 top-full z-50 pt-2">
             <div
               role="dialog"
-              aria-label="Thông báo của bạn"
+              aria-label={t("notification.title")}
               className={`w-[min(calc(100vw-1.5rem),24rem)] overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xl sm:w-96 ${
                 closing ? "notification-dropdown-exit" : "notification-dropdown-enter"
               }`}
             >
               {/* Header */}
               <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3 bg-gray-50/50">
-                <h2 className="text-sm font-bold text-gray-950">Thông báo</h2>
+                <h2 className="text-sm font-bold text-gray-950">{t("notification.notification")}</h2>
                 {unreadCount > 0 && (
                   <button
                     type="button"
@@ -213,7 +215,7 @@ export default function NotificationDropdown() {
                     className="flex items-center gap-1 rounded px-2 py-1 text-xs font-semibold text-primary hover:bg-primary/5 cursor-pointer transition-colors"
                   >
                     <Check size={14} />
-                    Đánh dấu tất cả đã đọc
+                    {t("notification.mark_all_read")}
                   </button>
                 )}
               </div>
@@ -223,16 +225,16 @@ export default function NotificationDropdown() {
                 {status === "loading" && notifications.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-12 text-gray-400">
                     <div className="size-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                    <span className="mt-2 text-xs">Đang tải thông báo...</span>
+                    <span className="mt-2 text-xs">{t("notification.loading")}</span>
                   </div>
                 ) : notifications.length === 0 ? (
                   <div className="flex flex-col items-center gap-2 px-4 py-12 text-center text-gray-500">
                     <div className="flex size-12 items-center justify-center rounded-full bg-gray-50 text-gray-400">
                       <Bell size={24} strokeWidth={1.5} />
                     </div>
-                    <p className="text-sm font-medium text-gray-700">Chưa có thông báo nào</p>
+                    <p className="text-sm font-medium text-gray-700">{t("notification.empty.title")}</p>
                     <p className="text-xs text-gray-400">
-                      Chúng tôi sẽ thông báo cho bạn khi có cập nhật mới.
+                      {t("notification.empty.desc")}
                     </p>
                   </div>
                 ) : (

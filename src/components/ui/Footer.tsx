@@ -2,8 +2,10 @@ import { Leaf, Mail, Phone, MapPin } from "lucide-react";
 import { FaFacebook, FaInstagram, FaTiktok } from "react-icons/fa";
 import Logo from "@/assets/image/fengdesk_logo_2.png";
 import DTBBCT from "@/assets/image/DTBBCT.png";
+import { useTranslation } from "react-i18next";
 
 export default function Footer() {
+  const { t } = useTranslation();
   return (
     <footer className="bg-white border-t border-gray-200 mt-auto">
       <div className="mx-auto max-w-screen-xl px-4 py-12 sm:px-6 lg:px-10">
@@ -19,13 +21,12 @@ export default function Footer() {
               </span>
             </a>
             <p className="text-sm leading-relaxed text-gray-600">
-              Mang đến không gian làm việc cân bằng, thịnh vượng và tràn đầy năng lượng tích cực với
-              các vật phẩm phong thủy tinh tế.
+              {t("footer.brand_desc")}
             </p>
             <ul className="mt-2 flex flex-col gap-3 text-sm text-gray-600">
               <li className="flex items-start gap-2">
                 <MapPin size={18} className="shrink-0 text-primary mt-0.5" />
-                <span>Khu CNC, Quận 9, Thủ Đức</span>
+                <span>{t("footer.address")}</span>
               </li>
               <li className="flex items-center gap-2">
                 <Phone size={18} className="shrink-0 text-primary" />
@@ -41,27 +42,27 @@ export default function Footer() {
           {/* About Us */}
           <div>
             <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-gray-900">
-              Về FengDesk
+              {t("footer.about.title")}
             </h3>
             <ul className="flex flex-col gap-3 text-sm text-gray-600">
               <li>
                 <a href="#" className="hover:text-primary transition-colors">
-                  Câu chuyện thương hiệu
+                  {t("footer.about.story")}
                 </a>
               </li>
               <li>
                 <a href="#" className="hover:text-primary transition-colors">
-                  Tuyển dụng
+                  {t("footer.about.careers")}
                 </a>
               </li>
               <li>
                 <a href="#" className="hover:text-primary transition-colors">
-                  Tin tức phong thủy
+                  {t("footer.about.news")}
                 </a>
               </li>
               <li>
                 <a href="#" className="hover:text-primary transition-colors">
-                  Liên hệ
+                  {t("footer.about.contact")}
                 </a>
               </li>
             </ul>
@@ -69,7 +70,7 @@ export default function Footer() {
               <a href="#" className="inline-block hover:opacity-80 transition-opacity">
                 <img
                   src={DTBBCT}
-                  alt="Đã đăng ký với Bộ Công Thương"
+                  alt={t("footer.about.registered")}
                   className="h-16 w-auto object-contain"
                 />
               </a>
@@ -79,27 +80,27 @@ export default function Footer() {
           {/* Customer Support */}
           <div>
             <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-gray-900">
-              Hỗ trợ khách hàng
+              {t("footer.support.title")}
             </h3>
             <ul className="flex flex-col gap-3 text-sm text-gray-600">
               <li>
                 <a href="#" className="hover:text-primary transition-colors">
-                  Chính sách vận chuyển
+                  {t("footer.support.shipping")}
                 </a>
               </li>
               <li>
                 <a href="#" className="hover:text-primary transition-colors">
-                  Chính sách đổi trả
+                  {t("footer.support.returns")}
                 </a>
               </li>
               <li>
                 <a href="#" className="hover:text-primary transition-colors">
-                  Hướng dẫn mua hàng
+                  {t("footer.support.guide")}
                 </a>
               </li>
               <li>
                 <a href="#" className="hover:text-primary transition-colors">
-                  Câu hỏi thường gặp (FAQ)
+                  {t("footer.support.faq")}
                 </a>
               </li>
             </ul>
@@ -108,15 +109,15 @@ export default function Footer() {
           {/* Newsletter & Socials */}
           <div className="flex flex-col gap-4">
             <h3 className="text-sm font-semibold uppercase tracking-wider text-gray-900">
-              Đăng ký nhận tin
+              {t("footer.newsletter.title")}
             </h3>
             <p className="text-sm text-gray-600">
-              Nhận thông tin mới nhất về sản phẩm và các ưu đãi đặc biệt.
+              {t("footer.newsletter.desc")}
             </p>
             <form className="mt-1 flex w-full max-w-md flex-col gap-2 sm:max-w-none sm:flex-row">
               <input
                 type="email"
-                placeholder="Email của bạn"
+                placeholder={t("footer.newsletter.email_placeholder")}
                 className="min-h-11 w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary sm:min-h-0 sm:rounded-l-md sm:rounded-r-none"
                 required
               />
@@ -124,12 +125,12 @@ export default function Footer() {
                 type="submit"
                 className="min-h-11 shrink-0 rounded-md bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary/90 sm:min-h-0 sm:rounded-l-none sm:rounded-r-md"
               >
-                Gửi
+                {t("footer.newsletter.submit")}
               </button>
             </form>
             <div className="mt-4">
               <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-900">
-                Kết nối với chúng tôi
+                {t("footer.socials.title")}
               </h3>
               <div className="flex items-center gap-4 text-gray-400">
                 <a href="#" className="hover:text-primary transition-colors">
@@ -158,11 +159,11 @@ export default function Footer() {
           </p>
           <div className="flex flex-wrap items-center justify-center gap-3 text-xs text-gray-500 sm:gap-4 sm:text-sm">
             <a href="#" className="hover:text-primary transition-colors">
-              Điều khoản dịch vụ
+              {t("footer.legal.terms")}
             </a>
             <span className="h-4 w-px bg-gray-300"></span>
             <a href="#" className="hover:text-primary transition-colors">
-              Chính sách bảo mật
+              {t("footer.legal.privacy")}
             </a>
           </div>
         </div>

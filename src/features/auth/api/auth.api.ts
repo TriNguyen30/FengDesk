@@ -3,6 +3,7 @@ import type { ApiResponse } from "@/types/api";
 import type {
   LoginPayload,
   LoginResponseData,
+  GoogleLoginPayload,
   RegisterResponseData,
   RegisterInitiatePayload,
   RegisterVerifyPayload,
@@ -15,6 +16,14 @@ import type {
 export async function loginRequest(payload: LoginPayload) {
   const { data } = await fetchHttpClient.post<ApiResponse<LoginResponseData>>(
     "/Auth/login",
+    payload,
+  );
+  return data;
+}
+
+export async function loginWithGoogleRequest(payload: GoogleLoginPayload) {
+  const { data } = await fetchHttpClient.post<ApiResponse<LoginResponseData>>(
+    "/Auth/google",
     payload,
   );
   return data;

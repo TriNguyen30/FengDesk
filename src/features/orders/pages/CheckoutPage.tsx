@@ -11,6 +11,9 @@ import type { PaymentMethod } from "@/features/orders/types/orders";
 import { formatVnd, PAYMENT_METHODS } from "@/features/orders/utils/orderUtils";
 import AddressModal from "@/features/users/components/AddressModal";
 import { paymentApi } from "@/features/payment";
+import FeatureBar from "@/components/ui/FeatureBar";
+import CommitmentPage from "@/components/ui/CommitmentPage";
+import { useTranslation } from "react-i18next";
 
 interface CheckoutLocationState {
   selectedItemIds?: string[];
@@ -21,6 +24,7 @@ export default function CheckoutPage() {
   const location = useLocation();
   const createOrderMutation = useCreateOrder();
   const { items, cartStatus } = useCart();
+  const { t } = useTranslation();
 
   // Cờ đánh dấu đơn hàng đã/đang được đặt, để tránh effect bên dưới
   // redirect nhầm về /cart khi cart thay đổi sau khi đặt hàng thành công.
@@ -73,10 +77,10 @@ export default function CheckoutPage() {
     if (isPlacingOrderRef.current) return;
 
     if (selectedItemIds.length === 0 || checkoutItems.length === 0) {
-      toast.error("Vui lòng chọn sản phẩm để thanh toán");
+      toast.error(t("checkout_page.toast.select_product"));
       navigate("/cart", { replace: true });
     }
-  }, [selectedItemIds.length, checkoutItems.length, navigate, cartStatus]);
+  }, [selectedItemIds.length, checkoutItems.length, navigate, cartStatus, t]);
 
   useEffect(() => {
     async function loadAddresses() {
@@ -89,7 +93,7 @@ export default function CheckoutPage() {
           setSelectedAddressId(defaultAddress.id);
         }
       } catch {
-        toast.error("Không thể tải danh sách địa chỉ");
+        toast.error(t("checkout_page.toast.load_address_error"));
       } finally {
         setLoadingAddresses(false);
       }
@@ -99,12 +103,12 @@ export default function CheckoutPage() {
 
   const handlePlaceOrder = async () => {
     if (!selectedAddressId) {
-      toast.error("Vui lòng chọn địa chỉ giao hàng");
+      toast.error(t("checkout_page.toast.select_address"));
       return;
     }
 
     if (checkoutItems.length === 0) {
-      toast.error("Không có sản phẩm để thanh toán");
+      toast.error(t("checkout_page.toast.no_product"));
       return;
     }
 
@@ -122,7 +126,7 @@ export default function CheckoutPage() {
       });
 
       if (result.data.isSuccess && result.data.data) {
-        toast.success("Đặt hàng thành công");
+        toast.success(t("checkout_page.toast.order_success"));
 
         if (paymentMethod === "PayOS") {
           try {
@@ -132,10 +136,10 @@ export default function CheckoutPage() {
               window.location.href = paymentRes.data.data.checkoutUrl;
               return;
             } else {
-              toast.error(paymentRes.data.message || "Không thể tạo liên kết thanh toán");
+              toast.error(paymentRes.data.message || t("checkout_page.toast.payment_link_error"));
             }
           } catch {
-            toast.error("Lỗi khi kết nối cổng thanh toán PayOS");
+            toast.error(t("checkout_page.toast.payment_gateway_error"));
           }
           navigate(`/profile/orders/${result.data.data.id}`, { replace: true });
           return;
@@ -147,10 +151,10 @@ export default function CheckoutPage() {
 
       // Đặt hàng thất bại: tắt cờ lại để effect redirect hoạt động bình thường
       isPlacingOrderRef.current = false;
-      toast.error(result.data.message || "Không thể tạo đơn hàng");
+      toast.error(result.data.message || t("checkout_page.toast.order_error"));
     } catch {
       isPlacingOrderRef.current = false;
-      toast.error("Không thể tạo đơn hàng");
+      toast.error(t("checkout_page.toast.order_error"));
     } finally {
       setSubmitting(false);
     }
@@ -169,16 +173,16 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl px-3 py-4 sm:px-6 sm:py-6">
+    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       <button
         onClick={() => navigate("/cart")}
         className="mb-4 flex items-center gap-1.5 text-sm font-medium text-gray-500 hover:text-primary cursor-pointer transition-colors"
       >
         <ChevronLeft className="h-4 w-4" />
-        Quay lại giỏ hàng
+        {t("checkout_page.actions.back_to_cart")}
       </button>
 
-      <h1 className="mb-6 text-2xl font-bold text-gray-900">Thanh toán</h1>
+      <h1 className="mb-6 text-2xl font-bold text-gray-900">{t("checkout_page.title")}</h1>
 
       <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
         <div className="space-y-6">
@@ -187,13 +191,13 @@ export default function CheckoutPage() {
             <div className="mb-4 flex items-center justify-between">
               <h2 className="flex items-center gap-2 text-lg font-bold text-gray-900">
                 <MapPin className="h-5 w-5 text-primary" />
-                Địa chỉ giao hàng
+                {t("checkout_page.address.title")}
               </h2>
               <button
                 onClick={() => setIsAddressModalOpen(true)}
                 className="text-sm font-medium text-primary hover:underline cursor-pointer"
               >
-                + Thêm địa chỉ
+                {t("checkout_page.actions.add_address")}
               </button>
             </div>
 
@@ -203,12 +207,12 @@ export default function CheckoutPage() {
               </div>
             ) : addresses.length === 0 ? (
               <div className="rounded-xl border border-dashed border-gray-200 py-8 text-center">
-                <p className="text-sm text-gray-500">Bạn chưa có địa chỉ giao hàng</p>
+                <p className="text-sm text-gray-500">{t("checkout_page.address.no_address")}</p>
                 <button
                   onClick={() => setIsAddressModalOpen(true)}
                   className="mt-3 text-sm font-medium text-primary hover:underline cursor-pointer"
                 >
-                  Thêm địa chỉ ngay
+                  {t("checkout_page.actions.add_address_now")}
                 </button>
               </div>
             ) : (
@@ -216,11 +220,10 @@ export default function CheckoutPage() {
                 {addresses.map((address) => (
                   <label
                     key={address.id}
-                    className={`flex cursor-pointer gap-3 rounded-xl border p-4 transition-colors ${
-                      selectedAddressId === address.id
-                        ? "border-primary bg-primary/5"
-                        : "border-gray-200 hover:border-primary/40"
-                    }`}
+                    className={`flex cursor-pointer gap-3 rounded-xl border p-4 transition-colors ${selectedAddressId === address.id
+                      ? "border-primary bg-primary/5"
+                      : "border-gray-200 hover:border-primary/40"
+                      }`}
                   >
                     <input
                       type="radio"
@@ -236,7 +239,7 @@ export default function CheckoutPage() {
                         <span className="text-sm text-gray-500">{address.recipientPhone}</span>
                         {address.isDefault && (
                           <span className="rounded bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
-                            Mặc định
+                            {t("checkout_page.address.default")}
                           </span>
                         )}
                       </div>
@@ -255,17 +258,16 @@ export default function CheckoutPage() {
           <section className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-100">
             <h2 className="mb-4 flex items-center gap-2 text-lg font-bold text-gray-900">
               <CreditCard className="h-5 w-5 text-primary" />
-              Phương thức thanh toán
+              {t("checkout_page.payment.title")}
             </h2>
             <div className="space-y-3">
               {PAYMENT_METHODS.map((method) => (
                 <label
                   key={method.value}
-                  className={`flex cursor-pointer items-center gap-3 rounded-xl border p-4 transition-colors ${
-                    paymentMethod === method.value
-                      ? "border-primary bg-primary/5"
-                      : "border-gray-200 hover:border-primary/40"
-                  }`}
+                  className={`flex cursor-pointer items-center gap-3 rounded-xl border p-4 transition-colors ${paymentMethod === method.value
+                    ? "border-primary bg-primary/5"
+                    : "border-gray-200 hover:border-primary/40"
+                    }`}
                 >
                   <input
                     type="radio"
@@ -284,14 +286,14 @@ export default function CheckoutPage() {
           {/* Note */}
           <section className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-100">
             <label htmlFor="orderNote" className="mb-2 block text-sm font-medium text-gray-700">
-              Ghi chú đơn hàng (tuỳ chọn)
+              {t("checkout_page.note.label")}
             </label>
             <textarea
               id="orderNote"
               rows={3}
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              placeholder="Ghi chú cho người bán hoặc shipper..."
+              placeholder={t("checkout_page.note.placeholder")}
               className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm text-gray-800 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
             />
           </section>
@@ -302,7 +304,7 @@ export default function CheckoutPage() {
           <aside className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-100">
             <h2 className="mb-4 flex items-center gap-2 text-lg font-bold text-gray-900">
               <ShoppingBag className="h-5 w-5 text-primary" />
-              Đơn hàng ({checkoutItems.length} sản phẩm)
+              {t("checkout_page.summary.title", { count: checkoutItems.length })}
             </h2>
 
             <ul className="mb-4 max-h-64 space-y-3 overflow-y-auto">
@@ -324,23 +326,23 @@ export default function CheckoutPage() {
 
             <div className="space-y-2 border-t border-dashed border-gray-200 pt-4 text-sm">
               <div className="flex justify-between text-gray-600">
-                <span>Tạm tính ({totalQuantity} sản phẩm)</span>
+                <span>{t("checkout_page.summary.subtotal", { count: totalQuantity })}</span>
                 <span className="font-semibold text-gray-900">{formatVnd(subtotal)}</span>
               </div>
               <div className="flex justify-between text-gray-600">
-                <span>Phí vận chuyển</span>
+                <span>{t("checkout_page.summary.shipping_fee")}</span>
                 <span className="font-semibold text-gray-900">
                   {feeLoading ? (
-                    "Đang tính..."
+                    t("checkout_page.summary.calculating")
                   ) : shippingFee === 0 && subtotal >= 500000 ? (
-                    <span className="text-green-600">Miễn phí</span>
+                    <span className="text-green-600">{t("checkout_page.summary.free")}</span>
                   ) : (
                     formatVnd(shippingFee)
                   )}
                 </span>
               </div>
               <div className="flex justify-between border-t border-gray-100 pt-3 text-base font-bold text-gray-900">
-                <span>Tổng cộng</span>
+                <span>{t("checkout_page.summary.total")}</span>
                 <span className="text-primary">
                   {feeLoading ? "..." : formatVnd(subtotal + shippingFee)}
                 </span>
@@ -355,17 +357,17 @@ export default function CheckoutPage() {
               {submitting ? (
                 <>
                   <Loader2 className="h-5 w-5 animate-spin" />
-                  Đang xử lý...
+                  {t("checkout_page.actions.processing")}
                 </>
               ) : (
-                "Đặt hàng"
+                t("checkout_page.actions.place_order")
               )}
             </button>
 
             <p className="mt-3 text-center text-xs text-gray-500">
-              Bằng việc đặt hàng, bạn đồng ý với{" "}
+              {t("checkout_page.summary.terms_prefix")}
               <Link to="/products" className="text-primary hover:underline">
-                điều khoản mua hàng
+                {t("checkout_page.summary.terms_link")}
               </Link>
             </p>
           </aside>
@@ -375,12 +377,13 @@ export default function CheckoutPage() {
               <Truck className="h-5 w-5" />
             </div>
             <span className="font-semibold leading-snug">
-              Free Ship TP.Hồ Chí Minh cho hoá đơn từ 500.000đ
+              {t("checkout_page.summary.free_ship")}
             </span>
           </div>
         </div>
       </div>
-
+      <FeatureBar />
+      <CommitmentPage />
       <AddressModal
         isOpen={isAddressModalOpen}
         onClose={() => setIsAddressModalOpen(false)}

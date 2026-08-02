@@ -4,6 +4,7 @@ import "./index.css";
 import App from "./app/App.tsx";
 
 import "@vietmap/vietmap-gl-js/dist/vietmap-gl.css";
+import "./utils/i18n.ts";
 import { applySavedTheme } from "@/components/ui/ThemeToggle";
 
 // Gắn theme đã lưu TRƯỚC khi render để không nháy màu mặc định.

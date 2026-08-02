@@ -10,18 +10,21 @@ import { createReviewRequest } from "@/features/review/api/review.api";
 import { toast } from "sonner";
 import { ordersApi } from "../api/orders.api";
 import PaymentQrModal from "@/features/payment/components/PaymentQrModal";
-
-const TABS = [
-  { label: "Tất cả", value: "" },
-  { label: "Đang chờ", value: "Pending" },
-  { label: "Đã thanh toán", value: "Paid" },
-  { label: "Đang xử lý", value: "Processing" },
-  { label: "Đã hoàn thành", value: "Completed" },
-  { label: "Đã hủy", value: "Cancelled" },
-  { label: "Đã hết hạn", value: "Expired" },
-];
+import { useTranslation } from "react-i18next";
 
 export default function OrdersPage() {
+  const { t } = useTranslation();
+  const TABS = [
+    { label: t("orders_page.tabs.all"), value: "" },
+    { label: t("orders_page.tabs.pending"), value: "Pending" },
+    { label: t("orders_page.tabs.paid"), value: "Paid" },
+    { label: t("orders_page.tabs.processing"), value: "Processing" },
+    { label: t("orders_page.tabs.shipping"), value: "Shipping" },
+    { label: t("orders_page.tabs.completed"), value: "Completed" },
+    { label: t("orders_page.tabs.cancelled"), value: "Cancelled" },
+    { label: t("orders_page.tabs.expired"), value: "Expired" },
+  ];
+
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const [activeTab, setActiveTab] = useState("");
@@ -48,15 +51,22 @@ export default function OrdersPage() {
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Đơn hàng của tôi</h1>
-        {listStatus !== "loading" && (
-          <p className="mt-1 text-sm text-gray-500 font-medium">
-            <strong className="text-gray-900">
-              {activeTab ? filteredOrders.length : pagination.totalCount || 0}
-            </strong>{" "}
-            đơn hàng
-          </p>
-        )}
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="text-xl font-bold tracking-tight text-gray-900">{t("orders_page.title")}</h1>
+            <p className="mt-0.5 text-sm text-gray-500">
+              {t("orders_page.subtitle")}
+            </p>
+          </div>
+          {listStatus !== "loading" && (
+            <p className="text-sm text-gray-500 font-medium bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100">
+              <strong className="text-gray-900">
+                {activeTab ? filteredOrders.length : pagination.totalCount || 0}
+              </strong>{" "}
+              {t("orders_page.orders_count")}
+            </p>
+          )}
+        </div>
       </div>
 
       {/* Tabs Scroll */}
@@ -71,9 +81,8 @@ export default function OrdersPage() {
               <button
                 key={tab.value}
                 onClick={() => setActiveTab(tab.value)}
-                className={`relative flex-1 whitespace-nowrap px-5 py-4 text-center text-sm font-medium transition-colors cursor-pointer ${
-                  isActive ? "text-primary" : "text-gray-500 hover:text-gray-700"
-                }`}
+                className={`relative flex-1 whitespace-nowrap px-5 py-4 text-center text-sm font-medium transition-colors cursor-pointer ${isActive ? "text-primary" : "text-gray-500 hover:text-gray-700"
+                  }`}
               >
                 {tab.label}
                 {isActive && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />}
@@ -91,14 +100,14 @@ export default function OrdersPage() {
         <div className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-200 py-16 text-center bg-white">
           <Package className="mb-3 h-12 w-12 text-gray-300" />
           <p className="text-gray-600">
-            Bạn chưa có đơn hàng nào {activeTab && "ở trạng thái này"}
+            {t("orders_page.empty.message")} {activeTab && t("orders_page.empty.in_status")}
           </p>
           {!activeTab && (
             <Link
               to="/products"
               className="mt-4 rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-white hover:bg-primary-dark"
             >
-              Mua sắm ngay
+              {t("orders_page.empty.shop_now")}
             </Link>
           )}
         </div>
@@ -107,6 +116,10 @@ export default function OrdersPage() {
           {filteredOrders.map((order) => {
             const statusMeta = getOrderStatusMeta(order.status, order.paymentMethod);
             const items = (order as any).items || [];
+            // Đơn có thể gồm hàng của nhiều store (mỗi store 1 delivery) → hiện store đầu + "+N".
+            const stores = order.stores ?? [];
+            const primaryStore = stores[0];
+            const storeLabel = primaryStore?.storeName ?? t("orders_page.card.store_fallback");
 
             return (
               <div
@@ -116,7 +129,12 @@ export default function OrdersPage() {
                 {/* Header */}
                 <div className="flex items-center justify-between border-b border-gray-50 px-4 py-3 sm:px-6">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-bold text-gray-900">FengShuiGarden</span>
+                    <span className="text-sm font-bold text-gray-900">{storeLabel}</span>
+                    {stores.length > 1 && (
+                      <span className="rounded bg-gray-100 px-1.5 py-0.5 text-xs font-medium text-gray-600">
+                        +{stores.length - 1}
+                      </span>
+                    )}
                     <div className="hidden gap-1 sm:flex ml-2">
                       <button
                         onClick={(e) => {
@@ -125,26 +143,16 @@ export default function OrdersPage() {
                         }}
                         className="flex items-center gap-1 rounded border border-primary/20 bg-primary/5 px-2 py-1 text-xs font-medium text-primary hover:bg-primary/10 transition-colors cursor-pointer"
                       >
-                        <MessageCircle className="h-3 w-3" /> Chat
+                        <MessageCircle className="h-3 w-3" /> {t("orders_page.card.chat")}
                       </button>
                       <button
                         onClick={(e) => {
                           e.preventDefault();
-                          const orderItems = (order as any).items || [];
-                          const deliveries = (order as any).deliveries || [];
-                          const storeId =
-                            orderItems[0]?.gardenStoreId ||
-                            orderItems[0]?.storeId ||
-                            deliveries[0]?.storeId;
-                          if (storeId) {
-                            navigate(`/stores/${storeId}`);
-                          } else {
-                            navigate("/products");
-                          }
+                          navigate(primaryStore ? `/stores/${primaryStore.storeId}` : "/products");
                         }}
                         className="flex items-center gap-1 rounded border border-gray-200 px-2 py-1 text-xs font-medium text-gray-600 hover:bg-gray-50 transition-colors cursor-pointer"
                       >
-                        <Store className="h-3 w-3" /> Xem Shop
+                        <Store className="h-3 w-3" /> {t("orders_page.card.view_shop")}
                       </button>
                     </div>
                   </div>
@@ -152,7 +160,7 @@ export default function OrdersPage() {
                     {order.status === "Completed" && (
                       <span className="hidden items-center gap-1 text-gray-400 sm:flex">
                         <Truck className="h-4 w-4" />
-                        Giao hàng thành công
+                        {t("orders_page.card.delivery_success")}
                       </span>
                     )}
                     {order.status === "Completed" && (
@@ -184,7 +192,7 @@ export default function OrdersPage() {
                           <p className="text-sm text-gray-900 line-clamp-2">{item.productName}</p>
                           {item.variantName && (
                             <p className="mt-1 text-xs text-gray-500">
-                              Phân loại hàng: {item.variantName}
+                              {t("orders_page.card.variant")} {item.variantName}
                             </p>
                           )}
                           <p className="mt-1 text-sm font-medium text-gray-900">x{item.quantity}</p>
@@ -204,7 +212,7 @@ export default function OrdersPage() {
                       </div>
                       <div className="flex-1">
                         <p className="text-sm font-bold text-gray-900">
-                          Đơn hàng #{order.id.slice(0, 8).toUpperCase()}
+                          {t("orders_page.card.order_id")}{order.id.slice(0, 8).toUpperCase()}
                         </p>
                         <p className="mt-1 text-xs text-gray-500">
                           {formatOrderDate(order.createdAt)}
@@ -217,7 +225,7 @@ export default function OrdersPage() {
                 {/* Footer */}
                 <div className="flex flex-col items-end gap-4 border-t border-gray-50 bg-gray-50/30 px-4 py-4 sm:px-6">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-600">Thành tiền:</span>
+                    <span className="text-sm text-gray-600">{t("orders_page.card.total")}</span>
                     <span className="text-xl font-bold text-primary">
                       {formatVnd(order.totalAmount)}
                     </span>
@@ -232,7 +240,7 @@ export default function OrdersPage() {
                         }}
                         className="flex-1 sm:flex-none rounded-lg bg-primary px-6 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-dark cursor-pointer"
                       >
-                        Thanh Toán
+                        {t("orders_page.actions.pay")}
                       </button>
                     )}
                     {order.status === "Completed" && (
@@ -251,14 +259,14 @@ export default function OrdersPage() {
                             }
                           }
                           setReviewModal({ open: true, orderId: order.id, items });
-                          if (items.length > 0)
-                            setSelectedProductId(items[0].productItemId || items[0].productId);
+                          // API /Review nhận productId (Product), KHÔNG phải productItemId (biến thể).
+                          if (items.length > 0) setSelectedProductId(items[0].productId);
                           setRating(5);
                           setReviewContent("");
                         }}
                         className="flex-1 sm:flex-none rounded-lg bg-primary px-6 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-dark cursor-pointer"
                       >
-                        Đánh Giá
+                        {t("orders_page.actions.review")}
                       </button>
                     )}
                     <button
@@ -268,13 +276,13 @@ export default function OrdersPage() {
                       }}
                       className="flex-1 sm:flex-none rounded-lg border border-gray-200 bg-white px-6 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 cursor-pointer"
                     >
-                      Liên Hệ Người Bán
+                      {t("orders_page.actions.contact_seller")}
                     </button>
                     <Link
                       to={`/profile/orders/${order.id}`}
                       className="flex-1 sm:flex-none rounded-lg border border-gray-200 bg-white px-6 py-2 text-center text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 cursor-pointer"
                     >
-                      Xem Chi Tiết
+                      {t("orders_page.actions.view_details")}
                     </Link>
                   </div>
                 </div>
@@ -284,7 +292,7 @@ export default function OrdersPage() {
 
           {pagination.totalPages > 1 && (
             <p className="pt-2 text-center text-xs text-gray-500">
-              Trang {pagination.page}/{pagination.totalPages} · {pagination.totalCount} đơn hàng
+              {t("orders_page.pagination", { page: pagination.page, total_pages: pagination.totalPages, total_count: pagination.totalCount })}
             </p>
           )}
         </div>
@@ -296,7 +304,7 @@ export default function OrdersPage() {
       {/* Review Modal */}
       <Modal
         open={reviewModal.open}
-        title="Đánh giá sản phẩm"
+        title={t("orders_page.review_modal.title")}
         onClose={() => setReviewModal({ ...reviewModal, open: false })}
       >
         <div className="flex flex-col gap-4">
@@ -305,7 +313,7 @@ export default function OrdersPage() {
               {reviewModal.items.length > 1 && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Chọn sản phẩm
+                    {t("orders_page.review_modal.select_product")}
                   </label>
                   <select
                     className="w-full rounded border border-gray-300 p-2 text-sm"
@@ -313,7 +321,7 @@ export default function OrdersPage() {
                     onChange={(e) => setSelectedProductId(e.target.value)}
                   >
                     {reviewModal.items.map((item: any) => (
-                      <option key={item.id} value={item.productItemId || item.productId}>
+                      <option key={item.id} value={item.productId}>
                         {item.productName}
                       </option>
                     ))}
@@ -323,7 +331,7 @@ export default function OrdersPage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Đánh giá của bạn
+                  {t("orders_page.review_modal.your_rating")}
                 </label>
                 <div className="flex items-center gap-1">
                   {[1, 2, 3, 4, 5].map((star) => (
@@ -338,12 +346,12 @@ export default function OrdersPage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Nội dung đánh giá
+                  {t("orders_page.review_modal.review_content")}
                 </label>
                 <textarea
                   className="w-full rounded border border-gray-300 p-3 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                   rows={4}
-                  placeholder="Hãy chia sẻ nhận xét của bạn về sản phẩm này nhé..."
+                  placeholder={t("orders_page.review_modal.placeholder")}
                   value={reviewContent}
                   onChange={(e) => setReviewContent(e.target.value)}
                 ></textarea>
@@ -356,17 +364,17 @@ export default function OrdersPage() {
                   className="rounded border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
                   disabled={submittingReview}
                 >
-                  Hủy
+                  {t("orders_page.review_modal.cancel")}
                 </button>
                 <button
                   type="button"
                   onClick={async () => {
                     if (!selectedProductId) {
-                      toast.error("Vui lòng chọn sản phẩm để đánh giá");
+                      toast.error(t("orders_page.review_modal.toast.select_product"));
                       return;
                     }
                     if (!reviewContent.trim()) {
-                      toast.error("Vui lòng nhập nội dung đánh giá");
+                      toast.error(t("orders_page.review_modal.toast.empty_content"));
                       return;
                     }
                     try {
@@ -376,10 +384,10 @@ export default function OrdersPage() {
                         content: reviewContent,
                         rating,
                       });
-                      toast.success("Đánh giá sản phẩm thành công!");
+                      toast.success(t("orders_page.review_modal.toast.success"));
                       setReviewModal({ ...reviewModal, open: false });
                     } catch (error: any) {
-                      toast.error(error.message || "Không thể gửi đánh giá lúc này");
+                      toast.error(error.message || t("orders_page.review_modal.toast.error"));
                     } finally {
                       setSubmittingReview(false);
                     }
@@ -387,13 +395,13 @@ export default function OrdersPage() {
                   className="flex items-center justify-center rounded bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-dark min-w-[100px]"
                   disabled={submittingReview}
                 >
-                  {submittingReview ? <Loader2 className="h-4 w-4 animate-spin" /> : "Gửi Đánh Giá"}
+                  {submittingReview ? <Loader2 className="h-4 w-4 animate-spin" /> : t("orders_page.review_modal.submit")}
                 </button>
               </div>
             </>
           ) : (
             <div className="py-8 text-center text-gray-500">
-              Không tìm thấy thông tin sản phẩm để đánh giá.
+              {t("orders_page.review_modal.not_found")}
             </div>
           )}
         </div>

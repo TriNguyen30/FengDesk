@@ -5,22 +5,45 @@ import type { Category } from "@/features/category/types/category";
 import ProductCard, { ProductCardSkeleton } from "@/features/products/components/ProductCard";
 import { useProductList } from "@/features/products/hooks/useProducts";
 import type { GetProductsParams } from "@/features/products/types/product";
-import { SearchX, List, ChevronRight, Filter } from "lucide-react";
-
-const FS_ELEMENTS = [
-  { code: "Kim", label: "Kim (Kim loại)" },
-  { code: "Moc", label: "Mộc (Cây cối)" },
-  { code: "Thuy", label: "Thủy (Nước)" },
-  { code: "Hoa", label: "Hỏa (Lửa)" },
-  { code: "Tho", label: "Thổ (Đất)" },
-];
+import { SearchX, List, ChevronRight, Filter, Banknote } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import FeatureBar from "@/components/ui/FeatureBar";
+import CommitmentPage from "@/components/ui/CommitmentPage";
 
 export default function ProductsPage() {
+  const { t } = useTranslation();
+
+  const FS_ELEMENTS = useMemo(() => [
+    { code: "Kim", label: t("products_page.elements.kim") },
+    { code: "Moc", label: t("products_page.elements.moc") },
+    { code: "Thuy", label: t("products_page.elements.thuy") },
+    { code: "Hoa", label: t("products_page.elements.hoa") },
+    { code: "Tho", label: t("products_page.elements.tho") },
+  ], [t]);
+
+  const PRICE_RANGES = useMemo(() => [
+    { id: "0-100000", label: t("products_page.price_ranges.under_100"), min: 0, max: 100000 },
+    { id: "100000-300000", label: t("products_page.price_ranges.100_300"), min: 100000, max: 300000 },
+    { id: "300000-500000", label: t("products_page.price_ranges.300_500"), min: 300000, max: 500000 },
+    { id: "500000-1000000", label: t("products_page.price_ranges.500_1000"), min: 500000, max: 1000000 },
+    { id: "1000000-999999999", label: t("products_page.price_ranges.over_1000"), min: 1000000, max: 999999999 },
+  ], [t]);
   const [searchParams, setSearchParams] = useSearchParams();
   const search = searchParams.get("search") || "";
   const categoryId = searchParams.get("categoryId") || "";
   const sort = searchParams.get("sort") || "default";
   const element = searchParams.get("element") || "";
+  const priceRangeId = searchParams.get("price") || "";
+
+  const handlePriceSelect = (id: string) => {
+    const newParams = new URLSearchParams(searchParams);
+    if (id) {
+      newParams.set("price", id);
+    } else {
+      newParams.delete("price");
+    }
+    setSearchParams(newParams);
+  };
 
   const handleElementSelect = (code: string) => {
     const newParams = new URLSearchParams(searchParams);
@@ -56,7 +79,14 @@ export default function ProductsPage() {
 
   const sortedProducts = useMemo(() => {
     if (!products) return [];
-    const arr = [...products];
+    let arr = [...products];
+
+    if (priceRangeId) {
+      const range = PRICE_RANGES.find(r => r.id === priceRangeId);
+      if (range) {
+        arr = arr.filter(p => p.minPrice >= range.min && p.minPrice <= range.max);
+      }
+    }
 
     switch (sort) {
       case "name-asc":
@@ -70,7 +100,7 @@ export default function ProductsPage() {
       default:
         return arr;
     }
-  }, [products, sort]);
+  }, [products, sort, priceRangeId]);
 
   useEffect(() => {
     async function fetchCategories() {
@@ -90,7 +120,7 @@ export default function ProductsPage() {
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
-  }, [search, categoryId, element]);
+  }, [search, categoryId, element, priceRangeId]);
 
   const handleCategorySelect = (id: string) => {
     const newParams = new URLSearchParams(searchParams);
@@ -115,10 +145,10 @@ export default function ProductsPage() {
       {/* Breadcrumb */}
       <nav className="mb-6 flex items-center gap-2 text-sm font-medium text-gray-500">
         <Link to="/" className="hover:text-primary transition-colors">
-          Trang chủ
+          {t("products_page.breadcrumb.home")}
         </Link>
         <ChevronRight className="h-4 w-4 text-gray-400" />
-        <span className="text-gray-900">Sản phẩm</span>
+        <span className="text-gray-900">{t("products_page.breadcrumb.products")}</span>
       </nav>
 
       <div className="flex flex-col gap-6 md:flex-row md:items-start md:gap-8">
@@ -127,7 +157,7 @@ export default function ProductsPage() {
           <div className="sticky top-24 rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
             <h2 className="mb-4 flex items-center gap-2 font-medium text-gray-900">
               <List className="h-4 w-4" />
-              Danh Mục
+              {t("products_page.filters.categories")}
             </h2>
             <div className="flex flex-col gap-3 mt-2">
               {loadingCategories ? (
@@ -146,11 +176,10 @@ export default function ProductsPage() {
                       className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
                     />
                     <span
-                      className={`text-sm font-medium transition-colors ${
-                        !categoryId ? "text-primary" : "text-gray-600 group-hover:text-gray-900"
-                      }`}
+                      className={`text-sm font-medium transition-colors ${!categoryId ? "text-primary" : "text-gray-600 group-hover:text-gray-900"
+                        }`}
                     >
-                      Tất cả sản phẩm
+                      {t("products_page.filters.all_products")}
                     </span>
                   </label>
                   {categories.map((cat) => (
@@ -162,11 +191,10 @@ export default function ProductsPage() {
                         className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
                       />
                       <span
-                        className={`text-sm font-medium transition-colors ${
-                          categoryId === cat.id
+                        className={`text-sm font-medium transition-colors ${categoryId === cat.id
                             ? "text-primary"
                             : "text-gray-600 group-hover:text-gray-900"
-                        }`}
+                          }`}
                       >
                         {cat.name}
                       </span>
@@ -178,8 +206,49 @@ export default function ProductsPage() {
 
             <div className="mt-8">
               <h2 className="mb-4 flex items-center gap-2 font-medium text-gray-900">
+                <Banknote className="h-4 w-4" />
+                {t("products_page.filters.price")}
+              </h2>
+              <div className="flex flex-col gap-3 mt-2">
+                <label className="flex items-center gap-3 cursor-pointer group">
+                  <input
+                    type="checkbox"
+                    checked={!priceRangeId}
+                    onChange={() => handlePriceSelect("")}
+                    className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
+                  />
+                  <span
+                    className={`text-sm font-medium transition-colors ${!priceRangeId ? "text-primary" : "text-gray-600 group-hover:text-gray-900"
+                      }`}
+                  >
+                    {t("products_page.filters.all_prices")}
+                  </span>
+                </label>
+                {PRICE_RANGES.map((pr) => (
+                  <label key={pr.id} className="flex items-center gap-3 cursor-pointer group">
+                    <input
+                      type="checkbox"
+                      checked={priceRangeId === pr.id}
+                      onChange={() => handlePriceSelect(priceRangeId === pr.id ? "" : pr.id)}
+                      className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
+                    />
+                    <span
+                      className={`text-sm font-medium transition-colors ${priceRangeId === pr.id
+                          ? "text-primary"
+                          : "text-gray-600 group-hover:text-gray-900"
+                        }`}
+                    >
+                      {pr.label}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <div className="mt-8">
+              <h2 className="mb-4 flex items-center gap-2 font-medium text-gray-900">
                 <Filter className="h-4 w-4" />
-                Mệnh (Hành)
+                {t("products_page.filters.element")}
               </h2>
               <div className="flex flex-col gap-3 mt-2">
                 <label className="flex items-center gap-3 cursor-pointer group">
@@ -190,11 +259,10 @@ export default function ProductsPage() {
                     className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
                   />
                   <span
-                    className={`text-sm font-medium transition-colors ${
-                      !element ? "text-primary" : "text-gray-600 group-hover:text-gray-900"
-                    }`}
+                    className={`text-sm font-medium transition-colors ${!element ? "text-primary" : "text-gray-600 group-hover:text-gray-900"
+                      }`}
                   >
-                    Tất cả các mệnh
+                    {t("products_page.filters.all_elements")}
                   </span>
                 </label>
                 {FS_ELEMENTS.map((el) => (
@@ -206,11 +274,10 @@ export default function ProductsPage() {
                       className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
                     />
                     <span
-                      className={`text-sm font-medium transition-colors ${
-                        element === el.code
+                      className={`text-sm font-medium transition-colors ${element === el.code
                           ? "text-primary"
                           : "text-gray-600 group-hover:text-gray-900"
-                      }`}
+                        }`}
                     >
                       {el.label}
                     </span>
@@ -229,19 +296,19 @@ export default function ProductsPage() {
                 <div className="h-6 w-48 rounded bg-gray-200 animate-pulse" />
               ) : (
                 <h1 className="text-lg font-medium text-gray-900">
-                  {selectedCategoryName ? selectedCategoryName : "Tất cả sản phẩm"}{" "}
+                  {selectedCategoryName ? selectedCategoryName : t("products_page.filters.all_products")}{" "}
                   <span className="text-sm text-gray-600">({sortedProducts.length})</span>
                 </h1>
               )}
               {search && (
                 <p className="mt-1 flex items-center gap-2 text-sm text-gray-600">
-                  Kết quả tìm kiếm cho:{" "}
+                  {t("products_page.search_results_for")}{" "}
                   <span className="font-semibold text-gray-900">"{search}"</span>
                   <button
                     onClick={handleSearchReset}
                     className="ml-2 text-xs text-primary hover:underline cursor-pointer"
                   >
-                    Xóa tìm kiếm
+                    {t("products_page.clear_search")}
                   </button>
                 </p>
               )}
@@ -249,17 +316,17 @@ export default function ProductsPage() {
             {!loading && (
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm text-gray-600">Sắp xếp theo:</span>
+                  <span className="text-sm text-gray-600">{t("products_page.sort_by")}</span>
                   <select
                     value={sort}
                     onChange={handleSortChange}
                     className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer"
                   >
-                    <option value="default">Mặc định</option>
-                    <option value="name-asc">Tên A-Z</option>
-                    <option value="name-desc">Tên Z-A</option>
-                    <option value="price-asc">Giá tăng dần</option>
-                    <option value="price-desc">Giá giảm dần</option>
+                    <option value="default">{t("products_page.sort.default")}</option>
+                    <option value="name-asc">{t("products_page.sort.name_asc")}</option>
+                    <option value="name-desc">{t("products_page.sort.name_desc")}</option>
+                    <option value="price-asc">{t("products_page.sort.price_asc")}</option>
+                    <option value="price-desc">{t("products_page.sort.price_desc")}</option>
                   </select>
                 </div>
               </div>
@@ -281,22 +348,24 @@ export default function ProductsPage() {
           ) : (
             <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-gray-200 bg-gray-50 py-20 text-center">
               <SearchX className="h-12 w-12 text-gray-300" />
-              <h3 className="mt-4 text-lg font-medium text-gray-900">Không tìm thấy sản phẩm</h3>
+              <h3 className="mt-4 text-lg font-medium text-gray-900">{t("products_page.empty.title")}</h3>
               <p className="mt-1 text-sm text-gray-500">
-                Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm.
+                {t("products_page.empty.desc")}
               </p>
-              {(search || categoryId || element) && (
+              {(search || categoryId || element || priceRangeId) && (
                 <button
                   onClick={() => setSearchParams({})}
-                  className="mt-6 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-dark"
+                  className="mt-6 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-dark cursor-pointer"
                 >
-                  Xóa tất cả bộ lọc
+                  {t("products_page.empty.clear_all")}
                 </button>
               )}
             </div>
           )}
         </div>
       </div>
+      <FeatureBar />
+      <CommitmentPage />
     </div>
   );
 }

@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 
 export interface ModalProps {
   open: boolean;
-  title?: string;
+  title?: React.ReactNode;
   onClose: () => void;
   children: React.ReactNode;
   size?: string;
@@ -76,9 +76,9 @@ export default function Modal({ open, title, onClose, children, size }: ModalPro
           >
             <div className="flex shrink-0 items-center justify-between border-b border-gray-100 px-4 py-3 sm:px-6 sm:py-4">
               {title ? (
-                <h2 id="modal-title" className="text-base font-bold text-gray-900 sm:text-lg">
+                <div id="modal-title" className="text-base font-bold text-gray-900 sm:text-lg">
                   {title}
-                </h2>
+                </div>
               ) : (
                 <span />
               )}

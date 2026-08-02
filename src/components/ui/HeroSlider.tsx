@@ -55,7 +55,7 @@ export default function HeroSlider({ slides }: HeroSliderProps) {
                 </span>
 
                 <h2 className="mb-2 text-2xl font-black leading-tight text-white drop-shadow-md sm:mb-3 sm:text-4xl md:text-5xl">
-                  {slide.title} <span className="text-green-400">{slide.highlight}</span>
+                  {slide.title} <span className="text-primary-light">{slide.highlight}</span>
                 </h2>
 
                 <p className="mb-1 line-clamp-2 text-xs text-white/80 sm:text-sm">{slide.desc1}</p>

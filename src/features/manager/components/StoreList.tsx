@@ -1,4 +1,4 @@
-import { Store as StoreIcon, RefreshCw, Phone, Clock, Edit, Trash2 } from "lucide-react";
+import { Store as StoreIcon, Loader2, Phone, Clock, Edit, Trash2 } from "lucide-react";
 import type { Shop } from "@/features/shop/types/shop";
 
 interface StoreListProps {
@@ -27,9 +27,9 @@ export function StoreList({
         </h3>
 
         {loading ? (
-          <div className="flex flex-col items-center justify-center py-12 gap-2">
-            <RefreshCw className="h-6 w-6 text-primary animate-spin" />
-            <p className="text-xs text-gray-400">Đang tải cửa hàng...</p>
+          <div className="flex flex-col items-center justify-center py-20 gap-3">
+            <Loader2 className="h-8 w-8 text-primary animate-spin" />
+            <p className="text-sm text-gray-400 font-medium">Đang tải cửa hàng...</p>
           </div>
         ) : stores.length === 0 ? (
           <div className="text-center py-10 text-gray-400 text-sm">

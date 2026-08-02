@@ -34,40 +34,43 @@ import type {
 } from "@/features/return/types/return.d.ts";
 import type { OrderLineItem } from "@/features/orders/types/orders";
 import { useAddressDetail } from "@/features/users/hooks/useAddress";
+import { useTranslation } from "react-i18next";
 
-const RETURN_TYPE_OPTIONS: { value: ReturnType; label: string }[] = [
-  { value: "Refund", label: "Hoàn tiền" },
-  { value: "Exchange", label: "Đổi hàng" },
+const getReturnTypeOptions = (t: any) => [
+  { value: "Refund", label: t("order_detail.return_modal.types.refund") },
+  { value: "Exchange", label: t("order_detail.return_modal.types.exchange") },
 ];
 
-const REASON_OPTIONS: { value: ReturnReason; label: string }[] = [
-  { value: "PlantHealth", label: "Tình trạng cây trồng/Sản phẩm lỗi" },
-  { value: "WrongItem", label: "Sai sản phẩm" },
-  { value: "DamagedPackage", label: "Hư hỏng trong vận chuyển" },
-  { value: "NotAsDescribed", label: "Không đúng mô tả" },
+const getReasonOptions = (t: any) => [
+  { value: "PlantHealth", label: t("order_detail.return_modal.reasons.plant_health") },
+  { value: "WrongItem", label: t("order_detail.return_modal.reasons.wrong_item") },
+  { value: "DamagedPackage", label: t("order_detail.return_modal.reasons.damaged_package") },
+  { value: "NotAsDescribed", label: t("order_detail.return_modal.reasons.not_as_described") },
 ];
 
-const DELIVERY_STATUS_LABEL: Record<string, { label: string; pillClass: string }> = {
-  Pending: { label: "Đang chờ", pillClass: "bg-amber-50 text-amber-700 border border-amber-200" },
+const getDeliveryStatusLabel = (t: any) => ({
+  Pending: { label: t("order_detail.delivery_status.pending"), pillClass: "bg-amber-50 text-amber-700 border border-amber-200" },
   Confirmed: {
-    label: "Đã xác nhận",
+    label: t("order_detail.delivery_status.confirmed"),
     pillClass: "bg-indigo-50 text-indigo-700 border border-indigo-200",
   },
   Preparing: {
-    label: "Đang chuẩn bị",
+    label: t("order_detail.delivery_status.preparing"),
     pillClass: "bg-blue-50 text-blue-700 border border-blue-200",
   },
   Shipped: {
-    label: "Đang giao hàng",
+    label: t("order_detail.delivery_status.shipped"),
     pillClass: "bg-blue-50 text-blue-700 border border-blue-200",
   },
   Delivered: {
-    label: "Đã giao hàng",
+    label: t("order_detail.delivery_status.delivered"),
     pillClass: "bg-emerald-50 text-emerald-700 border border-emerald-200",
   },
-  Cancelled: { label: "Đã hủy", pillClass: "bg-red-50 text-red-600 border border-red-200" },
-  Returned: { label: "Đã trả hàng", pillClass: "bg-red-50 text-red-600 border border-red-200" },
-};
+  Cancelled: { label: t("order_detail.delivery_status.cancelled"), pillClass: "bg-red-50 text-red-600 border border-red-200" },
+  Returned: { label: t("order_detail.delivery_status.returned"), pillClass: "bg-red-50 text-red-600 border border-red-200" },
+});
+
+
 
 interface SelectedItem {
   orderItemId: string;
@@ -82,6 +85,7 @@ interface ReturnModalState {
 }
 
 export default function OrderDetailPage() {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { currentOrder, detailStatus } = useOrderDetail(id);
@@ -182,7 +186,7 @@ export default function OrderDetailPage() {
         setImageUrls(prev => [...prev, ...newUrls].slice(0, 3));
       }
     } catch (err) {
-      toast.error("Tải ảnh lên thất bại");
+      toast.error(t("order_detail.toast.upload_error"));
     } finally {
       setUploadingImage(false);
     }
@@ -196,7 +200,7 @@ export default function OrderDetailPage() {
     if (!returnModal.deliveryId) return;
     const checkedItems = Object.values(selectedItems);
     if (checkedItems.length === 0) {
-      toast.error("Vui lòng chọn ít nhất một sản phẩm để trả.");
+      toast.error(t("order_detail.toast.no_item_selected"));
       return;
     }
     setSubmittingReturn(true);
@@ -220,13 +224,13 @@ export default function OrderDetailPage() {
       };
       const res = await returnApi.createReturn(payload);
       if (res.data.isSuccess) {
-        toast.success("Gửi yêu cầu trả hàng thành công!");
+        toast.success(t("order_detail.toast.return_success"));
         closeReturnModal();
       } else {
-        toast.error(res.data.message || "Không thể gửi yêu cầu trả hàng");
+        toast.error(res.data.message || t("order_detail.toast.return_error"));
       }
     } catch (err: any) {
-      toast.error(err?.response?.data?.message || "Có lỗi xảy ra khi gửi yêu cầu");
+      toast.error(err?.response?.data?.message || t("order_detail.toast.return_exception"));
     } finally {
       setSubmittingReturn(false);
     }
@@ -237,10 +241,10 @@ export default function OrderDetailPage() {
     setCancelling(true);
     try {
       await cancelOrderMutation.mutateAsync(id);
-      toast.success("Đã hủy đơn hàng");
+      toast.success(t("order_detail.toast.cancel_success"));
       setIsCancelModalOpen(false);
     } catch {
-      toast.error("Không thể hủy đơn hàng");
+      toast.error(t("order_detail.toast.cancel_error"));
     } finally {
       setCancelling(false);
     }
@@ -264,12 +268,12 @@ export default function OrderDetailPage() {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center">
         <Package className="mb-3 h-12 w-12 text-gray-300" />
-        <p className="text-gray-600">Không tìm thấy đơn hàng</p>
+        <p className="text-gray-600">{t("order_detail.not_found")}</p>
         <Link
           to="/profile/orders"
           className="mt-4 text-sm font-medium text-primary hover:underline"
         >
-          Quay lại danh sách
+          {t("order_detail.back_to_list")}
         </Link>
       </div>
     );
@@ -296,14 +300,14 @@ export default function OrderDetailPage() {
     if (order.status === "Cancelled") {
       return [
         {
-          label: "Đơn đã đặt",
+          label: t("order_detail.steps.placed"),
           date: order.createdAt,
           completed: true,
           isError: false,
           icon: <ClipboardList className="h-4 w-4" />,
         },
         {
-          label: "Đã hủy",
+          label: t("order_detail.steps.cancelled"),
           date: order.statusLogs?.find((l: any) => l.toStatus === "Cancelled")?.changedAt,
           completed: true,
           isError: true,
@@ -314,14 +318,14 @@ export default function OrderDetailPage() {
     if (order.status === "Expired") {
       return [
         {
-          label: "Đơn đã đặt",
+          label: t("order_detail.steps.placed"),
           date: order.createdAt,
           completed: true,
           isError: false,
           icon: <ClipboardList className="h-4 w-4" />,
         },
         {
-          label: "Đã hết hạn",
+          label: t("order_detail.steps.expired"),
           date: order.statusLogs?.find((l: any) => l.toStatus === "Expired")?.changedAt,
           completed: true,
           isError: true,
@@ -331,13 +335,14 @@ export default function OrderDetailPage() {
     }
 
     const steps: { id: string; label: string; icon: React.ReactNode }[] = [
-      { id: "Pending", label: "Đơn đã đặt", icon: <ClipboardList className="h-4 w-4" /> },
+      { id: "Pending", label: t("order_detail.steps.placed"), icon: <ClipboardList className="h-4 w-4" /> },
     ];
     if (order.paymentMethod === "PayOS") {
-      steps.push({ id: "Paid", label: "Đã thanh toán", icon: <CreditCard className="h-4 w-4" /> });
+      steps.push({ id: "Paid", label: t("order_detail.steps.paid"), icon: <CreditCard className="h-4 w-4" /> });
     }
-    steps.push({ id: "Processing", label: "Đang xử lý", icon: <Package className="h-4 w-4" /> });
-    steps.push({ id: "Completed", label: "Hoàn thành", icon: <CheckCircle className="h-4 w-4" /> });
+    steps.push({ id: "Processing", label: t("order_detail.steps.processing"), icon: <Package className="h-4 w-4" /> });
+    steps.push({ id: "Shipping", label: t("order_detail.steps.shipping"), icon: <Truck className="h-4 w-4" /> });
+    steps.push({ id: "Completed", label: t("order_detail.steps.completed"), icon: <CheckCircle className="h-4 w-4" /> });
 
     let currentIdx = steps.findIndex((s) => s.id === order.status);
     if (order.status === "Completed") currentIdx = steps.length - 1;
@@ -360,8 +365,11 @@ export default function OrderDetailPage() {
 
   const steps = getSteps();
 
-  // Determine active step index (first incomplete, or last if all done)
-  const activeIdx = steps.findIndex((s, i) => s.completed && !steps[i + 1]?.completed);
+  // Bước "đang tiến hành" = bước ĐẦU TIÊN chưa hoàn thành (ngay sau bước cuối đã xong).
+  // Nếu không còn bước nào dang dở (đã Completed, hoặc Cancelled/Expired đã chốt) → không có bước active.
+  const activeIdx = steps.findIndex((s) => !s.completed);
+  // Mốc đã "đi qua" (đã xong hoặc đang là bước active) — dùng để tô màu đường nối giữa các bước.
+  const reachedIdx = activeIdx === -1 ? steps.length - 1 : activeIdx;
 
   return (
     <div>
@@ -371,7 +379,7 @@ export default function OrderDetailPage() {
         className="mb-4 flex items-center gap-1.5 text-sm font-medium text-gray-500 hover:text-primary cursor-pointer"
       >
         <ChevronLeft className="h-4 w-4" />
-        Quay lại đơn hàng
+        {t("order_detail.back")}
       </button>
 
       <div className="flex flex-col gap-3">
@@ -408,7 +416,7 @@ export default function OrderDetailPage() {
                   {statusMeta.label}
                 </p>
                 <p className="text-xs text-gray-500 mt-0.5">
-                  Đặt lúc {formatOrderDate(order.createdAt)}
+                  {t("order_detail.placed_at")} {formatOrderDate(order.createdAt)}
                 </p>
               </div>
             </div>
@@ -423,25 +431,27 @@ export default function OrderDetailPage() {
               {steps.map((step, idx) => {
                 const isLast = idx === steps.length - 1;
                 const isActive = idx === activeIdx;
-                const lineRight = !isLast && steps[idx + 1]?.completed;
+                // Đường nối tô màu primary nếu cả 2 đầu đều đã "đi qua" (đã xong hoặc là bước active).
+                const leftReached = idx <= reachedIdx;
+                const rightReached = idx < reachedIdx;
 
                 return (
                   <div key={idx} className="flex-1 flex flex-col items-center gap-2">
                     <div className="w-full flex items-center">
                       {/* left line */}
                       <div
-                        className={`flex-1 h-0.5 ${idx === 0 ? "invisible" : step.isError ? "bg-red-400" : step.completed ? "bg-primary" : "bg-gray-100"}`}
+                        className={`flex-1 h-0.5 ${idx === 0 ? "invisible" : step.isError ? "bg-red-400" : leftReached ? "bg-primary" : "bg-gray-100"}`}
                       />
-                      {/* dot */}
+                      {/* dot: đã xong (tô đậm) ưu tiên trước — đang tiến hành (viền sáng) chỉ áp dụng cho bước kế tiếp chưa xong */}
                       <div
                         className={[
                           "w-9 h-9 rounded-full flex items-center justify-center shrink-0 z-10 transition-all",
                           step.isError
                             ? "bg-red-500 text-white"
-                            : isActive
-                              ? "bg-white border-2 border-primary text-primary shadow-[0_0_0_4px_#ede9fe]"
-                              : step.completed
-                                ? "bg-primary text-white"
+                            : step.completed
+                              ? "bg-primary text-white"
+                              : isActive
+                                ? "bg-white border-2 border-primary text-primary shadow-[0_0_0_4px_#ede9fe]"
                                 : "bg-gray-100 text-gray-400 border border-gray-200",
                         ].join(" ")}
                       >
@@ -449,7 +459,7 @@ export default function OrderDetailPage() {
                       </div>
                       {/* right line */}
                       <div
-                        className={`flex-1 h-0.5 ${isLast ? "invisible" : step.isError ? "bg-red-400" : lineRight ? "bg-primary" : "bg-gray-100"}`}
+                        className={`flex-1 h-0.5 ${isLast ? "invisible" : step.isError ? "bg-red-400" : rightReached ? "bg-primary" : "bg-gray-100"}`}
                       />
                     </div>
                     <div className="text-center px-1">
@@ -483,7 +493,7 @@ export default function OrderDetailPage() {
           <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
             <div className="flex items-center gap-2 text-sm font-semibold text-gray-800">
               <Store className="h-4 w-4 text-primary" />
-              Sản phẩm
+              {t("order_detail.product.title")}
             </div>
           </div>
 
@@ -507,7 +517,7 @@ export default function OrderDetailPage() {
                 </div>
                 <div className="text-right shrink-0">
                   <p className="text-sm font-semibold text-gray-900">{formatVnd(item.lineTotal)}</p>
-                  <p className="text-xs text-gray-400 mt-0.5">{formatVnd(item.unitPrice)} / cái</p>
+                  <p className="text-xs text-gray-400 mt-0.5">{formatVnd(item.unitPrice)} {t("order_detail.product.per_item")}</p>
                 </div>
               </li>
             ))}
@@ -517,29 +527,29 @@ export default function OrderDetailPage() {
           <div className="border-t border-dashed border-gray-200 mt-1 mx-4" />
           <div className="px-4 py-1.5 space-y-1 mt-1">
             <div className="flex justify-between text-sm text-gray-500">
-              <span>Tạm tính</span>
+              <span>{t("order_detail.product.subtotal")}</span>
               <span>{formatVnd(order.subtotal)}</span>
             </div>
             <div className="flex justify-between text-sm text-gray-500">
-              <span>Phí vận chuyển</span>
+              <span>{t("order_detail.product.shipping_fee")}</span>
               <span>
-                {order.totalShippingFee != null ? formatVnd(order.totalShippingFee) : "Chưa tính"}
+                {order.totalShippingFee != null ? formatVnd(order.totalShippingFee) : t("order_detail.product.uncalculated")}
               </span>
             </div>
           </div>
           <div className="flex justify-between items-center px-4 py-3 border-t border-dashed border-gray-200 mt-1">
-            <span className="text-sm font-semibold text-gray-800">Thành tiền</span>
+            <span className="text-sm font-semibold text-gray-800">{t("order_detail.product.total")}</span>
             <span className="text-lg font-bold text-primary">{formatVnd(order.totalAmount)}</span>
           </div>
 
           {/* Payment method row */}
           <div className="flex items-center gap-2 px-4 py-3 border-t border-gray-100 text-sm text-gray-500">
             <CreditCard className="h-4 w-4 text-primary shrink-0" />
-            <span>Thanh toán qua</span>
+            <span>{t("order_detail.product.payment_method")}</span>
             <span className="font-semibold text-gray-800">{order.paymentMethod}</span>
             {order.status !== "Pending" && order.paymentMethod === "PayOS" && (
               <span className="ml-auto text-xs font-medium bg-violet-50 text-violet-700 border border-violet-200 px-2.5 py-0.5 rounded-full">
-                Đã thanh toán
+                {t("order_detail.product.paid")}
               </span>
             )}
           </div>
@@ -551,7 +561,7 @@ export default function OrderDetailPage() {
             <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
               <div className="flex items-center gap-2 text-sm font-semibold text-gray-800">
                 <Truck className="h-4 w-4 text-primary" />
-                Đơn giao hàng
+                {t("order_detail.delivery.title")}
               </div>
               {hasReturnableDelivery && (
                 <button
@@ -559,14 +569,14 @@ export default function OrderDetailPage() {
                   className="flex items-center gap-1.5 text-xs font-semibold text-orange-600 bg-orange-50 border border-orange-200 px-3 py-1.5 rounded-lg hover:bg-orange-100 transition-colors cursor-pointer"
                 >
                   <RotateCcw className="h-3.5 w-3.5" />
-                  Yêu cầu trả hàng
+                  {t("order_detail.delivery.request_return")}
                 </button>
               )}
             </div>
 
             <div className="divide-y divide-gray-100">
               {deliveries.map((delivery) => {
-                const statusInfo = DELIVERY_STATUS_LABEL[delivery.status] ?? {
+                const statusInfo = getDeliveryStatusLabel(t)[delivery.status as keyof ReturnType<typeof getDeliveryStatusLabel>] ?? {
                   label: delivery.status,
                   pillClass: "bg-gray-100 text-gray-600",
                 };
@@ -594,7 +604,7 @@ export default function OrderDetailPage() {
                       )}
                       {delivery.shippingProvider && (
                         <p className="text-xs text-gray-500 mt-0.5">
-                          Đơn vị vận chuyển :{" "}
+                          {t("order_detail.delivery.shipping_provider")} {" "}
                           <span className="font-medium text-gray-700">
                             {delivery.shippingProvider}
                           </span>
@@ -604,8 +614,8 @@ export default function OrderDetailPage() {
                         <span className="mt-1.5 inline-flex items-center gap-1 text-xs font-medium text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded">
                           <span className="h-1.5 w-1.5 rounded-full bg-amber-400 inline-block" />
                           {returnRequest.status === "Requested"
-                            ? "Đang chờ xử lý trả hàng"
-                            : "Đang xử lý trả hàng"}
+                            ? t("order_detail.delivery.return_pending")
+                            : t("order_detail.delivery.return_processing")}
                         </span>
                       )}
                     </div>
@@ -618,7 +628,7 @@ export default function OrderDetailPage() {
                           className="flex items-center gap-1 text-xs font-semibold text-orange-600 bg-orange-50 border border-orange-200 px-2.5 py-1 rounded-lg hover:bg-orange-100 transition-colors cursor-pointer"
                         >
                           <RotateCcw className="h-3 w-3" />
-                          Trả
+                          {t("order_detail.delivery.return_btn")}
                         </button>
                       )}
                       <span
@@ -639,7 +649,7 @@ export default function OrderDetailPage() {
           <div className="rounded-xl bg-white border border-gray-100 overflow-hidden">
             <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-100 text-sm font-semibold text-gray-800">
               <MapPin className="h-4 w-4 text-primary" />
-              Địa chỉ nhận hàng
+              {t("order_detail.address")}
             </div>
             <div className="px-4 py-3.5">
               <div className="flex items-center gap-2 mb-1.5">
@@ -667,7 +677,7 @@ export default function OrderDetailPage() {
             <div className="flex gap-3 px-4 py-3.5 items-start">
               <StickyNote className="h-4 w-4 text-gray-400 mt-0.5 shrink-0" />
               <div>
-                <p className="text-xs font-semibold text-gray-400 mb-1">Ghi chú</p>
+                <p className="text-xs font-semibold text-gray-400 mb-1">{t("order_detail.note")}</p>
                 <p className="text-sm text-gray-600">{order.note}</p>
               </div>
             </div>
@@ -684,7 +694,7 @@ export default function OrderDetailPage() {
                 className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-primary text-white text-sm font-semibold py-2.5 hover:bg-primary/90 cursor-pointer transition-colors"
               >
                 <CreditCard className="h-4 w-4" />
-                Thanh toán ngay
+                {t("order_detail.actions.pay_now")}
               </button>
             )}
 
@@ -695,7 +705,7 @@ export default function OrderDetailPage() {
                 className="flex-1 flex items-center justify-center gap-2 rounded-lg border border-orange-300 text-orange-600 bg-orange-50 text-sm font-semibold py-2.5 hover:bg-orange-100 cursor-pointer transition-colors"
               >
                 <RotateCcw className="h-4 w-4" />
-                Trả hàng
+                {t("order_detail.actions.return")}
               </button>
             )}
 
@@ -710,7 +720,7 @@ export default function OrderDetailPage() {
               className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-primary text-white text-sm font-semibold py-2.5 hover:bg-primary/90 cursor-pointer transition-colors"
             >
               <ShoppingCart className="h-4 w-4" />
-              Mua lại
+              {t("order_detail.actions.buy_again")}
             </button>
 
             {/* Cancel */}
@@ -720,7 +730,7 @@ export default function OrderDetailPage() {
                 className="flex items-center justify-center gap-1.5 rounded-lg border border-gray-200 text-gray-500 text-sm font-medium px-3 py-2.5 hover:bg-gray-50 cursor-pointer transition-colors"
               >
                 <X className="h-4 w-4" />
-                Hủy
+                {t("order_detail.actions.cancel")}
               </button>
             )}
           </div>
@@ -736,24 +746,24 @@ export default function OrderDetailPage() {
       {/* ── Cancel Modal ── */}
       <Modal
         open={isCancelModalOpen}
-        title="Hủy đơn hàng"
+        title={t("order_detail.cancel_modal.title")}
         onClose={() => setIsCancelModalOpen(false)}
       >
         <div className="space-y-4">
-          <p className="text-sm text-gray-600">Bạn có chắc chắn muốn hủy đơn hàng này?</p>
+          <p className="text-sm text-gray-600">{t("order_detail.cancel_modal.desc")}</p>
           <div className="flex gap-3">
             <button
               onClick={() => setIsCancelModalOpen(false)}
               className="flex-1 rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 cursor-pointer"
             >
-              Không
+              {t("order_detail.cancel_modal.no")}
             </button>
             <button
               onClick={handleCancel}
               disabled={cancelling}
               className="flex-1 rounded-lg bg-red-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-60 cursor-pointer"
             >
-              {cancelling ? "Đang hủy..." : "Hủy đơn"}
+              {cancelling ? t("order_detail.cancel_modal.cancelling") : t("order_detail.cancel_modal.confirm")}
             </button>
           </div>
         </div>
@@ -764,7 +774,7 @@ export default function OrderDetailPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
           <div className="relative w-full max-w-sm bg-white rounded-2xl shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
             <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4 bg-orange-50/60">
-              <h3 className="text-base font-bold text-gray-900">Chọn đơn giao hàng</h3>
+              <h3 className="text-base font-bold text-gray-900">{t("order_detail.delivery_picker.title")}</h3>
               <button
                 onClick={() => setDeliveryPickerOpen(false)}
                 className="rounded-full p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors cursor-pointer"
@@ -791,13 +801,13 @@ export default function OrderDetailPage() {
                   )}
                   {delivery.shippingProvider && (
                     <p className="text-xs text-gray-500 mt-0.5">
-                      ĐVVC:{" "}
+                      {t("order_detail.delivery.shipping_provider_short")}{" "}
                       <span className="font-medium text-gray-700">{delivery.shippingProvider}</span>
                     </p>
                   )}
                   <span className="mt-1.5 inline-flex items-center gap-1 text-xs font-semibold text-emerald-600">
                     <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 inline-block" />
-                    Đã giao hàng
+                    {t("order_detail.delivery.delivered")}
                   </span>
                 </button>
               ))}
@@ -807,7 +817,7 @@ export default function OrderDetailPage() {
                 onClick={() => setDeliveryPickerOpen(false)}
                 className="w-full rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
               >
-                Hủy
+                {t("order_detail.delivery_picker.cancel")}
               </button>
             </div>
           </div>
@@ -821,9 +831,9 @@ export default function OrderDetailPage() {
             <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4 bg-orange-50/60">
               <div>
                 <span className="text-xs font-bold text-orange-500 uppercase tracking-wide">
-                  Trả hàng / Hoàn tiền
+                  {t("order_detail.return_modal.tag")}
                 </span>
-                <h3 className="text-base font-bold text-gray-900 mt-0.5">Yêu cầu trả hàng</h3>
+                <h3 className="text-base font-bold text-gray-900 mt-0.5">{t("order_detail.return_modal.title")}</h3>
               </div>
               <button
                 onClick={closeReturnModal}
@@ -838,7 +848,7 @@ export default function OrderDetailPage() {
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <label className="text-xs font-semibold text-gray-600">
-                    Chọn sản phẩm muốn trả <span className="text-red-500">*</span>
+                    {t("order_detail.return_modal.select_product")} <span className="text-red-500">*</span>
                   </label>
                   {returnModal.items.length > 0 && (
                     <button
@@ -847,14 +857,14 @@ export default function OrderDetailPage() {
                       className="flex items-center gap-1 text-xs font-semibold text-orange-500 hover:text-orange-600 cursor-pointer"
                     >
                       <CheckSquare className="h-3.5 w-3.5" />
-                      {allSelected ? "Bỏ chọn tất cả" : "Chọn tất cả"}
+                      {allSelected ? t("order_detail.return_modal.deselect_all") : t("order_detail.return_modal.select_all")}
                     </button>
                   )}
                 </div>
 
                 {returnModal.items.length === 0 ? (
                   <p className="text-sm text-gray-400 italic py-3 text-center">
-                    Không tìm thấy sản phẩm nào trong đơn giao này.
+                    {t("order_detail.return_modal.no_product")}
                   </p>
                 ) : (
                   <div className="rounded-xl border border-gray-100 overflow-hidden divide-y divide-gray-100">
@@ -934,10 +944,10 @@ export default function OrderDetailPage() {
               {/* Return type */}
               <div>
                 <label className="block text-xs font-semibold text-gray-600 mb-1.5">
-                  Hình thức <span className="text-red-500">*</span>
+                  {t("order_detail.return_modal.type")} <span className="text-red-500">*</span>
                 </label>
                 <div className="grid grid-cols-2 gap-2">
-                  {RETURN_TYPE_OPTIONS.map((opt) => (
+                  {getReturnTypeOptions(t).map((opt) => (
                     <button
                       key={opt.value}
                       type="button"
@@ -957,14 +967,14 @@ export default function OrderDetailPage() {
               {/* Reason */}
               <div>
                 <label className="block text-xs font-semibold text-gray-600 mb-1.5">
-                  Lý do <span className="text-red-500">*</span>
+                  {t("order_detail.return_modal.reason")} <span className="text-red-500">*</span>
                 </label>
                 <select
                   value={returnReason}
                   onChange={(e) => setReturnReason(e.target.value as ReturnReason)}
                   className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-700 focus:border-orange-400 focus:outline-none focus:ring-1 focus:ring-orange-200 transition-all"
                 >
-                  {REASON_OPTIONS.map((opt) => (
+                  {getReasonOptions(t).map((opt) => (
                     <option key={opt.value} value={opt.value}>
                       {opt.label}
                     </option>
@@ -975,12 +985,12 @@ export default function OrderDetailPage() {
               {/* Reason detail */}
               <div>
                 <label className="block text-xs font-semibold text-gray-600 mb-1.5">
-                  Mô tả thêm
+                  {t("order_detail.return_modal.reason_detail")}
                 </label>
                 <textarea
                   value={reasonDetail}
                   onChange={(e) => setReasonDetail(e.target.value)}
-                  placeholder="Mô tả chi tiết vấn đề của bạn..."
+                  placeholder={t("order_detail.return_modal.reason_placeholder")}
                   rows={3}
                   className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-700 placeholder-gray-400 focus:border-orange-400 focus:outline-none focus:ring-1 focus:ring-orange-200 transition-all resize-none"
                 />
@@ -989,12 +999,12 @@ export default function OrderDetailPage() {
               {/* Images */}
               <div>
                 <label className="block text-xs font-semibold text-gray-600 mb-1.5">
-                  Hình ảnh minh chứng (tối đa 3 ảnh) <span className="text-red-500">*</span>
+                  {t("order_detail.return_modal.images")} <span className="text-red-500">*</span>
                 </label>
                 <div className="flex flex-wrap gap-3">
                   {imageUrls.map((url, idx) => (
                     <div key={idx} className="relative h-20 w-20 rounded-lg border border-gray-200 overflow-hidden group">
-                      <img src={url} alt="Minh chứng" className="h-full w-full object-cover" />
+                      <img src={url} alt={t("order_detail.return_modal.image_alt")} className="h-full w-full object-cover" />
                       <button
                         type="button"
                         onClick={() => removeImage(idx)}
@@ -1011,7 +1021,7 @@ export default function OrderDetailPage() {
                       ) : (
                         <>
                           <Upload className="h-5 w-5" />
-                          <span className="text-[10px] font-medium">Thêm ảnh</span>
+                          <span className="text-[10px] font-medium">{t("order_detail.return_modal.add_image")}</span>
                         </>
                       )}
                       <input
@@ -1031,10 +1041,10 @@ export default function OrderDetailPage() {
               {returnType === "Refund" && (
                 <div className="rounded-xl border border-blue-100 bg-blue-50/40 p-4 space-y-3">
                   <p className="text-xs font-bold text-blue-700 uppercase tracking-wide">
-                    Thông tin tài khoản ngân hàng (tuỳ chọn)
+                    {t("order_detail.return_modal.bank_info")}
                   </p>
                   <div>
-                    <label className="block text-xs text-gray-600 mb-1">Tên chủ tài khoản</label>
+                    <label className="block text-xs text-gray-600 mb-1">{t("order_detail.return_modal.account_name")}</label>
                     <input
                       type="text"
                       value={bankAccountName}
@@ -1044,7 +1054,7 @@ export default function OrderDetailPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs text-gray-600 mb-1">Số tài khoản</label>
+                    <label className="block text-xs text-gray-600 mb-1">{t("order_detail.return_modal.account_number")}</label>
                     <input
                       type="text"
                       value={bankAccountNumber}
@@ -1054,7 +1064,7 @@ export default function OrderDetailPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs text-gray-600 mb-1">Tên ngân hàng</label>
+                    <label className="block text-xs text-gray-600 mb-1">{t("order_detail.return_modal.bank_name")}</label>
                     <input
                       type="text"
                       value={bankName}
@@ -1073,7 +1083,7 @@ export default function OrderDetailPage() {
                 onClick={closeReturnModal}
                 className="flex-1 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
               >
-                Hủy
+                {t("order_detail.return_modal.cancel")}
               </button>
               <button
                 type="button"
@@ -1084,10 +1094,10 @@ export default function OrderDetailPage() {
                 {submittingReturn ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    Đang gửi...
+                    {t("order_detail.return_modal.submitting")}
                   </>
                 ) : (
-                  "Gửi yêu cầu"
+                  t("order_detail.return_modal.submit")
                 )}
               </button>
             </div>

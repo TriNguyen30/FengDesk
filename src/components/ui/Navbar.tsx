@@ -1,4 +1,5 @@
 import { Truck, Package, User, LogOut, Sparkles, Store, Bot } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -18,6 +19,7 @@ import { clearSession } from "@/utils";
 import Logo from "@/assets/image/fengdesk_logo_2.png";
 
 export default function Navbar() {
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
 
   const handleSearch = (query: string) => {
@@ -83,7 +85,7 @@ export default function Navbar() {
   const openAiAssistant = () => {
     if (!user) {
       dispatch(setAuthModal("login"));
-      toast.info("Vui lòng đăng nhập để dùng trợ lý AI");
+      toast.info(t("navbar.login_required_ai"));
       return;
     }
     setAiOpen(true);
@@ -107,7 +109,7 @@ export default function Navbar() {
     } finally {
       clearSession();
       dispatch(logout());
-      toast.success("Đăng xuất thành công");
+      toast.success(t("navbar.logout_success"));
     }
   };
 
@@ -159,21 +161,35 @@ export default function Navbar() {
               <Truck size={13} className="shrink-0" />
               <span className="font-medium">
                 {/* Short on mobile, full on sm+ */}
-                <span className="sm:hidden">Freeship từ 500k</span>
-                <span className="hidden sm:inline">Miễn phí vận chuyển từ 500.000đ</span>
+                <span className="sm:hidden">{t("navbar.promo_freeship_short")}</span>
+                <span className="hidden sm:inline">{t("navbar.promo_freeship_long")}</span>
               </span>
             </div>
             <div className="hidden items-center gap-1.5 md:flex">
               <Package size={13} className="shrink-0" />
-              <span className="font-medium">Đổi trả trong 7 ngày</span>
+              <span className="font-medium">{t("navbar.promo_return")}</span>
             </div>
           </div>
-          <span className="shrink-0 font-medium">
-            <span className="sm:hidden">1900 1234</span>
-            <span className="hidden sm:inline">
-              Hỗ trợ: <strong>1900 1234</strong>
+          <div className="flex shrink-0 items-center gap-3 font-medium">
+            <span>
+              <span className="sm:hidden">1900 1234</span>
+              <span className="hidden sm:inline">
+                {t("navbar.promo_support")} <strong>1900 1234</strong>
+              </span>
             </span>
-          </span>
+            <div className="h-3 w-px bg-gray-300" />
+            <select
+              className="bg-transparent text-[11px] sm:text-xs text-gray-600 focus:outline-none cursor-pointer"
+              value={i18n.language}
+              onChange={(e) => {
+                i18n.changeLanguage(e.target.value);
+                localStorage.setItem("app_lang", e.target.value);
+              }}
+            >
+              <option value="vi">Tiếng Việt</option>
+              <option value="en">English</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -201,18 +217,20 @@ export default function Navbar() {
             <div className="flex-1 md:hidden" />
 
             {/* Icon group — always visible */}
-            <div className="flex shrink-0 items-center gap-1 sm:gap-3">
-              {user && <WorkspaceSwitcher />}
+            <div className="flex shrink-0 items-center gap-0.5 sm:gap-3">
+              <div className="hidden sm:block">
+                {user && <WorkspaceSwitcher />}
+              </div>
 
               <button
                 type="button"
                 onClick={openAiAssistant}
-                className="flex min-w-[44px] flex-col items-center gap-0.5 rounded-lg px-1 py-1 text-gray-700 transition-colors hover:text-primary cursor-pointer"
+                className="flex min-w-[36px] sm:min-w-[44px] flex-col items-center gap-0.5 rounded-lg px-1 py-1 text-gray-700 transition-colors hover:text-primary cursor-pointer"
                 aria-label="Trợ lý AI"
               >
                 <Bot size={22} strokeWidth={1.8} />
                 <span className="hidden text-[10px] font-medium sm:block sm:text-xs">
-                  Trợ lý AI
+                  {t("navbar.ai_assistant")}
                 </span>
               </button>
 
@@ -227,7 +245,7 @@ export default function Navbar() {
                 >
                   <button
                     type="button"
-                    className="flex min-w-[44px] flex-col items-center gap-0.5 rounded-lg px-1 py-1 text-gray-700 transition-colors hover:text-primary cursor-pointer"
+                    className="flex min-w-[36px] sm:min-w-[44px] flex-col items-center gap-0.5 rounded-lg px-1 py-1 text-gray-700 transition-colors hover:text-primary cursor-pointer"
                     aria-label="Tài khoản"
                     onClick={() => {
                       closeUserDropdown();
@@ -249,7 +267,7 @@ export default function Navbar() {
                     >
                       <div className="px-4 py-3 border-b border-gray-100 bg-gray-50/50">
                         <p className="text-sm font-semibold text-gray-900 truncate">
-                          {user.fullName || "Người dùng"}
+                          {user.fullName || t("navbar.default_user")}
                         </p>
                         <p className="text-xs text-gray-500 truncate">{user.email}</p>
                       </div>
@@ -261,7 +279,7 @@ export default function Navbar() {
                           }}
                           className="flex w-full items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 rounded-md transition-colors text-left font-medium cursor-pointer"
                         >
-                          Tài Khoản Của Tôi
+                          {t("navbar.my_account")}
                         </button>
                         <button
                           onClick={() => {
@@ -270,7 +288,7 @@ export default function Navbar() {
                           }}
                           className="flex w-full items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 rounded-md transition-colors text-left font-medium cursor-pointer"
                         >
-                          Không Gian Làm Việc
+                          {t("navbar.workspace")}
                         </button>
                         <button
                           onClick={() => {
@@ -279,7 +297,7 @@ export default function Navbar() {
                           }}
                           className="flex w-full items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 rounded-md transition-colors text-left font-medium cursor-pointer"
                         >
-                          Đơn Mua
+                          {t("navbar.orders")}
                         </button>
                         {/* Người bán đã có khu riêng ở switcher "Đổi khu" → avatar chỉ giữ CTA cho người chưa bán. */}
                         {!getRoles(user).includes("GardenOwner") && !hasSellerWorkspaceAccess && (
@@ -291,7 +309,7 @@ export default function Navbar() {
                             className="flex w-full items-center px-3 py-2 text-sm text-primary hover:bg-primary/5 rounded-md transition-colors text-left font-medium cursor-pointer"
                           >
                             <Store size={16} className="mr-2" />
-                            Trở thành người bán
+                            {t("navbar.become_seller")}
                           </button>
                         )}
 
@@ -303,7 +321,7 @@ export default function Navbar() {
                           className="flex w-full items-center px-3 py-2 text-sm text-red-600 hover:bg-red-50 hover:text-red-700 rounded-md transition-colors text-left font-medium cursor-pointer"
                         >
                           <LogOut size={16} className="mr-2" />
-                          Đăng xuất
+                          {t("navbar.logout")}
                         </button>
                       </div>
                     </div>
@@ -313,17 +331,17 @@ export default function Navbar() {
                 <button
                   type="button"
                   onClick={() => dispatch(setAuthModal("login"))}
-                  className="flex min-w-[44px] flex-col items-center gap-0.5 rounded-lg px-1 py-1 text-gray-700 transition-colors hover:text-primary active:bg-gray-100 cursor-pointer"
+                  className="flex min-w-[36px] sm:min-w-[44px] flex-col items-center gap-0.5 rounded-lg px-1 py-1 text-gray-700 transition-colors hover:text-primary active:bg-gray-100 cursor-pointer"
                   aria-label="Tài khoản"
                 >
                   <User size={22} strokeWidth={1.8} />
                   <span className="hidden text-[10px] font-medium sm:block sm:text-xs">
-                    Tài khoản
+                    {t("navbar.account")}
                   </span>
                 </button>
               )}
 
-              <div className="h-6 w-px bg-gray-200" />
+              <div className="hidden sm:block h-6 w-px bg-gray-200" />
 
               <CartDropDown />
             </div>

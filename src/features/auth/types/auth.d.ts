@@ -17,6 +17,11 @@ export interface LoginPayload {
   password: string;
 }
 
+export interface GoogleLoginPayload {
+  /** ID token (JWT "credential") trả về từ Google Identity Services ở FE. */
+  idToken: string;
+}
+
 export interface FengShui {
   element: string | null;
   kuaNumber: number | null;

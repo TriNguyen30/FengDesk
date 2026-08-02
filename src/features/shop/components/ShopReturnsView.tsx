@@ -14,8 +14,6 @@ import {
   XCircle,
   Package,
   Clock,
-  PackageCheck,
-  Banknote,
   FileWarning,
 } from "lucide-react";
 import { returnApi } from "@/features/return/api/return.api";
@@ -29,7 +27,7 @@ const RETURN_STATUS_META: Record<string, { label: string; className: string }> =
     className: "bg-amber-50 text-amber-600 border border-amber-200",
   },
   Reviewing: {
-    label: "Đang chờ xử lý",
+    label: "Đang xem xét",
     className: "bg-indigo-50 text-indigo-600 border border-indigo-200",
   },
   NeedMoreEvidence: {

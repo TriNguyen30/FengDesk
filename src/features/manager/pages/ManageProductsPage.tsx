@@ -13,6 +13,7 @@ import {
   XCircle,
   AlertCircle,
   Package,
+  Loader2,
 } from "lucide-react";
 import { useProductList, useDeleteProduct } from "@/features/products";
 import { getAllShopRequest } from "@/features/shop/api/shop.api";
@@ -25,6 +26,7 @@ import type { Tag } from "@/features/products/types/tag";
 import { generateSlug } from "@/utils/string";
 import { toast } from "sonner";
 import Modal from "@/components/ui/Modal";
+import { EditProductModal } from "@/features/manager/components";
 
 function formatVnd(n: number): string {
   return n.toLocaleString("vi-VN") + "đ";
@@ -49,6 +51,9 @@ export default function ManageProductsPage() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleteName, setDeleteName] = useState("");
   const [deleting, setDeleting] = useState(false);
+
+  // Edit modal state
+  const [editingProductId, setEditingProductId] = useState<string | null>(null);
 
   // Fetch filter options
   useEffect(() => {
@@ -221,8 +226,8 @@ export default function ManageProductsPage() {
         <div className="overflow-x-auto">
           {loading ? (
             <div className="flex flex-col items-center justify-center py-20 gap-3">
-              <RefreshCw className="h-8 w-8 text-primary animate-spin" />
-              <p className="text-sm font-medium text-gray-500">Đang tải danh sách sản phẩm...</p>
+              <Loader2 className="h-8 w-8 text-primary animate-spin" />
+              <p className="text-sm text-gray-400 font-medium">Đang tải danh sách sản phẩm...</p>
             </div>
           ) : products.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center px-4">
@@ -302,13 +307,13 @@ export default function ManageProductsPage() {
                           >
                             <Eye size={18} />
                           </Link>
-                          <Link
-                            to={`/manager/products/${product.id}/edit`}
+                          <button
+                            onClick={() => setEditingProductId(product.id)}
                             title="Chỉnh sửa sản phẩm"
                             className="inline-flex items-center justify-center p-2 rounded-lg text-primary hover:bg-primary/5 transition-colors cursor-pointer"
                           >
                             <Edit size={18} />
-                          </Link>
+                          </button>
                           <button
                             onClick={() => {
                               setDeleteId(product.id);
@@ -395,7 +400,7 @@ export default function ManageProductsPage() {
             >
               {deleting ? (
                 <>
-                  <RefreshCw size={14} className="animate-spin" />
+                  <Loader2 size={14} className="animate-spin" />
                   Đang xóa...
                 </>
               ) : (
@@ -405,6 +410,18 @@ export default function ManageProductsPage() {
           </div>
         </div>
       </Modal>
+
+      {/* Edit Product Modal */}
+      {editingProductId && (
+        <EditProductModal
+          open={!!editingProductId}
+          productId={editingProductId}
+          onClose={() => setEditingProductId(null)}
+          onSuccess={() => {
+            query.refetch();
+          }}
+        />
+      )}
     </div>
   );
 }

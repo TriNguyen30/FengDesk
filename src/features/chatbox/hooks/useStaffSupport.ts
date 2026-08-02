@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import { useAppSelector } from "@/app/store";
 import { chatApi } from "@/features/chatbox/api/chat.api";
 import { chatHub } from "@/features/chatbox/lib/chatHub";
+import { showBrowserNotification, playNotificationSound } from "@/features/chatbox/utils/chatUtils";
 import type {
   Chatbox,
   ChatConnectionStatus,
@@ -59,6 +60,11 @@ export function useStaffSupport() {
 
     const onMessage = (m: ChatMessageBroadcast) => {
       if (activeRef.current === m.chatboxId) setMessages((prev) => upsert(prev, m));
+      const fromMe = !!m.senderId && m.senderId === meId;
+      if (!fromMe) {
+        showBrowserNotification(m.senderName || "Tin nhắn mới", m.content || "Có hình ảnh mới");
+        playNotificationSound();
+      }
     };
 
     (async () => {

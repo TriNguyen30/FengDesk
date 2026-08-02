@@ -1,4 +1,5 @@
 import type { Chatbox } from "@/features/chatbox/types/chatbox";
+import notificationSoundFile from "@/assets/sound/NotificationSound.mp3";
 
 export function formatMessageTime(iso: string): string {
   const date = new Date(iso);
@@ -44,4 +45,37 @@ export function getLastMessagePreview(box: Chatbox): string {
   if (last.content?.trim()) return last.content.trim();
   if (last.images?.length) return "📷 Hình ảnh";
   return "...";
+}
+
+/** Hiển thị thông báo trình duyệt (Chrome Notification) nếu tab không focus. */
+export function showBrowserNotification(title: string, body: string, onClick?: () => void) {
+  if (!("Notification" in window)) return;
+  
+  if (document.hasFocus()) return; // Không hiển thị notification OS nếu user đang xem tab
+
+  const show = () => {
+    const notification = new Notification(title, { body, icon: "/favicon.ico" });
+    notification.onclick = () => {
+      window.focus();
+      onClick?.();
+    };
+  };
+
+  if (Notification.permission === "granted") {
+    show();
+  } else if (Notification.permission !== "denied") {
+    Notification.requestPermission().then((permission) => {
+      if (permission === "granted") {
+        show();
+      }
+    });
+  }
+}
+
+/** Phát âm thanh thông báo khi có tin nhắn mới. */
+export function playNotificationSound() {
+  const audio = new Audio(notificationSoundFile);
+  audio.play().catch((err) => {
+    console.warn("Không thể phát âm thanh thông báo (có thể do trình duyệt chặn autoplay):", err);
+  });
 }

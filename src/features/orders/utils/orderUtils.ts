@@ -2,6 +2,7 @@ export const STATUS_MAP: Record<string, { label: string; className: string }> = 
   Pending: { label: "Đang chờ", className: "bg-amber-50 text-amber-700" },
   Paid: { label: "Đã thanh toán", className: "bg-emerald-50 text-emerald-700" },
   Processing: { label: "Đang xử lý", className: "bg-blue-50 text-blue-700" },
+  Shipping: { label: "Đang vận chuyển", className: "bg-indigo-50 text-indigo-700" },
   Completed: { label: "Đã hoàn thành", className: "bg-green-50 text-green-700" },
   Cancelled: { label: "Đã hủy", className: "bg-red-50 text-red-700" },
   Expired: { label: "Đã hết hạn", className: "bg-gray-100 text-gray-500" },

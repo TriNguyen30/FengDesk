@@ -17,3 +17,13 @@ export interface Ward {
   name: string;
   code: string;
 }
+
+/** Đường dẫn hành chính đầy đủ của 1 phường — GET /locations/wards/{id}/path. */
+export interface WardPath {
+  wardId: string;
+  wardName: string;
+  districtId: string;
+  districtName: string;
+  provinceId: string;
+  provinceName: string;
+}

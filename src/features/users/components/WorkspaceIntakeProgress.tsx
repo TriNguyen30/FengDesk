@@ -47,9 +47,9 @@ export default function WorkspaceIntakeProgress({
         <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/15">
           <Bot size={13} />
         </span>
-        <Loader2 size={13} className="animate-spin" />
-        <span>{label}</span>
-        <Sparkles size={12} className="ml-auto opacity-70" />
+        <Loader2 size={13} className="shrink-0 animate-spin" />
+        <span className="min-w-0 flex-1 truncate whitespace-nowrap">{label}</span>
+        <Sparkles size={12} className="ml-auto shrink-0 opacity-70" />
       </div>
       <div className="mt-2 h-1 w-full overflow-hidden rounded-full bg-primary/10">
         <div

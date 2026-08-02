@@ -3,8 +3,9 @@ import { useParams, useNavigate } from "react-router-dom";
 import { BarChart3, ChevronLeft, MessagesSquare, Store, Truck, Users, Package } from "lucide-react";
 import { toast } from "sonner";
 import { useProductList } from "@/features/products/hooks/useProducts";
-import { getShopRequestById, getStoreMembershipRequest } from "@/features/shop/api/shop.api";
-import { Shop, StoreMembership } from "@/features/shop/types/shop";
+import { getShopRequestById } from "@/features/shop/api/shop.api";
+import { useStoreMembership } from "@/features/shop/hooks/useStoreMembership";
+import { Shop } from "@/features/shop/types/shop";
 import { useAppDispatch, useAppSelector } from "@/app/store";
 import { chatApi, chatHub } from "@/features/chatbox";
 import {
@@ -24,6 +25,8 @@ import {
   ShopStatsSection,
 } from "../components";
 import ShopReturnsView from "../components/ShopReturnsView";
+import FeatureBar from "@/components/ui/FeatureBar";
+import CommitmentPage from "@/components/ui/CommitmentPage";
 
 type ShopTab = "products" | "stats" | "deliveries" | "returns" | "chat" | "staff";
 
@@ -39,7 +42,7 @@ export default function ShopDetailPage() {
   const [activeTab, setActiveTab] = useState<ShopTab>("products");
   // Vai trò của user với store từ BE /stores/{id}/membership — nguồn sự thật duy nhất
   // (owner chính / đồng sở hữu / garden staff Accepted / admin). Null = khách.
-  const [membership, setMembership] = useState<StoreMembership | null>(null);
+  const { isOwnerView, isShopMember } = useStoreMembership(currentUser?.id ? id : undefined);
   // Guard chống double-click nút "Chat ngay": ref chặn đồng bộ, state để disable nút cho UX.
   const openingChatRef = useRef(false);
   const [isOpeningChat, setIsOpeningChat] = useState(false);
@@ -48,6 +51,7 @@ export default function ShopDetailPage() {
     products,
     loading: loadingProducts,
     totalCount,
+    query,
   } = useProductList({
     storeId: id || undefined,
     search: searchQuery || undefined,
@@ -77,26 +81,6 @@ export default function ShopDetailPage() {
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [id]);
-
-  // Membership per-store từ BE — cover cả staff-only (khác /stores/mine trước đây).
-  useEffect(() => {
-    if (!id || !currentUser?.id) {
-      setMembership(null);
-      return;
-    }
-    let active = true;
-    getStoreMembershipRequest(id)
-      .then((res) => {
-        if (!active) return;
-        setMembership(res.isSuccess && res.data ? res.data : null);
-      })
-      .catch(() => {
-        if (active) setMembership(null);
-      });
-    return () => {
-      active = false;
-    };
-  }, [id, currentUser?.id]);
 
   // Đổi shop → reset về tab Sản phẩm để khách không kẹt ở tab owner-only.
   useEffect(() => {
@@ -196,11 +180,9 @@ export default function ShopDetailPage() {
     );
   }
 
-  // Phân quyền theo membership per-store (KHÔNG theo role global):
-  // - Owner (chính/đồng sở hữu) / Admin: full quyền — sửa hồ sơ, xem thống kê + nhân viên.
+  // Phân quyền theo membership per-store (KHÔNG theo role global) — xem useStoreMembership:
+  // - Owner (chính/đồng sở hữu) / Admin không phải nhân viên store: full quyền.
   // - Garden staff (Accepted): chỉ xử lý đơn giao / trả hàng / tin nhắn.
-  const isOwnerView = !!membership && (membership.isOwner || membership.isAdmin);
-  const isShopMember = !!membership?.canManage;
   const canEditShopProfile = isOwnerView;
   const shopAddressText =
     typeof shop.address === "object" && shop.address
@@ -284,6 +266,7 @@ export default function ShopDetailPage() {
             shopId={shop.id}
             isShopMember={isShopMember}
             canAddProduct={isOwnerView}
+            onRefresh={() => query.refetch()}
           />
         </div>
       )}
@@ -343,6 +326,9 @@ export default function ShopDetailPage() {
       {activeTab === "stats" && isOwnerView && shop.id && <ShopStatsSection storeId={shop.id} />}
 
       {activeTab === "staff" && isOwnerView && shop.id && <ShopStaffSection storeId={shop.id} />}
+
+      <FeatureBar />
+      <CommitmentPage />
     </div>
   );
 }

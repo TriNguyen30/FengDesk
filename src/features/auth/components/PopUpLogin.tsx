@@ -140,7 +140,7 @@ export default function PopUpLogin({ open, onClose, onSwitchToSignUp }: PopUpLog
           </div>
         </form>
 
-        <SocialAuthButtons />
+        <SocialAuthButtons onSuccess={handleClose} />
 
         <p className="text-center text-sm text-gray-600">
           Chưa có tài khoản?{" "}

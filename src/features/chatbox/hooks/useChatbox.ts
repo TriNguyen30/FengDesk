@@ -4,6 +4,7 @@ import { useAppDispatch, useAppSelector } from "@/app/store";
 import { setAuthModal } from "@/features/auth/store/authSlice";
 import { chatApi } from "@/features/chatbox/api/chat.api";
 import { chatHub } from "@/features/chatbox/lib/chatHub";
+import { showBrowserNotification, playNotificationSound } from "@/features/chatbox/utils/chatUtils";
 import { useAiActivity } from "@/features/shared/ai-activity";
 import {
   addMessage,
@@ -59,6 +60,16 @@ export function useChatbox() {
     isOpenRef.current = isOpen;
   }, [isOpen]);
 
+  // Cập nhật tiêu đề tab (document.title) khi có tin nhắn chưa đọc
+  useEffect(() => {
+    const baseTitle = document.title.replace(/^\(\d+\)\s*(Tin nhắn mới.*?(?:\||-)\s*)?/, "");
+    if (unreadCount > 0) {
+      document.title = `(${unreadCount}) Tin nhắn mới | ${baseTitle}`;
+    } else {
+      document.title = baseTitle;
+    }
+  }, [unreadCount]);
+
   // Set id các phòng thuộc widget nhỏ (isGroup=true). Dùng trong onMessage để KHÔNG đếm unread
   // cho phòng AI riêng (isGroup=false) — phòng đó thuộc khung chat lớn.
   const widgetRoomIdsRef = useRef<Set<string>>(new Set());
@@ -69,10 +80,13 @@ export function useChatbox() {
   const refreshChatboxes = useCallback(async () => {
     const res = await chatApi.getMyChatboxes();
     if (res.data.isSuccess) {
-      // Widget nhỏ CHỈ hiện phòng nhóm/hỗ trợ (người ↔ người) đang HOẠT ĐỘNG. Loại:
-      //  - phòng AI riêng (isGroup=false) → thuộc khung chat lớn (drawer);
+      // Widget nhỏ hiện MỌI phòng người ↔ người đang HOẠT ĐỘNG: nhóm, hỗ trợ VÀ 1-1 trực tiếp
+      // (kể cả phòng do staff/manager chủ động tạo → isGroup=false). Loại:
+      //  - phòng AI riêng (có participant AiBot) → thuộc khung chat lớn (drawer);
       //  - phòng đã đóng (isClosed) → chỉ hiển thị bên staff, KHÔNG hiện cho customer.
-      const widgetRooms = res.data.data.items.filter((c) => c.isGroup && !c.isClosed);
+      const widgetRooms = res.data.data.items.filter(
+        (c) => !c.isClosed && !c.participants.some((p) => p.participantType === "AiBot"),
+      );
       dispatch(setChatboxes(widgetRooms));
       return widgetRooms;
     }
@@ -97,9 +111,13 @@ export function useChatbox() {
         if (!fromMe) {
           void chatApi.markRead(m.chatboxId).catch(() => {});
           dispatch(clearChatboxUnread(m.chatboxId));
+          showBrowserNotification(m.senderName || "Tin nhắn mới", m.content || "Có hình ảnh mới");
+          playNotificationSound();
         }
       } else if (!fromMe) {
         dispatch(bumpChatboxUnread(m.chatboxId));
+        showBrowserNotification(m.senderName || "Tin nhắn mới", m.content || "Có hình ảnh mới");
+        playNotificationSound();
       }
     };
     const onUserJoined = (p: { chatboxId: string; userId: string }) => {

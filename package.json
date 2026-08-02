@@ -16,6 +16,7 @@
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
     "@microsoft/signalr": "^10.0.0",
+    "@react-oauth/google": "^0.13.5",
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.6.1",
     "@reduxjs/toolkit": "^2.11.2",
@@ -25,8 +26,10 @@
     "@tanstack/react-query-devtools": "^5.101.0",
     "@vietmap/vietmap-gl-js": "7.0.0-pre.1",
     "axios": "^1.16.0",
+    "canvas-confetti": "^1.9.4",
     "firebase": "^12.13.0",
     "framer-motion": "^12.38.0",
+    "i18next": "^26.3.6",
     "lucide-react": "^1.14.0",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
@@ -48,6 +51,7 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@tailwindcss/vite": "^4.3.0",
+    "@types/canvas-confetti": "^1.9.0",
     "@types/node": "^24.12.2",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",

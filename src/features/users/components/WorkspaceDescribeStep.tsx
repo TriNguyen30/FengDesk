@@ -55,10 +55,12 @@ export default function WorkspaceDescribeStep({
 
   const toggleMic = async () => {
     if (isListening) {
-      // Dừng: chốt bằng Whisper; nếu lỗi/tắt → giữ text Web Speech (flow cũ).
+      // Dừng: chốt bằng BE (Whisper hoặc Moonshine); nếu lỗi/tắt → giữ text Web Speech (flow cũ).
+      // language lấy từ speechLang ("vi-VN"/"en-US" → "vi"/"en") — chỉ có ý nghĩa với Moonshine
+      // (chọn model), Whisper bỏ qua vì tự nhận diện.
       stop();
       const base = voiceBaseRef.current;
-      const whisperText = await stopAndTranscribe();
+      const whisperText = await stopAndTranscribe(speechLang === "en-US" ? "en" : "vi");
       const finalText = whisperText ?? livePreviewRef.current;
       if (finalText) setDescription(base ? `${base} ${finalText}` : finalText);
       return;

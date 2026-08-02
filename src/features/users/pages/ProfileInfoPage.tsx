@@ -10,8 +10,10 @@ import {
 } from "@/features/auth/api/auth.api";
 import { clearSession } from "@/utils";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 
 export default function ProfileInfoPage() {
+  const { t } = useTranslation();
   const user = useAppSelector((state) => state.auth.user);
   const { refreshToken } = useAppSelector((state) => state.auth);
   const dispatch = useAppDispatch();
@@ -42,13 +44,13 @@ export default function ProfileInfoPage() {
     try {
       const res = await updateBirthTimeRequest(birthTime || null);
       if (res.isSuccess) {
-        toast.success(res.message || "Đã cập nhật giờ sinh");
+        toast.success(res.message || t("profile_info.toast.birth_time_success"));
         queryClient.invalidateQueries({ queryKey: ["myProfile"] });
       } else {
-        toast.error(res.message || "Không cập nhật được giờ sinh");
+        toast.error(res.message || t("profile_info.toast.birth_time_error"));
       }
     } catch {
-      toast.error("Không cập nhật được giờ sinh");
+      toast.error(t("profile_info.toast.birth_time_error"));
     } finally {
       setSavingBirthTime(false);
     }
@@ -64,7 +66,7 @@ export default function ProfileInfoPage() {
     } finally {
       clearSession();
       dispatch(logout());
-      toast.success("Đăng xuất thành công");
+      toast.success(t("profile_info.toast.logout_success"));
       navigate("/");
     }
   };
@@ -74,14 +76,19 @@ export default function ProfileInfoPage() {
   }, []);
 
   if (isLoading) {
-    return <div className="max-w-2xl animate-pulse space-y-6">Đang tải thông tin...</div>;
+    return <div className="w-full animate-pulse space-y-6">{t("profile_info.loading")}</div>;
   }
 
   if (!profile) return null;
 
   return (
-    <div className="max-w-2xl">
-      <h1 className="mb-6 text-2xl font-bold text-gray-900">Thông tin tài khoản</h1>
+    <div className="w-full">
+      <div className="mb-6">
+        <h1 className="text-xl font-bold tracking-tight text-gray-900">{t("profile_info.title")}</h1>
+        <p className="mt-0.5 text-sm text-gray-500">
+          {t("profile_info.subtitle")}
+        </p>
+      </div>
 
       <div className="space-y-6">
         <div className="flex items-center gap-6 pb-6 border-b border-gray-100">
@@ -90,17 +97,17 @@ export default function ProfileInfoPage() {
           </div>
           <div>
             <h2 className="text-xl font-semibold text-gray-900">
-              {profile.fullName || "Người dùng"}
+              {profile.fullName || t("profile_info.default_user")}
             </h2>
             <p className="text-sm text-gray-500">
-              {profile.role === "Customer" ? "Khách hàng" : "Nhân viên"}
+              {profile.role === "Customer" ? t("profile_info.roles.customer") : t("profile_info.roles.staff")}
             </p>
           </div>
         </div>
 
         <form className="space-y-4">
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-gray-700">Họ và tên</label>
+            <label className="mb-1.5 block text-sm font-medium text-gray-700">{t("profile_info.fields.fullname")}</label>
             <input
               type="text"
               disabled
@@ -110,7 +117,7 @@ export default function ProfileInfoPage() {
           </div>
 
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-gray-700">Email</label>
+            <label className="mb-1.5 block text-sm font-medium text-gray-700">{t("profile_info.fields.email")}</label>
             <input
               type="email"
               disabled
@@ -122,26 +129,26 @@ export default function ProfileInfoPage() {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="mb-1.5 block text-sm font-medium text-gray-700">
-                Số điện thoại
+                {t("profile_info.fields.phone")}
               </label>
               <input
                 type="text"
                 disabled
-                defaultValue={profile.phone || "Chưa cập nhật"}
+                defaultValue={profile.phone || t("profile_info.values.not_updated")}
                 className="block w-full rounded-lg border border-gray-300 bg-gray-50 px-4 py-2.5 text-sm text-gray-900 opacity-70 cursor-not-allowed"
               />
             </div>
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-gray-700">Giới tính</label>
+              <label className="mb-1.5 block text-sm font-medium text-gray-700">{t("profile_info.fields.gender")}</label>
               <input
                 type="text"
                 disabled
                 defaultValue={
                   profile.gender === "Male"
-                    ? "Nam"
+                    ? t("profile_info.values.male")
                     : profile.gender === "Female"
-                      ? "Nữ"
-                      : "Chưa cập nhật"
+                      ? t("profile_info.values.female")
+                      : t("profile_info.values.not_updated")
                 }
                 className="block w-full rounded-lg border border-gray-300 bg-gray-50 px-4 py-2.5 text-sm text-gray-900 opacity-70 cursor-not-allowed"
               />
@@ -150,37 +157,37 @@ export default function ProfileInfoPage() {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-gray-700">Ngày sinh</label>
+              <label className="mb-1.5 block text-sm font-medium text-gray-700">{t("profile_info.fields.dob")}</label>
               <input
                 type="text"
                 disabled
                 defaultValue={
                   profile.dateOfBirth
                     ? new Date(profile.dateOfBirth).toLocaleDateString("vi-VN")
-                    : "Chưa cập nhật"
+                    : t("profile_info.values.not_updated")
                 }
                 className="block w-full rounded-lg border border-gray-300 bg-gray-50 px-4 py-2.5 text-sm text-gray-900 opacity-70 cursor-not-allowed"
               />
             </div>
             <div>
               <label className="mb-1.5 block text-sm font-medium text-gray-700">
-                Mệnh Phong Thuỷ
+                {t("profile_info.fields.element")}
               </label>
               <input
                 type="text"
                 disabled
                 defaultValue={
                   profile.fengShui?.element === "Kim"
-                    ? "Kim"
+                    ? t("profile_info.values.metal")
                     : profile.fengShui?.element === "Moc"
-                      ? "Mộc"
+                      ? t("profile_info.values.wood")
                       : profile.fengShui?.element === "Thuy"
-                        ? "Thủy"
+                        ? t("profile_info.values.water")
                         : profile.fengShui?.element === "Hoa"
-                          ? "Hỏa"
+                          ? t("profile_info.values.fire")
                           : profile.fengShui?.element === "Tho"
-                            ? "Thổ"
-                            : "Chưa cập nhật"
+                            ? t("profile_info.values.earth")
+                            : t("profile_info.values.not_updated")
                 }
                 className="block w-full rounded-lg border border-gray-300 bg-gray-50 px-4 py-2.5 text-sm text-gray-900 opacity-70 cursor-not-allowed"
               />
@@ -190,7 +197,7 @@ export default function ProfileInfoPage() {
           {/* Giờ sinh — sửa được: trợ lý AI dùng để luận đủ Tứ Trụ/Bát Tự */}
           <div>
             <label className="mb-1.5 block text-sm font-medium text-gray-700">
-              Giờ sinh <span className="font-normal text-gray-400">(tùy chọn)</span>
+              {t("profile_info.fields.birth_time")} <span className="font-normal text-gray-400">{t("profile_info.fields.optional")}</span>
             </label>
             <div className="flex gap-2">
               <input
@@ -206,11 +213,11 @@ export default function ProfileInfoPage() {
                 disabled={savingBirthTime || birthTime === savedBirthTime}
                 className="shrink-0 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-dark disabled:opacity-50 cursor-pointer"
               >
-                {savingBirthTime ? "Đang lưu..." : "Lưu"}
+                {savingBirthTime ? t("profile_info.actions.saving") : t("profile_info.actions.save")}
               </button>
             </div>
             <p className="mt-1 text-xs text-gray-400">
-              Thêm giờ sinh để trợ lý AI xem được Tứ Trụ / Bát Tự đầy đủ cho bạn.
+              {t("profile_info.hints.birth_time")}
             </p>
           </div>
 
@@ -220,18 +227,18 @@ export default function ProfileInfoPage() {
               disabled
               className="rounded-lg bg-primary px-5 py-2.5 text-sm font-medium text-white opacity-50 cursor-not-allowed"
             >
-              Cập nhật thông tin
+              {t("profile_info.actions.update")}
             </button>
             <button
               type="button"
               onClick={handleLogout}
               className="rounded-lg bg-red-500 px-5 py-2.5 text-sm font-medium text-white hover:bg-red-600 transition-colors cursor-pointer"
             >
-              Đăng xuất
+              {t("profile_info.actions.logout")}
             </button>
           </div>
           <p className="mt-2 text-xs text-gray-500">
-            Tính năng cập nhật thông tin đang được phát triển.
+            {t("profile_info.hints.update_wip")}
           </p>
         </form>
       </div>

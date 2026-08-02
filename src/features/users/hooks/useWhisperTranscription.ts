@@ -19,10 +19,13 @@ function isWhisperEnabled(): Promise<boolean> {
 }
 
 /**
- * Ghi âm bằng MediaRecorder → gửi BE /workspace/transcriptions (Whisper) → text.
- * Whisper tự nhận diện tiếng Việt / Anh / nói trộn — không cần chọn ngôn ngữ.
+ * Ghi âm bằng MediaRecorder → gửi BE /workspace/transcriptions (Whisper hoặc Moonshine, tùy
+ * Speech:Provider ở BE) → text.
+ * - Provider Whisper: tự nhận diện tiếng Việt / Anh / nói trộn — "language" bị BE bỏ qua.
+ * - Provider Moonshine: BẮT BUỘC "language" ("vi"/"en") để BE chọn đúng model — không nhận diện
+ *   được nói trộn, dùng đúng ngôn ngữ đang chọn ở nút VI/EN (speechLang, xem useSpeechInput).
  * Dùng KẾT HỢP với useSpeechInput (Web Speech): Web Speech cho preview live + fallback khi
- * Whisper lỗi/down (giữ flow cũ); Whisper cho kết quả chốt chính xác hơn.
+ * BE lỗi/down (giữ flow cũ); BE cho kết quả chốt chính xác hơn.
  */
 export function useWhisperTranscription() {
   const [isTranscribing, setIsTranscribing] = useState(false);
@@ -53,9 +56,11 @@ export function useWhisperTranscription() {
   }, []);
 
   /**
-   * Dừng ghi và gửi Whisper. Trả text chốt, hoặc null nếu lỗi (caller giữ text Web Speech làm fallback).
+   * Dừng ghi và gửi BE nhận diện. Trả text chốt, hoặc null nếu lỗi (caller giữ text Web Speech làm fallback).
+   * @param language "vi" | "en" — bắt buộc có ý nghĩa khi BE đang dùng provider Moonshine (chọn model);
+   * provider Whisper thì BE bỏ qua giá trị này.
    */
-  const stopAndTranscribe = useCallback(async (): Promise<string | null> => {
+  const stopAndTranscribe = useCallback(async (language: "vi" | "en" = "vi"): Promise<string | null> => {
     const recorder = recorderRef.current;
     recorderRef.current = null;
     if (!recorder) return null; // không có bản ghi (BE tắt hoặc không xin được mic) → dùng text Web Speech
@@ -74,6 +79,7 @@ export function useWhisperTranscription() {
     try {
       const formData = new FormData();
       formData.append("file", blob, "recording.webm");
+      formData.append("language", language);
       const res = await fetchHttpClient.post<ApiResponse<string>>(
         "/workspace/transcriptions",
         formData,
@@ -84,7 +90,7 @@ export function useWhisperTranscription() {
       const text = res.data?.data?.trim();
       return text || null;
     } catch {
-      return null; // Whisper down — fallback flow cũ (Web Speech)
+      return null; // BE down — fallback flow cũ (Web Speech)
     } finally {
       setIsTranscribing(false);
     }

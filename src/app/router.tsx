@@ -12,8 +12,8 @@ import ShopStaffPage from "@/features/shop/pages/ShopStaffPage";
 import DashboardPage from "@/features/manager/pages/DashboardPage";
 import ManageCategoriesPage from "@/features/manager/pages/ManageCategoriesPage";
 import ManageProductsPage from "@/features/manager/pages/ManageProductsPage";
+import Model3DQueuePage from "@/features/manager/pages/Model3DQueuePage";
 import CreateProductPage from "@/features/manager/pages/CreateProductPage";
-import EditProductPage from "@/features/manager/pages/EditProductPage";
 import ManageStoresPage from "@/features/manager/pages/ManageStoresPage";
 import ManageOrdersPage from "@/features/manager/pages/ManageOrdersPage";
 import StaffSupportPage from "@/features/chatbox/pages/StaffSupportPage";
@@ -24,6 +24,12 @@ import AboutPage from "@/features/home/pages/AboutPage";
 import ContactPage from "@/features/home/pages/ContactPage";
 import NewsPage from "@/features/home/pages/NewsPage";
 import ShopReturnsPage from "@/features/shop/pages/ShopReturnsPage";
+
+// Admin Pages
+import AdminLayout from "@/components/layouts/AdminLayout";
+import AdminDashboardPage from "@/features/admin/pages/AdminDashboardPage";
+import AdminUsersPage from "@/features/admin/pages/AdminUsersPage";
+import AdminUserDetailPage from "@/features/admin/pages/AdminUserDetailPage";
 
 // Profile Pages
 import ProfileLayout from "@/components/layouts/ProfileLayout";
@@ -37,6 +43,7 @@ import { PaymentSuccessPage, PaymentCancelPage } from "@/features/payment";
 import NotificationPage from "@/features/notification/pages/NotificationPage";
 import ProfileReturnOrder from "@/features/users/pages/ProfileReturnOrder";
 import MyInvitationsPage from "@/features/shop/pages/MyInvitationsPage";
+import NotFoundPage from "@/features/shared/404Page";
 
 export default function AppRoutes() {
   return (
@@ -86,14 +93,6 @@ export default function AppRoutes() {
           element={
             <ProtectedRoute>
               <CreateProductPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/seller/:storeId/products/:id/edit"
-          element={
-            <ProtectedRoute>
-              <EditProductPage />
             </ProtectedRoute>
           }
         />
@@ -164,12 +163,27 @@ export default function AppRoutes() {
         <Route path="categories" element={<ManageCategoriesPage />} />
         <Route path="products" element={<ManageProductsPage />} />
         <Route path="products/new" element={<CreateProductPage />} />
-        <Route path="products/:id/edit" element={<EditProductPage />} />
+        <Route path="model3d-queue" element={<Model3DQueuePage />} />
         <Route path="stores" element={<ManageStoresPage />} />
         <Route path="orders" element={<ManageOrdersPage />} />
         <Route path="order-returns" element={<ManageOrderReturnPage />} />
         <Route path="customers" element={<StaffSupportPage />} />
       </Route>
+      <Route
+        path="/admin"
+        element={
+          <ProtectedRoute requireAdmin>
+            <AdminLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<Navigate to="dashboard" replace />} />
+        <Route path="dashboard" element={<AdminDashboardPage />} />
+        <Route path="users" element={<AdminUsersPage />} />
+        <Route path="users/:id" element={<AdminUserDetailPage />} />
+      </Route>
+      {/* 404 Fallback */}
+      <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );
 }

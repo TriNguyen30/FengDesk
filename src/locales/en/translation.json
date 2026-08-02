@@ -1,0 +1,846 @@
+{
+  "navbar": {
+    "promo_freeship_short": "Freeship over 500k",
+    "promo_freeship_long": "Free shipping on orders over 500.000đ",
+    "promo_return": "7-day return",
+    "promo_support": "Support:",
+    "ai_assistant": "AI Assistant",
+    "account": "Account",
+    "my_account": "My Account",
+    "workspace": "Workspaces",
+    "orders": "My Orders",
+    "become_seller": "Become a seller",
+    "logout": "Log out",
+    "logout_success": "Logged out successfully",
+    "login_required_ai": "Please login to use AI Assistant",
+    "default_user": "User"
+  },
+  "cart": {
+    "decrease_quantity": "Decrease quantity",
+    "increase_quantity": "Increase quantity",
+    "remove_from_cart": "Remove from cart",
+    "cart_with_items_count": "Cart, {{count}} items",
+    "cart": "Cart",
+    "cart_cleared": "Cart cleared",
+    "clear_all": "Clear all",
+    "close": "Close",
+    "empty_cart": "No products yet",
+    "shop_now": "Shop now",
+    "subtotal": "Subtotal",
+    "view_cart": "View cart"
+  },
+  "notification": {
+    "mark_all_read_success": "Marked all notifications as read",
+    "mark_all_read_error": "Failed to update notification status",
+    "notification_with_unread_count": "Notifications, {{count}} unread messages",
+    "notification": "Notifications",
+    "your_notifications": "Your notifications",
+    "mark_all_read": "Mark all as read",
+    "loading_notifications": "Loading notifications...",
+    "no_notifications": "No notifications yet",
+    "no_notifications_desc": "We will notify you when there are new updates."
+  },
+  "search": {
+    "search_placeholder_1": "What plant are you looking for?",
+    "search_placeholder_2": "Find feng shui plants by element...",
+    "search_placeholder_3": "Desk plants for workspace...",
+    "search_placeholder_4": "Search for lucky items...",
+    "search_placeholder_5": "Meaningful gift plants...",
+    "search_button_aria_label": "Search"
+  },
+  "category_bar": {
+    "home": "Home",
+    "products": "Products",
+    "about": "About",
+    "news": "News",
+    "contact": "Contact",
+    "categories": "Categories"
+  },
+  "hero_slider": {
+    "slide1": {
+      "badge": "FENGDESK AI",
+      "title": "Discover Feng Shui Plants",
+      "highlight": "Mutual Generation",
+      "desc1": "AI-powered plant consultation",
+      "desc2": "Bring luck & prosperity",
+      "primaryBtn": "Try AI",
+      "secondaryBtn": "Learn more"
+    },
+    "slide2": {
+      "badge": "COLLECTION",
+      "title": "Ideal",
+      "highlight": "Workspace",
+      "desc1": "Purify air, reduce stress",
+      "desc2": "Perfect for any office space",
+      "primaryBtn": "Explore",
+      "secondaryBtn": "Learn more"
+    },
+    "slide3": {
+      "badge": "OFFER",
+      "title": "Desk Plants",
+      "highlight": "20% OFF",
+      "desc1": "Premium ceramic pot design",
+      "desc2": "Safe delivery to your door",
+      "primaryBtn": "Shop now",
+      "secondaryBtn": "Learn more"
+    }
+  },
+  "image_collections": {
+    "deep_focus": {
+      "title": "Deep Focus Bundle",
+      "desc": "Designed to reduce cortisol and increase focus during long coding or creative sessions.",
+      "btn": "Shop Bundle"
+    },
+    "new_arrival": {
+      "badge": "New Arrival",
+      "title": "AI Grow Light"
+    },
+    "minimalist": {
+      "title": "The Minimalist",
+      "desc": "Low maintenance, high impact."
+    },
+    "ai_consult": {
+      "title": "Personal AI Consult",
+      "desc": "Let AI analyze your space's light and energy to suggest the perfect plants for you.",
+      "btn": "Start Scan"
+    },
+    "view_all": "View all"
+  },
+  "five_elements": {
+    "title": "FengDesk AI - Five Elements in Space",
+    "desc": "Discover the right feng shui plant for your element to optimize vitality and fortune.",
+    "btn": "Experience AI Now",
+    "explore": "Explore",
+    "explore_energy": "Explore energy",
+    "kim": {
+      "name": "Metal Element",
+      "traits": "Decisive & Elegant"
+    },
+    "moc": {
+      "name": "Wood Element",
+      "traits": "Creative & Flexible"
+    },
+    "thuy": {
+      "name": "Water Element",
+      "traits": "Wise & Adaptable"
+    },
+    "hoa": {
+      "name": "Fire Element",
+      "traits": "Passionate & Enthusiastic"
+    },
+    "tho": {
+      "name": "Earth Element",
+      "traits": "Steady & Reliable"
+    }
+  },
+  "popular_categories": {
+    "title": "Popular Categories",
+    "view_all": "View all ›"
+  },
+  "best_sellers": {
+    "title": "Best Sellers",
+    "view_all": "View all ›"
+  },
+  "feature_bar": {
+    "feature1": {
+      "title": "AI Feng Shui Consult",
+      "sub": "Suggest by element"
+    },
+    "feature2": {
+      "title": "Free shipping",
+      "sub": "On orders over 500k"
+    },
+    "feature3": {
+      "title": "Healthy Plants",
+      "sub": "7-day warranty"
+    },
+    "feature4": {
+      "title": "24/7 Support",
+      "sub": "Expert consultation"
+    }
+  },
+  "commitment": {
+    "title1": "Commitment From",
+    "title2": "FengDesk",
+    "desc": "We believe that each plant is not just a decoration, but a companion that brings luck and positive energy to you.",
+    "c1": {
+      "title": "100% Healthy & Carefully Selected Plants",
+      "desc": "Each plant goes through a 5-step quality check from the nursery. We commit to not delivering plants with signs of pests, wilting, or damage. Plants always reach you in the best growing condition."
+    },
+    "c2": {
+      "title": "Growth Warranty & Free Returns",
+      "desc": "Your peace of mind is our top priority. FengDesk offers a 1-to-1 exchange within the first 7 days if the plant shows any signs of weakness due to objective reasons or transportation."
+    },
+    "c3": {
+      "title": "Lifelong Consultation & Support",
+      "desc": "You are not just buying a plant, you are gaining a companion. Our team of feng shui experts and agricultural engineers is always ready to support you with plant care suitable for each living space."
+    },
+    "c4": {
+      "title": "Standard Packaging & Safe Delivery",
+      "desc": "An exclusive packaging system with multiple protective layers secures the pot, branches, and leaves. We ensure the plant is always safe, uncrushed, unbroken, and without spilled soil during transit."
+    }
+  },
+  "products_page": {
+    "breadcrumb": {
+      "home": "Home",
+      "products": "Products"
+    },
+    "filters": {
+      "categories": "Categories",
+      "all_products": "All products",
+      "price": "Price Range",
+      "all_prices": "All prices",
+      "element": "Element",
+      "all_elements": "All elements"
+    },
+    "elements": {
+      "kim": "Metal",
+      "moc": "Wood",
+      "thuy": "Water",
+      "hoa": "Fire",
+      "tho": "Earth"
+    },
+    "price_ranges": {
+      "under_100": "Under 100,000đ",
+      "100_300": "100,000đ - 300,000đ",
+      "300_500": "300,000đ - 500,000đ",
+      "500_1000": "500,000đ - 1,000,000đ",
+      "over_1000": "Over 1,000,000đ"
+    },
+    "search_results_for": "Search results for:",
+    "clear_search": "Clear search",
+    "sort_by": "Sort by:",
+    "sort": {
+      "default": "Default",
+      "name_asc": "Name A-Z",
+      "name_desc": "Name Z-A",
+      "price_asc": "Price Low to High",
+      "price_desc": "Price High to Low"
+    },
+    "empty": {
+      "title": "No products found",
+      "desc": "Try changing the filters or search keywords.",
+      "clear_all": "Clear all filters"
+    }
+  },
+  "product_detail": {
+    "toast": {
+      "added_to_cart": "Added to cart",
+      "buy_now_error": "Error buying now",
+      "chat_error": "Cannot open chat with the store."
+    },
+    "error": {
+      "load_failed": "Failed to load product details",
+      "not_found": "Product not found"
+    },
+    "actions": {
+      "back": "Back",
+      "chat_now": "Chat now",
+      "view_shop": "View Shop",
+      "add_to_cart": "Add to cart",
+      "buy_now": "BUY NOW",
+      "out_of_stock": "OUT OF STOCK",
+      "out_of_stock_sm": "Out of stock",
+      "login": "Login"
+    },
+    "labels": {
+      "no_image": "No image",
+      "store": "Store:",
+      "sku": "SKU:",
+      "variant": "Variant",
+      "stock": "Stock: {{stock}} items",
+      "element": "Element:",
+      "weight": "Weight: {{weight}}g",
+      "size": "Size: {{l}}x{{w}}x{{h}} cm",
+      "free_ship": "Free Shipping in HCM City for orders over 500k",
+      "hotline": "Hotline",
+      "opening_hours": "Opening hours",
+      "address": "Address",
+      "updating": "Updating",
+      "description": "Product Description"
+    },
+    "feng_shui": {
+      "title": "Feng Shui suitability for your space",
+      "login_prompt": "Login to see how well this product fits your element and the elements of your rooms."
+    },
+    "suggested": {
+      "similar": "Similar products",
+      "from_shop": "Other products from this shop",
+      "you_may_like": "You may also like",
+      "view_all": "View all ›"
+    },
+    "lightbox": {
+      "zoom_out": "Zoom out",
+      "zoom_in": "Zoom in",
+      "reset": "Reset",
+      "close": "Close (Esc)"
+    },
+    "model_3d": {
+      "badge": "3D",
+      "view_mode": "View mode",
+      "view_image": "Images",
+      "view_model": "3D model",
+      "view_3d": "View 3D model",
+      "hint": "Drag to rotate, scroll to zoom",
+      "loading": "Loading 3D model...",
+      "load_error": "Failed to load 3D model"
+    }
+  },
+  "cart_page": {
+    "title": "Your Cart",
+    "breadcrumb": {
+      "home": "Home",
+      "cart": "Cart"
+    },
+    "actions": {
+      "remove": "Remove",
+      "select_all": "Select all",
+      "delete_all": "Delete all",
+      "checkout": "Proceed to checkout",
+      "cancel": "Cancel",
+      "shop_now": "Shop Now"
+    },
+    "empty_state": {
+      "title": "Your cart is empty",
+      "desc": "Go to the store page to select products to buy!!"
+    },
+    "summary": {
+      "title": "Order Summary",
+      "items_count": "{{count}} Items",
+      "subtotal": "Subtotal ({{count}} items)",
+      "shipping_fee": "Shipping fee",
+      "not_calculated": "Not calculated",
+      "total": "Total",
+      "vat_included": "(VAT included if any)"
+    },
+    "delete_modal": {
+      "title": "Clear Cart",
+      "desc": "Are you sure you want to remove all items from your cart?"
+    },
+    "toast": {
+      "select_required": "Please select at least one product",
+      "cart_deleted": "Cart cleared"
+    }
+  },
+  "checkout_page": {
+    "title": "Checkout",
+    "actions": {
+      "back_to_cart": "Back to cart",
+      "add_address": "+ Add address",
+      "add_address_now": "Add address now",
+      "place_order": "Place Order",
+      "processing": "Processing..."
+    },
+    "address": {
+      "title": "Shipping Address",
+      "no_address": "You don't have a shipping address",
+      "default": "Default"
+    },
+    "payment": {
+      "title": "Payment Method"
+    },
+    "note": {
+      "label": "Order Note (optional)",
+      "placeholder": "Notes for seller or shipper..."
+    },
+    "summary": {
+      "title": "Order ({{count}} items)",
+      "subtotal": "Subtotal ({{count}} items)",
+      "shipping_fee": "Shipping fee",
+      "calculating": "Calculating...",
+      "free": "Free",
+      "total": "Total",
+      "terms_prefix": "By placing an order, you agree to the ",
+      "terms_link": "terms of purchase",
+      "free_ship": "Free Shipping in HCM City for orders over 500k"
+    },
+    "toast": {
+      "select_product": "Please select a product to checkout",
+      "load_address_error": "Cannot load address list",
+      "select_address": "Please select a shipping address",
+      "no_product": "No products to checkout",
+      "order_success": "Order placed successfully",
+      "payment_link_error": "Cannot create payment link",
+      "payment_gateway_error": "Error connecting to PayOS payment gateway",
+      "order_error": "Cannot create order"
+    }
+  },
+  "product_card": {
+    "toast": {
+      "add_success": "Added to cart",
+      "add_error": "Cannot add to cart"
+    },
+    "labels": {
+      "element": "Element",
+      "edit": "Edit product",
+      "sold": "Sold {{count}}",
+      "add_to_cart": "Add to cart",
+      "in_stock": "In stock"
+    }
+  },
+  "review_section": {
+    "validation": {
+      "select_rating": "Please select a star rating.",
+      "min_length": "Review content must be at least 5 characters."
+    },
+    "rating_labels": {
+      "terrible": "Terrible",
+      "bad": "Bad",
+      "normal": "Normal",
+      "good": "Good",
+      "excellent": "Excellent",
+      "select": "Select rating"
+    },
+    "title": "Product Reviews ({{count}})",
+    "reviews_count": "{{count}} reviews",
+    "write_review": {
+      "title": "Write your review",
+      "rating_label": "Your rating:",
+      "placeholder": "Share your thoughts about the product (quality, packaging, delivery...)",
+      "submit": "Submit review",
+      "login_prompt": "Bought this product? Login to share your thoughts.",
+      "login_now": "Login now"
+    },
+    "list": {
+      "loading": "Loading reviews...",
+      "empty": "No reviews yet. Be the first to review!",
+      "anonymous": "Anonymous User",
+      "you": "You"
+    },
+    "actions": {
+      "edit": "Edit",
+      "delete": "Delete",
+      "cancel": "Cancel",
+      "save": "Save changes"
+    },
+    "delete_confirm": {
+      "message": "Confirm delete this review?"
+    },
+    "edit_review": {
+      "title": "Edit your review",
+      "rating_label": "Rating:"
+    }
+  },
+  "workspace": {
+    "switch": "Switch workspace",
+    "roles": {
+      "shop": "Shopping",
+      "seller": "Store",
+      "admin": "Admin"
+    }
+  },
+  "footer": {
+    "brand_desc": "Bringing a balanced, prosperous, and positive energy workspace with exquisite feng shui items.",
+    "address": "SHTP, District 9, Thu Duc",
+    "about": {
+      "title": "About FengDesk",
+      "story": "Brand Story",
+      "careers": "Careers",
+      "news": "Feng Shui News",
+      "contact": "Contact",
+      "registered": "Registered with Ministry of Industry and Trade"
+    },
+    "support": {
+      "title": "Customer Support",
+      "shipping": "Shipping Policy",
+      "returns": "Return Policy",
+      "guide": "Shopping Guide",
+      "faq": "Frequently Asked Questions (FAQ)"
+    },
+    "newsletter": {
+      "title": "Newsletter",
+      "desc": "Get the latest information on products and special offers.",
+      "email_placeholder": "Your email",
+      "submit": "Send"
+    },
+    "socials": {
+      "title": "Connect with us"
+    },
+    "legal": {
+      "terms": "Terms of Service",
+      "privacy": "Privacy Policy"
+    }
+  },
+  "profile_layout": {
+    "title": "Profile",
+    "nav": {
+      "info": "Account Info",
+      "addresses": "Addresses",
+      "workspace": "Workspace",
+      "orders": "My Orders",
+      "returns": "Return Requests",
+      "invitations": "Staff Invitations",
+      "notifications": "Notifications"
+    }
+  },
+  "profile_info": {
+    "toast": {
+      "birth_time_success": "Birth time updated",
+      "birth_time_error": "Failed to update birth time",
+      "logout_success": "Logged out successfully"
+    },
+    "loading": "Loading information...",
+    "title": "Account Info",
+    "subtitle": "Manage your personal info and account settings.",
+    "default_user": "User",
+    "roles": {
+      "customer": "Customer",
+      "staff": "Staff"
+    },
+    "fields": {
+      "fullname": "Full name",
+      "email": "Email",
+      "phone": "Phone number",
+      "gender": "Gender",
+      "dob": "Date of birth",
+      "element": "Feng Shui Element",
+      "birth_time": "Time of birth",
+      "optional": "(optional)"
+    },
+    "values": {
+      "not_updated": "Not updated",
+      "male": "Male",
+      "female": "Female",
+      "metal": "Metal",
+      "wood": "Wood",
+      "water": "Water",
+      "fire": "Fire",
+      "earth": "Earth"
+    },
+    "actions": {
+      "saving": "Saving...",
+      "save": "Save",
+      "update": "Update Info",
+      "logout": "Logout"
+    },
+    "hints": {
+      "birth_time": "Add birth time for the AI assistant to read your full Four Pillars of Destiny.",
+      "update_wip": "Information update feature is under development."
+    }
+  },
+  "address_book": {
+    "toast": {
+      "load_error": "Failed to load address list",
+      "delete_success": "Address deleted successfully",
+      "delete_error": "Failed to delete address",
+      "set_default_success": "Set as default address",
+      "set_default_error": "Failed to set default address"
+    },
+    "title": "My Addresses",
+    "subtitle": "Manage your shipping addresses for faster checkout.",
+    "add_new": "Add New Address",
+    "empty": {
+      "title": "No addresses yet",
+      "desc": "Add an address for more convenient delivery"
+    },
+    "item": {
+      "default_badge": "Default",
+      "phone": "Phone number:"
+    },
+    "actions": {
+      "update": "Update",
+      "set_default": "Set Default",
+      "delete": "Delete",
+      "cancel": "Cancel"
+    },
+    "delete_modal": {
+      "title": "Delete Address",
+      "desc": "Are you sure you want to delete this address? This action cannot be undone.",
+      "confirm": "Delete address"
+    }
+  },
+  "orders_page": {
+    "tabs": {
+      "all": "All",
+      "pending": "Pending",
+      "paid": "Paid",
+      "processing": "Processing",
+      "shipping": "Shipping",
+      "completed": "Completed",
+      "cancelled": "Cancelled",
+      "expired": "Expired"
+    },
+    "title": "My Orders",
+    "subtitle": "Track and manage your orders.",
+    "orders_count": "orders",
+    "empty": {
+      "message": "You don't have any orders",
+      "in_status": "in this status",
+      "shop_now": "Shop now"
+    },
+    "card": {
+      "chat": "Chat",
+      "view_shop": "View Shop",
+      "store_fallback": "Store",
+      "delivery_success": "Delivered successfully",
+      "variant": "Variation:",
+      "order_id": "Order #",
+      "total": "Total:"
+    },
+    "actions": {
+      "pay": "Pay Now",
+      "review": "Review",
+      "contact_seller": "Contact Seller",
+      "view_details": "View Details"
+    },
+    "pagination": "Page {{page}}/{{total_pages}} · {{total_count}} orders",
+    "review_modal": {
+      "title": "Product Review",
+      "select_product": "Select product",
+      "your_rating": "Your rating",
+      "review_content": "Review content",
+      "placeholder": "Share your thoughts about this product...",
+      "cancel": "Cancel",
+      "submit": "Submit Review",
+      "not_found": "No product information found to review.",
+      "toast": {
+        "select_product": "Please select a product to review",
+        "empty_content": "Please enter your review content",
+        "success": "Product reviewed successfully!",
+        "error": "Failed to submit review at this time"
+      }
+    }
+  },
+  "order_detail": {
+    "toast": {
+      "upload_error": "Failed to upload image",
+      "no_item_selected": "Please select at least one item to return.",
+      "return_success": "Return request sent successfully!",
+      "return_error": "Failed to send return request",
+      "return_exception": "An error occurred while sending the request",
+      "cancel_success": "Order cancelled successfully",
+      "cancel_error": "Failed to cancel order"
+    },
+    "not_found": "Order not found",
+    "back_to_list": "Back to list",
+    "back": "Back to orders",
+    "placed_at": "Placed at",
+    "steps": {
+      "placed": "Order placed",
+      "cancelled": "Cancelled",
+      "expired": "Expired",
+      "paid": "Paid",
+      "processing": "Processing",
+      "shipping": "Shipping",
+      "completed": "Completed"
+    },
+    "product": {
+      "title": "Products",
+      "per_item": "/ item",
+      "subtotal": "Subtotal",
+      "shipping_fee": "Shipping fee",
+      "uncalculated": "Uncalculated",
+      "total": "Total",
+      "payment_method": "Payment method",
+      "paid": "Paid"
+    },
+    "delivery": {
+      "title": "Deliveries",
+      "request_return": "Request Return",
+      "shipping_provider": "Shipping provider:",
+      "shipping_provider_short": "SP:",
+      "return_pending": "Return request pending",
+      "return_processing": "Processing return",
+      "return_btn": "Return",
+      "delivered": "Delivered"
+    },
+    "delivery_status": {
+      "pending": "Pending",
+      "confirmed": "Confirmed",
+      "preparing": "Preparing",
+      "shipped": "Shipping",
+      "delivered": "Delivered",
+      "cancelled": "Cancelled",
+      "returned": "Returned"
+    },
+    "address": "Shipping Address",
+    "note": "Note",
+    "actions": {
+      "pay_now": "Pay Now",
+      "return": "Return",
+      "buy_again": "Buy Again",
+      "cancel": "Cancel"
+    },
+    "cancel_modal": {
+      "title": "Cancel Order",
+      "desc": "Are you sure you want to cancel this order?",
+      "no": "No",
+      "cancelling": "Cancelling...",
+      "confirm": "Cancel order"
+    },
+    "delivery_picker": {
+      "title": "Select delivery",
+      "cancel": "Cancel"
+    },
+    "return_modal": {
+      "tag": "Return / Refund",
+      "title": "Return Request",
+      "select_product": "Select product to return",
+      "deselect_all": "Deselect all",
+      "select_all": "Select all",
+      "no_product": "No products found in this delivery.",
+      "type": "Type",
+      "reason": "Reason",
+      "reason_detail": "Additional details",
+      "reason_placeholder": "Describe your issue in detail...",
+      "images": "Evidence images (max 3)",
+      "image_alt": "Evidence",
+      "add_image": "Add image",
+      "bank_info": "Bank account info (optional)",
+      "account_name": "Account name",
+      "account_number": "Account number",
+      "bank_name": "Bank name",
+      "cancel": "Cancel",
+      "submitting": "Submitting...",
+      "submit": "Submit request",
+      "types": {
+        "refund": "Refund",
+        "exchange": "Exchange"
+      },
+      "reasons": {
+        "plant_health": "Plant health/Defective product",
+        "wrong_item": "Wrong item",
+        "damaged_package": "Damaged in transit",
+        "not_as_described": "Not as described"
+      }
+    }
+  },
+  "profile_return_order": {
+    "toast": {
+      "load_list_error": "Failed to load request list",
+      "load_list_exception": "An error occurred while loading data",
+      "cancel_success": "Return request cancelled successfully",
+      "cancel_error": "Failed to cancel request",
+      "cancel_exception": "An error occurred while cancelling request",
+      "ship_success": "Return confirmed successfully",
+      "ship_error": "Failed to confirm return",
+      "ship_exception": "An error occurred while confirming return",
+      "load_detail_error": "Failed to load return request details",
+      "load_detail_exception": "An error occurred while loading details"
+    },
+    "empty": {
+      "title": "No return requests yet",
+      "desc": "Your return/refund requests will appear here.",
+      "btn": "View orders"
+    },
+    "title": "Return Requests",
+    "desc": "Manage and track your return and refund requests.",
+    "list": {
+      "order_num": "Order #",
+      "reason": "Reason: ",
+      "products": " items",
+      "view_detail": "View details",
+      "cancel_req": "Cancel request",
+      "ship_back": "Return items",
+      "view_order": "View order"
+    },
+    "pagination": {
+      "prev": "Prev",
+      "next": "Next"
+    },
+    "cancel_modal": {
+      "title": "Cancel return request?",
+      "desc": "Are you sure you want to cancel this request? This action cannot be undone.",
+      "no": "No",
+      "cancelling": "Cancelling...",
+      "confirm": "Confirm cancel"
+    },
+    "ship_modal": {
+      "title": "Confirm return",
+      "desc": "Enter tracking code if you have one (optional).",
+      "placeholder": "Tracking code...",
+      "close": "Close",
+      "processing": "Processing...",
+      "confirm": "Confirm"
+    },
+    "detail_modal": {
+      "tag": "Return Request Details",
+      "loading": "Loading...",
+      "not_found": "Information not found.",
+      "status": "Status",
+      "type": "Type",
+      "refund_amount": "Refund amount",
+      "created_at": "Created at:",
+      "reason": "Reason",
+      "rejected_reason": "Rejected reason",
+      "return_items": "Returned items",
+      "bank_info": "Bank account info",
+      "account_name": "Account name:",
+      "account_number": "Account number:",
+      "bank_name": "Bank name:",
+      "refund_method": "Refund method:",
+      "images": "Images",
+      "history": "Status history",
+      "cancel": "Cancel request",
+      "ship_back": "Return items",
+      "close": "Close"
+    },
+    "types": {
+      "refund": "Refund",
+      "exchange": "Exchange"
+    },
+    "reasons": {
+      "defective": "Defective product",
+      "wrong_item": "Wrong item",
+      "not_as_described": "Not as described",
+      "damaged": "Damaged in transit",
+      "changed_mind": "Changed mind",
+      "other": "Other reason"
+    },
+    "statuses": {
+      "requested": "Requested",
+      "approved": "Approved",
+      "item_received": "Item received",
+      "refunding": "Refunding",
+      "rejected": "Rejected",
+      "processing": "Processing",
+      "completed": "Completed",
+      "cancelled": "Cancelled",
+      "return_in_transit": "Returning in transit"
+    }
+  },
+  "my_invitations": {
+    "title": "Staff Invitations",
+    "desc": "Stores that have invited you to join — accept to be able to receive and deliver orders.",
+    "refresh": "Refresh",
+    "empty": {
+      "title": "No invitations",
+      "desc": "When someone invites you to be a staff member, the invitation will appear here."
+    },
+    "card": {
+      "title": "Store staff invitation",
+      "inviter": "Invited by:",
+      "note": "If you accept, you will have permission to receive and deliver orders for this store.",
+      "reject": "Reject",
+      "accept": "Accept",
+      "toast": {
+        "accept_error": "Failed to accept invitation.",
+        "accept_success": "Successfully accepted to be a staff member.",
+        "reject_error": "Failed to reject invitation.",
+        "reject_success": "Successfully rejected invitation.",
+        "exception": "An error occurred."
+      }
+    }
+  },
+  "notification": {
+    "notification": "Notifications",
+    "notification_with_unread_count": "Notifications ({{count}} unread)",
+    "title": "Your Notifications",
+    "unread_count_1": "You have ",
+    "unread_count_2": " unread notifications",
+    "mark_all_read": "Mark all as read",
+    "loading": "Loading notifications...",
+    "empty": {
+      "title": "No notifications yet",
+      "desc": "Order and system notifications will appear here."
+    },
+    "pagination": {
+      "prev": "Previous page",
+      "next": "Next page"
+    },
+    "toast": {
+      "mark_all_success": "Marked all notifications as read",
+      "mark_all_error": "Failed to update notification status"
+    }
+  }
+}

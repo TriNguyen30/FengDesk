@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Store, Plus } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -7,7 +7,11 @@ import {
   getWardsByDistrictId,
 } from "@/features/users/api/location.api";
 import type { Provinces, District, Ward } from "@/features/users/types/location";
-import { geocodeLocation, reverseGeocode, findBestMatch } from "@/features/users/api/geocoding";
+import { geocodeLocation } from "@/features/users/api/geocoding";
+import {
+  resolveLocationFromCoordinates,
+  loadSelectionForWard,
+} from "@/features/users/utils/location-autofill";
 import { splitOpeningHours } from "@/features/shop/utils/opening-hours";
 import {
   getAllShopRequest,
@@ -91,7 +95,6 @@ export default function ManageStoresPage() {
     zoom: number;
   } | null>(null);
   const [isReverseGeocoding, setIsReverseGeocoding] = useState(false);
-  const isMapTriggeredRef = useRef(false);
 
   // Address Deletion
   const [deletingAddress, setDeletingAddress] = useState(false);
@@ -181,19 +184,17 @@ export default function ManageStoresPage() {
     }
   }, [isAddressModalOpen]);
 
-  // Districts based on province
+  // Districts based on province.
+  // Chỉ xoá lựa chọn cũ khi nó KHÔNG thuộc danh sách mới — không dùng cờ
+  // "thay đổi đến từ bản đồ" nữa vì cờ đó phụ thuộc thời điểm effect chạy so
+  // với lúc autofill kết thúc, khiến phường/quận vừa điền bị xoá ngẫu nhiên.
   useEffect(() => {
     if (selectedProvinceId) {
-      // Snapshot: ref may be reset before this fetch resolves (race fix)
-      const fromMap = isMapTriggeredRef.current;
       getDistrictsByProvinceId(selectedProvinceId)
         .then((data) => {
-          setDistricts(data || []);
-          if (!fromMap) {
-            setSelectedDistrictId("");
-            setWards([]);
-            setSelectedWardId("");
-          }
+          const list = data || [];
+          setDistricts(list);
+          setSelectedDistrictId((prev) => (list.some((d) => d.id === prev) ? prev : ""));
         })
         .catch((err) => console.error("Error fetching districts", err));
     } else {
@@ -207,14 +208,11 @@ export default function ManageStoresPage() {
   // Wards based on district
   useEffect(() => {
     if (selectedDistrictId) {
-      // Snapshot: ref may be reset before this fetch resolves (race fix)
-      const fromMap = isMapTriggeredRef.current;
       getWardsByDistrictId(selectedDistrictId)
         .then((data) => {
-          setWards(data || []);
-          if (!fromMap) {
-            setSelectedWardId("");
-          }
+          const list = data || [];
+          setWards(list);
+          setSelectedWardId((prev) => (list.some((w) => w.id === prev) ? prev : ""));
         })
         .catch((err) => console.error("Error fetching wards", err));
     } else {
@@ -223,11 +221,15 @@ export default function ManageStoresPage() {
     }
   }, [selectedDistrictId]);
 
+  // wardId gửi lên BE luôn bám theo dropdown đang hiển thị — nếu giữ lại phường
+  // cũ trong khi khu vực đã đổi thì đơn GHN sẽ về sai quận/phường.
+  useEffect(() => {
+    setAddressForm((prev) => (prev.wardId === selectedWardId ? prev : { ...prev, wardId: selectedWardId }));
+  }, [selectedWardId]);
+
   // ── Dropdown → Map: geocode selected location and zoom map ────────────
   const handleDropdownGeocode = useCallback(
     async (provinceName: string, districtName: string, wardName: string) => {
-      if (isMapTriggeredRef.current) return;
-
       let query = "";
       let zoom = 11;
 
@@ -258,7 +260,6 @@ export default function ManageStoresPage() {
 
   const handleProvinceChange = useCallback(
     (provinceId: string) => {
-      isMapTriggeredRef.current = false;
       setSelectedProvinceId(provinceId);
       const province = provinces.find((p) => p.id === provinceId);
       if (province) {
@@ -270,7 +271,6 @@ export default function ManageStoresPage() {
 
   const handleDistrictChange = useCallback(
     (districtId: string) => {
-      isMapTriggeredRef.current = false;
       setSelectedDistrictId(districtId);
       const province = provinces.find((p) => p.id === selectedProvinceId);
       const district = districts.find((d) => d.id === districtId);
@@ -283,7 +283,6 @@ export default function ManageStoresPage() {
 
   const handleWardChange = useCallback(
     (wardId: string) => {
-      isMapTriggeredRef.current = false;
       setSelectedWardId(wardId);
       setAddressForm((prev) => ({ ...prev, wardId }));
       const province = provinces.find((p) => p.id === selectedProvinceId);
@@ -301,56 +300,26 @@ export default function ManageStoresPage() {
     async (lat: number, lng: number) => {
       setAddressForm((prev) => ({ ...prev, latitude: lat, longitude: lng }));
       setIsReverseGeocoding(true);
-      isMapTriggeredRef.current = true;
 
       try {
-        const result = await reverseGeocode(lat, lng);
-        if (!result) {
-          isMapTriggeredRef.current = false;
-          setIsReverseGeocoding(false);
-          return;
-        }
+        const resolved = await resolveLocationFromCoordinates(lat, lng, provinces);
+        if (!resolved) return;
 
-        // Auto-fill house number + street name from reverse geocoding
-        if (result.street) {
-          setAddressForm((prev) => ({ ...prev, streetAddress: result.street ?? "" }));
-        }
-
-        let currentProvinces = provinces;
-        if (currentProvinces.length === 0) {
-          currentProvinces = await getProvinces();
-          setProvinces(currentProvinces || []);
-        }
-
-        const matchedProvinceId = findBestMatch(currentProvinces, result.province);
-        if (matchedProvinceId) {
-          setSelectedProvinceId(matchedProvinceId);
-
-          const districtData = await getDistrictsByProvinceId(matchedProvinceId);
-          setDistricts(districtData || []);
-
-          const matchedDistrictId = findBestMatch(districtData || [], result.district);
-          if (!matchedDistrictId)
-            console.warn("[Geocode] Không khớp được quận/huyện:", result.district);
-          if (matchedDistrictId) {
-            setSelectedDistrictId(matchedDistrictId);
-
-            const wardData = await getWardsByDistrictId(matchedDistrictId);
-            setWards(wardData || []);
-
-            const matchedWardId = findBestMatch(wardData || [], result.ward);
-            if (!matchedWardId)
-              console.warn("[Geocode] Không khớp được phường:", result.ward, "— DB có", (wardData || []).length, "phường");
-            if (matchedWardId) {
-              setSelectedWardId(matchedWardId);
-              setAddressForm((prev) => ({ ...prev, wardId: matchedWardId }));
-            }
-          }
-        }
+        // Set một lượt: danh mục + lựa chọn cùng nằm trong một batch render nên
+        // cascade effect luôn thấy id mới hợp lệ và giữ nguyên, không xoá ngược.
+        if (resolved.provinces.length) setProvinces(resolved.provinces);
+        setDistricts(resolved.districts);
+        setWards(resolved.wards);
+        setSelectedProvinceId(resolved.provinceId);
+        setSelectedDistrictId(resolved.districtId);
+        setSelectedWardId(resolved.wardId);
+        setAddressForm((prev) => ({
+          ...prev,
+          streetAddress: resolved.street || prev.streetAddress,
+        }));
       } catch (error) {
         console.error("Reverse geocoding error:", error);
       } finally {
-        isMapTriggeredRef.current = false;
         setIsReverseGeocoding(false);
       }
     },
@@ -377,6 +346,24 @@ export default function ManageStoresPage() {
       : createShopAddressRequest(storeId, payload);
   };
 
+  // Địa chỉ đã lưu chỉ có wardId → tra ngược để 3 dropdown hiện đúng khu vực cũ.
+  const applySavedRegion = useCallback(async (wardId: string) => {
+    setSelectedProvinceId("");
+    setSelectedDistrictId("");
+    setSelectedWardId("");
+    if (!wardId) return;
+
+    const selection = await loadSelectionForWard(wardId);
+    if (!selection) return;
+
+    setProvinces(selection.provinces);
+    setDistricts(selection.districts);
+    setWards(selection.wards);
+    setSelectedProvinceId(selection.provinceId);
+    setSelectedDistrictId(selection.districtId);
+    setSelectedWardId(selection.wardId);
+  }, []);
+
   // Handle store form open
   const handleOpenStoreModal = (store: Shop | null = null) => {
     if (store) {
@@ -399,6 +386,7 @@ export default function ManageStoresPage() {
         latitude: existingAddr?.latitude ?? 0,
         longitude: existingAddr?.longitude ?? 0,
       });
+      applySavedRegion(existingAddr?.wardId ?? "");
     } else {
       setEditingStore(null);
       setStoreForm({
@@ -411,6 +399,7 @@ export default function ManageStoresPage() {
         address: "",
       });
       setAddressForm({ wardId: "", streetAddress: "", latitude: 0, longitude: 0 });
+      applySavedRegion("");
     }
     setIsStoreModalOpen(true);
   };
@@ -530,8 +519,7 @@ export default function ManageStoresPage() {
         latitude: addr.latitude || 0,
         longitude: addr.longitude || 0,
       });
-      setSelectedProvinceId("");
-      setSelectedDistrictId("");
+      applySavedRegion(addr.wardId || "");
     } else {
       setEditingAddress(null);
       setAddressForm({
@@ -540,8 +528,7 @@ export default function ManageStoresPage() {
         latitude: 10.8231, // Default coordinates (HCMC)
         longitude: 106.6297,
       });
-      setSelectedProvinceId("");
-      setSelectedDistrictId("");
+      applySavedRegion("");
     }
     setIsAddressModalOpen(true);
   };

@@ -10,6 +10,7 @@ import {
   XCircle,
   AlertCircle,
   FolderTree,
+  Loader2,
 } from "lucide-react";
 import {
   useCategoryList,
@@ -192,8 +193,8 @@ export default function ManageCategoriesPage() {
         <div className="overflow-x-auto">
           {loading ? (
             <div className="flex flex-col items-center justify-center py-20 gap-3">
-              <RefreshCw className="h-8 w-8 text-primary animate-spin" />
-              <p className="text-sm font-medium text-gray-500">Đang tải danh sách danh mục...</p>
+              <Loader2 className="h-8 w-8 text-primary animate-spin" />
+              <p className="text-sm text-gray-400 font-medium">Đang tải danh sách danh mục...</p>
             </div>
           ) : filteredCategories.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center px-4">
@@ -304,7 +305,7 @@ export default function ManageCategoriesPage() {
             >
               {deleting ? (
                 <>
-                  <RefreshCw size={14} className="animate-spin" />
+                  <Loader2 size={14} className="animate-spin" />
                   Đang xóa...
                 </>
               ) : (
@@ -396,7 +397,7 @@ export default function ManageCategoriesPage() {
             >
               {isSubmitting ? (
                 <>
-                  <RefreshCw size={14} className="animate-spin" />
+                  <Loader2 size={14} className="animate-spin" />
                   Đang lưu...
                 </>
               ) : (
