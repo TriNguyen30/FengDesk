@@ -9,6 +9,7 @@ import {
 } from "@/features/orders";
 import type { StoreDelivery } from "@/features/orders";
 import { formatOrderDate, formatVnd } from "@/features/orders/utils/orderUtils";
+import Tabs from "@/components/ui/Tabs";
 
 const DELIVERY_STATUS_MAP: Record<string, { label: string; className: string }> = {
   Pending: { label: "Chờ xác nhận", className: "bg-amber-50 text-amber-700 border-amber-200" },
@@ -107,29 +108,14 @@ export function ShopDeliveriesView({ storeId }: ShopDeliveriesViewProps) {
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
       <div className="border-b border-gray-100 p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gray-50/30">
-        <div className="flex flex-wrap gap-1.5">
-          {TABS.map((tab) => {
-            const count = counts[tab.value] ?? 0;
-            return (
-              <button
-                key={tab.value}
-                onClick={() => setActiveTab(tab.value)}
-                className={`rounded-lg px-3.5 py-1.5 text-xs font-semibold transition-all cursor-pointer ${
-                  activeTab === tab.value
-                    ? "bg-primary text-white shadow-sm"
-                    : "text-gray-500 hover:bg-gray-100 hover:text-gray-900"
-                }`}
-              >
-                {tab.label}
-                {activeTab !== tab.value && count > 0 && (
-                  <span className="ml-1.5 rounded-full bg-gray-200/60 px-1.5 py-0.5 text-[10px] text-gray-600 font-medium">
-                    {count}
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </div>
+        {/* Filter tab: chỉ đổi bộ lọc trên cùng một danh sách → KHÔNG bọc TabPanel, nếu không mỗi
+            lần lọc sẽ nháy cả bảng. */}
+        <Tabs
+          items={TABS.map((tab) => ({ ...tab, count: counts[tab.value] ?? 0 }))}
+          value={activeTab}
+          onChange={setActiveTab}
+          ariaLabel="Lọc đơn giao theo trạng thái"
+        />
 
         <div className="relative w-full md:w-72">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />

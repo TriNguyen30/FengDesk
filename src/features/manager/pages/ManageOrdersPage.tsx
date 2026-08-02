@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import {
   ShoppingBag,
   Loader2,
@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import { getAllShopRequest } from "@/features/shop/api/shop.api";
 import { useAllOrdersList, useUpdateOrderDeliveryStatus } from "@/features/orders";
 import type { Order, OrderDetail } from "@/features/orders";
+import Tabs from "@/components/ui/Tabs";
 import { formatOrderDate, formatVnd } from "@/features/orders/utils/orderUtils";
 import { ordersApi } from "@/features/orders";
 import { STATUS_MAP } from "@/features/orders/utils/orderUtils";
@@ -101,6 +102,17 @@ export default function ManageOrdersPage() {
     }
   };
 
+  // Badge số lượng cho từng tab. Bản cũ gọi orders.filter() HAI lần cho MỖI tab ngay trong JSX
+  // (8 tab × 2 = 16 lượt quét toàn bộ danh sách mỗi lần render) — gom lại còn một lượt duy nhất.
+  const tabsWithCounts = useMemo(() => {
+    const byStatus = new Map<string, number>();
+    for (const o of orders) byStatus.set(o.status, (byStatus.get(o.status) ?? 0) + 1);
+    return TABS.map((tab) => ({
+      ...tab,
+      count: tab.value === "All" ? orders.length : (byStatus.get(tab.value) ?? 0),
+    }));
+  }, [orders]);
+
   // Filter orders by active tab and search term
   const filteredOrders = orders.filter((order) => {
     // 1. Filter by Tab
@@ -129,29 +141,13 @@ export default function ManageOrdersPage() {
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
         {/* Tabs & Search controls */}
         <div className="border-b border-gray-100 p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gray-50/30">
-          {/* Filter Tabs */}
-          <div className="flex flex-wrap gap-1.5">
-            {TABS.map((tab) => (
-              <button
-                key={tab.value}
-                onClick={() => setActiveTab(tab.value)}
-                className={`rounded-lg px-3.5 py-1.5 text-xs font-semibold transition-all cursor-pointer ${
-                  activeTab === tab.value
-                    ? "bg-primary text-white shadow-sm"
-                    : "text-gray-500 hover:bg-gray-100 hover:text-gray-900"
-                }`}
-              >
-                {tab.label}
-                {activeTab !== tab.value &&
-                  orders.filter((d) => tab.value === "All" || d.status === tab.value).length >
-                    0 && (
-                    <span className="ml-1.5 rounded-full bg-gray-200/60 px-1.5 py-0.2 text-[10px] text-gray-600 font-medium">
-                      {orders.filter((d) => tab.value === "All" || d.status === tab.value).length}
-                    </span>
-                  )}
-              </button>
-            ))}
-          </div>
+          {/* Filter tab: chỉ đổi bộ lọc trên cùng một bảng → KHÔNG bọc TabPanel. */}
+          <Tabs
+            items={tabsWithCounts}
+            value={activeTab}
+            onChange={setActiveTab}
+            ariaLabel="Lọc đơn hàng theo trạng thái"
+          />
 
           {/* Search Input */}
           <div className="relative w-full md:w-72">

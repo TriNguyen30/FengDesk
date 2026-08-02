@@ -14,11 +14,17 @@ const CHAT_SURFACE_KEY = "fd-chat-surface";
 /** Khoá bật/tắt kiểu boolean của bản trước — chỉ còn dùng để chuyển đổi dữ liệu cũ. */
 const LEGACY_LIQUID_CHAT_KEY = "fd-liquid-chat";
 
-/** Chất liệu nền khung hội thoại của trợ lý AI. */
-export type ChatSurface = "liquid" | "blur" | "off";
+/**
+ * Chất liệu nền khung hội thoại của trợ lý AI.
+ *
+ * Bản trước có thêm chế độ "liquid" (mặt nước WebGL). Đã gỡ vì lý do hiệu năng:
+ * mỗi khung hình nó phải drawImage lại lớp ASCII rồi upload thành texture —
+ * một vòng GPU → CPU → GPU chạy suốt thời gian khung chat mở. Ai đang chọn
+ * "liquid" sẽ được chuyển sang "blur" ở readChatSurface().
+ */
+export type ChatSurface = "blur" | "off";
 
 export const CHAT_SURFACES: ReadonlyArray<{ value: ChatSurface; label: string }> = [
-  { value: "liquid", label: "Nước" },
   { value: "blur", label: "Mờ" },
   { value: "off", label: "Tắt" },
 ];
@@ -43,12 +49,14 @@ function readDrift(): number {
     : FLUID_DRIFT_DEFAULT;
 }
 
-const CHAT_SURFACE_DEFAULT: ChatSurface = "liquid";
+const CHAT_SURFACE_DEFAULT: ChatSurface = "blur";
 
 function readChatSurface(): ChatSurface {
   const raw = localStorage.getItem(CHAT_SURFACE_KEY);
 
-  if (raw === "liquid" || raw === "blur" || raw === "off") return raw;
+  // "liquid" là giá trị của bản trước — chế độ đó không còn, rơi về "blur".
+  if (raw === "liquid") return "blur";
+  if (raw === "blur" || raw === "off") return raw;
 
   // Ai từng chủ động TẮT bằng công tắc boolean của bản trước thì giữ nguyên ý đó;
   // còn lại coi như chưa chọn gì và rơi về mặc định mới.

@@ -11,7 +11,10 @@ import { Bot, ImagePlus, Loader2, Pencil, Send, Sparkles, User, X } from "lucide
 import { useAiChat, type AiMessage } from "@/features/chatbox/hooks/useAiChat";
 import { useImageAttachments } from "@/features/chatbox/hooks/useImageAttachments";
 import { AiActivityIndicator } from "@/features/shared/ai-activity";
-import LiquidMeshBackground from "@/components/ui/LiquidMeshBackground";
+// TẠM GỠ (perf): nền "Nước" dựng bằng WebGL — mỗi khung hình phải đọc lại
+// canvas ASCII bằng drawImage rồi upload thành texture, tức là một vòng
+// GPU → CPU → GPU đủ để một mình nó ăn hết ngân sách khung hình.
+// import LiquidMeshBackground from "@/components/ui/LiquidMeshBackground";
 import { useChatSurface } from "@/utils/appearance";
 import AttachmentPreviewRow from "./AttachmentPreviewRow";
 import ConfirmDeleteButton from "./ConfirmDeleteButton";
@@ -27,6 +30,9 @@ const SUGGESTIONS = [
 ];
 
 const DEFAULT_DRAWER_WIDTH = 448;
+
+/** Còn cách đáy dưới ngưỡng này (px) thì coi như người dùng đang theo dõi tin mới. */
+const STICK_THRESHOLD = 200;
 
 const getDrawerWidthLimits = (viewportWidth: number) => {
   const minWidth = Math.min(viewportWidth, DEFAULT_DRAWER_WIDTH);
@@ -95,7 +101,6 @@ export default function AiAssistantDrawer({ open, onClose, productId }: AiAssist
   const [isHoveringResizeHandle, setIsHoveringResizeHandle] = useState(false);
   const att = useImageAttachments(uploadImage);
   const fileRef = useRef<HTMLInputElement>(null);
-  const bottomRef = useRef<HTMLDivElement>(null);
   // Phân trang lịch sử: container cuộn + giữ vị trí cuộn khi prepend tin cũ (tránh nhảy).
   const scrollRef = useRef<HTMLDivElement>(null);
   const prevScrollHeightRef = useRef(0);
@@ -152,6 +157,32 @@ export default function AiAssistantDrawer({ open, onClose, productId }: AiAssist
     }
   }, [open, loadHistory]);
 
+  /**
+   * Neo đáy khung hội thoại.
+   *
+   * CỐ Ý không dùng `bottomRef.scrollIntoView()`: nó cuộn MỌI vùng cuộn tổ tiên
+   * cho tới tận document, nên mỗi nhịp stream của AI lại kéo cả trang nền lên
+   * một đoạn — kể cả khi khung chat là `fixed`. Ghi thẳng scrollTop thì chỉ
+   * đúng khung này bị động tới.
+   *
+   * Cũng cố ý luôn nhảy tức thì thay vì `behavior: "smooth"`: nhịp stream tới
+   * dày hơn thời gian chạy animation nên mỗi lần gọi lại khởi động animation từ
+   * đầu, khung giật liên tục mà không bao giờ chạm đáy. Ngoài ra animation
+   * smooth còn đi ngang vùng `scrollTop < 60` và kích hoạt nhầm load-more.
+   */
+  const scrollToBottom = () => {
+    const el = scrollRef.current;
+
+    if (el) el.scrollTop = el.scrollHeight;
+  };
+
+  /** Người dùng có đang bám đáy (theo dõi tin mới) hay đã kéo lên đọc tin cũ? */
+  const isNearBottom = () => {
+    const el = scrollRef.current;
+
+    return !el || el.scrollHeight - el.scrollTop - el.clientHeight < STICK_THRESHOLD;
+  };
+
   // Khôi phục vị trí cuộn sau khi prepend tin cũ (layout-effect chạy TRƯỚC effect cuộn-đáy, trước khi
   // paint) → bù đúng phần chiều cao mới thêm ở trên, không reset cờ ở đây (để effect dưới biết mà bỏ cuộn đáy).
   useLayoutEffect(() => {
@@ -169,12 +200,18 @@ export default function AiAssistantDrawer({ open, onClose, productId }: AiAssist
     }
     if (!open) return;
     if (!initialScrolledRef.current) {
-      // Lần đầu sau khi mở: nhảy thẳng xuống đáy (không animation — xem chú thích initialScrolledRef).
-      bottomRef.current?.scrollIntoView();
+      // Lần đầu sau khi mở: nhảy thẳng xuống đáy (xem chú thích initialScrolledRef).
+      scrollToBottom();
       if (messages.length > 0) initialScrolledRef.current = true;
       return;
     }
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    // Effect này chạy theo cả `activity`/`narrations`, tức là mỗi nhịp stream của
+    // AI. Chỉ neo đáy khi người dùng vẫn đang ở gần đáy — nếu không thì mỗi nhịp
+    // lại giật họ khỏi đoạn đang đọc. Ngoại lệ: tin cuối là tin MÌNH vừa gửi thì
+    // luôn nhảy xuống, vì đó là hành động chủ động chứ không phải nền chạy.
+    const justSent = messages[messages.length - 1]?.role === "user";
+
+    if (justSent || isNearBottom()) scrollToBottom();
   }, [messages, activity, narrations, open]);
 
   // Trigger nạp tin cũ hơn (dùng chung cho scroll gần đỉnh + nút bấm). Ghi scrollHeight để bù vị trí.
@@ -383,9 +420,10 @@ export default function AiAssistantDrawer({ open, onClose, productId }: AiAssist
               : "bg-gray-50"
           }`}
         >
+          {/* TẠM GỠ (perf) — xem ghi chú ở phần import LiquidMeshBackground.
           {chatSurface === "liquid" && (
             <LiquidMeshBackground active={open} className="absolute inset-0 -z-10" />
-          )}
+          )} */}
 
           <div
             ref={scrollRef}
@@ -514,13 +552,7 @@ export default function AiAssistantDrawer({ open, onClose, productId }: AiAssist
                                     onLoad={() => {
                                       // Ảnh nạp xong mới biết chiều cao → danh sách dài ra SAU khi đã cuộn đáy.
                                       // Nếu đang ở gần đáy thì neo lại đáy, không thì để yên (user đang đọc tin cũ).
-                                      const el = scrollRef.current;
-                                      if (
-                                        el &&
-                                        el.scrollHeight - el.scrollTop - el.clientHeight < 200
-                                      ) {
-                                        bottomRef.current?.scrollIntoView();
-                                      }
+                                      if (isNearBottom()) scrollToBottom();
                                     }}
                                   />
                                 ))}
@@ -577,7 +609,6 @@ export default function AiAssistantDrawer({ open, onClose, productId }: AiAssist
                     <AiActivityIndicator activity={activity} />
                   </div>
                 )}
-                <div ref={bottomRef} />
               </div>
             )}
           </div>

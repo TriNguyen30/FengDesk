@@ -67,76 +67,90 @@ export default function AppearanceSettings() {
         />
       </button>
 
+      {/* Mở/đóng bằng grid-template-rows 0fr→1fr: CSS thuần, không phải đo chiều cao, và animate được —
+          khác với `display:none` (thuộc tính rời rạc, trình duyệt không nội suy nên trước đây panel
+          bật/tắt cụp một cái). `inert` chặn tab-focus vào các nút đang bị thu gọn. */}
       <div
         id="appearance-settings-panel"
-        className={`flex flex-col gap-1 rounded-lg bg-neutral-dark/40 p-1 ${open ? "mt-1" : "hidden"}`}
+        inert={!open}
+        className={`grid transition-[grid-template-rows] duration-300 ease-out ${
+          open ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+        }`}
       >
-        <ThemeToggle variant="sidebar" />
-
-        <button type="button" onClick={() => setClouds(!clouds)} className={rowClass}>
-          <Cloud size={18} />
-
-          <span className="flex-1 text-left">Mảng mây</span>
-
-          <Switch on={clouds} label="Mảng mây" />
-        </button>
-
-        <div className="px-3 py-2.5">
-          <div className="flex items-center gap-3 text-sm font-medium text-text-secondary">
-            <Droplet size={18} />
-
-            <span className="flex-1">Nền khung chat AI</span>
-          </div>
-
+        <div className="overflow-hidden">
           <div
-            role="radiogroup"
-            aria-label="Chất liệu nền khung chat AI"
-            className="mt-2 flex gap-1 rounded-lg bg-neutral-dark/60 p-1"
+            className={`mt-1 flex flex-col gap-1 rounded-lg bg-neutral-dark/40 p-1 transition-opacity duration-200 ${
+              open ? "opacity-100" : "opacity-0"
+            }`}
           >
-            {CHAT_SURFACES.map(({ value, label }) => {
-              const selected = chatSurface === value;
+            <ThemeToggle variant="sidebar" />
 
-              return (
-                <button
-                  key={value}
-                  type="button"
-                  role="radio"
-                  aria-checked={selected}
-                  onClick={() => setChatSurface(value)}
-                  className={`flex-1 cursor-pointer rounded-md px-2 py-1.5 text-xs font-semibold transition-colors ${
-                    selected
-                      ? "bg-primary text-white"
-                      : "text-text-secondary hover:bg-neutral-dark hover:text-text-primary"
-                  }`}
-                >
-                  {label}
-                </button>
-              );
-            })}
+            <button type="button" onClick={() => setClouds(!clouds)} className={rowClass}>
+              <Cloud size={18} />
+
+              <span className="flex-1 text-left">Mảng mây</span>
+
+              <Switch on={clouds} label="Mảng mây" />
+            </button>
+
+            <div className="px-3 py-2.5">
+              <div className="flex items-center gap-3 text-sm font-medium text-text-secondary">
+                <Droplet size={18} />
+
+                <span className="flex-1">Nền khung chat AI</span>
+              </div>
+
+              <div
+                role="radiogroup"
+                aria-label="Chất liệu nền khung chat AI"
+                className="mt-2 flex gap-1 rounded-lg bg-neutral-dark/60 p-1"
+              >
+                {CHAT_SURFACES.map(({ value, label }) => {
+                  const selected = chatSurface === value;
+
+                  return (
+                    <button
+                      key={value}
+                      type="button"
+                      role="radio"
+                      aria-checked={selected}
+                      onClick={() => setChatSurface(value)}
+                      className={`flex-1 cursor-pointer rounded-md px-2 py-1.5 text-xs font-semibold transition-colors ${
+                        selected
+                          ? "bg-primary text-white"
+                          : "text-text-secondary hover:bg-neutral-dark hover:text-text-primary"
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="px-3 py-2.5">
+              <div className="flex items-center gap-3 text-sm font-medium text-text-secondary">
+                <Waves size={18} />
+
+                <span className="flex-1">Fluid trôi nổi</span>
+
+                <span className="text-xs font-semibold text-text-primary">
+                  {drift === 0 ? "Tắt" : `${drift}/${FLUID_DRIFT_MAX}`}
+                </span>
+              </div>
+
+              <input
+                type="range"
+                min={0}
+                max={FLUID_DRIFT_MAX}
+                step={1}
+                value={drift}
+                onChange={(e) => setFluidDrift(Number(e.target.value))}
+                aria-label="Cường độ fluid trôi nổi ngẫu nhiên"
+                className="mt-2 w-full cursor-pointer accent-primary"
+              />
+            </div>
           </div>
-        </div>
-
-        <div className="px-3 py-2.5">
-          <div className="flex items-center gap-3 text-sm font-medium text-text-secondary">
-            <Waves size={18} />
-
-            <span className="flex-1">Fluid trôi nổi</span>
-
-            <span className="text-xs font-semibold text-text-primary">
-              {drift === 0 ? "Tắt" : `${drift}/${FLUID_DRIFT_MAX}`}
-            </span>
-          </div>
-
-          <input
-            type="range"
-            min={0}
-            max={FLUID_DRIFT_MAX}
-            step={1}
-            value={drift}
-            onChange={(e) => setFluidDrift(Number(e.target.value))}
-            aria-label="Cường độ fluid trôi nổi ngẫu nhiên"
-            className="mt-2 w-full cursor-pointer accent-primary"
-          />
         </div>
       </div>
     </div>

@@ -491,19 +491,27 @@
 ------------------------------------------------------------------------- */
 
 :root[data-theme="dark"] .shadow-sm {
-  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.45), 0 1px 2px -1px rgb(0 0 0 / 0.45);
+  box-shadow:
+    0 1px 3px 0 rgb(0 0 0 / 0.45),
+    0 1px 2px -1px rgb(0 0 0 / 0.45);
 }
 
 :root[data-theme="dark"] .shadow-md {
-  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.5), 0 2px 4px -2px rgb(0 0 0 / 0.5);
+  box-shadow:
+    0 4px 6px -1px rgb(0 0 0 / 0.5),
+    0 2px 4px -2px rgb(0 0 0 / 0.5);
 }
 
 :root[data-theme="dark"] .shadow-lg {
-  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.55), 0 4px 6px -4px rgb(0 0 0 / 0.55);
+  box-shadow:
+    0 10px 15px -3px rgb(0 0 0 / 0.55),
+    0 4px 6px -4px rgb(0 0 0 / 0.55);
 }
 
 :root[data-theme="dark"] .shadow-xl {
-  box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.6), 0 8px 10px -6px rgb(0 0 0 / 0.6);
+  box-shadow:
+    0 20px 25px -5px rgb(0 0 0 / 0.6),
+    0 8px 10px -6px rgb(0 0 0 / 0.6);
 }
 
 :root[data-theme="dark"] .shadow-2xl {
@@ -908,6 +916,43 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .fd-cloud {
     animation: none;
+  }
+}
+
+/* ── Transition mặc định cho phần tử tương tác ───────────────────────────────
+   Trước đây mỗi chỗ phải tự nhớ thêm `transition-colors`, quên là đổi màu cụp một cái.
+   Đặt mặc định ở đây để hover/focus/active ở TOÀN APP mượt mà không phải sửa từng file.
+
+   CỐ Ý chỉ liệt kê color / background-color / border-color / fill / stroke / opacity:
+   - đây đều là thuộc tính compositor hoặc paint-only, không gây layout;
+   - KHÔNG dùng `transition: all` — `all` biến cả width/height/top/margin thành animatable,
+     mỗi lần đổi là một lần tính lại layout, và buộc trình duyệt dò toàn bộ property.
+     Đó là cách nhanh nhất để "thêm animation" xong app chậm đi.
+
+   Class Tailwind (`transition-transform`, `duration-*`…) khai báo sau nên vẫn ghi đè được. */
+@layer base {
+  a,
+  button,
+  summary,
+  [role="button"],
+  [role="tab"],
+  [role="radio"],
+  [role="switch"] {
+    transition-property: color, background-color, border-color, fill, stroke, opacity;
+    transition-duration: 180ms;
+    transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  /* Ai bật giảm chuyển động thì tắt sạch, kể cả animation của thư viện. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
   }
 }
 

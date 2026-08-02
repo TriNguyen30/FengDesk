@@ -4,6 +4,9 @@ import type { ChatMessage } from "@/features/chatbox/types/chatbox";
 import { AiActivityIndicator, type AiActivity } from "@/features/shared/ai-activity";
 import ChatMessageBubble from "./ChatMessageBubble";
 
+/** Còn cách đáy dưới ngưỡng này (px) thì coi như người dùng đang theo dõi tin mới. */
+const STICK_THRESHOLD = 200;
+
 interface ChatMessageListProps {
   messages: ChatMessage[];
   meId?: string;
@@ -17,7 +20,7 @@ export default function ChatMessageList({
   aiActivity,
   showScrollbar,
 }: ChatMessageListProps) {
-  const bottomRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   // Chốt chặn cuối: loại trùng theo id ngay trước khi render. Dù state thượng nguồn lỡ chứa message
   // trùng (race realtime/reload khi restart BE), key React vẫn luôn unique → hết "two children with the same key".
@@ -27,9 +30,29 @@ export default function ChatMessageList({
     return [...byId.values()];
   }, [messages]);
 
+  /**
+   * Neo đáy bằng cách ghi thẳng scrollTop của CHÍNH khung này.
+   *
+   * CỐ Ý không dùng scrollIntoView: nó cuộn mọi vùng cuộn tổ tiên cho tới tận
+   * document, nên mỗi nhịp cập nhật của AI lại kéo cả trang nền lên một đoạn.
+   * Cũng cố ý không dùng behavior "smooth": nhịp stream tới dày hơn thời gian
+   * chạy animation, mỗi lần gọi lại khởi động lại animation từ đầu → khung giật
+   * liên tục mà không bao giờ tới đáy.
+   *
+   * Chỉ neo khi người dùng đang ở gần đáy; kéo lên đọc tin cũ thì để yên.
+   */
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [uniqueMessages, aiActivity]);
+    const el = scrollRef.current;
+
+    if (!el) return;
+
+    // Tin cuối là tin MÌNH vừa gửi thì luôn nhảy đáy — đó là hành động chủ động.
+    const justSent = uniqueMessages[uniqueMessages.length - 1]?.senderId === meId;
+
+    if (!justSent && el.scrollHeight - el.scrollTop - el.clientHeight > STICK_THRESHOLD) return;
+
+    el.scrollTop = el.scrollHeight;
+  }, [uniqueMessages, aiActivity, meId]);
 
   if (uniqueMessages.length === 0) {
     return (
@@ -50,6 +73,7 @@ export default function ChatMessageList({
 
   return (
     <div
+      ref={scrollRef}
       className={`flex flex-1 flex-col gap-3 bg-[#f9fafb] px-3 py-4 ${
         showScrollbar ? "overflow-y-scroll" : "overflow-y-auto scrollbar-none"
       }`}
@@ -58,7 +82,6 @@ export default function ChatMessageList({
         <ChatMessageBubble key={message.id} message={message} isOwn={message.senderId === meId} />
       ))}
       {aiActivity && <AiActivityIndicator activity={aiActivity} />}
-      <div ref={bottomRef} />
     </div>
   );
 }

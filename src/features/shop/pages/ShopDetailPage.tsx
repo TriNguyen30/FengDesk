@@ -27,6 +27,7 @@ import {
 import ShopReturnsView from "../components/ShopReturnsView";
 import FeatureBar from "@/components/ui/FeatureBar";
 import CommitmentPage from "@/components/ui/CommitmentPage";
+import Tabs, { TabPanel, type TabItem } from "@/components/ui/Tabs";
 
 type ShopTab = "products" | "stats" | "deliveries" | "returns" | "chat" | "staff";
 
@@ -192,7 +193,7 @@ export default function ShopDetailPage() {
         : "Đang cập nhật";
 
   // Tab hiện theo vai trò per-store: staff KHÔNG thấy "Thống kê" + "Nhân viên" (BE cũng chặn 403).
-  const TABS: { value: ShopTab; label: string; icon: typeof Store; hidden?: boolean }[] = [
+  const TABS: TabItem<ShopTab>[] = [
     { value: "products", label: "Sản phẩm", icon: Store },
     { value: "stats", label: "Thống kê", icon: BarChart3, hidden: !isOwnerView },
     { value: "deliveries", label: "Đơn giao", icon: Truck },
@@ -226,106 +227,96 @@ export default function ShopDetailPage() {
 
       {/* Owner-only tabs */}
       {isShopMember && (
-        <div className="mb-6 flex flex-wrap gap-1.5 border-b border-gray-100">
-          {TABS.filter((tab) => !tab.hidden).map((tab) => {
-            const Icon = tab.icon;
-            const active = tab.value === activeTab;
-            return (
+        <Tabs
+          items={TABS}
+          value={activeTab}
+          onChange={setActiveTab}
+          variant="underline"
+          className="mb-6"
+          ariaLabel="Khu vực quản lý cửa hàng"
+        />
+      )}
+
+      {/* Tab body — mỗi tab là nội dung khác hẳn nhau nên có chuyển cảnh (khác filter tab). */}
+      <TabPanel value={activeTab}>
+        {activeTab === "products" && (
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+            <ShopSidebar
+              shop={shop}
+              shopAddressText={shopAddressText}
+              canEdit={canEditShopProfile}
+              onShopUpdated={(updated) => setShop(updated)}
+            />
+            <ShopProductCatalog
+              products={products}
+              loadingProducts={loadingProducts}
+              totalCount={totalCount}
+              searchQuery={searchQuery}
+              onSearchQueryChange={setSearchQuery}
+              shopId={shop.id}
+              isShopMember={isShopMember}
+              canAddProduct={isOwnerView}
+              onRefresh={() => query.refetch()}
+            />
+          </div>
+        )}
+
+        {activeTab === "deliveries" && isShopMember && shop.id && (
+          <div className="space-y-3">
+            <div className="flex items-center justify-between gap-2">
+              <div>
+                <h2 className="text-lg font-bold text-gray-900">Đơn giao của cửa hàng</h2>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  Nhận đơn để vào trạng thái xử lý, sau đó tạo vận đơn để gọi đơn vị giao hàng.
+                </p>
+              </div>
               <button
-                key={tab.value}
-                onClick={() => setActiveTab(tab.value)}
-                className={`flex items-center gap-2 border-b-2 px-4 py-2.5 text-sm font-semibold transition-all cursor-pointer ${
-                  active
-                    ? "border-primary text-primary"
-                    : "border-transparent text-gray-500 hover:text-gray-800"
-                }`}
+                onClick={() => navigate(`/seller/${shop.id}/deliveries`)}
+                className="text-xs font-semibold text-primary hover:underline cursor-pointer"
               >
-                <Icon size={15} />
-                {tab.label}
+                Mở trang đầy đủ →
               </button>
-            );
-          })}
-        </div>
-      )}
+            </div>
+            <ShopDeliveriesView storeId={shop.id} />
+          </div>
+        )}
 
-      {/* Tab body */}
-      {activeTab === "products" && (
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          <ShopSidebar
-            shop={shop}
-            shopAddressText={shopAddressText}
-            canEdit={canEditShopProfile}
-            onShopUpdated={(updated) => setShop(updated)}
-          />
-          <ShopProductCatalog
-            products={products}
-            loadingProducts={loadingProducts}
-            totalCount={totalCount}
-            searchQuery={searchQuery}
-            onSearchQueryChange={setSearchQuery}
-            shopId={shop.id}
-            isShopMember={isShopMember}
-            canAddProduct={isOwnerView}
-            onRefresh={() => query.refetch()}
-          />
-        </div>
-      )}
+        {activeTab === "returns" && isShopMember && shop.id && (
+          <div className="space-y-3">
+            <div className="flex items-center justify-between gap-2">
+              <div>
+                <h2 className="text-lg font-bold text-gray-900">Đơn trả hàng của cửa hàng</h2>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  Nhận đơn để vào trạng thái xử lý, sau đó tạo vận đơn để gọi đơn vị giao hàng.
+                </p>
+              </div>
+              <button
+                onClick={() => navigate(`/seller/${shop.id}/returns`)}
+                className="text-xs font-semibold text-primary hover:underline cursor-pointer"
+              >
+                Mở trang đầy đủ →
+              </button>
+            </div>
+            <ShopReturnsView storeId={shop.id} />
+          </div>
+        )}
 
-      {activeTab === "deliveries" && isShopMember && shop.id && (
-        <div className="space-y-3">
-          <div className="flex items-center justify-between gap-2">
+        {activeTab === "chat" && isShopMember && (
+          <div className="space-y-3">
             <div>
-              <h2 className="text-lg font-bold text-gray-900">Đơn giao của cửa hàng</h2>
+              <h2 className="text-lg font-bold text-gray-900">Hộp thư khách hàng</h2>
               <p className="text-xs text-gray-500 mt-0.5">
-                Nhận đơn để vào trạng thái xử lý, sau đó tạo vận đơn để gọi đơn vị giao hàng.
+                Tổng hợp tin nhắn khách gửi đến cửa hàng, có panel xem nhanh thông tin khách.
               </p>
             </div>
-            <button
-              onClick={() => navigate(`/seller/${shop.id}/deliveries`)}
-              className="text-xs font-semibold text-primary hover:underline cursor-pointer"
-            >
-              Mở trang đầy đủ →
-            </button>
+            <ShopChatInbox storeId={shop.id} />
           </div>
-          <ShopDeliveriesView storeId={shop.id} />
-        </div>
-      )}
+        )}
 
-      {activeTab === "returns" && isShopMember && shop.id && (
-        <div className="space-y-3">
-          <div className="flex items-center justify-between gap-2">
-            <div>
-              <h2 className="text-lg font-bold text-gray-900">Đơn trả hàng của cửa hàng</h2>
-              <p className="text-xs text-gray-500 mt-0.5">
-                Nhận đơn để vào trạng thái xử lý, sau đó tạo vận đơn để gọi đơn vị giao hàng.
-              </p>
-            </div>
-            <button
-              onClick={() => navigate(`/seller/${shop.id}/returns`)}
-              className="text-xs font-semibold text-primary hover:underline cursor-pointer"
-            >
-              Mở trang đầy đủ →
-            </button>
-          </div>
-          <ShopReturnsView storeId={shop.id} />
-        </div>
-      )}
+        {activeTab === "stats" && isOwnerView && shop.id && <ShopStatsSection storeId={shop.id} />}
 
-      {activeTab === "chat" && isShopMember && (
-        <div className="space-y-3">
-          <div>
-            <h2 className="text-lg font-bold text-gray-900">Hộp thư khách hàng</h2>
-            <p className="text-xs text-gray-500 mt-0.5">
-              Tổng hợp tin nhắn khách gửi đến cửa hàng, có panel xem nhanh thông tin khách.
-            </p>
-          </div>
-          <ShopChatInbox storeId={shop.id} />
-        </div>
-      )}
-
-      {activeTab === "stats" && isOwnerView && shop.id && <ShopStatsSection storeId={shop.id} />}
-
-      {activeTab === "staff" && isOwnerView && shop.id && <ShopStaffSection storeId={shop.id} />}
+        {activeTab === "staff" && isOwnerView && shop.id && <ShopStaffSection storeId={shop.id} />}
+      </TabPanel>
 
       <FeatureBar />
       <CommitmentPage />

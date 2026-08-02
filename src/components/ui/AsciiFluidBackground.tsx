@@ -6,17 +6,17 @@ import { useClouds, useFluidDrift } from "@/utils/appearance";
 const CLOUD_LAYERS = [1, 2, 3, 4, 5, 6];
 
 /** Kích thước một ô lưới (px CSS) — ô càng lớn thì càng ít ký tự phải vẽ. */
-const CELL_SIZE = 20;
+const CELL_SIZE = 17;
 /** Cỡ chữ so với ô lưới; quá 0.9 là các ký tự bắt đầu dính nhau. */
-const GLYPH_SCALE = 0.86;
+const GLYPH_SCALE = 1;
 /** Bậc đậm nhạt: nhạt → đậm. */
-const RAMP = ["·", "-", "+", "*"] as const;
+const RAMP = ["-", "·", "+", "*"] as const;
 /** Ngưỡng mật độ tương ứng từng ký tự trong RAMP. */
 const RAMP_STOPS = [0.05, 0.14, 0.32, 0.6] as const;
 /** Số mức alpha rời rạc — gom nét vẽ theo mức để đổi fillStyle ít lần nhất. */
 const ALPHA_STEPS = 5;
-const MIN_ALPHA = 0.18;
-const MAX_ALPHA = 0.62;
+const MIN_ALPHA = 0.28;
+const MAX_ALPHA = 0.68;
 
 /** Phần vận tốc / mật độ còn lại sau mỗi giây (dùng luỹ thừa theo dt). */
 const VELOCITY_RETENTION = 0.5;
@@ -25,34 +25,34 @@ const VELOCITY_RETENTION = 0.5;
  * nhiều nên sống dai, ô đậm (ký tự "*") tan nhanh hơn. Ô có độ đậm ở giữa thì
  * nội suy tuyến tính giữa hai mốc này.
  */
-const DENSITY_RETENTION_FAINT = 0.58;
-const DENSITY_RETENTION_DENSE = 0.12;
+const DENSITY_RETENTION_FAINT = 0.48;
+const DENSITY_RETENTION_DENSE = 0.16;
 
 const POINTER_MAX_SPEED = 55; // ô/giây
 const POINTER_FORCE_GAIN = 1;
-const SPLAT_RADIUS = 1.4;
+const SPLAT_RADIUS = 1.3;
 
 /** Click → vòng lực toả tròn: số nhánh và tốc độ bắn ra (ô/giây). */
-const BURST_ARMS = 8;
-const BURST_SPEED = 26;
+const BURST_ARMS = 20;
+const BURST_SPEED = 36;
 /**
  * Cụm fluid trôi nổi ngẫu nhiên. Khác vệt chuột ở chỗ mực được bơm DẦN theo
  * bao hình attack → hold → release thay vì đổ một lần, cộng vận tốc gần bằng 0
  * nên cụm hiện lên nhẹ nhàng và tan chậm thay vì bị kéo thành vệt.
  */
-const DRIFT_RADIUS = [3.5, 5] as const; // ô lưới (vệt chuột chỉ ~2.2)
-const DRIFT_ATTACK = [0.4, 0.6] as const; // giây hiện dần
-const DRIFT_HOLD = [0, 0.2] as const; // giây giữ nguyên độ đậm
-const DRIFT_RELEASE = [1.8, 2.6] as const; // giây ngừng bơm để tự tan
+const DRIFT_RADIUS = [2.8, 3.6] as const; // ô lưới (vệt chuột chỉ ~2.2)
+const DRIFT_ATTACK = [0.25, 0.35] as const; // giây hiện dần
+const DRIFT_HOLD = [0.1, 0.3] as const; // giây giữ nguyên độ đậm
+const DRIFT_RELEASE = [1.8, 2.4] as const; // giây ngừng bơm để tự tan
 const DRIFT_SPEED = 6; // ô/giây — chỉ đủ để cụm lững lờ trôi
 /**
  * Mực bơm mỗi giây ở đỉnh bao hình. Vì tâm cụm là vùng đậm nên nó tiêu tán theo
  * DENSITY_RETENTION_DENSE: mật độ cân bằng ≈ FEED / |ln(DENSITY_RETENTION_DENSE)|,
  * và luôn bị chặn ở trần cứng 1.6 trong FluidSolver.splat().
  */
-const DRIFT_FEED = 5.8;
+const DRIFT_FEED = 5.2;
 /** Số cụm sống đồng thời ứng với 1 bậc cường độ (bậc 0 = tắt hẳn). */
-const DRIFT_PUFFS_PER_LEVEL = 3;
+const DRIFT_PUFFS_PER_LEVEL = 5;
 
 type Rgb = [number, number, number];
 
@@ -167,6 +167,11 @@ export default function AsciiFluidBackground({ className = "" }: { className?: s
     const puffs: DriftPuff[] = [];
     let spawnTimer = 0.3;
 
+    /** Số ô đã vẽ ở lượt render gần nhất — 0 nghĩa là màn hình đang trống. */
+    let painted = 0;
+    /** Vòng lặp đang ngủ: không step, không render, không clearRect. */
+    let idle = false;
+
     /** Bảng màu: mực nhạt ngả nâu ấm, mực đậm ngả xanh sage của brand. */
     const buildPalette = () => {
       const ink = readThemeColor("--color-primary-dark", FALLBACK_INK);
@@ -201,6 +206,11 @@ export default function AsciiFluidBackground({ className = "" }: { className?: s
         Math.max(8, Math.ceil(width / cellPx) + 2),
         Math.max(8, Math.ceil(height / cellPx) + 2),
       );
+
+      // Lưới mới hoàn toàn trống — để vòng lặp tự đánh giá lại thay vì kẹt ở
+      // trạng thái ngủ/thức của kích thước cũ.
+      painted = 0;
+      idle = false;
 
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.textAlign = "center";
@@ -264,9 +274,12 @@ export default function AsciiFluidBackground({ className = "" }: { className?: s
       if (trailActive) burst(pointer.x, pointer.y, 1.35);
     };
 
-    /** Rải vệt mực dọc quãng chuột đã đi trong frame để nét không bị đứt. */
+    /**
+     * Rải vệt mực dọc quãng chuột đã đi trong frame để nét không bị đứt.
+     * Trả về true nếu có bơm mực — vòng lặp dùng để biết khi nào được phép ngủ.
+     */
     const emitFromPointer = (dt: number) => {
-      if (!pointer.seen) return;
+      if (!pointer.seen) return false;
 
       const dx = pointer.x - pointer.prevX;
       const dy = pointer.y - pointer.prevY;
@@ -276,7 +289,7 @@ export default function AsciiFluidBackground({ className = "" }: { className?: s
       pointer.prevX = pointer.x;
       pointer.prevY = pointer.y;
 
-      if (!trailActive || distance < 0.02) return;
+      if (!trailActive || distance < 0.02) return false;
 
       const speed = Math.min(distance / dt, POINTER_MAX_SPEED);
       const steps = Math.min(10, Math.ceil(distance / 0.7));
@@ -297,6 +310,8 @@ export default function AsciiFluidBackground({ className = "" }: { className?: s
           SPLAT_RADIUS,
         );
       }
+
+      return true;
     };
 
     /** Nội suy ngẫu nhiên trong khoảng [min, max]. */
@@ -341,6 +356,8 @@ export default function AsciiFluidBackground({ className = "" }: { className?: s
      * Cụm trôi nổi: bơm mực dần theo bao hình nên hiện lên nhẹ nhàng, bán kính
      * lớn gấp 2–4 lần vệt chuột, và vì được nuôi liên tục suốt vòng đời nên tồn
      * tại lâu hơn hẳn vệt chuột (thứ chỉ đổ mực một lần rồi tiêu tán).
+     *
+     * Trả về true nếu có bơm mực — vòng lặp dùng để biết khi nào được phép ngủ.
      */
     const updateDrift = (dt: number) => {
       const level = driftRef.current;
@@ -348,7 +365,7 @@ export default function AsciiFluidBackground({ className = "" }: { className?: s
       if (level <= 0) {
         puffs.length = 0;
 
-        return;
+        return false;
       }
 
       const maxPuffs = Math.max(1, Math.round(level * DRIFT_PUFFS_PER_LEVEL));
@@ -383,6 +400,8 @@ export default function AsciiFluidBackground({ className = "" }: { className?: s
           puff.radius,
         );
       }
+
+      return puffs.length > 0;
     };
 
     const render = () => {
@@ -391,6 +410,8 @@ export default function AsciiFluidBackground({ className = "" }: { className?: s
       ctx.clearRect(0, 0, cssWidth, cssHeight);
 
       for (const bucket of buckets) bucket.length = 0;
+
+      painted = 0;
 
       for (let y = 1; y < rows - 1; y++) {
         for (let x = 1; x < cols - 1; x++) {
@@ -406,6 +427,7 @@ export default function AsciiFluidBackground({ className = "" }: { className?: s
           const level = Math.min(ALPHA_STEPS - 1, Math.floor(d * ALPHA_STEPS));
 
           buckets[tier * ALPHA_STEPS + level].push(i);
+          painted++;
         }
       }
 
@@ -443,8 +465,36 @@ export default function AsciiFluidBackground({ className = "" }: { className?: s
 
       pointer.idle += dt;
 
-      updateDrift(dt);
-      emitFromPointer(dt);
+      // Hai hàm này chỉ bơm mực vào lưới nên rất rẻ; phần đắt nằm ở step() + render().
+      const drifted = updateDrift(dt);
+      const trailed = emitFromPointer(dt);
+
+      /**
+       * Không có nguồn bơm mới VÀ lượt vẽ trước không còn ô nào → cả hệ đứng
+       * yên vĩnh viễn: không bơm thì mực chỉ có thể giảm chứ không tự sinh, mà
+       * đã dưới ngưỡng vẽ rồi thì không bao giờ vượt lên lại. Bỏ luôn step(),
+       * render() và clearRect cho tới khi có mực mới.
+       *
+       * clearRect toàn màn hình mới là thứ đắt nhất ở đây — không phải phép
+       * tính fluid. Nó làm bẩn cả lớp canvas mỗi khung hình, kéo theo một lượt
+       * hợp thành lại của mọi thứ nằm trên, kể cả `backdrop-filter` của .fd-rail.
+       * Đứng yên thật sự thì chi phí nền về gần 0.
+       */
+      if (!drifted && !trailed && painted === 0) {
+        if (!idle) {
+          // Xả trường vận tốc trước khi ngủ: ngừng gọi step() chỉ ĐÓNG BĂNG vận
+          // tốc chứ không tắt dần, và lúc tỉnh lại nó sẽ hất mực mới đi một cú
+          // không ăn nhập với gì cả.
+          solver.reset();
+          ctx.clearRect(0, 0, cssWidth, cssHeight);
+          idle = true;
+        }
+
+        return;
+      }
+
+      idle = false;
+
       solver.step(
         dt,
         VELOCITY_RETENTION ** dt,
