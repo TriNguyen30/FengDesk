@@ -23,7 +23,7 @@ import type { Model3DPreview, Model3DRequestQueueItem } from "@/features/product
 const MAX_IMAGES = 4;
 
 const FAILURE_REASON_LABEL: Record<string, string> = {
-  InsufficientCredits: "Hết credit Meshy — tự thử lại sau",
+  InsufficientCredits: "Meshy đã hết credit",
   GenerationFailed: "Meshy tạo model thất bại",
   InvalidImage: "Ảnh nguồn không hợp lệ",
 };
@@ -50,23 +50,28 @@ export default function Model3DQueueItemModal({ item, onClose, onChanged }: Mode
 
   const open = !!item;
 
-  // Reset state mỗi khi mở 1 item khác
+  // Reset state mỗi khi mở một item khác. Cả Initial và Regenerate đều thao tác thủ công.
   useEffect(() => {
     setProductImages([]);
-    setShowPicker(item?.status === "AwaitingStaff");
-    setSelectedImageIds([]);
+    setShowPicker(item?.status === "AwaitingStaff" || item?.status === "Failed");
+    const initialIds = item?.sourceImageIds?.length
+      ? [...item.sourceImageIds]
+      : item?.productImageId ? [item.productImageId] : [];
+    if (item?.productImageId && !initialIds.includes(item.productImageId)) initialIds.unshift(item.productImageId);
+    setSelectedImageIds([...initialIds]);
     setNewFiles([]);
     setPreview(null);
     setShowRejectInput(false);
     setRejectReason("");
 
-    if (item && item.requestType === "Regenerate") {
+    if (item) {
       setLoadingImages(true);
       productApi
         .getProductById(item.productId)
         .then((res) => {
           if (res.data.isSuccess && res.data.data) {
             setProductImages(res.data.data.images || []);
+            setSelectedImageIds([...initialIds]);
           }
         })
         .catch(() => toast.error("Không tải được ảnh sản phẩm"))
@@ -77,6 +82,7 @@ export default function Model3DQueueItemModal({ item, onClose, onChanged }: Mode
   const totalSelected = selectedImageIds.length + newFiles.length;
 
   const toggleExistingImage = (imageId: string) => {
+    if (imageId === item?.productImageId) return;
     setSelectedImageIds((prev) => {
       if (prev.includes(imageId)) return prev.filter((id) => id !== imageId);
       if (totalSelected >= MAX_IMAGES) {
@@ -99,7 +105,7 @@ export default function Model3DQueueItemModal({ item, onClose, onChanged }: Mode
 
   const removeNewFile = (idx: number) => setNewFiles((prev) => prev.filter((_, i) => i !== idx));
 
-  const isRetryFlow = item?.status === "InProgress";
+  const isRetryFlow = item?.status === "InProgress" || item?.status === "Failed";
 
   const handleGenerateOrRetry = async () => {
     if (!item || totalSelected === 0) {
@@ -109,7 +115,11 @@ export default function Model3DQueueItemModal({ item, onClose, onChanged }: Mode
     setSubmitting(true);
     try {
       const call = isRetryFlow ? model3DQueueApi.retry : model3DQueueApi.generate;
-      const res = await call(item.id, { sourceImageIds: selectedImageIds, newImageFiles: newFiles });
+      const res = await call(item.id, {
+        productImageId: item.productImageId ?? undefined,
+        sourceImageIds: selectedImageIds,
+        newImageFiles: newFiles,
+      });
       if (res.data.isSuccess) {
         toast.success(res.data.message || "Đã gửi yêu cầu tới Meshy");
         onChanged();
@@ -131,6 +141,7 @@ export default function Model3DQueueItemModal({ item, onClose, onChanged }: Mode
       const res = await model3DQueueApi.preview(item.id);
       if (res.data.isSuccess) {
         setPreview(res.data.data);
+        if (res.data.data.state === "Failed") onChanged();
       } else {
         toast.error(res.data.message || "Không xem trước được");
       }
@@ -140,6 +151,15 @@ export default function Model3DQueueItemModal({ item, onClose, onChanged }: Mode
       setPreviewLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (!item || item.status !== "InProgress" || showPicker || (preview && preview.state !== "Running")) return;
+    handlePreview();
+    const interval = window.setInterval(handlePreview, 5_000);
+    return () => window.clearInterval(interval);
+    // item id/status and picker state are the lifecycle boundaries for polling this Meshy task.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [item?.id, item?.status, showPicker, preview?.state]);
 
   const handleAccept = async () => {
     if (!item) return;
@@ -203,29 +223,29 @@ export default function Model3DQueueItemModal({ item, onClose, onChanged }: Mode
       }
     >
       <div className="space-y-5">
-        {item.requestType === "Initial" ? (
-          <div className="flex items-start gap-3 rounded-xl bg-gray-50 px-4 py-3 text-sm text-gray-500">
-            <AlertTriangle size={16} className="mt-0.5 shrink-0 text-amber-500" />
+        {item.productImageUrl && (
+          <div className="flex items-center gap-3 rounded-xl bg-primary/5 p-3 ring-1 ring-primary/10">
+            <img
+              src={item.productImageUrl}
+              alt="Ảnh đại diện của model"
+              className="h-14 w-14 rounded-lg object-cover ring-1 ring-gray-100"
+            />
             <div>
-              <p className="font-medium text-gray-700">Request tự động (Initial) — chỉ để theo dõi.</p>
-              <p className="mt-1">
-                Hệ thống tự gửi Meshy, không thao tác thủ công ở đây.
-                {item.internalFailureReason && (
-                  <>
-                    {" "}Lý do đang kẹt:{" "}
-                    <span className="font-semibold text-amber-600">
-                      {FAILURE_REASON_LABEL[item.internalFailureReason] || item.internalFailureReason}
-                    </span>
-                    .
-                  </>
-                )}
-                {item.nextAttemptAt && (
-                  <> Thử lại lúc: {new Date(item.nextAttemptAt).toLocaleString("vi-VN")}.</>
-                )}
-              </p>
+              <p className="text-xs font-semibold text-gray-700">Model sẽ được lưu cho ảnh này</p>
+              <p className="mt-0.5 text-xs text-gray-400">Có thể chọn thêm ảnh cùng kiểu dáng ở góc khác.</p>
             </div>
           </div>
-        ) : item.status === "Succeeded" ? (
+        )}
+        {item.internalFailureReason && item.status !== "Succeeded" && item.status !== "Rejected" && (
+          <div className="flex items-start gap-3 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">
+            <AlertTriangle size={16} className="mt-0.5 shrink-0" />
+            <div>
+              <p className="font-semibold">Lần xử lý trước chưa thành công</p>
+              <p className="mt-0.5 text-xs">{FAILURE_REASON_LABEL[item.internalFailureReason] || item.internalFailureReason}</p>
+            </div>
+          </div>
+        )}
+        {item.status === "Succeeded" ? (
           <div className="flex items-center gap-2 rounded-xl bg-green-50 px-4 py-3 text-sm text-green-700">
             <Check size={16} /> Đã áp dụng model 3D cho sản phẩm.
           </div>
@@ -333,7 +353,36 @@ export default function Model3DQueueItemModal({ item, onClose, onChanged }: Mode
                         Hủy
                       </button>
                     )}
+                    <button
+                      type="button"
+                      onClick={() => setShowRejectInput((value) => !value)}
+                      disabled={submitting}
+                      className="rounded-xl border border-red-200 px-4 py-2.5 text-sm font-semibold text-red-600 hover:bg-red-50 cursor-pointer disabled:opacity-60"
+                    >
+                      Từ chối
+                    </button>
                   </div>
+                  {showRejectInput && (
+                    <div className="space-y-2 rounded-xl border border-red-100 bg-red-50/50 p-3">
+                      <label className="text-xs font-semibold text-gray-700">Lý do từ chối</label>
+                      <textarea
+                        value={rejectReason}
+                        onChange={(e) => setRejectReason(e.target.value)}
+                        rows={2}
+                        maxLength={1000}
+                        className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-primary focus:outline-none"
+                        placeholder="VD: Ảnh nguồn không đủ rõ hoặc không cùng một kiểu dáng..."
+                      />
+                      <button
+                        type="button"
+                        onClick={handleReject}
+                        disabled={submitting || !rejectReason.trim()}
+                        className="rounded-lg bg-red-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-red-700 cursor-pointer disabled:opacity-60"
+                      >
+                        Xác nhận từ chối
+                      </button>
+                    </div>
+                  )}
                 </div>
               )
             ) : (
@@ -434,6 +483,7 @@ export default function Model3DQueueItemModal({ item, onClose, onChanged }: Mode
                       value={rejectReason}
                       onChange={(e) => setRejectReason(e.target.value)}
                       rows={2}
+                      maxLength={1000}
                       className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-primary focus:outline-none"
                       placeholder="VD: Ảnh nguồn không đủ rõ, sản phẩm không phù hợp để tạo model 3D..."
                     />

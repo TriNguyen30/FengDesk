@@ -11,6 +11,7 @@ import type {
 
 function buildRequestFormData(payload: RequestModel3DPayload): FormData {
   const form = new FormData();
+  if (payload.productImageId) form.append("ProductImageId", payload.productImageId);
   (payload.sourceImageIds ?? []).forEach((id) => form.append("SourceImageIds", id));
   (payload.newImageFiles ?? []).forEach((file) => form.append("NewImages", file));
   return form;
@@ -24,9 +25,8 @@ export interface GetModel3DQueueParams {
 }
 
 /**
- * Hàng chờ Regenerate cho staff sàn (Staff/Manager/Admin) — /api/model3d-requests. Request Initial
- * (tự động) KHÔNG xử lý được qua đây (generate/retry trả 400 nếu gọi nhầm loại) — chỉ hiện để
- * theo dõi (vd status=Queued&reason=InsufficientCredits = đang kẹt vì hết credit Meshy).
+ * Hàng chờ thống nhất cho staff sàn: cả Initial và Regenerate đều dùng cùng generate/preview/
+ * retry/accept/reject flow và luôn gắn kết quả với productImageId.
  */
 export const model3DQueueApi = {
   getQueue: (params?: GetModel3DQueueParams) => {

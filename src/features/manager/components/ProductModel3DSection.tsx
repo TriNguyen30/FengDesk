@@ -34,7 +34,7 @@ interface ProductModel3DSectionProps {
 
 const REQUEST_STATUS_LABEL: Record<Model3DRequestStatus, string> = {
   Queued: "Đang chờ xử lý",
-  Processing: "Đang tạo (tự động)",
+  Processing: "Đang tạo",
   AwaitingStaff: "Chờ sàn xử lý",
   InProgress: "Sàn đang xử lý",
   Succeeded: "Hoàn tất",
@@ -53,7 +53,7 @@ const REQUEST_STATUS_STYLE: Record<Model3DRequestStatus, string> = {
 };
 
 export function ProductModel3DSection({ productId, images, onRefreshProduct }: ProductModel3DSectionProps) {
-  const [model, setModel] = useState<ProductModel3D | null>(null);
+  const [models, setModels] = useState<ProductModel3D[]>([]);
   const [requests, setRequests] = useState<Model3DRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [toggling, setToggling] = useState(false);
@@ -61,6 +61,14 @@ export function ProductModel3DSection({ productId, images, onRefreshProduct }: P
   const [submitting, setSubmitting] = useState(false);
   const [selectedImageIds, setSelectedImageIds] = useState<string[]>([]);
   const [newFiles, setNewFiles] = useState<File[]>([]);
+  const sortedImages = useMemo(() => [...images].sort((a, b) => a.sortOrder - b.sortOrder), [images]);
+  const [targetImageId, setTargetImageId] = useState<string>(sortedImages[0]?.id ?? "");
+
+  useEffect(() => {
+    if (!sortedImages.some((image) => image.id === targetImageId)) {
+      setTargetImageId(sortedImages[0]?.id ?? "");
+    }
+  }, [sortedImages, targetImageId]);
 
   const load = useCallback(async () => {
     if (!productId) return;
@@ -70,7 +78,7 @@ export function ProductModel3DSection({ productId, images, onRefreshProduct }: P
         model3DApi.getModel3D(productId).catch(() => null), // 404 = chưa có model — không phải lỗi
         model3DApi.listModel3DRequests(productId).catch(() => null),
       ]);
-      setModel(modelRes?.data?.isSuccess ? modelRes.data.data : null);
+      setModels(modelRes?.data?.isSuccess ? modelRes.data.data : []);
       setRequests(requestsRes?.data?.isSuccess ? requestsRes.data.data : []);
     } finally {
       setLoading(false);
@@ -81,9 +89,16 @@ export function ProductModel3DSection({ productId, images, onRefreshProduct }: P
     load();
   }, [load]);
 
+  const model = useMemo(
+    () => models.find((candidate) => candidate.productImageId === targetImageId) ?? null,
+    [models, targetImageId],
+  );
+
   const openRequest = useMemo(
-    () => requests.find((r) => OPEN_MODEL3D_REQUEST_STATUSES.includes(r.status)),
-    [requests],
+    () => requests.find(
+      (r) => r.productImageId === targetImageId && OPEN_MODEL3D_REQUEST_STATUSES.includes(r.status),
+    ),
+    [requests, targetImageId],
   );
 
   // Server quyết định Initial/Regenerate dựa trên model hiện tại có Succeeded hay chưa — mirror lại
@@ -93,12 +108,13 @@ export function ProductModel3DSection({ productId, images, onRefreshProduct }: P
   const totalSelected = selectedImageIds.length + newFiles.length;
 
   const resetPicker = () => {
-    setSelectedImageIds([]);
+    setSelectedImageIds(targetImageId ? [targetImageId] : []);
     setNewFiles([]);
     setShowPicker(false);
   };
 
   const toggleExistingImage = (imageId: string) => {
+    if (imageId === targetImageId) return;
     setSelectedImageIds((prev) => {
       if (prev.includes(imageId)) return prev.filter((id) => id !== imageId);
       if (totalSelected >= MAX_IMAGES) {
@@ -124,7 +140,14 @@ export function ProductModel3DSection({ productId, images, onRefreshProduct }: P
     setNewFiles((prev) => prev.filter((_, i) => i !== idx));
   };
 
-  const handleRequestInitial = () => setShowPicker(true);
+  const handleRequestInitial = () => {
+    if (!targetImageId) {
+      toast.error("Sản phẩm chưa có ảnh để tạo model 3D");
+      return;
+    }
+    setSelectedImageIds([targetImageId]);
+    setShowPicker(true);
+  };
 
   const handleSubmitInitial = async () => {
     if (totalSelected === 0) {
@@ -134,11 +157,12 @@ export function ProductModel3DSection({ productId, images, onRefreshProduct }: P
     setSubmitting(true);
     try {
       const res = await model3DApi.requestModel3D(productId, {
+        productImageId: targetImageId,
         sourceImageIds: selectedImageIds,
         newImageFiles: newFiles,
       });
       if (res.data.isSuccess) {
-        toast.success(res.data.message || "Đã tạo yêu cầu — hệ thống sẽ tự tạo mô hình 3D");
+        toast.success(res.data.message || "Đã gửi yêu cầu — đội ngũ sàn sẽ xử lý");
         resetPicker();
         load();
         onRefreshProduct();
@@ -155,7 +179,7 @@ export function ProductModel3DSection({ productId, images, onRefreshProduct }: P
   const handleRequestRegenerate = async () => {
     setSubmitting(true);
     try {
-      const res = await model3DApi.requestModel3D(productId, {});
+      const res = await model3DApi.requestModel3D(productId, { productImageId: targetImageId });
       if (res.data.isSuccess) {
         toast.success(res.data.message || "Đã gửi yêu cầu tạo lại — đội ngũ sàn sẽ xử lý thủ công");
         load();
@@ -173,9 +197,11 @@ export function ProductModel3DSection({ productId, images, onRefreshProduct }: P
   const handleToggle = async (nextEnabled: boolean) => {
     setToggling(true);
     try {
-      const res = await model3DApi.toggleModel3D(productId, nextEnabled);
+      if (!model) return;
+      const res = await model3DApi.toggleModel3D(productId, model.id, nextEnabled);
       if (res.data.isSuccess) {
-        setModel((m) => (m ? { ...m, isEnabled: nextEnabled } : m));
+        setModels((current) => current.map((item) =>
+          item.id === model.id ? { ...item, isEnabled: nextEnabled } : item));
         toast.success(nextEnabled ? "Đã bật hiển thị mô hình 3D" : "Đã tắt hiển thị mô hình 3D");
         onRefreshProduct();
       } else {
@@ -202,13 +228,49 @@ export function ProductModel3DSection({ productId, images, onRefreshProduct }: P
       <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-100 space-y-4">
         <div className="flex items-center gap-2 border-b border-gray-100 pb-3">
           <Box size={18} className="text-primary" />
-          <h2 className="text-base font-bold text-gray-950">Mô hình 3D sản phẩm</h2>
+          <h2 className="text-base font-bold text-gray-950">Mô hình 3D theo ảnh sản phẩm</h2>
         </div>
 
-        {!model ? (
+        {sortedImages.length > 0 && (
+          <div className="space-y-2">
+            <p className="text-xs font-semibold text-gray-600">Chọn ảnh/kiểu dáng cần quản lý</p>
+            <div className="grid grid-cols-4 gap-2 sm:grid-cols-6">
+              {sortedImages.map((image) => {
+                const imageModel = models.find((candidate) => candidate.productImageId === image.id);
+                const selected = targetImageId === image.id;
+                return (
+                  <button
+                    key={image.id}
+                    type="button"
+                    onClick={() => {
+                      setTargetImageId(image.id);
+                      setShowPicker(false);
+                      setSelectedImageIds([image.id]);
+                      setNewFiles([]);
+                    }}
+                    className={`relative aspect-square overflow-hidden rounded-xl border-2 transition-all cursor-pointer ${
+                      selected ? "border-primary ring-2 ring-primary/15" : "border-gray-100 hover:border-gray-300"
+                    }`}
+                  >
+                    <img src={image.url} alt="" className="h-full w-full object-cover" />
+                    {imageModel?.status === "Succeeded" && (
+                      <span className="absolute bottom-1 right-1 rounded-full bg-green-600 px-1.5 py-0.5 text-[9px] font-bold text-white">
+                        Có 3D
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {sortedImages.length === 0 ? (
+          <div className="py-8 text-center text-sm text-gray-400">Hãy thêm ảnh sản phẩm trước khi tạo model 3D.</div>
+        ) : !model ? (
           <div className="flex flex-col items-center justify-center py-10 text-center text-gray-400">
             <Box size={32} className="stroke-1 text-gray-300 mb-2" />
-            <p className="text-sm">Chưa có mô hình 3D nào được tạo cho sản phẩm này.</p>
+            <p className="text-sm">Ảnh đang chọn chưa có mô hình 3D.</p>
           </div>
         ) : (
           <div className="flex flex-col sm:flex-row gap-4 items-start">
@@ -276,7 +338,7 @@ export function ProductModel3DSection({ productId, images, onRefreshProduct }: P
         ) : isRegenerate ? (
           <div className="space-y-3">
             <p className="text-sm text-gray-500">
-              Sản phẩm đã có mô hình 3D. Muốn tạo lại (chưa ưng ý kết quả hiện tại)? Yêu cầu sẽ được
+              Ảnh/kiểu dáng này đã có mô hình 3D. Muốn tạo lại? Yêu cầu sẽ được
               đội ngũ sàn xử lý thủ công — họ sẽ tự chọn ảnh phù hợp.
             </p>
             <button
@@ -305,8 +367,8 @@ export function ProductModel3DSection({ productId, images, onRefreshProduct }: P
         ) : (
           <div className="space-y-3">
             <p className="text-sm text-gray-500">
-              Chọn ảnh sản phẩm để hệ thống tự động tạo mô hình 3D (qua AI). Bỏ trống sẽ dùng ảnh đầu
-              tiên của sản phẩm.
+              Tạo model riêng cho ảnh/kiểu dáng đang chọn. Có thể chọn thêm các ảnh cùng kiểu dáng ở
+              góc khác để Meshy dựng chính xác hơn.
             </p>
             <button
               type="button"
