@@ -277,6 +277,9 @@
     },
     "model_3d": {
       "badge": "3D",
+      "view_mode": "Chế độ xem",
+      "view_image": "Hình ảnh",
+      "view_model": "Mô hình 3D",
       "view_3d": "Xem mô hình 3D",
       "hint": "Kéo để xoay, cuộn để phóng to/thu nhỏ",
       "loading": "Đang tải mô hình 3D...",

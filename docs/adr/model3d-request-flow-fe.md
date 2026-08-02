@@ -16,7 +16,7 @@
 ## 2. Actor 1 — Khách xem model 3D (public)
 
 **File:**
-- `src/components/ui/3DSection.tsx` — component `Product3DViewer` (default export) + `Model3DToggleBadge`.
+- `src/components/ui/3DSection.tsx` — component `Product3DViewer` (default export) + `Model3DViewSwitcher`.
   Dùng `@react-three/fiber` (`Canvas`) + `@react-three/drei` (`useGLTF`, `OrbitControls`, `Center`).
   Tự tính bounding box (`THREE.Box3`) để scale mọi model về cùng kích thước hiển thị bất kể tỉ lệ gốc
   Meshy xuất ra. Có `Model3DErrorBoundary` (class component) bọc riêng — lỗi tải GLB hỏng/URL sai
@@ -25,10 +25,10 @@
   **404 = sản phẩm chưa từng có model, coi là bình thường** (`retry: false`, không toast lỗi).
   Chỉ trả `model3D` (khác `undefined`) khi `status === "Succeeded" && isEnabled && modelUrl` — mọi
   trạng thái khác (`Pending`/`Processing`/`Failed`/tắt hiển thị) đều bị ẩn khỏi khách.
-- Tích hợp: `src/features/products/pages/ProductDetailPage.tsx` — badge tròn **"3D"** góc trái khung
-  ảnh chính (đối xứng badge hành ngũ hành ở góc phải). Bấm để `viewMode` chuyển `"image" ↔ "3d"`,
-  thay hẳn nội dung khung ảnh chính (không phải section riêng bên dưới). Khi ở chế độ 3D: tắt
-  auto-swipe ảnh, tắt zoom-hover, tắt click-to-lightbox.
+- Tích hợp: `src/features/products/pages/ProductDetailPage.tsx` — bộ chuyển **"Hình ảnh / Mô hình 3D"**
+  nằm bên ngoài, phía trên khung media. Nút không nằm trong vùng click-to-lightbox nên không còn
+  xung đột event. Chuyển chế độ sẽ thay hẳn nội dung khung ảnh chính; khi ở chế độ 3D: tắt
+  auto-swipe ảnh, tắt zoom-hover, tắt click-to-lightbox. Chọn thumbnail sẽ tự chuyển về chế độ ảnh.
 
 **API:** `src/features/products/api/model3d.api.ts` → `model3DApi.getModel3D(productId)`.
 
@@ -130,12 +130,13 @@ Type khớp 1–1 với DTO backend (`ProductModel3DResponse`, `Model3DRequestRe
 - Không auto-poll (cả trang hàng chờ lẫn trạng thái "Đang xử lý" trong modal) — staff phải bấm tay
   "Làm mới"/"Kiểm tra lại".
 - Danh sách hàng chờ lấy tối đa 100 item/lần, chưa có phân trang thật.
-- Viewer 3D không dùng HDRI environment (`@react-three/drei` `<Environment>`) để tránh phụ thuộc CDN
-  ngoài — chỉ dùng 3 đèn (`ambientLight` + 2 `directionalLight`). Xem mục 7 nếu cần làm nền đẹp hơn.
+- Viewer 3D không tải HDRI từ CDN ngoài. Môi trường studio được tạo nội bộ bằng
+  `@react-three/drei` (`Environment` + `Lightformer`), kết hợp key/fill/rim light và bóng tiếp xúc.
+- Ảnh sản phẩm được dùng làm background phóng lớn, blur và giảm bão hoà. Viewer lấy mẫu độ sáng
+  của ảnh/model để tự chọn mức sáng và vùng tương phản phía sau sản phẩm; nếu storage chặn
+  đọc pixel qua CORS thì tự rơi về mức trung tính.
 
 ## 7. Chưa làm / có thể mở rộng sau
 
-- Nền/background cho `Product3DViewer` (hiện đang nền trong suốt/xám trơn — xem đề xuất trong hội
-  thoại lúc triển khai, chưa chốt phương án).
 - Thông báo real-time cho staff sàn khi có request `AwaitingStaff` mới (hiện phải tự vào trang xem).
 - Phân trang thật cho `Model3DQueuePage`.
