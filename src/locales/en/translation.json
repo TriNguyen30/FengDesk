@@ -277,6 +277,9 @@
     },
     "model_3d": {
       "badge": "3D",
+      "view_mode": "View mode",
+      "view_image": "Images",
+      "view_model": "3D model",
       "view_3d": "View 3D model",
       "hint": "Drag to rotate, scroll to zoom",
       "loading": "Loading 3D model...",
