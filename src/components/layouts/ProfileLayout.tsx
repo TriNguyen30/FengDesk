@@ -3,7 +3,6 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { User, MapPin, Package, HousePlus, Bell, RefreshCw, Mail } from "lucide-react";
 import { useEffect } from "react";
 import { useMyStoreInvitations } from "@/features/shop/hooks/useShopStaff";
-import AppearanceSettings from "@/components/ui/AppearanceSettings";
 import FeatureBar from "@/components/ui/FeatureBar";
 import CommitmentPage from "@/components/ui/CommitmentPage";
 import { useTranslation } from "react-i18next";
@@ -77,7 +76,6 @@ export default function ProfileLayout() {
                   </NavLink>
                 );
               })}
-              <AppearanceSettings />
             </nav>
           </div>
         </aside>

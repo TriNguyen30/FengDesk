@@ -7,7 +7,7 @@ import {
   type KeyboardEvent,
   type MouseEvent,
 } from "react";
-import { Bot, ImagePlus, Loader2, Pencil, Send, Sparkles, User, X } from "lucide-react";
+import { Bot, ImagePlus, Loader2, Pencil, Pin, PinOff, Send, Sparkles, User, X } from "lucide-react";
 import { useAiChat, type AiMessage } from "@/features/chatbox/hooks/useAiChat";
 import { useImageAttachments } from "@/features/chatbox/hooks/useImageAttachments";
 import { AiActivityIndicator } from "@/features/shared/ai-activity";
@@ -29,21 +29,43 @@ const SUGGESTIONS = [
   "Sản phẩm nào đang bán chạy?",
 ];
 
-const DEFAULT_DRAWER_WIDTH = 448;
+/**
+ * Ba mốc bề rộng, tính theo phần trăm khung nhìn.
+ *
+ * Mốc nhỏ nhất trước đây là 448px cố định — quá hẹp trên màn rộng, tin nhắn vỡ
+ * dòng liên tục. Giờ mốc nhỏ nhất chính là mốc GIỮA của thang cũ, và cả thang
+ * đẩy lên: 40% / 50% / 75%.
+ */
+const DRAWER_WIDTH_STOPS = [0.4, 0.5, 0.65] as const;
+
+/** Sàn tuyệt đối: hẹp hơn ngần này thì bong bóng chat vỡ dòng từng chữ. */
+const DRAWER_MIN_WIDTH = 448;
 
 /** Còn cách đáy dưới ngưỡng này (px) thì coi như người dùng đang theo dõi tin mới. */
 const STICK_THRESHOLD = 200;
 
-const getDrawerWidthLimits = (viewportWidth: number) => {
-  const minWidth = Math.min(viewportWidth, DEFAULT_DRAWER_WIDTH);
-  const maxWidth = Math.max(minWidth, Math.floor(viewportWidth * 0.5));
-  const midWidth = Math.round((minWidth + maxWidth) / 2);
-  return { minWidth, maxWidth, midWidth };
+/**
+ * Ba mốc quy ra px cho khung nhìn hiện tại, đã tăng dần và không trùng nhau.
+ *
+ * Trên màn hẹp, sàn 448px có thể đẩy hai mốc đầu chồng lên nhau — khi đó thang
+ * tự co lại còn ít mốc hơn thay vì để người dùng bấm mà không thấy gì đổi.
+ */
+const getDrawerStops = (viewportWidth: number) => {
+  const stops: number[] = [];
+
+  for (const ratio of DRAWER_WIDTH_STOPS) {
+    const width = Math.min(viewportWidth, Math.max(DRAWER_MIN_WIDTH, Math.round(viewportWidth * ratio)));
+
+    if (stops.length === 0 || width > stops[stops.length - 1] + 8) stops.push(width);
+  }
+
+  return stops;
 };
 
 const clampDrawerWidth = (value: number, viewportWidth: number) => {
-  const { minWidth, maxWidth } = getDrawerWidthLimits(viewportWidth);
-  return Math.min(maxWidth, Math.max(minWidth, value));
+  const stops = getDrawerStops(viewportWidth);
+
+  return Math.min(stops[stops.length - 1], Math.max(stops[0], value));
 };
 
 interface AiAssistantDrawerProps {
@@ -94,9 +116,15 @@ export default function AiAssistantDrawer({ open, onClose, productId }: AiAssist
   })();
   const [draft, setDraft] = useState("");
   const [drawerWidth, setDrawerWidth] = useState(() => {
-    if (typeof window === "undefined") return DEFAULT_DRAWER_WIDTH;
-    return clampDrawerWidth(DEFAULT_DRAWER_WIDTH, window.innerWidth);
+    if (typeof window === "undefined") return DRAWER_MIN_WIDTH;
+    return getDrawerStops(window.innerWidth)[0];
   });
+  /**
+   * "Gắn vào màn hình": khung chat thôi nổi trên nội dung mà chiếm hẳn một dải
+   * bên phải — trang bị đẩy sang trái nhường chỗ, bỏ lớp phủ tối, bỏ khoá cuộn,
+   * và Escape / bấm ra ngoài không đóng nữa. Để vừa đọc trang vừa hỏi trợ lý.
+   */
+  const [pinned, setPinned] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
   const [isHoveringResizeHandle, setIsHoveringResizeHandle] = useState(false);
   const att = useImageAttachments(uploadImage);
@@ -114,7 +142,7 @@ export default function AiAssistantDrawer({ open, onClose, productId }: AiAssist
   /** Vị trí chuột lúc bấm xuống viền: vừa để tính width, vừa để phân biệt "click" với "kéo". */
   const resizeStartRef = useRef<{ x: number; y: number } | null>(null);
   /** Width mới nhất trong lúc kéo — chỉ đẩy vào React state một lần khi thả chuột. */
-  const resizeWidthRef = useRef<number>(DEFAULT_DRAWER_WIDTH);
+  const resizeWidthRef = useRef<number>(DRAWER_MIN_WIDTH);
 
   // Rewind (sửa & gửi lại tin của mình): id tin đang sửa + nội dung nháp.
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -280,15 +308,39 @@ export default function AiAssistantDrawer({ open, onClose, productId }: AiAssist
     };
   }, [isResizing]);
 
-  // ESC để đóng + khóa cuộn nền khi mở.
+  // ESC để đóng. Khi đã gắn thì khung là một phần của trang chứ không phải hộp
+  // thoại nữa — Escape lúc đó là phím thoát của trang, không phải của khung.
   useEffect(() => {
-    if (!open) return;
+    if (!open || pinned) return;
     const onKey = (e: globalThis.KeyboardEvent) => {
       if (e.key === "Escape") onClose();
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [open, onClose]);
+  }, [open, pinned, onClose]);
+
+  /**
+   * Khi gắn: đẩy nội dung trang sang trái đúng bằng bề rộng khung.
+   *
+   * Ghi vào một biến CSS trên <html> thay vì padding thẳng vào body — lớp nền
+   * `.fd-ambient` là `fixed inset-0` nên phải KHÔNG bị đẩy (nền vẫn trải hết
+   * màn), chỉ khối nội dung mới đẩy. Biến này do AppLayout tiêu thụ.
+   */
+  useEffect(() => {
+    const root = document.documentElement;
+
+    if (!open || !pinned) {
+      root.style.removeProperty("--fd-drawer-pad");
+
+      return;
+    }
+
+    root.style.setProperty("--fd-drawer-pad", `${drawerWidth}px`);
+
+    return () => {
+      root.style.removeProperty("--fd-drawer-pad");
+    };
+  }, [open, pinned, drawerWidth]);
 
   const canSend =
     (draft.trim().length > 0 || att.urls.length > 0) && !sending && !att.uploading && !editingId;
@@ -315,15 +367,18 @@ export default function AiAssistantDrawer({ open, onClose, productId }: AiAssist
     setIsResizing(true);
   };
 
+  /** Click vào viền → nhảy sang mốc rộng kế tiếp, tới mốc cuối thì vòng về đầu. */
   const cycleDrawerWidth = () => {
     if (typeof window === "undefined") return;
 
-    const { minWidth, maxWidth, midWidth } = getDrawerWidthLimits(window.innerWidth);
+    const stops = getDrawerStops(window.innerWidth);
+
     setDrawerWidth((currentWidth) => {
-      const current = Math.round(currentWidth);
-      if (current <= Math.round(minWidth + 2)) return midWidth;
-      if (Math.abs(current - midWidth) <= 8) return maxWidth;
-      return minWidth;
+      // Kéo tay xong thường không rơi đúng mốc nào, nên lấy mốc đầu tiên rộng
+      // hơn hẳn bề rộng hiện tại thay vì dò khớp chính xác.
+      const next = stops.find((stop) => stop > Math.round(currentWidth) + 8);
+
+      return next ?? stops[0];
     });
   };
 
@@ -332,10 +387,11 @@ export default function AiAssistantDrawer({ open, onClose, productId }: AiAssist
 
   return (
     <>
-      {/* Backdrop */}
+      {/* Lớp phủ tối. Khi đã gắn thì bỏ hẳn: trang phía sau phải bấm được, mà
+          đó cũng chính là lý do tồn tại của chế độ gắn. */}
       <div
         className={`fixed inset-0 z-40 bg-gray-900/30 backdrop-blur-[1px] transition-opacity duration-300 ${
-          open ? "opacity-100" : "pointer-events-none opacity-0"
+          open && !pinned ? "opacity-100" : "pointer-events-none opacity-0"
         }`}
         onClick={onClose}
         aria-hidden
@@ -393,6 +449,18 @@ export default function AiAssistantDrawer({ open, onClose, productId }: AiAssist
               label="Xóa hội thoại"
               idleClassName="text-white/90 hover:bg-white/15"
             />
+            <button
+              type="button"
+              onClick={() => setPinned((v) => !v)}
+              aria-pressed={pinned}
+              className={`rounded-lg p-1.5 transition-colors cursor-pointer ${
+                pinned ? "bg-white/20 text-white" : "text-white/90 hover:bg-white/15"
+              }`}
+              aria-label={pinned ? "Bỏ gắn khung chat" : "Gắn khung chat vào màn hình"}
+              title={pinned ? "Bỏ gắn" : "Gắn vào màn hình"}
+            >
+              {pinned ? <PinOff size={17} /> : <Pin size={17} />}
+            </button>
             <button
               type="button"
               onClick={onClose}

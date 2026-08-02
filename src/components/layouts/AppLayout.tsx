@@ -9,6 +9,7 @@ import { useAppSelector } from "@/app/store";
 import BackToTopButton from "@/components/ui/BackToTopButton";
 import AsciiFluidBackground from "@/components/ui/AsciiFluidBackground";
 import CategoryBar from "@/components/ui/CategoryBar";
+import { useEffectSettings } from "@/utils/appearance";
 
 const toasterStyle = { "--width": "min(100vw - 1.5rem, 356px)" } as CSSProperties;
 
@@ -20,7 +21,11 @@ export default function AppLayout() {
   const user = useAppSelector((s) => s.auth.user);
   const navigate = useNavigate();
   const { pathname } = useLocation();
-  const reduceMotion = useReducedMotion();
+  const systemReduceMotion = useReducedMotion();
+  const { pageTransition } = useEffectSettings();
+  // Tắt trong cài đặt cũng tính là "giảm chuyển động" — dùng chung một cờ để
+  // không phải rẽ nhánh hai lần ở mỗi prop của motion.div.
+  const reduceMotion = systemReduceMotion || !pageTransition;
 
   // Gom các route con của /profile vào một key để ProfileLayout không bị remount
   // (mất state sidebar + refetch) mỗi lần đổi tab trong trang cá nhân.
@@ -38,7 +43,15 @@ export default function AppLayout() {
   }, []);
 
   return (
-    <div className="flex min-h-screen min-w-0 flex-col overflow-x-clip">
+    // padding-right theo --fd-drawer-pad: khi khung trợ lý AI được "gắn", nó
+    // chiếm hẳn một dải bên phải và nội dung phải nhường chỗ thay vì bị che.
+    // Biến chỉ tồn tại lúc đang gắn; bình thường fallback 0 nên không ảnh hưởng.
+    // CỐ Ý đặt ở đây chứ không phải trên <body>: lớp nền .fd-ambient là fixed
+    // inset-0 và nằm ngoài khối này, nên nó vẫn trải kín màn như cũ.
+    <div
+      className="flex min-h-screen min-w-0 flex-col overflow-x-clip transition-[padding] duration-300 ease-out"
+      style={{ paddingRight: "var(--fd-drawer-pad, 0px)" }}
+    >
       {/* Nền fluid ASCII đặt ở layout (không phải từng page) để không bị remount
           khi đổi route — hiệu ứng chạy liên tục xuyên suốt các tab. */}
       <AsciiFluidBackground />

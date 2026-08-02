@@ -1,9 +1,10 @@
 import { Diamond, Leaf, Droplets, Flame, Mountain } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, type CSSProperties } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import * as THREE from "three";
 import { useTranslation } from "react-i18next";
+import { useEffectSettings } from "@/utils/appearance";
 
 const elements = [
   {
@@ -317,6 +318,48 @@ function makeBlankParticle(obj: THREE.Object3D, type: ElementType): Particle3D {
 }
 
 // ─── Hover Particles ──────────────────────────────────────────────────────────
+
+type ParticleSpec = {
+  delay: number;
+  duration: number;
+  xStart: number;
+  yStart: number;
+  xEnd: number;
+  yEnd: number;
+  rotEnd: number;
+};
+
+/** Hằng số cấp module — trước đây mảng này dựng lại ở MỖI lần render của 5 thẻ. */
+const PARTICLES: ParticleSpec[] = [
+  { delay: 0.1, duration: 3.5, xStart: -60, yStart: -90, xEnd: -80, yEnd: -140, rotEnd: 180 },
+  { delay: 0.8, duration: 4.0, xStart: 60, yStart: -80, xEnd: 90, yEnd: -130, rotEnd: -180 },
+  { delay: 1.5, duration: 3.2, xStart: -70, yStart: 70, xEnd: -110, yEnd: 110, rotEnd: 240 },
+  { delay: 0.4, duration: 3.8, xStart: 70, yStart: 80, xEnd: 110, yEnd: 120, rotEnd: -240 },
+  { delay: 2.1, duration: 4.5, xStart: -30, yStart: 100, xEnd: -50, yEnd: 150, rotEnd: 360 },
+  { delay: 1.2, duration: 3.6, xStart: 30, yStart: 110, xEnd: 50, yEnd: 160, rotEnd: -360 },
+  { delay: 2.5, duration: 3.9, xStart: 0, yStart: -110, xEnd: 10, yEnd: -170, rotEnd: 120 },
+  { delay: 0.6, duration: 4.2, xStart: 90, yStart: 0, xEnd: 140, yEnd: -10, rotEnd: -120 },
+];
+
+/**
+ * Thông số của một hạt, đưa xuống CSS qua custom property.
+ *
+ * `delay` để ÂM: animation đứng sẵn ở giữa chu kỳ mà chưa chạy khung nào, nên
+ * lần hover đầu tiên đã đủ 8 hạt thay vì phải đợi tới 2,5 giây. Xem khối
+ * `.fd-particle` trong index.css.
+ */
+function particleVars(p: ParticleSpec): CSSProperties {
+  return {
+    "--fd-x0": `${p.xStart}px`,
+    "--fd-y0": `${p.yStart}px`,
+    "--fd-x1": `${p.xEnd}px`,
+    "--fd-y1": `${p.yEnd}px`,
+    "--fd-rot": `${p.rotEnd}deg`,
+    "--fd-dur": `${p.duration}s`,
+    "--fd-delay": `-${p.delay}s`,
+  } as CSSProperties;
+}
+
 const HoverParticles = ({ type }: { type: ElementType }) => {
   const getIcon = () => {
     switch (type) {
@@ -335,46 +378,12 @@ const HoverParticles = ({ type }: { type: ElementType }) => {
     }
   };
 
-  const particles = [
-    { delay: 0.1, duration: 3.5, xStart: -60, yStart: -90, xEnd: -80, yEnd: -140, rotEnd: 180 },
-    { delay: 0.8, duration: 4.0, xStart: 60, yStart: -80, xEnd: 90, yEnd: -130, rotEnd: -180 },
-    { delay: 1.5, duration: 3.2, xStart: -70, yStart: 70, xEnd: -110, yEnd: 110, rotEnd: 240 },
-    { delay: 0.4, duration: 3.8, xStart: 70, yStart: 80, xEnd: 110, yEnd: 120, rotEnd: -240 },
-    { delay: 2.1, duration: 4.5, xStart: -30, yStart: 100, xEnd: -50, yEnd: 150, rotEnd: 360 },
-    { delay: 1.2, duration: 3.6, xStart: 30, yStart: 110, xEnd: 50, yEnd: 160, rotEnd: -360 },
-    { delay: 2.5, duration: 3.9, xStart: 0, yStart: -110, xEnd: 10, yEnd: -170, rotEnd: 120 },
-    { delay: 0.6, duration: 4.2, xStart: 90, yStart: 0, xEnd: 140, yEnd: -10, rotEnd: -120 },
-  ];
-
   return (
-    <div className="absolute inset-[-40px] z-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-      {particles.map((p, i) => (
-        <motion.div
-          key={i}
-          className="absolute left-1/2 top-1/2"
-          initial={{
-            x: p.xStart,
-            y: p.yStart,
-            scale: 0.5,
-            opacity: 0,
-            rotate: 0,
-          }}
-          animate={{
-            y: [p.yStart, p.yEnd],
-            x: [p.xStart, p.xEnd],
-            scale: [0.5, 1, 0],
-            opacity: [0, 1, 0],
-            rotate: [0, p.rotEnd],
-          }}
-          transition={{
-            duration: p.duration,
-            repeat: Infinity,
-            delay: p.delay,
-            ease: "easeInOut",
-          }}
-        >
+    <div className="fd-hover-fx">
+      {PARTICLES.map((p, i) => (
+        <span key={i} className="fd-particle" style={particleVars(p)}>
           {getIcon()}
-        </motion.div>
+        </span>
       ))}
     </div>
   );
@@ -806,6 +815,7 @@ export default function FiveElementsSection() {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [animatingElement, setAnimatingElement] = useState<string | null>(null);
+  const { hoverEffects } = useEffectSettings();
 
   const handleElementClick = (e: React.MouseEvent, elementId: string) => {
     e.preventDefault();
@@ -822,12 +832,6 @@ export default function FiveElementsSection() {
     <section className="mt-8 sm:mt-12 relative">
       {/* ── Decorative frame wrapper ─────────────────────────────────────── */}
       <div className="relative">
-        {/* Ambient glow blobs behind the frame */}
-        <div className="pointer-events-none absolute -inset-x-6 -inset-y-8 -z-10 overflow-hidden sm:-inset-x-10 sm:-inset-y-12">
-          <div className="absolute -left-10 -top-10 h-56 w-56 rounded-full bg-primary/20 blur-3xl sm:h-72 sm:w-72" />
-          <div className="absolute -right-10 -bottom-10 h-56 w-56 rounded-full bg-amber-300/20 blur-3xl sm:h-72 sm:w-72" />
-        </div>
-
         {/* Gradient border shell */}
         <div className="rounded-[28px] bg-gradient-to-br from-primary/40 via-amber-200/40 to-primary/40 p-[1.5px] shadow-xl shadow-primary/10">
           <div className="relative overflow-hidden rounded-[26px] bg-white">
@@ -878,12 +882,14 @@ export default function FiveElementsSection() {
                       className={`group relative flex flex-col items-center justify-center rounded-2xl text-center transition-all duration-300 ${element.color} ${element.hoverColor} hover:-translate-y-1 hover:shadow-lg cursor-pointer`}
                     >
                       <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden rounded-2xl">
-                        <div
-                          className="absolute inset-[-100%] opacity-0 group-hover:opacity-100 animate-[spin_3s_linear_infinite] transition-opacity duration-300"
-                          style={{
-                            background: `conic-gradient(from 0deg, transparent 0 180deg, ${element.overlayColor} 360deg)`,
-                          }}
-                        />
+                        {hoverEffects && (
+                          <div
+                            className="fd-elem-glow"
+                            style={{
+                              background: `conic-gradient(from 0deg, transparent 0 180deg, ${element.overlayColor} 360deg)`,
+                            }}
+                          />
+                        )}
                         <div
                           className={`absolute inset-[2px] rounded-[14px] ${element.color} ${element.hoverColor.replace("hover:", "group-hover:")} transition-colors duration-300`}
                         />
@@ -897,7 +903,7 @@ export default function FiveElementsSection() {
                         />
                       </div>
 
-                      <HoverParticles type={element.id as ElementType} />
+                      {hoverEffects && <HoverParticles type={element.id as ElementType} />}
 
                       <div className="relative z-10 flex w-full flex-col items-center p-6">
                         <div

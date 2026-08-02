@@ -69,6 +69,23 @@
   --fd-ev-surplus-text: #ef4444;
   --fd-ev-attention-bg: #f6ead8;
   --fd-ev-attention-text: #8a6a3f;
+
+  /* ── Dải nội dung (.fd-rail) — ba núm chỉnh độ đục, gom về một chỗ ─────────
+     Hai chất liệu dùng hai cơ chế khác hẳn nhau nên không có một con số "độ đục"
+     chung; đây là núm tương ứng của từng bên.
+
+     Kính mờ: độ đục đến từ BÁN KÍNH LÀM MỜ — mờ càng mạnh thì nền phía sau càng
+     nhoè thành mảng phẳng. Đây cũng chính là núm giá / hiệu năng: chi phí tăng
+     theo bán kính, nên đẩy lên cao là thấy máy nóng lên ngay. */
+  --fd-rail-blur: 8px;
+
+  /* Đục màu: alpha thật. Càng cao càng che mây, càng dễ đọc chữ.
+     Dưới ~70% thì chữ gray-900 bắt đầu mất tương phản ở chỗ mây chồng nhau. */
+  --fd-rail-tint-opacity: 78%;
+
+  /* Sắc của dải đục: phần --color-neutral trong hỗn hợp với --color-primary.
+     100% = đúng màu nền trang (không xanh); giảm xuống là xanh dần lên. */
+  --fd-rail-tint-mix: 84%;
 }
 
 /* Hairline: gray-100 dùng làm VIỀN thì phải đậm hơn khi dùng làm NỀN, không thì
@@ -751,7 +768,16 @@ body {
    Ambient background — mảng mây màu + lớp fluid ASCII (trang chủ)
    Mây là khối màu ĐẶC, viền sắc nét (không blur, không gradient mờ);
    nhiều mảng chồng nhau qua mix-blend-mode: multiply → chỗ đậm chỗ nhạt.
-   Chỉ animate transform nên toàn bộ chạy trên GPU compositing.
+
+   ⚠ Chỉ animate transform, NHƯNG không có nghĩa là "chạy hoàn toàn trên GPU
+   compositing" như ghi chú cũ ở đây từng khẳng định: `mix-blend-mode` khiến
+   phần tử KHÔNG thể tách thành layer độc lập, nên mỗi khung hình trình duyệt
+   phải trộn lại nó với nền phía sau. Đó mới là lý do mảng mây đắt, chứ không
+   phải bản thân animation. Nếu cần cắt thêm chi phí thì chỗ để cắt là bỏ
+   mix-blend-mode và pha sẵn màu, không phải giảm FPS.
+
+   Trạng thái do JS điều khiển qua class trên .fd-ambient:
+   `fd-clouds-paused` (đứng im, animation không tick — chi phí đúng bằng 0).
 ========================= */
 
 .fd-ambient {
@@ -770,6 +796,17 @@ body {
   display: block;
   mix-blend-mode: multiply;
   will-change: transform;
+}
+
+/* Đứng im. Animation đang `paused` thì trình duyệt không tick nó khung hình nào
+   — rẻ hơn hẳn so với hạ FPS, vì FPS thấp vẫn là còn chạy. Mây giữ nguyên vị
+   trí đang có nên nhìn như một nền tĩnh bình thường, không phải "biến mất".
+
+   Cũng bỏ luôn `will-change`: nó là lời hứa "cái này sắp động", giữ lại khi đã
+   đứng im chỉ tổ ghim một layer GPU không ai dùng. */
+.fd-clouds-paused .fd-cloud {
+  animation-play-state: paused;
+  will-change: auto;
 }
 
 /* Nền tối: chồng mảng phải làm SÁNG lên thay vì tối đi. Kèm giảm độ đục vì
@@ -958,15 +995,43 @@ body {
 
 /* Dải nội dung: làm đục phần nền nằm giữa hai viền dọc, canh đúng bề rộng
    max-w-screen-xl (80rem) của Navbar / CategoryBar / main → viền trùng đúng
-   mép các mảng mây nhìn thấy ở hai bên. */
+   mép các mảng mây nhìn thấy ở hai bên.
+
+   Chất liệu chọn được, vì đây là điểm đắt nhất của cả lớp nền — xem RailSurface
+   trong utils/appearance.ts. */
 .fd-rail {
   position: absolute;
   inset: 0;
   width: 100%;
   max-width: 80rem;
   margin-inline: auto;
-  /* Không phủ màu — chỉ làm đục phần nền nằm dưới. */
-  backdrop-filter: blur(8px) saturate(1.05);
+}
+
+/* Kính mờ. ĐẮT: `backdrop-filter` khiến việc vẽ dải này PHỤ THUỘC vào các lớp
+   đang động phía sau, nên mỗi lần canvas fluid repaint (60 lần/giây) là một
+   lượt gaussian blur trên gần trọn màn hình. Đẹp nhất, nhưng là thứ đầu tiên
+   nên hạ khi máy yếu. */
+.fd-rail-blur {
+  backdrop-filter: blur(var(--fd-rail-blur)) saturate(1.05);
+}
+
+/* Đục màu. Không blur, không phụ thuộc nền → trình duyệt cache dải này thành
+   một layer TĨNH và không raster lại lần nào nữa, dù canvas phía sau đổi liên
+   tục. Bán trong suốt nên mây vẫn hiện mờ mờ xuyên qua.
+
+   Màu: nền trang kéo về phía primary — cùng tông xanh sage với mảng mây, nhưng
+   nhạt hơn hẳn chúng. Cả hai token đều đổi theo theme nên nền tối tự ra bản
+   xanh trầm, không phải chỉnh riêng.
+
+   Hai núm chỉnh (--fd-rail-tint-opacity / --fd-rail-tint-mix) khai báo ở :root
+   đầu tệp, xem ghi chú tại đó. */
+.fd-rail-tint {
+  background: color-mix(
+    in oklab,
+    color-mix(in oklab, var(--color-neutral) var(--fd-rail-tint-mix), var(--color-primary))
+      var(--fd-rail-tint-opacity),
+    transparent
+  );
 }
 
 .fd-rail::before,
@@ -991,6 +1056,94 @@ body {
 
 .fd-rail::after {
   right: 0;
+}
+
+/* =========================
+   Hiệu ứng hover thẻ ngũ hành (trang chủ)
+
+   Trước đây đây là 40 animation framer-motion `repeat: Infinity` (8 hạt × 5
+   thẻ) cộng 5 vầng sáng `animate-[spin_…_infinite]`. Tất cả nằm sau `opacity-0`
+   nên KHÔNG AI NHÌN THẤY, nhưng framer-motion không biết điều đó: nó vẫn tick
+   đủ 60 lần/giây và ghi style vào DOM — cỡ 12.000 lượt ghi mỗi giây, chạy suốt
+   thời gian trang mở.
+
+   Bản này là CSS thuần với hai mẹo:
+
+   1. `animation-play-state: paused` mặc định → trình duyệt không tick khung nào.
+      Vì `:hover` vốn đã tính theo TỪNG thẻ, chỉ thẻ đang bị rê chuột mới chạy;
+      4 thẻ còn lại đứng im. Không hover thì chi phí đúng bằng 0.
+
+   2. `animation-delay` ÂM để "tua sẵn". Các hạt cố tình lệch pha nhau tới 2,5s;
+      nếu chỉ pause từ mốc 0 thì lần hover đầu phải đợi 2,5 giây mới đủ 8 hạt.
+      Delay âm nghĩa là "coi như đã chạy được ngần ấy rồi" — animation giữ ở
+      giữa chu kỳ mà chưa từng chạy một khung hình nào. Hover là hiện đủ ngay.
+========================= */
+
+.fd-hover-fx {
+  position: absolute;
+  inset: -40px;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 300ms ease-out;
+}
+
+.group:hover .fd-hover-fx {
+  opacity: 1;
+}
+
+.fd-particle {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  animation: fd-particle var(--fd-dur) ease-in-out infinite;
+  animation-delay: var(--fd-delay);
+  animation-play-state: paused;
+}
+
+.fd-elem-glow {
+  position: absolute;
+  inset: -100%;
+  opacity: 0;
+  transition: opacity 300ms ease-out;
+  animation: fd-spin 3s linear infinite;
+  animation-play-state: paused;
+}
+
+.group:hover .fd-elem-glow {
+  opacity: 1;
+}
+
+.group:hover .fd-particle,
+.group:hover .fd-elem-glow {
+  animation-play-state: running;
+}
+
+/* x / y / rotate nội suy tuyến tính suốt chu kỳ (nên mốc 50% phải là trung
+   điểm, tính bằng calc), còn scale và opacity có đỉnh ở giữa. */
+@keyframes fd-particle {
+  0% {
+    transform: translate(var(--fd-x0), var(--fd-y0)) rotate(0deg) scale(0.5);
+    opacity: 0;
+  }
+  50% {
+    transform: translate(
+        calc((var(--fd-x0) + var(--fd-x1)) / 2),
+        calc((var(--fd-y0) + var(--fd-y1)) / 2)
+      )
+      rotate(calc(var(--fd-rot) / 2)) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--fd-x1), var(--fd-y1)) rotate(var(--fd-rot)) scale(0);
+    opacity: 0;
+  }
+}
+
+@keyframes fd-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* =========================
