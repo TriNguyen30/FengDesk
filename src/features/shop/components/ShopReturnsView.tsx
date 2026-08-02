@@ -25,12 +25,16 @@ import { formatOrderDate, formatVnd } from "@/features/orders/utils/orderUtils";
 
 const RETURN_STATUS_META: Record<string, { label: string; className: string }> = {
   Requested: {
-    label: "Yêu cầu mới",
+    label: "Đã gửi yêu cầu",
     className: "bg-amber-50 text-amber-600 border border-amber-200",
   },
-  Accepted: {
-    label: "Đã chấp nhận",
+  Reviewing: {
+    label: "Đang chờ xử lý",
     className: "bg-indigo-50 text-indigo-600 border border-indigo-200",
+  },
+  NeedMoreEvidence: {
+    label: "Đang chờ bổ sung bằng chứng",
+    className: "bg-orange-50 text-orange-600 border border-orange-200",
   },
   Rejected: { label: "Đã từ chối", className: "bg-red-50 text-red-500 border border-red-200" },
   Processing: { label: "Đang xử lý", className: "bg-blue-50 text-blue-600 border border-blue-200" },

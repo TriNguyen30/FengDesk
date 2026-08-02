@@ -11,6 +11,7 @@ import type {
   AcceptReturnResponse,
   RequestMoreEvidenceRequest,
   RequestMoreEvidenceResponse,
+  ResubmitEvidenceResponse,
 } from "@/features/return/types/return.d.ts";
 
 export const returnApi = {
@@ -50,6 +51,22 @@ export const returnApi = {
     return fetchHttpClient.post<RequestMoreEvidenceResponse>(
       `/returns/${returnId}/request-more-evidence`,
       payload
+    );
+  },
+
+  resubmitEvidence: async (returnId: string, files: File[]) => {
+    const formData = new FormData();
+    files.forEach((file) => {
+      formData.append("files", file);
+    });
+    return fetchHttpClient.post<ResubmitEvidenceResponse>(
+      `/returns/${returnId}/resubmit-evidence`,
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
     );
   },
 };
