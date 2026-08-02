@@ -16,6 +16,7 @@ import {
   Clock,
   PackageCheck,
   Banknote,
+  FileWarning,
 } from "lucide-react";
 import { returnApi } from "@/features/return/api/return.api";
 import type { ReturnItem, ReturnDetail } from "@/features/return/types/return.d.ts";
@@ -86,6 +87,12 @@ interface AcceptModalState {
   returnId: string | null;
 }
 
+// ── Request Evidence confirm modal state ─────────────────────────────────────
+interface RequestEvidenceModalState {
+  open: boolean;
+  returnId: string | null;
+}
+
 // ── Reject confirm modal state ───────────────────────────────────────────────
 interface RejectModalState {
   open: boolean;
@@ -115,6 +122,12 @@ export default function ShopReturnsView({ storeId }: ShopReturnsViewProps) {
   // Accept modal
   const [acceptModal, setAcceptModal] = useState<AcceptModalState>({ open: false, returnId: null });
   const [accepting, setAccepting] = useState(false);
+
+  // Request Evidence modal
+  const [requestEvidenceModal, setRequestEvidenceModal] = useState<RequestEvidenceModalState>({ open: false, returnId: null });
+  const [evidenceNote, setEvidenceNote] = useState("");
+  const [evidenceDeadlineHours, setEvidenceDeadlineHours] = useState<number | "">("");
+  const [requestingEvidence, setRequestingEvidence] = useState(false);
 
   // Reject modal
   const [rejectModal, setRejectModal] = useState<RejectModalState>({ open: false, returnId: null });
@@ -225,6 +238,37 @@ export default function ShopReturnsView({ storeId }: ShopReturnsViewProps) {
     }
   };
 
+  // ── Request Evidence handlers ──────────────────────────────────────────────
+  const openRequestEvidenceModal = (returnId: string) => {
+    setEvidenceNote("");
+    setEvidenceDeadlineHours("");
+    setRequestEvidenceModal({ open: true, returnId });
+  };
+
+  const closeRequestEvidenceModal = () => setRequestEvidenceModal({ open: false, returnId: null });
+
+  const handleRequestEvidence = async () => {
+    if (!requestEvidenceModal.returnId) return;
+    setRequestingEvidence(true);
+    try {
+      const res = await returnApi.requestMoreEvidence(requestEvidenceModal.returnId, {
+        note: evidenceNote || null,
+        deadlineHours: evidenceDeadlineHours === "" ? null : Number(evidenceDeadlineHours),
+      });
+      if (res.data.isSuccess) {
+        toast.success("Đã yêu cầu thêm bằng chứng");
+        closeRequestEvidenceModal();
+        fetchReturns(page);
+      } else {
+        toast.error(res.data.message || "Không thể yêu cầu thêm bằng chứng");
+      }
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || "Có lỗi xảy ra khi yêu cầu thêm bằng chứng");
+    } finally {
+      setRequestingEvidence(false);
+    }
+  };
+
   // ── Reject handlers ────────────────────────────────────────────────────────
   const openRejectModal = (returnId: string) => {
     setRejectReason("");
@@ -268,11 +312,10 @@ export default function ShopReturnsView({ storeId }: ShopReturnsViewProps) {
               <button
                 key={tab.value}
                 onClick={() => setActiveTab(tab.value)}
-                className={`rounded-lg px-3.5 py-1.5 text-xs font-semibold transition-all cursor-pointer ${
-                  activeTab === tab.value
+                className={`rounded-lg px-3.5 py-1.5 text-xs font-semibold transition-all cursor-pointer ${activeTab === tab.value
                     ? "bg-primary text-white shadow-sm"
                     : "text-gray-500 hover:bg-gray-100 hover:text-gray-900"
-                }`}
+                  }`}
               >
                 {tab.label}
                 {activeTab !== tab.value && count > 0 && (
@@ -366,33 +409,36 @@ export default function ShopReturnsView({ storeId }: ShopReturnsViewProps) {
                       </span>
                     </td>
                     <td
-                      className="p-4 text-right flex items-center justify-end gap-2"
+                      className="p-4 text-right flex items-center justify-end gap-1"
                       onClick={(e) => e.stopPropagation()}
                     >
-                      {r.status === "Requested" && (
-                        <>
-                          <button
-                            onClick={() => openAcceptModal(r.id)}
-                            className="inline-flex items-center gap-1 rounded-lg border border-indigo-200 bg-indigo-50 px-2.5 py-1.5 text-xs font-semibold text-indigo-600 hover:bg-indigo-100 transition-colors cursor-pointer"
-                          >
-                            <Check size={14} />
-                            Đồng ý
-                          </button>
-                          <button
-                            onClick={() => openRejectModal(r.id)}
-                            className="inline-flex items-center gap-1 rounded-lg border border-red-200 bg-red-50 px-2.5 py-1.5 text-xs font-semibold text-red-500 hover:bg-red-100 transition-colors cursor-pointer"
-                          >
-                            <Ban size={14} />
-                            Từ chối
-                          </button>
-                        </>
-                      )}
+                      <button
+                        onClick={() => openAcceptModal(r.id)}
+                        className="group flex items-center rounded-lg border border-indigo-200 bg-indigo-50 px-2 py-1.5 text-xs font-semibold text-indigo-600 hover:bg-indigo-100 transition-all duration-300 cursor-pointer"
+                      >
+                        <Check size={16} />
+                        <span className="max-w-0 overflow-hidden whitespace-nowrap opacity-0 transition-all duration-300 group-hover:max-w-[80px] group-hover:ml-1.5 group-hover:opacity-100">Đồng ý</span>
+                      </button>
+                      <button
+                        onClick={() => openRequestEvidenceModal(r.id)}
+                        className="group flex items-center rounded-lg border border-amber-200 bg-amber-50 px-2 py-1.5 text-xs font-semibold text-amber-600 hover:bg-amber-100 transition-all duration-300 cursor-pointer"
+                      >
+                        <FileWarning size={16} />
+                        <span className="max-w-0 overflow-hidden whitespace-nowrap opacity-0 transition-all duration-300 group-hover:max-w-[80px] group-hover:ml-1.5 group-hover:opacity-100">Yêu cầu</span>
+                      </button>
+                      <button
+                        onClick={() => openRejectModal(r.id)}
+                        className="group flex items-center rounded-lg border border-red-200 bg-red-50 px-2 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-100 transition-all duration-300 cursor-pointer"
+                      >
+                        <Ban size={16} />
+                        <span className="max-w-0 overflow-hidden whitespace-nowrap opacity-0 transition-all duration-300 group-hover:max-w-[80px] group-hover:ml-1.5 group-hover:opacity-100">Từ chối</span>
+                      </button>
                       <button
                         onClick={() => openDetailModal(r.id)}
-                        className="inline-flex items-center gap-1 rounded-lg border border-gray-200 bg-gray-50 px-2.5 py-1.5 text-xs font-semibold text-gray-600 hover:bg-gray-100 transition-colors cursor-pointer"
+                        className="group flex items-center rounded-lg border border-gray-200 bg-gray-50 px-2 py-1.5 text-xs font-semibold text-gray-600 hover:bg-gray-100 transition-all duration-300 cursor-pointer"
                       >
-                        <Eye size={14} />
-                        Chi tiết
+                        <Eye size={16} />
+                        <span className="max-w-0 overflow-hidden whitespace-nowrap opacity-0 transition-all duration-300 group-hover:max-w-[80px] group-hover:ml-1.5 group-hover:opacity-100">Chi tiết</span>
                       </button>
                     </td>
                   </tr>
@@ -642,13 +688,13 @@ export default function ShopReturnsView({ storeId }: ShopReturnsViewProps) {
 
             {/* Footer: quick actions when pending */}
             {returnDetail && returnDetail.status === "Requested" && (
-              <div className="flex gap-3 border-t border-gray-100 px-6 py-4 bg-gray-50/50">
+              <div className="flex gap-2 border-t border-gray-100 px-6 py-4 bg-gray-50/50">
                 <button
                   onClick={() => {
                     closeDetailModal();
                     openRejectModal(returnDetail.id);
                   }}
-                  className="flex-1 flex items-center justify-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-semibold text-red-600 hover:bg-red-100 transition-colors cursor-pointer"
+                  className="flex-1 flex items-center justify-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-red-600 hover:bg-red-100 transition-colors cursor-pointer"
                 >
                   <X className="h-4 w-4" />
                   Từ chối
@@ -656,9 +702,19 @@ export default function ShopReturnsView({ storeId }: ShopReturnsViewProps) {
                 <button
                   onClick={() => {
                     closeDetailModal();
+                    openRequestEvidenceModal(returnDetail.id);
+                  }}
+                  className="flex-1 flex items-center justify-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-600 hover:bg-amber-100 transition-colors cursor-pointer"
+                >
+                  <FileWarning className="h-4 w-4" />
+                  Yêu cầu thêm
+                </button>
+                <button
+                  onClick={() => {
+                    closeDetailModal();
                     openAcceptModal(returnDetail.id);
                   }}
-                  className="flex-1 flex items-center justify-center gap-1.5 rounded-lg border border-indigo-200 bg-indigo-50 px-4 py-2.5 text-sm font-semibold text-indigo-600 hover:bg-indigo-100 transition-colors cursor-pointer"
+                  className="flex-1 flex items-center justify-center gap-1.5 rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 text-sm font-semibold text-indigo-600 hover:bg-indigo-100 transition-colors cursor-pointer"
                 >
                   <Check className="h-4 w-4" />
                   Đồng ý
@@ -698,6 +754,74 @@ export default function ShopReturnsView({ storeId }: ShopReturnsViewProps) {
                 className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-indigo-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-600 disabled:opacity-60 transition-colors cursor-pointer"
               >
                 {accepting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Đang xử lý...
+                  </>
+                ) : (
+                  "Xác nhận"
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Request Evidence Confirm Modal ─────────────────────────────────── */}
+      {requestEvidenceModal.open && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="w-full max-w-sm rounded-2xl bg-white shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-start gap-3 px-6 py-5 border-b border-gray-100">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-50">
+                <FileWarning className="h-5 w-5 text-amber-500" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-gray-900">Yêu cầu thêm bằng chứng?</h3>
+                <p className="mt-1 text-sm text-gray-500">
+                  Khách hàng sẽ cần cung cấp thêm bằng chứng.
+                </p>
+              </div>
+            </div>
+            <div className="px-6 py-4 space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1.5">
+                  Ghi chú (tuỳ chọn)
+                </label>
+                <textarea
+                  value={evidenceNote}
+                  onChange={(e) => setEvidenceNote(e.target.value)}
+                  placeholder="Yêu cầu cụ thể..."
+                  rows={2}
+                  className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-700 placeholder-gray-400 focus:border-amber-400 focus:outline-none focus:ring-1 focus:ring-amber-200 transition-all resize-none"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1.5">
+                  Thời hạn (giờ) - Tuỳ chọn
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  value={evidenceDeadlineHours}
+                  onChange={(e) => setEvidenceDeadlineHours(e.target.value ? Number(e.target.value) : "")}
+                  placeholder="Ví dụ: 48"
+                  className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 placeholder-gray-400 focus:border-amber-400 focus:outline-none focus:ring-1 focus:ring-amber-200 transition-all"
+                />
+              </div>
+            </div>
+            <div className="flex gap-3 px-6 py-4 border-t border-gray-100">
+              <button
+                onClick={closeRequestEvidenceModal}
+                className="flex-1 rounded-lg border border-gray-200 px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
+              >
+                Hủy
+              </button>
+              <button
+                onClick={handleRequestEvidence}
+                disabled={requestingEvidence}
+                className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-amber-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-amber-600 disabled:opacity-60 transition-colors cursor-pointer"
+              >
+                {requestingEvidence ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin" />
                     Đang xử lý...

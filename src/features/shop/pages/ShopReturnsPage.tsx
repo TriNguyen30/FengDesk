@@ -7,7 +7,7 @@ export default function ShopReturnsPage() {
   const { storeId = "" } = useParams<{ storeId: string }>();
 
   return (
-    <div className="mx-auto max-w-6xl py-4">
+    <div className="mx-auto max-w-7xl py-4">
       <div className="mb-4 flex items-center gap-2 text-sm text-gray-500">
         <Link
           to={`/stores/${storeId}`}

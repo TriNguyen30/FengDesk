@@ -9,6 +9,8 @@ import type {
   RejectReturnRequest,
   RejectReturnResponse,
   AcceptReturnResponse,
+  RequestMoreEvidenceRequest,
+  RequestMoreEvidenceResponse,
 } from "@/features/return/types/return.d.ts";
 
 export const returnApi = {
@@ -42,5 +44,12 @@ export const returnApi = {
 
   acceptReturn: async (returnId: string) => {
     return fetchHttpClient.post<AcceptReturnResponse>(`/returns/${returnId}/accept`);
+  },
+
+  requestMoreEvidence: async (returnId: string, payload: RequestMoreEvidenceRequest) => {
+    return fetchHttpClient.post<RequestMoreEvidenceResponse>(
+      `/returns/${returnId}/request-more-evidence`,
+      payload
+    );
   },
 };

@@ -106,6 +106,11 @@ export interface RejectReturnRequest {
   reason?: string | null;
 }
 
+export interface RequestMoreEvidenceRequest {
+  note?: string | null;
+  deadlineHours?: number | null;
+}
+
 // ── Response types ───────────────────────────────────────────────────────────
 export interface CreateReturnResponse {
   data: ReturnDetail;
@@ -132,6 +137,14 @@ export interface RejectReturnResponse {
 }
 
 export interface AcceptReturnResponse {
+  data: ReturnDetail;
+  isSuccess: boolean;
+  statusCode: number;
+  message: string | null;
+  errors: any;
+}
+
+export interface RequestMoreEvidenceResponse {
   data: ReturnDetail;
   isSuccess: boolean;
   statusCode: number;
