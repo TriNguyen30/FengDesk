@@ -6,14 +6,9 @@ import type {
   CreateReturnRequest,
   CreateReturnResponse,
   CancelReturnResponse,
-  ApproveReturnRequest,
-  ApproveReturnResponse,
   RejectReturnRequest,
   RejectReturnResponse,
-  ShipBackRequest,
-  ShipBackResponse,
-  ResolveReturnRequest,
-  ResolveReturnResponse,
+  AcceptReturnResponse,
 } from "@/features/return/types/return.d.ts";
 
 export const returnApi = {
@@ -41,30 +36,11 @@ export const returnApi = {
     return fetchHttpClient.post<CancelReturnResponse>(`/returns/${returnId}/cancel`, {});
   },
 
-  approveReturn: async (returnId: string, payload?: ApproveReturnRequest) => {
-    return fetchHttpClient.post<ApproveReturnResponse>(
-      `/returns/${returnId}/approve`,
-      payload ?? {},
-    );
-  },
-
   rejectReturn: async (returnId: string, payload?: RejectReturnRequest) => {
     return fetchHttpClient.post<RejectReturnResponse>(`/returns/${returnId}/reject`, payload ?? {});
   },
 
-  shipBack: async (returnId: string, payload?: ShipBackRequest) => {
-    return fetchHttpClient.post<ShipBackResponse>(`/returns/${returnId}/ship-back`, payload ?? {});
-  },
-
-  receiveReturn: async (returnId: string) => {
-    return fetchHttpClient.post<ReturnDetailResponse>(`/returns/${returnId}/receive`, {});
-  },
-
-  resolveReturn: async (returnId: string, payload: ResolveReturnRequest) => {
-    return fetchHttpClient.post<ResolveReturnResponse>(`/returns/${returnId}/resolve`, payload);
-  },
-
-  completeRefund: async (returnId: string) => {
-    return fetchHttpClient.post<ReturnDetailResponse>(`/returns/${returnId}/complete-refund`, {});
+  acceptReturn: async (returnId: string) => {
+    return fetchHttpClient.post<AcceptReturnResponse>(`/returns/${returnId}/accept`);
   },
 };
