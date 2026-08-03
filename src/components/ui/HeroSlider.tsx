@@ -1,5 +1,6 @@
 import { Splide, SplideSlide } from "@splidejs/react-splide";
 import "@splidejs/react-splide/css";
+import { Link } from "react-router-dom";
 
 export interface HeroSlide {
   id: number;
@@ -11,11 +12,23 @@ export interface HeroSlide {
   image: string;
   primaryBtn: string;
   secondaryBtn: string;
+  /** Đích của nút chính. Bỏ trống khi dùng onPrimaryClick (vd mở trợ lý AI). */
+  primaryTo?: string;
+  /** Hành động của nút chính thay cho điều hướng — ưu tiên hơn primaryTo. */
+  onPrimaryClick?: () => void;
+  secondaryTo: string;
 }
 
 interface HeroSliderProps {
   slides: HeroSlide[];
 }
+
+// Nút chính có thể là <button> (mở drawer AI) hoặc <Link> (điều hướng) → tách class ra dùng chung.
+const PRIMARY_BTN_CLASS =
+  "inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-lg transition-colors hover:bg-primary-dark cursor-pointer sm:w-auto sm:min-h-0 sm:px-6";
+
+const SECONDARY_BTN_CLASS =
+  "inline-flex min-h-11 w-full items-center justify-center rounded-lg border border-white/40 bg-white/20 px-5 py-2.5 text-sm font-semibold text-white backdrop-blur-sm transition-colors hover:bg-white/30 cursor-pointer sm:w-auto sm:min-h-0 sm:px-6";
 
 export default function HeroSlider({ slides }: HeroSliderProps) {
   return (
@@ -64,18 +77,22 @@ export default function HeroSlider({ slides }: HeroSliderProps) {
                 </p>
 
                 <div className="flex flex-col gap-2 sm:flex-row sm:gap-3">
-                  <button
-                    type="button"
-                    className="min-h-11 w-full rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-lg transition-colors hover:bg-primary-dark sm:w-auto sm:min-h-0 sm:px-6"
-                  >
-                    {slide.primaryBtn}
-                  </button>
-                  <button
-                    type="button"
-                    className="min-h-11 w-full rounded-lg border border-white/40 bg-white/20 px-5 py-2.5 text-sm font-semibold text-white backdrop-blur-sm transition-colors hover:bg-white/30 sm:w-auto sm:min-h-0 sm:px-6"
-                  >
+                  {slide.onPrimaryClick ? (
+                    <button
+                      type="button"
+                      onClick={slide.onPrimaryClick}
+                      className={PRIMARY_BTN_CLASS}
+                    >
+                      {slide.primaryBtn}
+                    </button>
+                  ) : (
+                    <Link to={slide.primaryTo ?? "/products"} className={PRIMARY_BTN_CLASS}>
+                      {slide.primaryBtn}
+                    </Link>
+                  )}
+                  <Link to={slide.secondaryTo} className={SECONDARY_BTN_CLASS}>
                     {slide.secondaryBtn}
-                  </button>
+                  </Link>
                 </div>
               </div>
             </div>

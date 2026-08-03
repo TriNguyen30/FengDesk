@@ -18,6 +18,8 @@ export interface CartItem {
   productItemId: string;
   productName: string;
   variantName: string;
+  /** Ảnh đại diện sản phẩm do BE trả kèm. Null khi sản phẩm chưa có ảnh. */
+  imageUrl: string | null;
   unitPrice: number;
   quantity: number;
   stock: number;

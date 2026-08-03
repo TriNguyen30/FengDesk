@@ -30,15 +30,25 @@
     "view_cart": "Xem giỏ hàng"
   },
   "notification": {
-    "mark_all_read_success": "Đã đánh dấu tất cả thông báo là đã đọc",
-    "mark_all_read_error": "Không thể cập nhật trạng thái thông báo",
-    "notification_with_unread_count": "Thông báo, {{count}} tin chưa đọc",
     "notification": "Thông báo",
-    "your_notifications": "Thông báo của bạn",
+    "notification_with_unread_count": "Thông báo ({{count}} chưa đọc)",
+    "title": "Thông báo của bạn",
+    "unread_count_1": "Bạn có ",
+    "unread_count_2": " thông báo chưa đọc",
     "mark_all_read": "Đánh dấu tất cả đã đọc",
-    "loading_notifications": "Đang tải thông báo...",
-    "no_notifications": "Chưa có thông báo nào",
-    "no_notifications_desc": "Chúng tôi sẽ thông báo cho bạn khi có cập nhật mới."
+    "loading": "Đang tải thông báo...",
+    "empty": {
+      "title": "Chưa có thông báo nào",
+      "desc": "Các thông báo về đơn hàng và hệ thống sẽ xuất hiện ở đây."
+    },
+    "pagination": {
+      "prev": "Trang trước",
+      "next": "Trang sau"
+    },
+    "toast": {
+      "mark_all_success": "Đã đánh dấu tất cả thông báo là đã đọc",
+      "mark_all_error": "Không thể cập nhật trạng thái thông báo"
+    }
   },
   "search": {
     "search_placeholder_1": "Bạn cần tìm cây gì?",
@@ -93,7 +103,9 @@
     },
     "new_arrival": {
       "badge": "Mới Ra Mắt",
-      "title": "Đèn Trồng Cây AI"
+      "title": "Đèn Trồng Cây AI",
+      "loading": "Đang tải sản phẩm 3D…",
+      "toggle_3d": "Bật/tắt xem mô hình 3D"
     },
     "minimalist": {
       "title": "Tối Giản",
@@ -477,7 +489,9 @@
     "toast": {
       "birth_time_success": "Đã cập nhật giờ sinh",
       "birth_time_error": "Không cập nhật được giờ sinh",
-      "logout_success": "Đăng xuất thành công"
+      "logout_success": "Đăng xuất thành công",
+      "update_success": "Cập nhật thông tin thành công",
+      "update_error": "Không cập nhật được thông tin"
     },
     "loading": "Đang tải thông tin...",
     "title": "Thông tin tài khoản",
@@ -505,7 +519,8 @@
       "wood": "Mộc",
       "water": "Thủy",
       "fire": "Hỏa",
-      "earth": "Thổ"
+      "earth": "Thổ",
+      "other": "Khác"
     },
     "actions": {
       "saving": "Đang lưu...",
@@ -514,8 +529,39 @@
       "logout": "Đăng xuất"
     },
     "hints": {
-      "birth_time": "Thêm đầy đủ thông tin để Lumi có thể tư vấn chính xác hơn.",
-      "update_wip": "Tính năng cập nhật thông tin đang được phát triển."
+      "birth_time": "Thêm đầy đủ thông tin để Lumi có thể tư vấn chính xác hơn."
+    },
+    "placeholders": {
+      "phone": "VD: 0912345678"
+    },
+    "errors": {
+      "fullname_required": "Vui lòng nhập họ tên"
+    },
+    "dob_warning": {
+      "title": "Xác nhận đổi ngày sinh",
+      "body": "Ngày sinh dùng để tính mệnh Nạp Âm và cung Kua của bạn. Đổi ngày sinh sẽ tính lại mệnh, kéo theo thay đổi các gợi ý phong thủy mà hệ thống đưa ra. Bạn có chắc chắn không?",
+      "cancel": "Huỷ",
+      "confirm": "Đổi ngày sinh"
+    },
+    "email_change": {
+      "new_placeholder": "Nhập email mới",
+      "success": "Đổi email thành công",
+      "actions": {
+        "edit": "Sửa",
+        "cancel": "Huỷ",
+        "verify": "Xác nhận",
+        "send_otp_new": "Gửi mã tới email mới",
+        "confirm": "Đổi email"
+      },
+      "hints": {
+        "otp_current": "Đã gửi mã 6 số tới {{email}}. Nhập mã để mở khoá ô email.",
+        "enter_new": "Nhập email mới vào ô phía trên rồi bấm gửi mã xác nhận.",
+        "otp_new": "Đã gửi mã 6 số tới {{email}}. Nhập mã để hoàn tất đổi email."
+      },
+      "errors": {
+        "generic": "Thao tác không thành công. Vui lòng thử lại.",
+        "otp": "Mã xác thực không đúng hoặc đã hết hạn."
+      }
     }
   },
   "address_book": {
@@ -820,27 +866,6 @@
         "reject_success": "Đã từ chối lời mời.",
         "exception": "Đã xảy ra lỗi."
       }
-    }
-  },
-  "notification": {
-    "notification": "Thông báo",
-    "notification_with_unread_count": "Thông báo ({{count}} chưa đọc)",
-    "title": "Thông báo của bạn",
-    "unread_count_1": "Bạn có ",
-    "unread_count_2": " thông báo chưa đọc",
-    "mark_all_read": "Đánh dấu tất cả đã đọc",
-    "loading": "Đang tải thông báo...",
-    "empty": {
-      "title": "Chưa có thông báo nào",
-      "desc": "Các thông báo về đơn hàng và hệ thống sẽ xuất hiện ở đây."
-    },
-    "pagination": {
-      "prev": "Trang trước",
-      "next": "Trang sau"
-    },
-    "toast": {
-      "mark_all_success": "Đã đánh dấu tất cả thông báo là đã đọc",
-      "mark_all_error": "Không thể cập nhật trạng thái thông báo"
     }
   }
 }

@@ -6,7 +6,7 @@ import { useEffectSettings } from "@/utils/appearance";
 const CLOUD_LAYERS = [1, 2, 3, 4, 5, 6];
 
 /** Kích thước một ô lưới (px CSS) — ô càng lớn thì càng ít ký tự phải vẽ. */
-const CELL_SIZE = 16;
+const CELL_SIZE = 15;
 /** Cỡ chữ so với ô lưới; quá 0.9 là các ký tự bắt đầu dính nhau. */
 const GLYPH_SCALE = 1;
 /** Bậc đậm nhạt: nhạt → đậm. */
@@ -15,7 +15,7 @@ const RAMP = ["-", "·", "+", "*"] as const;
 const RAMP_STOPS = [0.05, 0.14, 0.32, 0.6] as const;
 /** Số mức alpha rời rạc — gom nét vẽ theo mức để đổi fillStyle ít lần nhất. */
 const ALPHA_STEPS = 5;
-const MIN_ALPHA = 0.28;
+const MIN_ALPHA = 0.5;
 const MAX_ALPHA = 0.68;
 
 /** Phần vận tốc / mật độ còn lại sau mỗi giây (dùng luỹ thừa theo dt). */
@@ -25,26 +25,27 @@ const VELOCITY_RETENTION = 0.5;
  * nhiều nên sống dai, ô đậm (ký tự "*") tan nhanh hơn. Ô có độ đậm ở giữa thì
  * nội suy tuyến tính giữa hai mốc này.
  */
-const DENSITY_RETENTION_FAINT = 0.48;
-const DENSITY_RETENTION_DENSE = 0.12;
+const DENSITY_RETENTION_FAINT = 0.52;
+const DENSITY_RETENTION_DENSE = 0.1;
 
 const POINTER_MAX_SPEED = 55; // ô/giây
 const POINTER_FORCE_GAIN = 1;
 const SPLAT_RADIUS = 1.3;
 
+
 /** Click → vòng lực toả tròn: số nhánh và tốc độ bắn ra (ô/giây). */
-const BURST_ARMS = 28;
-const BURST_SPEED = 46;
+const BURST_ARMS = 38;
+const BURST_SPEED = 86;
 /**
  * Cụm fluid trôi nổi ngẫu nhiên. Khác vệt chuột ở chỗ mực được bơm DẦN theo
  * bao hình attack → hold → release thay vì đổ một lần, cộng vận tốc gần bằng 0
  * nên cụm hiện lên nhẹ nhàng và tan chậm thay vì bị kéo thành vệt.
  */
-const DRIFT_RADIUS = [3, 4.8] as const; // ô lưới (vệt chuột chỉ ~2.2)
-const DRIFT_ATTACK = [0.6, 0.1] as const; // giây hiện dần
-const DRIFT_HOLD = [0, 0] as const; // giây giữ nguyên độ đậm
-const DRIFT_RELEASE = [2, 2.8] as const; // giây ngừng bơm để tự tan
-const DRIFT_SPEED = 12; // ô/giây — chỉ đủ để cụm lững lờ trôi
+const DRIFT_RADIUS = [2.8, 4] as const; // ô lưới (vệt chuột chỉ ~2.2)
+const DRIFT_ATTACK = [0.8, 2] as const; // giây hiện dần
+const DRIFT_HOLD = [0.0, 0.0] as const; // giây giữ nguyên độ đậm
+const DRIFT_RELEASE = [2.8, 3.8] as const; // giây ngừng bơm để tự tan
+const DRIFT_SPEED = 13; // ô/giây — chỉ đủ để cụm lững lờ trôi
 /**
  * Mực bơm mỗi giây ở đỉnh bao hình. Vì tâm cụm là vùng đậm nên nó tiêu tán theo
  * DENSITY_RETENTION_DENSE: mật độ cân bằng ≈ FEED / |ln(DENSITY_RETENTION_DENSE)|,
@@ -52,7 +53,7 @@ const DRIFT_SPEED = 12; // ô/giây — chỉ đủ để cụm lững lờ trô
  */
 const DRIFT_FEED = 6.2;
 /** Số cụm sống đồng thời ứng với 1 bậc cường độ (bậc 0 = tắt hẳn). */
-const DRIFT_PUFFS_PER_LEVEL = 2;
+const DRIFT_PUFFS_PER_LEVEL = 3;
 
 /**
  * Chế độ "chừa dải": cho fluid vẽ lấn thêm bấy nhiêu ô vào TRONG dải nội dung.

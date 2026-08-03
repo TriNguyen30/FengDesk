@@ -1029,7 +1029,7 @@ body {
   background: color-mix(
     in oklab,
     color-mix(in oklab, var(--color-neutral) var(--fd-rail-tint-mix), var(--color-primary))
-      var(--fd-rail-tint-opacity),
+      68%,
     transparent
   );
 }

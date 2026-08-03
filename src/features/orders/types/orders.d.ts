@@ -39,6 +39,10 @@ export interface OrderLineItem {
   productId: string;
   deliveryId: string | null;
   productName: string;
+  /** Tên biến thể (vd "Đỏ / Size L"). Null nếu sản phẩm không có biến thể đặt tên. */
+  variantName: string | null;
+  /** Ảnh đại diện sản phẩm do BE trả kèm. Null khi sản phẩm chưa có ảnh. */
+  imageUrl: string | null;
   unitPrice: number;
   quantity: number;
   lineTotal: number;
@@ -69,6 +73,8 @@ export interface Order {
   createdAt: string;
   /** Cửa hàng bán trong đơn — suy ra từ delivery, hoặc từ sản phẩm khi đơn chưa có delivery. */
   stores?: OrderStore[];
+  /** Sản phẩm trong đơn — BE trả kèm ở danh sách để thẻ đơn hiện được ảnh + tên, khỏi gọi chi tiết. */
+  items?: OrderLineItem[];
 }
 
 export interface OrderDetail extends Order {

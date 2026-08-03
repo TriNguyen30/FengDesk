@@ -1,6 +1,5 @@
-import { MapPin, Phone, Mail, Clock, Send, ChevronRight } from "lucide-react";
+import { MapPin, Phone, Mail, Clock, Send } from "lucide-react";
 import { useState } from "react";
-import { Link } from "react-router-dom";
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
@@ -23,15 +22,6 @@ export default function ContactPage() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-      {/* Breadcrumb */}
-      <nav className="mb-6 flex items-center gap-2 text-sm font-medium text-gray-500">
-        <Link to="/" className="hover:text-primary transition-colors">
-          Trang chủ
-        </Link>
-        <ChevronRight className="h-4 w-4 text-gray-400" />
-        <span className="text-gray-900">Liên hệ</span>
-      </nav>
-
       {/* Header */}
       <div className="text-center mb-12">
         <h1 className="text-3xl font-bold text-gray-900 sm:text-4xl">Liên hệ với chúng tôi</h1>

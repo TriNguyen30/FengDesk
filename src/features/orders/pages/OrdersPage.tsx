@@ -10,6 +10,7 @@ import { createReviewRequest } from "@/features/review/api/review.api";
 import { toast } from "sonner";
 import { ordersApi } from "../api/orders.api";
 import PaymentQrModal from "@/features/payment/components/PaymentQrModal";
+import OrderItemImage from "../components/OrderItemImage";
 import { useTranslation } from "react-i18next";
 
 export default function OrdersPage() {
@@ -69,23 +70,23 @@ export default function OrdersPage() {
         </div>
       </div>
 
-      {/* Tabs Scroll */}
-      <div
-        className="mb-6 w-full overflow-x-auto rounded-lg border border-gray-100 bg-white shadow-sm [&::-webkit-scrollbar]:hidden"
-        style={{ scrollbarWidth: "none" }}
-      >
-        <div className="flex w-full min-w-max px-2">
+      {/* Tabs — 8 nhãn tiếng Việt không vừa một hàng ở khung /profile, nên xuống dòng dạng pill
+          thay vì cuộn ngang: cuộn ngang làm tab cuối bị góc bo của thẻ cắt cụt. */}
+      <div className="mb-6 w-full rounded-lg border border-gray-100 bg-white p-2 shadow-sm">
+        <div className="flex flex-wrap gap-1">
           {TABS.map((tab) => {
             const isActive = activeTab === tab.value;
             return (
               <button
                 key={tab.value}
                 onClick={() => setActiveTab(tab.value)}
-                className={`relative flex-1 whitespace-nowrap px-5 py-4 text-center text-sm font-medium transition-colors cursor-pointer ${isActive ? "text-primary" : "text-gray-500 hover:text-gray-700"
-                  }`}
+                className={`whitespace-nowrap rounded-md px-4 py-2 text-sm font-medium transition-colors cursor-pointer ${
+                  isActive
+                    ? "bg-primary/10 text-primary"
+                    : "text-gray-500 hover:bg-gray-50 hover:text-gray-700"
+                }`}
               >
                 {tab.label}
-                {isActive && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />}
               </button>
             );
           })}
@@ -185,9 +186,12 @@ export default function OrdersPage() {
                         key={item.id || idx}
                         className="flex items-start gap-4 py-3 border-b border-gray-50 last:border-0 last:pb-0 first:pt-0"
                       >
-                        <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded border border-gray-100 bg-gray-50">
-                          <Package className="h-8 w-8 text-gray-300" />
-                        </div>
+                        <OrderItemImage
+                          imageUrl={item.imageUrl}
+                          alt={item.productName}
+                          className="h-20 w-20"
+                          iconClassName="h-8 w-8"
+                        />
                         <div className="flex flex-1 flex-col min-w-0">
                           <p className="text-sm text-gray-900 line-clamp-2">{item.productName}</p>
                           {item.variantName && (

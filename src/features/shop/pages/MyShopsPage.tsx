@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Navigate, useNavigate, Link } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Store, Plus, Phone, Clock, Loader2, ChevronRight, Truck, Users } from "lucide-react";
 import { getMyShopsRequest } from "@/features/shop/api/shop.api";
@@ -81,15 +81,6 @@ export default function MyShopsPage() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-      {/* Breadcrumb */}
-      <nav className="mb-6 flex items-center gap-2 text-sm font-medium text-gray-500">
-        <Link to="/" className="hover:text-primary transition-colors">
-          Trang chủ
-        </Link>
-        <ChevronRight className="h-4 w-4 text-gray-400" />
-        <span className="text-gray-900">Cửa hàng của tôi</span>
-      </nav>
-
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
           <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
@@ -126,8 +117,9 @@ export default function MyShopsPage() {
                 </p>
               </div>
               <span
-                className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${shop.isActive ? "bg-green-50 text-green-600" : "bg-gray-100 text-gray-500"
-                  }`}
+                className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${
+                  shop.isActive ? "bg-green-50 text-green-600" : "bg-gray-100 text-gray-500"
+                }`}
               >
                 {shop.isActive ? "Đang hoạt động" : "Tạm dừng"}
               </span>

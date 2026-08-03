@@ -11,6 +11,8 @@ import type {
   MyProfile,
   LogoutPayload,
   RefreshTokenPayload,
+  UpdateProfilePayload,
+  ChangeEmailTokenData,
 } from "@/features/auth/types/auth";
 
 export async function loginRequest(payload: LoginPayload) {
@@ -65,6 +67,47 @@ export async function updateBirthTimeRequest(birthTime: string | null) {
   });
   return data;
 }
+/** Cập nhật họ tên / SĐT / giới tính / ngày sinh. Email đổi qua luồng OTP riêng bên dưới. */
+export async function updateProfileRequest(payload: UpdateProfilePayload) {
+  const { data } = await fetchHttpClient.put<ApiResponse<MyProfile>>("/Auth/me", payload);
+  return data;
+}
+
+// ===== Đổi email — 4 bước tuần tự, mỗi bước cần kết quả của bước trước =====
+
+/** B1: gửi OTP tới email HIỆN TẠI. */
+export async function initiateEmailChangeRequest() {
+  const { data } = await fetchHttpClient.post<ApiResponse<null>>("/Auth/me/email/initiate", {});
+  return data;
+}
+
+/** B2: xác thực OTP email hiện tại → nhận changeEmailToken. */
+export async function verifyCurrentEmailRequest(otp: string) {
+  const { data } = await fetchHttpClient.post<ApiResponse<ChangeEmailTokenData>>(
+    "/Auth/me/email/verify-current",
+    { otp },
+  );
+  return data;
+}
+
+/** B3: khai email mới → BE gửi OTP tới hòm thư đó. */
+export async function requestNewEmailRequest(changeEmailToken: string, newEmail: string) {
+  const { data } = await fetchHttpClient.post<ApiResponse<null>>("/Auth/me/email/request-new", {
+    changeEmailToken,
+    newEmail,
+  });
+  return data;
+}
+
+/** B4: xác thực OTP email mới → đổi email, BE cấp lại cặp token cho phiên hiện tại. */
+export async function confirmNewEmailRequest(changeEmailToken: string, otp: string) {
+  const { data } = await fetchHttpClient.post<ApiResponse<LoginResponseData>>(
+    "/Auth/me/email/confirm",
+    { changeEmailToken, otp },
+  );
+  return data;
+}
+
 export async function logoutRequest(payload: LogoutPayload) {
   const { data } = await fetchHttpClient.post<ApiResponse<null>>("/Auth/logout", payload);
   return data;

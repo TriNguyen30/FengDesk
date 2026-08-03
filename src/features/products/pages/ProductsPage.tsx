@@ -1,11 +1,11 @@
 import { useEffect, useState, useMemo } from "react";
-import { useSearchParams, Link } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import { getCategoriesRequest } from "@/features/category/api/category.api";
 import type { Category } from "@/features/category/types/category";
 import ProductCard, { ProductCardSkeleton } from "@/features/products/components/ProductCard";
 import { useProductList } from "@/features/products/hooks/useProducts";
 import type { GetProductsParams } from "@/features/products/types/product";
-import { SearchX, List, ChevronRight, Filter, Banknote } from "lucide-react";
+import { SearchX, List, Filter, Banknote } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import FeatureBar from "@/components/ui/FeatureBar";
 import CommitmentPage from "@/components/ui/CommitmentPage";
@@ -13,21 +13,47 @@ import CommitmentPage from "@/components/ui/CommitmentPage";
 export default function ProductsPage() {
   const { t } = useTranslation();
 
-  const FS_ELEMENTS = useMemo(() => [
-    { code: "Kim", label: t("products_page.elements.kim") },
-    { code: "Moc", label: t("products_page.elements.moc") },
-    { code: "Thuy", label: t("products_page.elements.thuy") },
-    { code: "Hoa", label: t("products_page.elements.hoa") },
-    { code: "Tho", label: t("products_page.elements.tho") },
-  ], [t]);
+  const FS_ELEMENTS = useMemo(
+    () => [
+      { code: "Kim", label: t("products_page.elements.kim") },
+      { code: "Moc", label: t("products_page.elements.moc") },
+      { code: "Thuy", label: t("products_page.elements.thuy") },
+      { code: "Hoa", label: t("products_page.elements.hoa") },
+      { code: "Tho", label: t("products_page.elements.tho") },
+    ],
+    [t],
+  );
 
-  const PRICE_RANGES = useMemo(() => [
-    { id: "0-100000", label: t("products_page.price_ranges.under_100"), min: 0, max: 100000 },
-    { id: "100000-300000", label: t("products_page.price_ranges.100_300"), min: 100000, max: 300000 },
-    { id: "300000-500000", label: t("products_page.price_ranges.300_500"), min: 300000, max: 500000 },
-    { id: "500000-1000000", label: t("products_page.price_ranges.500_1000"), min: 500000, max: 1000000 },
-    { id: "1000000-999999999", label: t("products_page.price_ranges.over_1000"), min: 1000000, max: 999999999 },
-  ], [t]);
+  const PRICE_RANGES = useMemo(
+    () => [
+      { id: "0-100000", label: t("products_page.price_ranges.under_100"), min: 0, max: 100000 },
+      {
+        id: "100000-300000",
+        label: t("products_page.price_ranges.100_300"),
+        min: 100000,
+        max: 300000,
+      },
+      {
+        id: "300000-500000",
+        label: t("products_page.price_ranges.300_500"),
+        min: 300000,
+        max: 500000,
+      },
+      {
+        id: "500000-1000000",
+        label: t("products_page.price_ranges.500_1000"),
+        min: 500000,
+        max: 1000000,
+      },
+      {
+        id: "1000000-999999999",
+        label: t("products_page.price_ranges.over_1000"),
+        min: 1000000,
+        max: 999999999,
+      },
+    ],
+    [t],
+  );
   const [searchParams, setSearchParams] = useSearchParams();
   const search = searchParams.get("search") || "";
   const categoryId = searchParams.get("categoryId") || "";
@@ -82,9 +108,9 @@ export default function ProductsPage() {
     let arr = [...products];
 
     if (priceRangeId) {
-      const range = PRICE_RANGES.find(r => r.id === priceRangeId);
+      const range = PRICE_RANGES.find((r) => r.id === priceRangeId);
       if (range) {
-        arr = arr.filter(p => p.minPrice >= range.min && p.minPrice <= range.max);
+        arr = arr.filter((p) => p.minPrice >= range.min && p.minPrice <= range.max);
       }
     }
 
@@ -142,18 +168,18 @@ export default function ProductsPage() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-      {/* Breadcrumb */}
-      <nav className="mb-6 flex items-center gap-2 text-sm font-medium text-gray-500">
-        <Link to="/" className="hover:text-primary transition-colors">
-          {t("products_page.breadcrumb.home")}
-        </Link>
-        <ChevronRight className="h-4 w-4 text-gray-400" />
-        <span className="text-gray-900">{t("products_page.breadcrumb.products")}</span>
-      </nav>
+      {/* Từ md trở lên là LƯỚI 2×2 chứ không phải hai cột lồng nhau:
+            hàng 1 — (trống)   | tiêu đề + ô sắp xếp
+            hàng 2 — thẻ lọc   | lưới sản phẩm
+          Nhờ đặt hàng tường minh, mép trên thẻ lọc luôn ngang mép trên thẻ sản
+          phẩm, KỂ CẢ khi hàng tiêu đề cao lên (vd đang tìm kiếm thì có thêm dòng
+          "kết quả cho ..."). Cách cũ — cột phải bọc cả tiêu đề lẫn lưới — thì
+          không có cách nào bù được, vì chiều cao hàng tiêu đề thay đổi được.
 
-      <div className="flex flex-col gap-6 md:flex-row md:items-start md:gap-8">
+          Dưới md vẫn là flex-col theo đúng thứ tự nguồn: lọc → tiêu đề → lưới. */}
+      <div className="flex flex-col gap-6 md:grid md:grid-cols-[16rem_1fr] md:items-start md:gap-x-8 md:gap-y-6">
         {/* Sidebar Filter */}
-        <aside className="w-full shrink-0 md:w-64">
+        <aside className="w-full shrink-0 md:col-start-1 md:row-start-2">
           <div className="sticky top-24 rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
             <h2 className="mb-4 flex items-center gap-2 font-medium text-gray-900">
               <List className="h-4 w-4" />
@@ -176,8 +202,9 @@ export default function ProductsPage() {
                       className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
                     />
                     <span
-                      className={`text-sm font-medium transition-colors ${!categoryId ? "text-primary" : "text-gray-600 group-hover:text-gray-900"
-                        }`}
+                      className={`text-sm font-medium transition-colors ${
+                        !categoryId ? "text-primary" : "text-gray-600 group-hover:text-gray-900"
+                      }`}
                     >
                       {t("products_page.filters.all_products")}
                     </span>
@@ -191,10 +218,11 @@ export default function ProductsPage() {
                         className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
                       />
                       <span
-                        className={`text-sm font-medium transition-colors ${categoryId === cat.id
+                        className={`text-sm font-medium transition-colors ${
+                          categoryId === cat.id
                             ? "text-primary"
                             : "text-gray-600 group-hover:text-gray-900"
-                          }`}
+                        }`}
                       >
                         {cat.name}
                       </span>
@@ -218,8 +246,9 @@ export default function ProductsPage() {
                     className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
                   />
                   <span
-                    className={`text-sm font-medium transition-colors ${!priceRangeId ? "text-primary" : "text-gray-600 group-hover:text-gray-900"
-                      }`}
+                    className={`text-sm font-medium transition-colors ${
+                      !priceRangeId ? "text-primary" : "text-gray-600 group-hover:text-gray-900"
+                    }`}
                   >
                     {t("products_page.filters.all_prices")}
                   </span>
@@ -233,10 +262,11 @@ export default function ProductsPage() {
                       className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
                     />
                     <span
-                      className={`text-sm font-medium transition-colors ${priceRangeId === pr.id
+                      className={`text-sm font-medium transition-colors ${
+                        priceRangeId === pr.id
                           ? "text-primary"
                           : "text-gray-600 group-hover:text-gray-900"
-                        }`}
+                      }`}
                     >
                       {pr.label}
                     </span>
@@ -259,8 +289,9 @@ export default function ProductsPage() {
                     className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
                   />
                   <span
-                    className={`text-sm font-medium transition-colors ${!element ? "text-primary" : "text-gray-600 group-hover:text-gray-900"
-                      }`}
+                    className={`text-sm font-medium transition-colors ${
+                      !element ? "text-primary" : "text-gray-600 group-hover:text-gray-900"
+                    }`}
                   >
                     {t("products_page.filters.all_elements")}
                   </span>
@@ -274,10 +305,11 @@ export default function ProductsPage() {
                       className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
                     />
                     <span
-                      className={`text-sm font-medium transition-colors ${element === el.code
+                      className={`text-sm font-medium transition-colors ${
+                        element === el.code
                           ? "text-primary"
                           : "text-gray-600 group-hover:text-gray-900"
-                        }`}
+                      }`}
                     >
                       {el.label}
                     </span>
@@ -288,51 +320,54 @@ export default function ProductsPage() {
           </div>
         </aside>
 
-        {/* Main Content */}
-        <div className="flex-1 min-w-0">
-          <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
-            <div>
-              {loadingCategories ? (
-                <div className="h-6 w-48 rounded bg-gray-200 animate-pulse" />
-              ) : (
-                <h1 className="text-lg font-medium text-gray-900">
-                  {selectedCategoryName ? selectedCategoryName : t("products_page.filters.all_products")}{" "}
-                  <span className="text-sm text-gray-600">({sortedProducts.length})</span>
-                </h1>
-              )}
-              {search && (
-                <p className="mt-1 flex items-center gap-2 text-sm text-gray-600">
-                  {t("products_page.search_results_for")}{" "}
-                  <span className="font-semibold text-gray-900">"{search}"</span>
-                  <button
-                    onClick={handleSearchReset}
-                    className="ml-2 text-xs text-primary hover:underline cursor-pointer"
-                  >
-                    {t("products_page.clear_search")}
-                  </button>
-                </p>
-              )}
-            </div>
-            {!loading && (
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-gray-600">{t("products_page.sort_by")}</span>
-                  <select
-                    value={sort}
-                    onChange={handleSortChange}
-                    className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer"
-                  >
-                    <option value="default">{t("products_page.sort.default")}</option>
-                    <option value="name-asc">{t("products_page.sort.name_asc")}</option>
-                    <option value="name-desc">{t("products_page.sort.name_desc")}</option>
-                    <option value="price-asc">{t("products_page.sort.price_asc")}</option>
-                    <option value="price-desc">{t("products_page.sort.price_desc")}</option>
-                  </select>
-                </div>
-              </div>
+        {/* Tiêu đề + ô sắp xếp — hàng 1 của cột phải. */}
+        <div className="flex min-w-0 flex-wrap items-center justify-between gap-4 md:col-start-2 md:row-start-1">
+          <div>
+            {loadingCategories ? (
+              <div className="h-6 w-48 rounded bg-gray-200 animate-pulse" />
+            ) : (
+              <h1 className="text-lg font-medium text-gray-900">
+                {selectedCategoryName
+                  ? selectedCategoryName
+                  : t("products_page.filters.all_products")}{" "}
+                <span className="text-sm text-gray-600">({sortedProducts.length})</span>
+              </h1>
+            )}
+            {search && (
+              <p className="mt-1 flex items-center gap-2 text-sm text-gray-600">
+                {t("products_page.search_results_for")}{" "}
+                <span className="font-semibold text-gray-900">"{search}"</span>
+                <button
+                  onClick={handleSearchReset}
+                  className="ml-2 text-xs text-primary hover:underline cursor-pointer"
+                >
+                  {t("products_page.clear_search")}
+                </button>
+              </p>
             )}
           </div>
+          {!loading && (
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-600">{t("products_page.sort_by")}</span>
+                <select
+                  value={sort}
+                  onChange={handleSortChange}
+                  className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer"
+                >
+                  <option value="default">{t("products_page.sort.default")}</option>
+                  <option value="name-asc">{t("products_page.sort.name_asc")}</option>
+                  <option value="name-desc">{t("products_page.sort.name_desc")}</option>
+                  <option value="price-asc">{t("products_page.sort.price_asc")}</option>
+                  <option value="price-desc">{t("products_page.sort.price_desc")}</option>
+                </select>
+              </div>
+            </div>
+          )}
+        </div>
 
+        {/* Lưới sản phẩm — hàng 2 của cột phải, ngang hàng với thẻ lọc. */}
+        <div className="min-w-0 md:col-start-2 md:row-start-2">
           {loading ? (
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 sm:gap-4 lg:gap-6">
               {Array.from({ length: 8 }).map((_, i) => (
@@ -348,10 +383,10 @@ export default function ProductsPage() {
           ) : (
             <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-gray-200 bg-gray-50 py-20 text-center">
               <SearchX className="h-12 w-12 text-gray-300" />
-              <h3 className="mt-4 text-lg font-medium text-gray-900">{t("products_page.empty.title")}</h3>
-              <p className="mt-1 text-sm text-gray-500">
-                {t("products_page.empty.desc")}
-              </p>
+              <h3 className="mt-4 text-lg font-medium text-gray-900">
+                {t("products_page.empty.title")}
+              </h3>
+              <p className="mt-1 text-sm text-gray-500">{t("products_page.empty.desc")}</p>
               {(search || categoryId || element || priceRangeId) && (
                 <button
                   onClick={() => setSearchParams({})}

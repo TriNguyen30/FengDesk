@@ -74,6 +74,22 @@ export interface RegisterFinalizePayload {
   gender: number;
 }
 
+/** Body PUT /Auth/me. Enum gender gửi dạng chuỗi ("Male"/"Female"/…) — BE dùng JsonStringEnumConverter. */
+export interface UpdateProfilePayload {
+  fullName: string;
+  /** Null = xóa số điện thoại. */
+  phone: string | null;
+  gender: "Unspecified" | "Male" | "Female" | "Other";
+  /** ISO date ("YYYY-MM-DD"). Null = xóa ngày sinh. Đổi giá trị này làm tính lại mệnh/ngũ hành. */
+  dateOfBirth: string | null;
+}
+
+/** Kết quả bước xác thực OTP email hiện tại — token ràng 3 bước sau vào cùng một phiên. */
+export interface ChangeEmailTokenData {
+  changeEmailToken: string;
+  expiresAt: string;
+}
+
 export interface RefreshTokenPayload {
   refreshToken: string;
 }

@@ -30,15 +30,25 @@
     "view_cart": "View cart"
   },
   "notification": {
-    "mark_all_read_success": "Marked all notifications as read",
-    "mark_all_read_error": "Failed to update notification status",
-    "notification_with_unread_count": "Notifications, {{count}} unread messages",
     "notification": "Notifications",
-    "your_notifications": "Your notifications",
+    "notification_with_unread_count": "Notifications ({{count}} unread)",
+    "title": "Your Notifications",
+    "unread_count_1": "You have ",
+    "unread_count_2": " unread notifications",
     "mark_all_read": "Mark all as read",
-    "loading_notifications": "Loading notifications...",
-    "no_notifications": "No notifications yet",
-    "no_notifications_desc": "We will notify you when there are new updates."
+    "loading": "Loading notifications...",
+    "empty": {
+      "title": "No notifications yet",
+      "desc": "Order and system notifications will appear here."
+    },
+    "pagination": {
+      "prev": "Previous page",
+      "next": "Next page"
+    },
+    "toast": {
+      "mark_all_success": "Marked all notifications as read",
+      "mark_all_error": "Failed to update notification status"
+    }
   },
   "search": {
     "search_placeholder_1": "What plant are you looking for?",
@@ -93,7 +103,9 @@
     },
     "new_arrival": {
       "badge": "New Arrival",
-      "title": "AI Grow Light"
+      "title": "AI Grow Light",
+      "loading": "Loading 3D product…",
+      "toggle_3d": "Toggle 3D model view"
     },
     "minimalist": {
       "title": "The Minimalist",
@@ -477,7 +489,9 @@
     "toast": {
       "birth_time_success": "Birth time updated",
       "birth_time_error": "Failed to update birth time",
-      "logout_success": "Logged out successfully"
+      "logout_success": "Logged out successfully",
+      "update_success": "Profile updated successfully",
+      "update_error": "Could not update your profile"
     },
     "loading": "Loading information...",
     "title": "Account Info",
@@ -505,7 +519,8 @@
       "wood": "Wood",
       "water": "Water",
       "fire": "Fire",
-      "earth": "Earth"
+      "earth": "Earth",
+      "other": "Other"
     },
     "actions": {
       "saving": "Saving...",
@@ -514,8 +529,39 @@
       "logout": "Logout"
     },
     "hints": {
-      "birth_time": "Add birth time for the AI assistant to read your full Four Pillars of Destiny.",
-      "update_wip": "Information update feature is under development."
+      "birth_time": "Add birth time for the AI assistant to read your full Four Pillars of Destiny."
+    },
+    "placeholders": {
+      "phone": "e.g. 0912345678"
+    },
+    "errors": {
+      "fullname_required": "Please enter your full name"
+    },
+    "dob_warning": {
+      "title": "Confirm date of birth change",
+      "body": "Your date of birth determines your Na Am element and Kua number. Changing it recalculates your element, which changes the feng shui recommendations you receive. Are you sure?",
+      "cancel": "Cancel",
+      "confirm": "Change date of birth"
+    },
+    "email_change": {
+      "new_placeholder": "Enter new email",
+      "success": "Email changed successfully",
+      "actions": {
+        "edit": "Edit",
+        "cancel": "Cancel",
+        "verify": "Verify",
+        "send_otp_new": "Send code to new email",
+        "confirm": "Change email"
+      },
+      "hints": {
+        "otp_current": "A 6-digit code was sent to {{email}}. Enter it to unlock the email field.",
+        "enter_new": "Type your new email above, then send the verification code.",
+        "otp_new": "A 6-digit code was sent to {{email}}. Enter it to finish changing your email."
+      },
+      "errors": {
+        "generic": "Something went wrong. Please try again.",
+        "otp": "The verification code is incorrect or has expired."
+      }
     }
   },
   "address_book": {
@@ -820,27 +866,6 @@
         "reject_success": "Successfully rejected invitation.",
         "exception": "An error occurred."
       }
-    }
-  },
-  "notification": {
-    "notification": "Notifications",
-    "notification_with_unread_count": "Notifications ({{count}} unread)",
-    "title": "Your Notifications",
-    "unread_count_1": "You have ",
-    "unread_count_2": " unread notifications",
-    "mark_all_read": "Mark all as read",
-    "loading": "Loading notifications...",
-    "empty": {
-      "title": "No notifications yet",
-      "desc": "Order and system notifications will appear here."
-    },
-    "pagination": {
-      "prev": "Previous page",
-      "next": "Next page"
-    },
-    "toast": {
-      "mark_all_success": "Marked all notifications as read",
-      "mark_all_error": "Failed to update notification status"
     }
   }
 }
