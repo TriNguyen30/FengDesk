@@ -24,6 +24,7 @@ import Modal from "@/components/ui/Modal";
 import { useOrderDetail, useCancelOrder } from "../hooks/useOrders";
 import { formatOrderDate, formatVnd, getOrderStatusMeta } from "../utils/orderUtils";
 import PaymentQrModal from "@/features/payment/components/PaymentQrModal";
+import OrderItemImage from "../components/OrderItemImage";
 import { returnApi } from "@/features/return/api/return.api";
 import { uploadFile } from "@/services/upload.service";
 import type {
@@ -501,9 +502,7 @@ export default function OrderDetailPage() {
           <ul className="divide-y divide-gray-100">
             {(order.items ?? []).map((item) => (
               <li key={item.id} className="flex gap-3 px-4 py-3.5 items-start">
-                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-gray-50 border border-gray-100">
-                  <Package className="h-5 w-5 text-gray-300" />
-                </div>
+                <OrderItemImage imageUrl={item.imageUrl} alt={item.productName} />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-gray-900 leading-snug">
                     {item.productName}
@@ -881,9 +880,11 @@ export default function OrderDetailPage() {
                             onChange={() => handleToggleItem(item)}
                             className="h-4 w-4 rounded accent-orange-500 cursor-pointer shrink-0"
                           />
-                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gray-100">
-                            <Package className="h-5 w-5 text-gray-400" />
-                          </div>
+                          <OrderItemImage
+                            imageUrl={item.imageUrl}
+                            alt={item.productName}
+                            className="h-10 w-10"
+                          />
                           <div className="min-w-0 flex-1">
                             <p className="text-sm font-medium text-gray-900 truncate">
                               {item.productName}

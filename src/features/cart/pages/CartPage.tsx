@@ -2,11 +2,10 @@ import { useCart } from "@/features/cart";
 import CartItemImage from "@/features/cart/components/CartItemImage";
 import type { CartItem } from "@/features/cart/types/cart";
 import { Link, useNavigate } from "react-router-dom";
-import { Minus, Plus, ShoppingCart, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Minus, Plus, ShoppingCart, Trash2, ChevronLeft } from "lucide-react";
 import { toast } from "sonner";
 import { useState, useMemo, useEffect } from "react";
 import { useAppSelector } from "@/app/store";
-import { useProductPrimaryImage } from "@/features/products";
 import { YouMightAlsoLikeSection } from "@/features/products/components/ProductCard";
 import type { UpdateCartItemParams } from "@/features/cart/types/cart";
 import Modal from "@/components/ui/Modal";
@@ -29,7 +28,6 @@ interface CartLineItemProps {
 }
 
 function CartLineItem({ item, selected, onSelect, onQuantityChange, onRemove }: CartLineItemProps) {
-  const { imageUrl } = useProductPrimaryImage(item.productId);
   const { t } = useTranslation();
 
   return (
@@ -43,7 +41,7 @@ function CartLineItem({ item, selected, onSelect, onQuantityChange, onRemove }: 
         />
       </div>
       <CartItemImage
-        imageUrl={imageUrl}
+        imageUrl={item.imageUrl}
         alt={item.productName}
         className="flex h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-gray-50 ring-1 ring-gray-100"
         iconSize={28}
@@ -155,15 +153,6 @@ export default function CartPage() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-      {/* Breadcrumb */}
-      <nav className="mb-4 flex items-center gap-2 text-sm font-medium text-gray-500">
-        <Link to="/" className="hover:text-primary transition-colors">
-          {t("cart_page.breadcrumb.home")}
-        </Link>
-        <ChevronRight className="h-4 w-4 text-gray-400" />
-        <span className="text-gray-900">{t("cart_page.breadcrumb.cart")}</span>
-      </nav>
-
       <div className="rounded-2xl bg-white shadow-sm ring-1 ring-gray-100 overflow-hidden">
         {items.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 px-4 text-center">
@@ -171,9 +160,7 @@ export default function CartPage() {
               <img src={EmptyCartImg} alt="Empty Cart" className="h-70 w-70 object-contain" />
             </div>
             <h2 className="text-xl font-bold text-gray-900">{t("cart_page.empty_state.title")}</h2>
-            <p className="mt-2 text-sm text-gray-500">
-              {t("cart_page.empty_state.desc")}
-            </p>
+            <p className="mt-2 text-sm text-gray-500">{t("cart_page.empty_state.desc")}</p>
             <Link
               to="/products"
               className="mt-6 rounded-xl bg-primary px-8 py-3.5 text-sm font-bold text-white shadow-md transition-all hover:bg-primary-dark hover:shadow-lg active:scale-95 cursor-pointer"
@@ -236,7 +223,9 @@ export default function CartPage() {
 
             {/* ── Right: Order Summary ───────────────────────────────────── */}
             <div className="flex w-full flex-col gap-5 border-t border-gray-100 bg-gray-50/50 p-4 lg:w-96 lg:border-l lg:border-t-0 lg:p-6">
-              <h2 className="text-lg font-bold leading-snug text-gray-900">{t("cart_page.summary.title")}</h2>
+              <h2 className="text-lg font-bold leading-snug text-gray-900">
+                {t("cart_page.summary.title")}
+              </h2>
 
               <div className="flex flex-col gap-4 text-sm text-gray-600">
                 <div className="flex justify-between">
@@ -245,19 +234,25 @@ export default function CartPage() {
                 </div>
                 <div className="flex justify-between">
                   <span>{t("cart_page.summary.shipping_fee")}</span>
-                  <span className="font-semibold text-gray-900">{t("cart_page.summary.not_calculated")}</span>
+                  <span className="font-semibold text-gray-900">
+                    {t("cart_page.summary.not_calculated")}
+                  </span>
                 </div>
               </div>
 
               <div className="border-t border-dashed border-gray-200 pt-4">
                 <div className="flex justify-between items-end">
-                  <span className="text-base font-bold text-gray-900">{t("cart_page.summary.total")}</span>
+                  <span className="text-base font-bold text-gray-900">
+                    {t("cart_page.summary.total")}
+                  </span>
                   <div className="text-right">
                     <span className="text-2xl font-bold text-primary">
                       {selectedSubtotal.toLocaleString("vi-VN")}
                       <span className="text-lg">đ</span>
                     </span>
-                    <p className="mt-0.5 text-xs text-gray-500">{t("cart_page.summary.vat_included")}</p>
+                    <p className="mt-0.5 text-xs text-gray-500">
+                      {t("cart_page.summary.vat_included")}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -292,9 +287,7 @@ export default function CartPage() {
         onClose={() => setIsDeleteModalOpen(false)}
       >
         <div className="space-y-4">
-          <p className="text-sm text-gray-600">
-            {t("cart_page.delete_modal.desc")}
-          </p>
+          <p className="text-sm text-gray-600">{t("cart_page.delete_modal.desc")}</p>
           <div className="flex gap-3 pt-2">
             <button
               onClick={() => setIsDeleteModalOpen(false)}

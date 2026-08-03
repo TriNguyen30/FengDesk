@@ -1,4 +1,13 @@
-import { Component, ReactNode, Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import {
+  Component,
+  ReactNode,
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { Canvas, useThree } from "@react-three/fiber";
 import {
   Center,
@@ -22,6 +31,19 @@ interface Product3DViewerProps {
   className?: string;
   /** Tự xoay khi không tương tác — mặc định bật, giống các trang thương mại điện tử. */
   autoRotate?: boolean;
+  /** Gọi khi model đã vào scene VÀ đã vẽ được ít nhất một khung hình — dùng để gỡ ảnh poster. */
+  onModelReady?: () => void;
+  /**
+   * Hiện gợi ý "kéo để xoay". Bật ở trang chi tiết (viewer là nội dung chính), tắt ở các ô
+   * trang trí nhỏ trên trang chủ.
+   */
+  showHint?: boolean;
+  /**
+   * Gọi khi model không hiển thị được nữa: GLB hỏng, hoặc WebGL context bị trình duyệt thu hồi
+   * (tab nền, đổi GPU, quá nhiều context). Không có nhánh này thì canvas trong suốt và khung
+   * viewer trông như một ô trắng rỗng.
+   */
+  onModelUnavailable?: () => void;
 }
 
 /**
@@ -34,11 +56,71 @@ export default function Product3DViewer({
   backgroundImageUrl,
   className = "",
   autoRotate = true,
+  onModelReady,
+  onModelUnavailable,
+  showHint = true,
 }: Product3DViewerProps) {
   const { t } = useTranslation();
   const [modelLuminance, setModelLuminance] = useState(0.46);
   const backdropUrl = backgroundImageUrl || thumbnailUrl;
   const handleModelLuminance = useCallback((value: number) => setModelLuminance(value), []);
+
+  // Giữ callback trong ref: FitModel/Canvas chỉ nhận hàm ổn định, đổi prop không làm remount scene.
+  // Đồng bộ trong effect chứ không phải lúc render — ref chỉ được ghi ngoài pha render.
+  const readyRef = useRef(onModelReady);
+  const unavailableRef = useRef(onModelUnavailable);
+  useEffect(() => {
+    readyRef.current = onModelReady;
+    unavailableRef.current = onModelUnavailable;
+  });
+
+  const handleReady = useCallback(() => readyRef.current?.(), []);
+  const handleUnavailable = useCallback(() => unavailableRef.current?.(), []);
+
+  /**
+   * Canvas đang sống + cờ mounted, để phân biệt MẤT CONTEXT THẬT với context loss do chính r3f gây ra.
+   * Khi tháo Canvas, r3f gọi gl.forceContextLoss() trong một setTimeout (xem createRoot/unmount của
+   * @react-three/fiber) → sự kiện "webglcontextlost" cũng bắn ở mọi lần unmount bình thường, kể cả
+   * lượt mount→unmount→remount của StrictMode. Nếu tin sự kiện đó thì ô sẽ tự nhảy về trạng thái lỗi.
+   */
+  const mountedRef = useRef(true);
+  const activeCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      activeCanvasRef.current = null;
+    };
+  }, []);
+
+  /**
+   * WebGL context bị thu hồi = canvas ngừng vẽ nhưng DOM vẫn còn → ô trống. Chặn hành vi mặc định
+   * để trình duyệt còn cơ hội cấp lại context, đồng thời báo lên trên để hiện lại ảnh poster.
+   */
+  const handleCanvasCreated = useCallback(
+    ({ gl }: { gl: THREE.WebGLRenderer }) => {
+      const canvas = gl.domElement;
+      activeCanvasRef.current = canvas;
+
+      const onLost = (event: Event) => {
+        event.preventDefault();
+        // Chỉ là mất context thật khi component còn sống VÀ sự kiện đến từ đúng canvas hiện hành —
+        // sự kiện của canvas đời trước (r3f dọn dẹp trễ) phải bỏ qua.
+        if (!mountedRef.current || event.target !== activeCanvasRef.current) return;
+        console.warn("[Product3DViewer] WebGL context bị thu hồi — quay về ảnh tĩnh.");
+        handleUnavailable();
+      };
+
+      const onRestored = () => {
+        if (!mountedRef.current || activeCanvasRef.current !== canvas) return;
+        handleReady();
+      };
+
+      canvas.addEventListener("webglcontextlost", onLost);
+      canvas.addEventListener("webglcontextrestored", onRestored);
+    },
+    [handleReady, handleUnavailable],
+  );
 
   return (
     <div className={`relative isolate h-full w-full overflow-hidden bg-[#e5eadf] ${className}`}>
@@ -46,6 +128,7 @@ export default function Product3DViewer({
 
       <Model3DErrorBoundary
         key={modelUrl}
+        onError={handleUnavailable}
         fallback={
           <div className="relative z-10 flex h-full w-full flex-col items-center justify-center gap-2 text-center">
             <div className="rounded-2xl border border-white/30 bg-white/55 p-4 shadow-lg backdrop-blur-md">
@@ -63,6 +146,7 @@ export default function Product3DViewer({
             camera={{ fov: 38, position: [0, 0.05, 4] }}
             dpr={[1, 2]}
             gl={{ preserveDrawingBuffer: true, antialias: true, alpha: true }}
+            onCreated={handleCanvasCreated}
             shadows
           >
             <ambientLight intensity={0.55} />
@@ -82,7 +166,7 @@ export default function Product3DViewer({
               <Lightformer intensity={0.9} position={[4, 0, 1]} scale={[2, 4, 1]} />
             </Environment>
             <Center>
-              <FitModel url={modelUrl} onLuminance={handleModelLuminance} />
+              <FitModel url={modelUrl} onLuminance={handleModelLuminance} onReady={handleReady} />
             </Center>
             <ContactShadows
               position={[0, -0.83, 0]}
@@ -104,17 +188,27 @@ export default function Product3DViewer({
         </Suspense>
       </Model3DErrorBoundary>
 
-      <div className="pointer-events-none absolute bottom-3 left-1/2 z-20 flex max-w-[calc(100%-1.5rem)] -translate-x-1/2 items-center gap-1.5 whitespace-nowrap rounded-full border border-white/25 bg-gray-950/55 px-3 py-1.5 text-[11px] font-medium text-white/95 shadow-lg backdrop-blur-md sm:bottom-4">
-        <Pointer className="h-4 w-4 shrink-0" strokeWidth={2.2} />
-        {t("product_detail.model_3d.hint")}
-      </div>
+      {showHint && (
+        <div className="pointer-events-none absolute bottom-3 left-1/2 z-20 flex max-w-[calc(100%-1.5rem)] -translate-x-1/2 items-center gap-1.5 whitespace-nowrap rounded-full border border-white/25 bg-gray-950/55 px-3 py-1.5 text-[11px] font-medium text-white/95 shadow-lg backdrop-blur-md sm:bottom-4">
+          <Pointer className="h-4 w-4 shrink-0" strokeWidth={2.2} />
+          {t("product_detail.model_3d.hint")}
+        </div>
+      )}
     </div>
   );
 }
 
 /** Load GLB + tự scale về kích thước chuẩn (đường kính bao ~1.6) để mọi model, dù xuất từ MeshyAI ở
  * tỉ lệ nào, đều lấp vừa khung camera giống nhau. */
-function FitModel({ url, onLuminance }: { url: string; onLuminance: (value: number) => void }) {
+function FitModel({
+  url,
+  onLuminance,
+  onReady,
+}: {
+  url: string;
+  onLuminance: (value: number) => void;
+  onReady: () => void;
+}) {
   const { scene } = useGLTF(url);
   const cloned = useMemo(() => scene.clone(true), [scene]);
   const { invalidate } = useThree();
@@ -134,9 +228,22 @@ function FitModel({ url, onLuminance }: { url: string; onLuminance: (value: numb
     });
     onLuminance(estimateModelLuminance(cloned));
     invalidate();
-  }, [cloned, invalidate, onLuminance]);
 
-  return <primitive object={cloned} scale={scale} />;
+    // Đợi 2 khung hình rồi mới báo "sẵn sàng": khung đầu r3f mới dựng scene, khung sau mới thực sự
+    // có pixel model. Báo sớm hơn sẽ gỡ ảnh poster đúng lúc canvas còn trống → nháy trắng.
+    let secondFrame = 0;
+    const firstFrame = requestAnimationFrame(() => {
+      secondFrame = requestAnimationFrame(onReady);
+    });
+    return () => {
+      cancelAnimationFrame(firstFrame);
+      cancelAnimationFrame(secondFrame);
+    };
+  }, [cloned, invalidate, onLuminance, onReady]);
+
+  // dispose={null}: hình học/vật liệu thuộc về cache của useGLTF và được dùng chung với mọi bản
+  // clone khác, không được để vòng đời của instance này quyết định.
+  return <primitive object={cloned} scale={scale} dispose={null} />;
 }
 
 function ModelLoadingFallback() {
@@ -304,7 +411,7 @@ interface ErrorBoundaryState {
 /** useGLTF ném lỗi thật (không phải Promise) khi file GLB hỏng/URL sai — cần error boundary để
  * không sập cả trang sản phẩm. */
 class Model3DErrorBoundary extends Component<
-  { children: ReactNode; fallback: ReactNode },
+  { children: ReactNode; fallback: ReactNode; onError?: () => void },
   ErrorBoundaryState
 > {
   state: ErrorBoundaryState = { hasError: false };
@@ -315,6 +422,7 @@ class Model3DErrorBoundary extends Component<
 
   componentDidCatch(error: unknown) {
     console.error("[Product3DViewer] Lỗi tải model 3D:", error);
+    this.props.onError?.();
   }
 
   render() {

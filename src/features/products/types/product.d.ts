@@ -32,6 +32,9 @@ export interface Product {
   minPrice: number;
   primaryImageUrl: string;
   primaryElement?: string | null;
+  /** URL file GLB khi sản phẩm có model 3D xem được (Succeeded + owner bật hiển thị). Null nếu không. */
+  model3DUrl?: string | null;
+  model3DThumbnailUrl?: string | null;
   items: ProductItem[];
 }
 
@@ -46,6 +49,8 @@ export interface GetProductsParams {
   search?: string;
   /** Hành phong thủy — khớp cả hành chính lẫn hành phụ của sản phẩm. */
   element?: "Kim" | "Moc" | "Thuy" | "Hoa" | "Tho";
+  /** true = chỉ lấy sản phẩm có model 3D xem được. Trang chủ dùng để bốc ngẫu nhiên 1 model. */
+  hasModel3D?: boolean;
   page?: number;
   pageSize?: number;
 }

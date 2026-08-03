@@ -7,7 +7,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { useAppSelector } from "@/app/store";
-import { useProductPrimaryImage } from "@/features/products";
 import type { UpdateCartItemParams } from "@/features/cart/types/cart";
 import { generateSlug } from "@/utils/string";
 
@@ -23,16 +22,15 @@ interface CartDropdownItemProps {
 }
 
 function CartDropdownItem({ item, onNavigate, onQuantityChange, onRemove }: CartDropdownItemProps) {
-  const { imageUrl } = useProductPrimaryImage(item.productId);
   const { t } = useTranslation();
 
   return (
     <li className="flex gap-3 px-3 py-3 hover:bg-gray-50/80">
-      <CartItemImage imageUrl={imageUrl} alt={item.productName} />
+      <CartItemImage imageUrl={item.imageUrl} alt={item.productName} />
       <div className="min-w-0 flex-1">
         <a
           href={`/products/${item.productId}`}
-          onClick={(e) => onNavigate(e, `/product/${item.productId}`)}
+          onClick={(e) => onNavigate(e, `/products/${item.productId}`)}
           className="line-clamp-2 text-left text-xs font-medium leading-snug text-gray-800 hover:text-primary"
         >
           {item.productName} {item.variantName ? `(${item.variantName})` : ""}

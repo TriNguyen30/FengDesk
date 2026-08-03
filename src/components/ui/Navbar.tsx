@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import SearchBar from "./Search";
 import AiAssistantDrawer from "@/features/chatbox/components/AiAssistantDrawer";
+import { useAiAssistant } from "@/features/chatbox/hooks/useAiAssistant";
 import PopUpLogin from "@/features/auth/components/PopUpLogin";
 import PopUpSignUp from "@/features/auth/components/PopUpSignUp";
 import { CartDropDown, useCart } from "@/features/cart";
@@ -82,15 +83,8 @@ export default function Navbar() {
   }, [userDropdownOpen, closeUserDropdown]);
 
   // Trợ lý AI giờ là KHUNG CHAT trượt bên hông (thay cho trang /ai full-screen).
-  const [aiOpen, setAiOpen] = useState(false);
-  const openAiAssistant = () => {
-    if (!user) {
-      dispatch(setAuthModal("login"));
-      toast.info(t("navbar.login_required_ai"));
-      return;
-    }
-    setAiOpen(true);
-  };
+  // State nằm ở Redux để CTA ngoài Navbar (vd trang chủ) cũng mở được cùng drawer.
+  const { isOpen: aiOpen, open: openAiAssistant, close: closeAiAssistant } = useAiAssistant();
 
   useEffect(() => {
     if (user) {
@@ -370,7 +364,7 @@ export default function Navbar() {
         onSwitchToLogin={() => dispatch(setAuthModal("login"))}
       />
 
-      <AiAssistantDrawer key={user?.id ?? "guest"} open={aiOpen} onClose={() => setAiOpen(false)} />
+      <AiAssistantDrawer key={user?.id ?? "guest"} open={aiOpen} onClose={closeAiAssistant} />
     </header>
   );
 }

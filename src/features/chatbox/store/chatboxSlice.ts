@@ -6,6 +6,8 @@ type ChatView = "list" | "conversation";
 
 interface ChatboxState {
   isOpen: boolean;
+  /** Drawer trợ lý AI (khác khung chat hỗ trợ). Ở Redux vì nhiều nơi ngoài Navbar cần mở nó. */
+  isAiAssistantOpen: boolean;
   view: ChatView;
   activeChatboxId: string | null;
   chatboxes: Chatbox[];
@@ -17,6 +19,7 @@ interface ChatboxState {
 
 const initialState: ChatboxState = {
   isOpen: false,
+  isAiAssistantOpen: false,
   view: "list",
   activeChatboxId: null,
   chatboxes: [],
@@ -56,6 +59,12 @@ const chatboxSlice = createSlice({
     },
     toggleChatbox(state) {
       state.isOpen = !state.isOpen;
+    },
+    openAiAssistant(state) {
+      state.isAiAssistantOpen = true;
+    },
+    closeAiAssistant(state) {
+      state.isAiAssistantOpen = false;
     },
     setView(state, action: PayloadAction<ChatView>) {
       state.view = action.payload;
@@ -114,6 +123,8 @@ export const {
   openChatbox,
   closeChatbox,
   toggleChatbox,
+  openAiAssistant,
+  closeAiAssistant,
   setView,
   setActiveChatbox,
   setChatboxes,
@@ -130,6 +141,7 @@ export const {
 type RootLike = { chatbox: ChatboxState };
 export const selectChatbox = (s: RootLike) => s.chatbox;
 export const selectChatboxIsOpen = (s: RootLike) => s.chatbox.isOpen;
+export const selectAiAssistantIsOpen = (s: RootLike) => s.chatbox.isAiAssistantOpen;
 export const selectChatboxView = (s: RootLike) => s.chatbox.view;
 export const selectActiveChatboxId = (s: RootLike) => s.chatbox.activeChatboxId;
 export const selectChatboxes = (s: RootLike) => s.chatbox.chatboxes;

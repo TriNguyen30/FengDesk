@@ -5,9 +5,11 @@ import { BestSellersSection } from "@/features/products/components/ProductCard";
 import FiveElementsSection from "../components/FiveElementsSection";
 import ImageCollections from "../components/ImageCollections";
 import CommitmentPage from "@/components/ui/CommitmentPage";
+import { useAiAssistant } from "@/features/chatbox/hooks/useAiAssistant";
 import { useTranslation } from "react-i18next";
 export default function HomePage() {
   const { t } = useTranslation();
+  const { open: openAiAssistant } = useAiAssistant();
 
   const slides: HeroSlide[] = [
     {
@@ -21,6 +23,9 @@ export default function HomePage() {
         "https://images.squarespace-cdn.com/content/v1/663638597899f63cfa9deca6/1736727318707-KPNZ2QBTGEXVXAEC6WK8/7.16.24+Bristol+Botanics-27.jpg",
       primaryBtn: t("hero_slider.slide1.primaryBtn"),
       secondaryBtn: t("hero_slider.slide1.secondaryBtn"),
+      // "Trải nghiệm AI" → mở drawer trợ lý (khách chưa đăng nhập sẽ thấy modal đăng nhập).
+      onPrimaryClick: openAiAssistant,
+      secondaryTo: "/about",
     },
     {
       id: 2,
@@ -33,6 +38,8 @@ export default function HomePage() {
         "https://s.yimg.com/ny/api/res/1.2/OjlgtatUjnfv6rMRAgVNSA--/YXBwaWQ9aGlnaGxhbmRlcjt3PTk2MDtoPTU0MDtjZj13ZWJw/https://media.zenfs.com/en/real_homes_245/4b07f622a522e2e612f3336385080532",
       primaryBtn: t("hero_slider.slide2.primaryBtn"),
       secondaryBtn: t("hero_slider.slide2.secondaryBtn"),
+      primaryTo: "/products",
+      secondaryTo: "/about",
     },
     {
       id: 3,
@@ -45,6 +52,8 @@ export default function HomePage() {
         "https://www.thespruce.com/thmb/fQjL1wNf72Ez89dkS-VwpiQGiAM=/6127x0/filters:no_upscale():max_bytes(150000):strip_icc()/thespruce.com-best-houseplants-for-sun-4147670-1-3d69cd3cf2b943d9aa8363cde764e595.jpg",
       primaryBtn: t("hero_slider.slide3.primaryBtn"),
       secondaryBtn: t("hero_slider.slide3.secondaryBtn"),
+      primaryTo: "/products",
+      secondaryTo: "/about",
     },
   ];
 

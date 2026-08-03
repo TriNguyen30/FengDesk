@@ -1,7 +1,8 @@
 import { Leaf } from "lucide-react";
 
 interface CartItemImageProps {
-  imageUrl?: string;
+  /** BE trả kèm trong CartItemResponse.imageUrl. Null = sản phẩm chưa có ảnh. */
+  imageUrl?: string | null;
   alt: string;
   className?: string;
   iconSize?: number;

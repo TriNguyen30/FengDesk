@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Leaf, ShieldCheck, Heart, Sparkles, Sprout, ChevronRight } from "lucide-react";
+import { Leaf, ShieldCheck, Heart, Sparkles, Sprout } from "lucide-react";
 import { Link } from "react-router-dom";
 // import FengShui from "@/assets/image/FengShuiv2.png";
 import FengDeskIllustration from "@/assets/video/FengShuiIllustration.mp4";
@@ -21,19 +21,6 @@ export default function AboutPage() {
 
   return (
     <div className="min-h-screen bg-gray-50/50">
-      {/* Breadcrumb */}
-      <div className="bg-white/80 backdrop-blur-md border-b border-gray-100 relative z-20">
-        <div className="mx-auto max-w-7xl px-4 py-3 sm:px-6 lg:px-8">
-          <nav className="flex items-center gap-2 text-sm font-medium text-gray-500">
-            <Link to="/" className="hover:text-primary transition-colors">
-              Trang chủ
-            </Link>
-            <ChevronRight className="h-4 w-4 text-gray-400" />
-            <span className="text-gray-900">Về chúng tôi</span>
-          </nav>
-        </div>
-      </div>
-
       {/* Hero Section */}
       {/* Nền là ảnh phủ lớp đen — chữ ở đây luôn là tông sáng, nên đánh dấu để
           theme tối không lật thang màu trong phạm vi này. */}
