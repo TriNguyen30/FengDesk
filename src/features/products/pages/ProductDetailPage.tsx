@@ -69,7 +69,7 @@ export default function ProductDetailPage() {
   const navigate = useNavigate();
   const { addItem } = useCart();
   const { product, loading, failed } = useProductDetail(id);
-  const { model3D } = useProductModel3D(product?.id);
+  const { models3D } = useProductModel3D(product?.id);
   const sortedImages = useMemo(() => {
     return [...(product?.images || [])].sort((a, b) => a.sortOrder - b.sortOrder);
   }, [product?.images]);
@@ -84,6 +84,10 @@ export default function ProductDetailPage() {
 
   const [selectedItem, setSelectedItem] = useState<ProductItem | null>(null);
   const [activeImage, setActiveImage] = useState<string>("");
+  const model3D = useMemo(() => {
+    const active = sortedImages.find((image) => image.url === activeImage);
+    return active ? models3D.find((model) => model.productImageId === active.id) : undefined;
+  }, [activeImage, models3D, sortedImages]);
   const [quantity, setQuantity] = useState<number>(1);
   const [shop, setShop] = useState<Shop | null>(null);
 

@@ -336,7 +336,7 @@ export function Model3DViewSwitcher({
     <div
       role="group"
       aria-label={t("product_detail.model_3d.view_mode")}
-      className="grid min-w-[210px] grid-cols-2 gap-1 rounded-xl border border-gray-200 bg-gray-50 p-1 shadow-inner"
+      className="grid min-w-[210px] grid-cols-2 gap-1 rounded-full border border-gray-200 bg-gray-50 p-1 shadow-inner"
     >
       <button
         type="button"
@@ -346,7 +346,7 @@ export function Model3DViewSwitcher({
         }}
         aria-pressed={activeMode === "image"}
         aria-controls="product-media-viewer"
-        className={`flex h-9 items-center justify-center gap-1.5 rounded-lg px-3 text-xs font-semibold transition-all duration-200 cursor-pointer active:scale-[.97] ${
+        className={`flex h-9 items-center justify-center gap-1.5 rounded-full px-3 text-xs font-semibold transition-all duration-200 cursor-pointer active:scale-[.97] ${
           activeMode === "image"
             ? "bg-white text-gray-800 shadow-sm ring-1 ring-black/5"
             : "text-gray-500 hover:bg-white/70 hover:text-gray-700"
@@ -364,7 +364,7 @@ export function Model3DViewSwitcher({
         }}
         aria-pressed={activeMode === "3d"}
         aria-controls="product-media-viewer"
-        className={`flex h-9 items-center justify-center gap-1.5 rounded-lg px-3 text-xs font-bold transition-all duration-200 cursor-pointer active:scale-[.97] ${
+        className={`flex h-9 items-center justify-center gap-1.5 rounded-full px-3 text-xs font-bold transition-all duration-200 cursor-pointer active:scale-[.97] ${
           activeMode === "3d"
             ? "bg-primary text-white shadow-md shadow-primary/20"
             : "text-primary hover:bg-primary/10"
