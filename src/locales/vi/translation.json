@@ -514,7 +514,7 @@
       "logout": "Đăng xuất"
     },
     "hints": {
-      "birth_time": "Thêm giờ sinh để trợ lý AI xem được Tứ Trụ / Bát Tự đầy đủ cho bạn.",
+      "birth_time": "Thêm đầy đủ thông tin để Lumi có thể tư vấn chính xác hơn.",
       "update_wip": "Tính năng cập nhật thông tin đang được phát triển."
     }
   },

@@ -9,6 +9,7 @@ import PopUpLogin from "@/features/auth/components/PopUpLogin";
 import PopUpSignUp from "@/features/auth/components/PopUpSignUp";
 import { CartDropDown, useCart } from "@/features/cart";
 import { NotificationDropdown } from "@/features/notification";
+import AppearanceSettings from "@/components/ui/AppearanceSettings";
 import WorkspaceSwitcher from "./WorkspaceSwitcher";
 import { useHasSellerWorkspaceAccess } from "@/features/shop/hooks/useShopStaff";
 import { getRoles } from "@/lib/workspace";
@@ -235,6 +236,10 @@ export default function Navbar() {
               </button>
 
               {user && <NotificationDropdown />}
+
+              {/* Không gắn với `user`: khách vãng lai mới là người ở trang chủ
+                  lâu nhất, mà đó cũng là trang nặng hiệu ứng nhất. */}
+              <AppearanceSettings />
 
               {user ? (
                 <div

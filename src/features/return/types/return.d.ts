@@ -102,21 +102,13 @@ export interface CreateReturnRequest {
 }
 
 // ── Approve / Reject request types (POST /returns/{id}/approve, /reject) ────
-export interface ApproveReturnRequest {
-  note?: string | null;
-}
-
 export interface RejectReturnRequest {
   reason?: string | null;
 }
 
-export interface ShipBackRequest {
-  trackingCode?: string | null;
-}
-
-export interface ResolveReturnRequest {
-  restock: boolean;
+export interface RequestMoreEvidenceRequest {
   note?: string | null;
+  deadlineHours?: number | null;
 }
 
 // ── Response types ───────────────────────────────────────────────────────────
@@ -136,14 +128,6 @@ export interface CancelReturnResponse {
   errors: any;
 }
 
-export interface ApproveReturnResponse {
-  data: ReturnDetail;
-  isSuccess: boolean;
-  statusCode: number;
-  message: string | null;
-  errors: any;
-}
-
 export interface RejectReturnResponse {
   data: ReturnDetail;
   isSuccess: boolean;
@@ -152,7 +136,7 @@ export interface RejectReturnResponse {
   errors: any;
 }
 
-export interface ShipBackResponse {
+export interface AcceptReturnResponse {
   data: ReturnDetail;
   isSuccess: boolean;
   statusCode: number;
@@ -160,7 +144,15 @@ export interface ShipBackResponse {
   errors: any;
 }
 
-export interface ResolveReturnResponse {
+export interface RequestMoreEvidenceResponse {
+  data: ReturnDetail;
+  isSuccess: boolean;
+  statusCode: number;
+  message: string | null;
+  errors: any;
+}
+
+export interface ResubmitEvidenceResponse {
   data: ReturnDetail;
   isSuccess: boolean;
   statusCode: number;

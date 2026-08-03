@@ -1,14 +1,19 @@
-import { Outlet, NavLink } from "react-router-dom";
+import { Outlet, NavLink, useLocation } from "react-router-dom";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { User, MapPin, Package, HousePlus, Bell, RefreshCw, Mail } from "lucide-react";
 import { useEffect } from "react";
 import { useMyStoreInvitations } from "@/features/shop/hooks/useShopStaff";
-import AppearanceSettings from "@/components/ui/AppearanceSettings";
 import FeatureBar from "@/components/ui/FeatureBar";
 import CommitmentPage from "@/components/ui/CommitmentPage";
 import { useTranslation } from "react-i18next";
 
 export default function ProfileLayout() {
   const { t } = useTranslation();
+  // AppLayout gom mọi route /profile/* về CHUNG một transition key (xem AppLayout.tsx) để layout này
+  // không remount mỗi lần đổi tab — đánh đổi là mất luôn chuyển cảnh. Bù lại bằng một AnimatePresence
+  // lồng bên trong: sidebar đứng yên, chỉ vùng nội dung chuyển cảnh.
+  const { pathname } = useLocation();
+  const reduceMotion = useReducedMotion();
   // Load lời mời (nhẹ) để hiện badge số lượng bên cạnh menu; nếu 0 thì ẩn badge.
   const { invitations } = useMyStoreInvitations();
   const pendingCount = invitations.length;
@@ -43,7 +48,9 @@ export default function ProfileLayout() {
         {/* Sidebar */}
         <aside className="w-full shrink-0 md:w-64">
           <div className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm">
-            <h2 className="mb-4 px-2 text-lg font-bold text-gray-900">{t("profile_layout.title")}</h2>
+            <h2 className="mb-4 px-2 text-lg font-bold text-gray-900">
+              {t("profile_layout.title")}
+            </h2>
             <nav className="flex flex-col gap-1">
               {navItems.map((item) => {
                 const Icon = item.icon;
@@ -69,7 +76,6 @@ export default function ProfileLayout() {
                   </NavLink>
                 );
               })}
-              <AppearanceSettings />
             </nav>
           </div>
         </aside>
@@ -77,7 +83,19 @@ export default function ProfileLayout() {
         {/* Main Content */}
         <main className="flex-1 min-w-0">
           <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm min-h-[400px]">
-            <Outlet />
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.div
+                key={pathname}
+                initial={reduceMotion ? false : { opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -6 }}
+                // Ngắn hơn AppLayout (0.26s) vì mode="wait" cộng dồn exit + enter; đổi tab phải đằm
+                // nhưng không được có cảm giác chờ.
+                transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
+              >
+                <Outlet />
+              </motion.div>
+            </AnimatePresence>
           </div>
         </main>
       </div>

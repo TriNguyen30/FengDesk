@@ -102,9 +102,19 @@ const cartSlice = createSlice({
 export const { clearCartState } = cartSlice.actions;
 export default cartSlice.reducer;
 
+/**
+ * Nhánh "chưa có giỏ" phải trả về CÙNG một mảng rỗng.
+ *
+ * Viết `|| []` là tạo mảng MỚI ở mỗi lần gọi selector, nên useSyncExternalStore
+ * luôn thấy tham chiếu khác và bắt component render lại sau MỌI action Redux —
+ * kể cả action chẳng liên quan gì tới giỏ hàng. Navbar dùng useCart() và luôn
+ * nằm trên màn hình, nên cái này chạm tới toàn app.
+ */
+const NO_CART_ITEMS: CartProduct["items"] = [];
+
 export const selectCart = (state: RootState) => state.cart.cart;
 export const selectCartStatus = (state: RootState) => state.cart.status;
-export const selectCartItems = (state: RootState) => state.cart.cart?.items || [];
+export const selectCartItems = (state: RootState) => state.cart.cart?.items ?? NO_CART_ITEMS;
 export const selectCartItemCount = (state: RootState) => state.cart.cart?.items.length ?? 0;
 export const selectCartTotalQuantity = (state: RootState) => {
   const items = state.cart.cart?.items;

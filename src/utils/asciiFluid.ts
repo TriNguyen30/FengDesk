@@ -73,6 +73,19 @@ export class FluidSolver {
   }
 
   /**
+   * Đưa lưới về trạng thái nghỉ hoàn toàn.
+   *
+   * Dùng khi vòng lặp vẽ chuẩn bị ngủ: nếu chỉ ngừng gọi step() thì trường vận
+   * tốc bị ĐÓNG BĂNG ở giá trị cuối chứ không tắt dần, và lúc tỉnh lại nó sẽ
+   * hất mực mới đi một cú không ăn nhập với gì cả.
+   */
+  reset() {
+    this.u.fill(0);
+    this.v.fill(0);
+    this.density.fill(0);
+  }
+
+  /**
    * densityDecayFaint / densityDecayDense: phần mực còn lại sau frame này, tra
    * theo chính độ đậm của ô — nhạt tan chậm, đậm tan nhanh (xem dissipate).
    */

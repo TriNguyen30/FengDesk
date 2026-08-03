@@ -138,7 +138,16 @@ export const selectConnectionStatus = (s: RootLike) => s.chatbox.connectionStatu
 export const selectChatboxUnreadCount = (s: RootLike) =>
   s.chatbox.chatboxes.reduce((sum, c) => sum + (c.unreadCount ?? 0), 0);
 export const selectIsSending = (s: RootLike) => s.chatbox.isSending;
+/**
+ * Nhánh "chưa mở phòng nào" phải trả về CÙNG một mảng rỗng — xem ghi chú của
+ * NO_CART_ITEMS trong cartSlice: `?? []` tạo tham chiếu mới ở mỗi lần gọi nên
+ * ChatWidget (luôn nằm trên màn hình) render lại sau mọi action Redux.
+ */
+const NO_MESSAGES: ChatMessage[] = [];
+
 export const selectActiveMessages = (s: RootLike) =>
-  s.chatbox.activeChatboxId ? (s.chatbox.messagesByRoom[s.chatbox.activeChatboxId] ?? []) : [];
+  s.chatbox.activeChatboxId
+    ? (s.chatbox.messagesByRoom[s.chatbox.activeChatboxId] ?? NO_MESSAGES)
+    : NO_MESSAGES;
 
 export default chatboxSlice.reducer;
