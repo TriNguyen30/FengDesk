@@ -240,15 +240,21 @@ function ArrivalModelTile({ product }: { product: Product }) {
   // vòng tròn nhảy về đầu và trông giật cục.
   const busy = phase === "reveal" || phase === "hiding";
 
+  // Trạng thái NHÌN THẤY của nút phải bám theo thứ đang hiện trên ô, không phải theo mỗi cờ enabled:
+  // khi model hỏng (phase "failed") ô rơi về ảnh 2D nên nút cũng phải xám, nếu không người dùng
+  // thấy nút xanh mà ô lại 2D và phải bấm thừa một lần cho hai bên khớp nhau.
+  const active = enabled && phase !== "failed";
+
   const toggle3D = (event: React.MouseEvent) => {
     event.preventDefault();
     event.stopPropagation();
     if (busy) return;
-    if (enabled) {
+    if (active) {
       setEnabled(false);
       // Chỉ loang ngược khi model đang thực sự hiện; còn ở ảnh thì tắt luôn cho gọn.
       setPhase((current) => (current === "model" || current === "reveal" ? "hiding" : "poster"));
     } else {
+      // Từ "failed" thì đây là lượt thử lại: dựng lại viewer từ đầu.
       setEnabled(true);
       setPhase("poster");
     }
@@ -285,7 +291,7 @@ function ArrivalModelTile({ product }: { product: Product }) {
         </span>
         <button
           type="button"
-          aria-pressed={enabled}
+          aria-pressed={active}
           aria-label={toggleLabel}
           title={toggleLabel}
           disabled={busy}
@@ -298,7 +304,7 @@ function ArrivalModelTile({ product }: { product: Product }) {
           // đối xứng để nhịp thò/thụt đều, không dồn hết vào đoạn đầu.
           className={`-ml-3 rounded-r-full py-1 pl-4 pr-3 text-xs font-bold tracking-wide text-white transition-[translate,background-color,box-shadow] duration-[350ms] ease-[cubic-bezier(.45,.05,.55,.95)] ${
             busy ? "-translate-x-9 cursor-default shadow-none" : "cursor-pointer shadow-sm"
-          } ${enabled ? "bg-primary hover:bg-primary-dark" : "bg-neutral-400 hover:bg-neutral-500"}`}
+          } ${active ? "bg-primary hover:bg-primary-dark" : "bg-neutral-400 hover:bg-neutral-500"}`}
         >
           3D
         </button>

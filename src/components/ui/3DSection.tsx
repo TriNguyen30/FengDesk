@@ -78,19 +78,46 @@ export default function Product3DViewer({
   const handleUnavailable = useCallback(() => unavailableRef.current?.(), []);
 
   /**
+   * Canvas đang sống + cờ mounted, để phân biệt MẤT CONTEXT THẬT với context loss do chính r3f gây ra.
+   * Khi tháo Canvas, r3f gọi gl.forceContextLoss() trong một setTimeout (xem createRoot/unmount của
+   * @react-three/fiber) → sự kiện "webglcontextlost" cũng bắn ở mọi lần unmount bình thường, kể cả
+   * lượt mount→unmount→remount của StrictMode. Nếu tin sự kiện đó thì ô sẽ tự nhảy về trạng thái lỗi.
+   */
+  const mountedRef = useRef(true);
+  const activeCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      activeCanvasRef.current = null;
+    };
+  }, []);
+
+  /**
    * WebGL context bị thu hồi = canvas ngừng vẽ nhưng DOM vẫn còn → ô trống. Chặn hành vi mặc định
    * để trình duyệt còn cơ hội cấp lại context, đồng thời báo lên trên để hiện lại ảnh poster.
    */
   const handleCanvasCreated = useCallback(
     ({ gl }: { gl: THREE.WebGLRenderer }) => {
       const canvas = gl.domElement;
+      activeCanvasRef.current = canvas;
+
       const onLost = (event: Event) => {
         event.preventDefault();
+        // Chỉ là mất context thật khi component còn sống VÀ sự kiện đến từ đúng canvas hiện hành —
+        // sự kiện của canvas đời trước (r3f dọn dẹp trễ) phải bỏ qua.
+        if (!mountedRef.current || event.target !== activeCanvasRef.current) return;
         console.warn("[Product3DViewer] WebGL context bị thu hồi — quay về ảnh tĩnh.");
         handleUnavailable();
       };
+
+      const onRestored = () => {
+        if (!mountedRef.current || activeCanvasRef.current !== canvas) return;
+        handleReady();
+      };
+
       canvas.addEventListener("webglcontextlost", onLost);
-      canvas.addEventListener("webglcontextrestored", handleReady);
+      canvas.addEventListener("webglcontextrestored", onRestored);
     },
     [handleReady, handleUnavailable],
   );
@@ -417,7 +444,7 @@ export function Model3DViewSwitcher({
     <div
       role="group"
       aria-label={t("product_detail.model_3d.view_mode")}
-      className="grid min-w-[210px] grid-cols-2 gap-1 rounded-xl border border-gray-200 bg-gray-50 p-1 shadow-inner"
+      className="grid min-w-[210px] grid-cols-2 gap-1 rounded-full border border-gray-200 bg-gray-50 p-1 shadow-inner"
     >
       <button
         type="button"
@@ -427,7 +454,7 @@ export function Model3DViewSwitcher({
         }}
         aria-pressed={activeMode === "image"}
         aria-controls="product-media-viewer"
-        className={`flex h-9 items-center justify-center gap-1.5 rounded-lg px-3 text-xs font-semibold transition-all duration-200 cursor-pointer active:scale-[.97] ${
+        className={`flex h-9 items-center justify-center gap-1.5 rounded-full px-3 text-xs font-semibold transition-all duration-200 cursor-pointer active:scale-[.97] ${
           activeMode === "image"
             ? "bg-white text-gray-800 shadow-sm ring-1 ring-black/5"
             : "text-gray-500 hover:bg-white/70 hover:text-gray-700"
@@ -445,7 +472,7 @@ export function Model3DViewSwitcher({
         }}
         aria-pressed={activeMode === "3d"}
         aria-controls="product-media-viewer"
-        className={`flex h-9 items-center justify-center gap-1.5 rounded-lg px-3 text-xs font-bold transition-all duration-200 cursor-pointer active:scale-[.97] ${
+        className={`flex h-9 items-center justify-center gap-1.5 rounded-full px-3 text-xs font-bold transition-all duration-200 cursor-pointer active:scale-[.97] ${
           activeMode === "3d"
             ? "bg-primary text-white shadow-md shadow-primary/20"
             : "text-primary hover:bg-primary/10"

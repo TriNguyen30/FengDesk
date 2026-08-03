@@ -1,7 +1,6 @@
 import { ReactNode } from "react";
 import { Provider } from "react-redux";
 import { QueryClientProvider } from "@tanstack/react-query";
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { BrowserRouter } from "react-router-dom";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import { SearchProvider } from "@/features/search";

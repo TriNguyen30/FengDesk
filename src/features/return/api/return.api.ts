@@ -6,14 +6,12 @@ import type {
   CreateReturnRequest,
   CreateReturnResponse,
   CancelReturnResponse,
-  ApproveReturnRequest,
-  ApproveReturnResponse,
   RejectReturnRequest,
   RejectReturnResponse,
-  ShipBackRequest,
-  ShipBackResponse,
-  ResolveReturnRequest,
-  ResolveReturnResponse,
+  AcceptReturnResponse,
+  RequestMoreEvidenceRequest,
+  RequestMoreEvidenceResponse,
+  ResubmitEvidenceResponse,
 } from "@/features/return/types/return.d.ts";
 
 export const returnApi = {
@@ -41,30 +39,34 @@ export const returnApi = {
     return fetchHttpClient.post<CancelReturnResponse>(`/returns/${returnId}/cancel`, {});
   },
 
-  approveReturn: async (returnId: string, payload?: ApproveReturnRequest) => {
-    return fetchHttpClient.post<ApproveReturnResponse>(
-      `/returns/${returnId}/approve`,
-      payload ?? {},
-    );
-  },
-
   rejectReturn: async (returnId: string, payload?: RejectReturnRequest) => {
     return fetchHttpClient.post<RejectReturnResponse>(`/returns/${returnId}/reject`, payload ?? {});
   },
 
-  shipBack: async (returnId: string, payload?: ShipBackRequest) => {
-    return fetchHttpClient.post<ShipBackResponse>(`/returns/${returnId}/ship-back`, payload ?? {});
+  acceptReturn: async (returnId: string) => {
+    return fetchHttpClient.post<AcceptReturnResponse>(`/returns/${returnId}/accept`);
   },
 
-  receiveReturn: async (returnId: string) => {
-    return fetchHttpClient.post<ReturnDetailResponse>(`/returns/${returnId}/receive`, {});
+  requestMoreEvidence: async (returnId: string, payload: RequestMoreEvidenceRequest) => {
+    return fetchHttpClient.post<RequestMoreEvidenceResponse>(
+      `/returns/${returnId}/request-more-evidence`,
+      payload
+    );
   },
 
-  resolveReturn: async (returnId: string, payload: ResolveReturnRequest) => {
-    return fetchHttpClient.post<ResolveReturnResponse>(`/returns/${returnId}/resolve`, payload);
-  },
-
-  completeRefund: async (returnId: string) => {
-    return fetchHttpClient.post<ReturnDetailResponse>(`/returns/${returnId}/complete-refund`, {});
+  resubmitEvidence: async (returnId: string, files: File[]) => {
+    const formData = new FormData();
+    files.forEach((file) => {
+      formData.append("files", file);
+    });
+    return fetchHttpClient.post<ResubmitEvidenceResponse>(
+      `/returns/${returnId}/resubmit-evidence`,
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
   },
 };
