@@ -4,6 +4,7 @@ import type { Model3DRequest, ProductModel3D, RequestModel3DPayload } from "../t
 
 function buildRequestFormData(payload: RequestModel3DPayload): FormData {
   const form = new FormData();
+  if (payload.productImageId) form.append("ProductImageId", payload.productImageId);
   (payload.sourceImageIds ?? []).forEach((id) => form.append("SourceImageIds", id));
   (payload.newImageFiles ?? []).forEach((file) => form.append("NewImages", file));
   return form;
@@ -15,13 +16,13 @@ export const model3DApi = {
    * 404 = sản phẩm chưa từng có model 3D — coi là trạng thái bình thường, không phải lỗi.
    */
   getModel3D: (productId: string) => {
-    return fetchHttpClient.get<ApiResponse<ProductModel3D>>(`/products/${productId}/model-3d`);
+    return fetchHttpClient.get<ApiResponse<ProductModel3D[]>>(`/products/${productId}/model-3d`);
   },
 
   /**
    * Tạo yêu cầu sinh/tạo lại model 3D (owner/garden staff của store). Server tự quyết định
-   * Initial (chưa có model — cần ảnh, tự động qua Meshy) hay Regenerate (đã có model — bỏ trống
-   * ảnh, staff sàn xử lý thủ công). Bị chặn (409) nếu sản phẩm đang có 1 request "mở".
+   * Initial (chưa có model) hay Regenerate (đã có model); cả hai đều vào hàng chờ staff sàn.
+   * Bị chặn (409) nếu ảnh đang có một request mở.
    */
   requestModel3D: (productId: string, payload: RequestModel3DPayload) => {
     return fetchHttpClient.post<ApiResponse<Model3DRequest>>(
@@ -37,8 +38,8 @@ export const model3DApi = {
   },
 
   /** Bật/tắt hiển thị model 3D trên trang sản phẩm công khai — không xóa dữ liệu model đã sinh. */
-  toggleModel3D: (productId: string, isEnabled: boolean) => {
-    return fetchHttpClient.patch<ApiResponse<null>>(`/products/${productId}/model-3d/toggle`, {
+  toggleModel3D: (productId: string, modelId: string, isEnabled: boolean) => {
+    return fetchHttpClient.patch<ApiResponse<null>>(`/products/${productId}/model-3d/${modelId}/toggle`, {
       isEnabled,
     });
   },

@@ -14,8 +14,7 @@ import {
   XCircle,
   Package,
   Clock,
-  PackageCheck,
-  Banknote,
+  FileWarning,
 } from "lucide-react";
 import { returnApi } from "@/features/return/api/return.api";
 import type { ReturnItem, ReturnDetail } from "@/features/return/types/return.d.ts";
@@ -24,12 +23,16 @@ import { formatOrderDate, formatVnd } from "@/features/orders/utils/orderUtils";
 
 const RETURN_STATUS_META: Record<string, { label: string; className: string }> = {
   Requested: {
-    label: "Yêu cầu mới",
+    label: "Đã gửi yêu cầu",
     className: "bg-amber-50 text-amber-600 border border-amber-200",
   },
-  Approved: {
-    label: "Đã duyệt",
+  Reviewing: {
+    label: "Đang xem xét",
     className: "bg-indigo-50 text-indigo-600 border border-indigo-200",
+  },
+  NeedMoreEvidence: {
+    label: "Đang chờ bổ sung bằng chứng",
+    className: "bg-orange-50 text-orange-600 border border-orange-200",
   },
   Rejected: { label: "Đã từ chối", className: "bg-red-50 text-red-500 border border-red-200" },
   Processing: { label: "Đang xử lý", className: "bg-blue-50 text-blue-600 border border-blue-200" },
@@ -80,8 +83,14 @@ const REASON_LABEL: Record<string, string> = {
   Other: "Lý do khác",
 };
 
-// ── Approve confirm modal state ──────────────────────────────────────────────
-interface ApproveModalState {
+// ── Accept confirm modal state ───────────────────────────────────────────────
+interface AcceptModalState {
+  open: boolean;
+  returnId: string | null;
+}
+
+// ── Request Evidence confirm modal state ─────────────────────────────────────
+interface RequestEvidenceModalState {
   open: boolean;
   returnId: string | null;
 }
@@ -92,17 +101,6 @@ interface RejectModalState {
   returnId: string | null;
 }
 
-// ── Receive confirm modal state ──────────────────────────────────────────────
-interface ReceiveModalState {
-  open: boolean;
-  returnId: string | null;
-}
-
-// ── Resolve confirm modal state ──────────────────────────────────────────────
-interface ResolveModalState {
-  open: boolean;
-  returnId: string | null;
-}
 
 // ── Detail modal state ───────────────────────────────────────────────────────
 interface DetailModalState {
@@ -123,34 +121,20 @@ export default function ShopReturnsView({ storeId }: ShopReturnsViewProps) {
   const [returns, setReturns] = useState<ReturnItem[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Approve modal
-  const [approveModal, setApproveModal] = useState<ApproveModalState>({
-    open: false,
-    returnId: null,
-  });
-  const [approveNote, setApproveNote] = useState("");
-  const [approving, setApproving] = useState(false);
+  // Accept modal
+  const [acceptModal, setAcceptModal] = useState<AcceptModalState>({ open: false, returnId: null });
+  const [accepting, setAccepting] = useState(false);
+
+  // Request Evidence modal
+  const [requestEvidenceModal, setRequestEvidenceModal] = useState<RequestEvidenceModalState>({ open: false, returnId: null });
+  const [evidenceNote, setEvidenceNote] = useState("");
+  const [evidenceDeadlineHours, setEvidenceDeadlineHours] = useState<number | "">("");
+  const [requestingEvidence, setRequestingEvidence] = useState(false);
 
   // Reject modal
   const [rejectModal, setRejectModal] = useState<RejectModalState>({ open: false, returnId: null });
   const [rejectReason, setRejectReason] = useState("");
   const [rejecting, setRejecting] = useState(false);
-
-  // Receive modal
-  const [receiveModal, setReceiveModal] = useState<ReceiveModalState>({
-    open: false,
-    returnId: null,
-  });
-  const [receiving, setReceiving] = useState(false);
-
-  // Resolve modal
-  const [resolveModal, setResolveModal] = useState<ResolveModalState>({
-    open: false,
-    returnId: null,
-  });
-  const [resolveRestock, setResolveRestock] = useState(true);
-  const [resolveNote, setResolveNote] = useState("");
-  const [resolving, setResolving] = useState(false);
 
   // Detail modal
   const [detailModal, setDetailModal] = useState<DetailModalState>({ open: false, returnId: null });
@@ -230,32 +214,60 @@ export default function ShopReturnsView({ storeId }: ShopReturnsViewProps) {
     setReturnDetail(null);
   };
 
-  // ── Approve handlers ───────────────────────────────────────────────────────
-  const openApproveModal = (returnId: string) => {
-    setApproveNote("");
-    setApproveModal({ open: true, returnId });
+  // ── Accept handlers ────────────────────────────────────────────────────────
+  const openAcceptModal = (returnId: string) => {
+    setAcceptModal({ open: true, returnId });
   };
 
-  const closeApproveModal = () => setApproveModal({ open: false, returnId: null });
+  const closeAcceptModal = () => setAcceptModal({ open: false, returnId: null });
 
-  const handleApprove = async () => {
-    if (!approveModal.returnId) return;
-    setApproving(true);
+  const handleAccept = async () => {
+    if (!acceptModal.returnId) return;
+    setAccepting(true);
     try {
-      const res = await returnApi.approveReturn(approveModal.returnId, {
-        note: approveNote || null,
-      });
+      const res = await returnApi.acceptReturn(acceptModal.returnId);
       if (res.data.isSuccess) {
-        toast.success("Đã duyệt yêu cầu trả hàng");
-        closeApproveModal();
+        toast.success("Đã đồng ý yêu cầu trả hàng");
+        closeAcceptModal();
         fetchReturns(page);
       } else {
-        toast.error(res.data.message || "Không thể duyệt yêu cầu trả hàng");
+        toast.error(res.data.message || "Không thể đồng ý yêu cầu trả hàng");
       }
     } catch (err: any) {
-      toast.error(err?.response?.data?.message || "Có lỗi xảy ra khi duyệt yêu cầu");
+      toast.error(err?.response?.data?.message || "Có lỗi xảy ra khi đồng ý yêu cầu");
     } finally {
-      setApproving(false);
+      setAccepting(false);
+    }
+  };
+
+  // ── Request Evidence handlers ──────────────────────────────────────────────
+  const openRequestEvidenceModal = (returnId: string) => {
+    setEvidenceNote("");
+    setEvidenceDeadlineHours("");
+    setRequestEvidenceModal({ open: true, returnId });
+  };
+
+  const closeRequestEvidenceModal = () => setRequestEvidenceModal({ open: false, returnId: null });
+
+  const handleRequestEvidence = async () => {
+    if (!requestEvidenceModal.returnId) return;
+    setRequestingEvidence(true);
+    try {
+      const res = await returnApi.requestMoreEvidence(requestEvidenceModal.returnId, {
+        note: evidenceNote || null,
+        deadlineHours: evidenceDeadlineHours === "" ? null : Number(evidenceDeadlineHours),
+      });
+      if (res.data.isSuccess) {
+        toast.success("Đã yêu cầu thêm bằng chứng");
+        closeRequestEvidenceModal();
+        fetchReturns(page);
+      } else {
+        toast.error(res.data.message || "Không thể yêu cầu thêm bằng chứng");
+      }
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || "Có lỗi xảy ra khi yêu cầu thêm bằng chứng");
+    } finally {
+      setRequestingEvidence(false);
     }
   };
 
@@ -290,62 +302,7 @@ export default function ShopReturnsView({ storeId }: ShopReturnsViewProps) {
     }
   };
 
-  // ── Receive handlers ───────────────────────────────────────────────────────
-  const openReceiveModal = (returnId: string) => {
-    setReceiveModal({ open: true, returnId });
-  };
 
-  const closeReceiveModal = () => setReceiveModal({ open: false, returnId: null });
-
-  const handleReceive = async () => {
-    if (!receiveModal.returnId) return;
-    setReceiving(true);
-    try {
-      const res = await returnApi.receiveReturn(receiveModal.returnId);
-      if (res.data.isSuccess) {
-        toast.success("Xác nhận đã nhận hàng thành công");
-        closeReceiveModal();
-        fetchReturns(page);
-      } else {
-        toast.error(res.data.message || "Không thể xác nhận nhận hàng");
-      }
-    } catch (err: any) {
-      toast.error(err?.response?.data?.message || "Có lỗi xảy ra khi xác nhận nhận hàng");
-    } finally {
-      setReceiving(false);
-    }
-  };
-
-  // ── Resolve handlers ───────────────────────────────────────────────────────
-  const openResolveModal = (returnId: string) => {
-    setResolveRestock(true);
-    setResolveNote("");
-    setResolveModal({ open: true, returnId });
-  };
-
-  const closeResolveModal = () => setResolveModal({ open: false, returnId: null });
-
-  const handleResolve = async () => {
-    if (!resolveModal.returnId) return;
-    setResolving(true);
-    try {
-      const res = await returnApi.resolveReturn(resolveModal.returnId, {
-        restock: resolveRestock,
-        note: resolveNote || null,
-      });
-      if (res.data.isSuccess) {
-        toast.success("Xử lý hoàn tất thành công");
-        closeResolveModal();
-        fetchReturns(page);
-      } else {
-        toast.error(res.data.message || "Không thể xử lý hoàn tất");
-      }
-    } catch (err: any) {
-      toast.error(err?.response?.data?.message || "Có lỗi xảy ra khi xử lý hoàn tất");
-    } finally {
-      setResolving(false);
-    }
-  };
 
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
@@ -357,11 +314,10 @@ export default function ShopReturnsView({ storeId }: ShopReturnsViewProps) {
               <button
                 key={tab.value}
                 onClick={() => setActiveTab(tab.value)}
-                className={`rounded-lg px-3.5 py-1.5 text-xs font-semibold transition-all cursor-pointer ${
-                  activeTab === tab.value
+                className={`rounded-lg px-3.5 py-1.5 text-xs font-semibold transition-all cursor-pointer ${activeTab === tab.value
                     ? "bg-primary text-white shadow-sm"
                     : "text-gray-500 hover:bg-gray-100 hover:text-gray-900"
-                }`}
+                  }`}
               >
                 {tab.label}
                 {activeTab !== tab.value && count > 0 && (
@@ -455,51 +411,36 @@ export default function ShopReturnsView({ storeId }: ShopReturnsViewProps) {
                       </span>
                     </td>
                     <td
-                      className="p-4 text-right flex items-center justify-end gap-2"
+                      className="p-4 text-right flex items-center justify-end gap-1"
                       onClick={(e) => e.stopPropagation()}
                     >
-                      {r.status === "Requested" && (
-                        <>
-                          <button
-                            onClick={() => openApproveModal(r.id)}
-                            className="inline-flex items-center gap-1 rounded-lg border border-indigo-200 bg-indigo-50 px-2.5 py-1.5 text-xs font-semibold text-indigo-600 hover:bg-indigo-100 transition-colors cursor-pointer"
-                          >
-                            <Check size={14} />
-                            Duyệt
-                          </button>
-                          <button
-                            onClick={() => openRejectModal(r.id)}
-                            className="inline-flex items-center gap-1 rounded-lg border border-red-200 bg-red-50 px-2.5 py-1.5 text-xs font-semibold text-red-500 hover:bg-red-100 transition-colors cursor-pointer"
-                          >
-                            <Ban size={14} />
-                            Từ chối
-                          </button>
-                        </>
-                      )}
-                      {r.status === "ReturnInTransit" && (
-                        <button
-                          onClick={() => openReceiveModal(r.id)}
-                          className="inline-flex items-center gap-1 rounded-lg border border-teal-200 bg-teal-50 px-2.5 py-1.5 text-xs font-semibold text-teal-600 hover:bg-teal-100 transition-colors cursor-pointer"
-                        >
-                          <PackageCheck size={14} />
-                          Nhận hàng
-                        </button>
-                      )}
-                      {r.status === "ItemReceived" && (
-                        <button
-                          onClick={() => openResolveModal(r.id)}
-                          className="inline-flex items-center gap-1 rounded-lg border border-purple-200 bg-purple-50 px-2.5 py-1.5 text-xs font-semibold text-purple-600 hover:bg-purple-100 transition-colors cursor-pointer"
-                        >
-                          <Banknote size={14} />
-                          Hoàn tiền
-                        </button>
-                      )}
+                      <button
+                        onClick={() => openAcceptModal(r.id)}
+                        className="group flex items-center rounded-lg border border-indigo-200 bg-indigo-50 px-2 py-1.5 text-xs font-semibold text-indigo-600 hover:bg-indigo-100 transition-all duration-300 cursor-pointer"
+                      >
+                        <Check size={16} />
+                        <span className="max-w-0 overflow-hidden whitespace-nowrap opacity-0 transition-all duration-300 group-hover:max-w-[80px] group-hover:ml-1.5 group-hover:opacity-100">Đồng ý</span>
+                      </button>
+                      <button
+                        onClick={() => openRequestEvidenceModal(r.id)}
+                        className="group flex items-center rounded-lg border border-amber-200 bg-amber-50 px-2 py-1.5 text-xs font-semibold text-amber-600 hover:bg-amber-100 transition-all duration-300 cursor-pointer"
+                      >
+                        <FileWarning size={16} />
+                        <span className="max-w-0 overflow-hidden whitespace-nowrap opacity-0 transition-all duration-300 group-hover:max-w-[80px] group-hover:ml-1.5 group-hover:opacity-100">Yêu cầu</span>
+                      </button>
+                      <button
+                        onClick={() => openRejectModal(r.id)}
+                        className="group flex items-center rounded-lg border border-red-200 bg-red-50 px-2 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-100 transition-all duration-300 cursor-pointer"
+                      >
+                        <Ban size={16} />
+                        <span className="max-w-0 overflow-hidden whitespace-nowrap opacity-0 transition-all duration-300 group-hover:max-w-[80px] group-hover:ml-1.5 group-hover:opacity-100">Từ chối</span>
+                      </button>
                       <button
                         onClick={() => openDetailModal(r.id)}
-                        className="inline-flex items-center gap-1 rounded-lg border border-gray-200 bg-gray-50 px-2.5 py-1.5 text-xs font-semibold text-gray-600 hover:bg-gray-100 transition-colors cursor-pointer"
+                        className="group flex items-center rounded-lg border border-gray-200 bg-gray-50 px-2 py-1.5 text-xs font-semibold text-gray-600 hover:bg-gray-100 transition-all duration-300 cursor-pointer"
                       >
-                        <Eye size={14} />
-                        Chi tiết
+                        <Eye size={16} />
+                        <span className="max-w-0 overflow-hidden whitespace-nowrap opacity-0 transition-all duration-300 group-hover:max-w-[80px] group-hover:ml-1.5 group-hover:opacity-100">Chi tiết</span>
                       </button>
                     </td>
                   </tr>
@@ -749,13 +690,13 @@ export default function ShopReturnsView({ storeId }: ShopReturnsViewProps) {
 
             {/* Footer: quick actions when pending */}
             {returnDetail && returnDetail.status === "Requested" && (
-              <div className="flex gap-3 border-t border-gray-100 px-6 py-4 bg-gray-50/50">
+              <div className="flex gap-2 border-t border-gray-100 px-6 py-4 bg-gray-50/50">
                 <button
                   onClick={() => {
                     closeDetailModal();
                     openRejectModal(returnDetail.id);
                   }}
-                  className="flex-1 flex items-center justify-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-semibold text-red-600 hover:bg-red-100 transition-colors cursor-pointer"
+                  className="flex-1 flex items-center justify-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-red-600 hover:bg-red-100 transition-colors cursor-pointer"
                 >
                   <X className="h-4 w-4" />
                   Từ chối
@@ -763,42 +704,22 @@ export default function ShopReturnsView({ storeId }: ShopReturnsViewProps) {
                 <button
                   onClick={() => {
                     closeDetailModal();
-                    openApproveModal(returnDetail.id);
+                    openRequestEvidenceModal(returnDetail.id);
                   }}
-                  className="flex-1 flex items-center justify-center gap-1.5 rounded-lg border border-indigo-200 bg-indigo-50 px-4 py-2.5 text-sm font-semibold text-indigo-600 hover:bg-indigo-100 transition-colors cursor-pointer"
+                  className="flex-1 flex items-center justify-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-600 hover:bg-amber-100 transition-colors cursor-pointer"
+                >
+                  <FileWarning className="h-4 w-4" />
+                  Yêu cầu thêm
+                </button>
+                <button
+                  onClick={() => {
+                    closeDetailModal();
+                    openAcceptModal(returnDetail.id);
+                  }}
+                  className="flex-1 flex items-center justify-center gap-1.5 rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 text-sm font-semibold text-indigo-600 hover:bg-indigo-100 transition-colors cursor-pointer"
                 >
                   <Check className="h-4 w-4" />
-                  Duyệt
-                </button>
-              </div>
-            )}
-
-            {returnDetail && returnDetail.status === "ReturnInTransit" && (
-              <div className="flex gap-3 border-t border-gray-100 px-6 py-4 bg-gray-50/50">
-                <button
-                  onClick={() => {
-                    closeDetailModal();
-                    openReceiveModal(returnDetail.id);
-                  }}
-                  className="flex-1 flex items-center justify-center gap-1.5 rounded-lg bg-teal-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-teal-600 transition-colors cursor-pointer"
-                >
-                  <PackageCheck className="h-4 w-4" />
-                  Xác nhận đã nhận hàng
-                </button>
-              </div>
-            )}
-
-            {returnDetail && returnDetail.status === "ItemReceived" && (
-              <div className="flex gap-3 border-t border-gray-100 px-6 py-4 bg-gray-50/50">
-                <button
-                  onClick={() => {
-                    closeDetailModal();
-                    openResolveModal(returnDetail.id);
-                  }}
-                  className="flex-1 flex items-center justify-center gap-1.5 rounded-lg bg-purple-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-purple-600 transition-colors cursor-pointer"
-                >
-                  <Banknote className="h-4 w-4" />
-                  Đồng ý hoàn tiền
+                  Đồng ý
                 </button>
               </div>
             )}
@@ -806,8 +727,9 @@ export default function ShopReturnsView({ storeId }: ShopReturnsViewProps) {
         </div>
       )}
 
-      {/* ── Approve Confirm Modal ──────────────────────────────────────────── */}
-      {approveModal.open && (
+
+      {/* ── Accept Confirm Modal ───────────────────────────────────────────── */}
+      {acceptModal.open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
           <div className="w-full max-w-sm rounded-2xl bg-white shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
             <div className="flex items-start gap-3 px-6 py-5 border-b border-gray-100">
@@ -815,43 +737,99 @@ export default function ShopReturnsView({ storeId }: ShopReturnsViewProps) {
                 <CheckCircle2 className="h-5 w-5 text-indigo-500" />
               </div>
               <div>
-                <h3 className="text-base font-bold text-gray-900">Duyệt yêu cầu trả hàng?</h3>
+                <h3 className="text-base font-bold text-gray-900">Đồng ý yêu cầu trả hàng?</h3>
                 <p className="mt-1 text-sm text-gray-500">
-                  Yêu cầu sẽ được chuyển sang trạng thái "Đã duyệt".
+                  Yêu cầu sẽ được chuyển sang trạng thái "Đã duyệt" và khách hàng sẽ được hoàn tiền.
                 </p>
               </div>
             </div>
-            <div className="px-6 py-4">
-              <label className="block text-xs font-semibold text-gray-600 mb-1.5">
-                Ghi chú (tuỳ chọn)
-              </label>
-              <textarea
-                value={approveNote}
-                onChange={(e) => setApproveNote(e.target.value)}
-                placeholder="Thêm ghi chú cho yêu cầu này..."
-                rows={3}
-                className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-700 placeholder-gray-400 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-200 transition-all resize-none"
-              />
-            </div>
             <div className="flex gap-3 px-6 py-4 border-t border-gray-100">
               <button
-                onClick={closeApproveModal}
+                onClick={closeAcceptModal}
                 className="flex-1 rounded-lg border border-gray-200 px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
               >
                 Hủy
               </button>
               <button
-                onClick={handleApprove}
-                disabled={approving}
+                onClick={handleAccept}
+                disabled={accepting}
                 className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-indigo-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-600 disabled:opacity-60 transition-colors cursor-pointer"
               >
-                {approving ? (
+                {accepting ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    Đang duyệt...
+                    Đang xử lý...
                   </>
                 ) : (
-                  "Xác nhận duyệt"
+                  "Xác nhận"
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Request Evidence Confirm Modal ─────────────────────────────────── */}
+      {requestEvidenceModal.open && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="w-full max-w-sm rounded-2xl bg-white shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-start gap-3 px-6 py-5 border-b border-gray-100">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-50">
+                <FileWarning className="h-5 w-5 text-amber-500" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-gray-900">Yêu cầu thêm bằng chứng?</h3>
+                <p className="mt-1 text-sm text-gray-500">
+                  Khách hàng sẽ cần cung cấp thêm bằng chứng.
+                </p>
+              </div>
+            </div>
+            <div className="px-6 py-4 space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1.5">
+                  Ghi chú (tuỳ chọn)
+                </label>
+                <textarea
+                  value={evidenceNote}
+                  onChange={(e) => setEvidenceNote(e.target.value)}
+                  placeholder="Yêu cầu cụ thể..."
+                  rows={2}
+                  className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-700 placeholder-gray-400 focus:border-amber-400 focus:outline-none focus:ring-1 focus:ring-amber-200 transition-all resize-none"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1.5">
+                  Thời hạn (giờ) - Tuỳ chọn
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  value={evidenceDeadlineHours}
+                  onChange={(e) => setEvidenceDeadlineHours(e.target.value ? Number(e.target.value) : "")}
+                  placeholder="Ví dụ: 48"
+                  className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 placeholder-gray-400 focus:border-amber-400 focus:outline-none focus:ring-1 focus:ring-amber-200 transition-all"
+                />
+              </div>
+            </div>
+            <div className="flex gap-3 px-6 py-4 border-t border-gray-100">
+              <button
+                onClick={closeRequestEvidenceModal}
+                className="flex-1 rounded-lg border border-gray-200 px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
+              >
+                Hủy
+              </button>
+              <button
+                onClick={handleRequestEvidence}
+                disabled={requestingEvidence}
+                className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-amber-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-amber-600 disabled:opacity-60 transition-colors cursor-pointer"
+              >
+                {requestingEvidence ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Đang xử lý...
+                  </>
+                ) : (
+                  "Xác nhận"
                 )}
               </button>
             </div>
@@ -912,112 +890,6 @@ export default function ShopReturnsView({ storeId }: ShopReturnsViewProps) {
         </div>
       )}
 
-      {/* ── Receive Confirm Modal ──────────────────────────────────────────── */}
-      {receiveModal.open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="w-full max-w-sm rounded-2xl bg-white shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-            <div className="flex items-start gap-3 px-6 py-5 border-b border-gray-100">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-teal-50">
-                <PackageCheck className="h-5 w-5 text-teal-500" />
-              </div>
-              <div>
-                <h3 className="text-base font-bold text-gray-900">Xác nhận nhận hàng?</h3>
-                <p className="mt-1 text-sm text-gray-500">
-                  Bạn xác nhận đã nhận được hàng trả từ khách? Trạng thái sẽ chuyển sang "Đã nhận
-                  hàng".
-                </p>
-              </div>
-            </div>
-            <div className="flex gap-3 px-6 py-4">
-              <button
-                onClick={closeReceiveModal}
-                className="flex-1 rounded-lg border border-gray-200 px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
-              >
-                Hủy
-              </button>
-              <button
-                onClick={handleReceive}
-                disabled={receiving}
-                className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-teal-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-teal-600 disabled:opacity-60 transition-colors cursor-pointer"
-              >
-                {receiving ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Đang xử lý...
-                  </>
-                ) : (
-                  "Xác nhận"
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ── Resolve Confirm Modal ──────────────────────────────────────────── */}
-      {resolveModal.open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="w-full max-w-sm rounded-2xl bg-white shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-            <div className="flex items-start gap-3 px-6 py-5 border-b border-gray-100">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-purple-50">
-                <Banknote className="h-5 w-5 text-purple-500" />
-              </div>
-              <div>
-                <h3 className="text-base font-bold text-gray-900">Đồng ý hoàn tiền?</h3>
-                <p className="mt-1 text-sm text-gray-500">
-                  Xác nhận hoàn tất xử lý và bắt đầu quá trình hoàn tiền/đổi hàng cho khách.
-                </p>
-              </div>
-            </div>
-            <div className="px-6 py-4 space-y-4">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={resolveRestock}
-                  onChange={(e) => setResolveRestock(e.target.checked)}
-                  className="h-4 w-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500 cursor-pointer"
-                />
-                <span className="text-sm font-medium text-gray-700">Nhập lại kho sản phẩm này</span>
-              </label>
-
-              <div>
-                <label className="block text-xs font-semibold text-gray-600 mb-1.5">
-                  Ghi chú (tuỳ chọn)
-                </label>
-                <textarea
-                  value={resolveNote}
-                  onChange={(e) => setResolveNote(e.target.value)}
-                  placeholder="Ghi chú xử lý..."
-                  rows={2}
-                  className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-700 placeholder-gray-400 focus:border-purple-400 focus:outline-none focus:ring-1 focus:ring-purple-200 transition-all resize-none"
-                />
-              </div>
-            </div>
-            <div className="flex gap-3 px-6 py-4 border-t border-gray-100">
-              <button
-                onClick={closeResolveModal}
-                className="flex-1 rounded-lg border border-gray-200 px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
-              >
-                Hủy
-              </button>
-              <button
-                onClick={handleResolve}
-                disabled={resolving}
-                className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-purple-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-purple-600 disabled:opacity-60 transition-colors cursor-pointer"
-              >
-                {resolving ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Đang xử lý...
-                  </>
-                ) : (
-                  "Xác nhận"
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       <DeliveryDetailModal
         deliveryId={orderDetailDeliveryId}

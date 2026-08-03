@@ -8,6 +8,7 @@ export type Model3DStatus = "Pending" | "Processing" | "Succeeded" | "Failed";
 export interface ProductModel3D {
   id: string;
   productId: string;
+  productImageId: string | null;
   status: Model3DStatus;
   progress: number;
   sourceImageUrl: string;
@@ -37,25 +38,28 @@ export type Model3DRequestStatus =
   | "Failed"
   | "Rejected";
 
-/** Các trạng thái coi là "đang mở" — chặn tạo request mới (chỉ 1 request mở/product). */
+/** Các trạng thái coi là "đang mở" — chặn tạo request mới cho cùng ảnh. Failed chờ staff retry/reject. */
 export const OPEN_MODEL3D_REQUEST_STATUSES: Model3DRequestStatus[] = [
   "Queued",
   "Processing",
   "AwaitingStaff",
   "InProgress",
+  "Failed",
 ];
 
 export interface Model3DRequest {
   id: string;
   productId: string;
+  productImageId: string | null;
   requestType: Model3DRequestType;
   status: Model3DRequestStatus;
   createdAt: string;
   updatedAt: string;
 }
 
-/** Payload tạo request (Initial: cần ảnh; Regenerate: bỏ trống, staff sàn tự chọn ảnh sau). */
+/** Payload tạo request hoặc gửi Meshy; model luôn gắn với productImageId. */
 export interface RequestModel3DPayload {
+  productImageId?: string;
   sourceImageIds?: string[];
   newImageFiles?: File[];
 }
@@ -73,6 +77,8 @@ export interface Model3DRequestQueueItem {
   productId: string;
   productName: string;
   storeName: string;
+  productImageId: string | null;
+  productImageUrl: string | null;
   requestType: Model3DRequestType;
   status: Model3DRequestStatus;
   sourceImageIds: string[];
@@ -88,6 +94,7 @@ export interface Model3DRequestQueueItem {
 export interface Model3DRequestQueueResponse {
   items: Model3DRequestQueueItem[];
   total: number;
+  statusCounts: Partial<Record<Model3DRequestStatus, number>>;
 }
 
 export type Model3DPreviewState = "Running" | "Succeeded" | "Failed";
