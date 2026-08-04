@@ -414,7 +414,7 @@ export default function ShopReturnsView({ storeId }: ShopReturnsViewProps) {
                       className="p-4 text-right flex items-center justify-end gap-1"
                       onClick={(e) => e.stopPropagation()}
                     >
-                      <button
+                      {/* <button
                         onClick={() => openAcceptModal(r.id)}
                         className="group flex items-center rounded-lg border border-indigo-200 bg-indigo-50 px-2 py-1.5 text-xs font-semibold text-indigo-600 hover:bg-indigo-100 transition-all duration-300 cursor-pointer"
                       >
@@ -434,7 +434,7 @@ export default function ShopReturnsView({ storeId }: ShopReturnsViewProps) {
                       >
                         <Ban size={16} />
                         <span className="max-w-0 overflow-hidden whitespace-nowrap opacity-0 transition-all duration-300 group-hover:max-w-[80px] group-hover:ml-1.5 group-hover:opacity-100">Từ chối</span>
-                      </button>
+                      </button> */}
                       <button
                         onClick={() => openDetailModal(r.id)}
                         className="group flex items-center rounded-lg border border-gray-200 bg-gray-50 px-2 py-1.5 text-xs font-semibold text-gray-600 hover:bg-gray-100 transition-all duration-300 cursor-pointer"
