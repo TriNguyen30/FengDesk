@@ -9,7 +9,7 @@ import { useAppSelector } from "@/app/store";
 import { YouMightAlsoLikeSection } from "@/features/products/components/ProductCard";
 import type { UpdateCartItemParams } from "@/features/cart/types/cart";
 import Modal from "@/components/ui/Modal";
-import EmptyCartImg from "@/assets/image/EmptyCart.jpg";
+import EmptyCartImg from "@/assets/image/empty-cart.png";
 import { generateSlug } from "@/utils/string";
 import FeatureBar from "@/components/ui/FeatureBar";
 import CommitmentPage from "@/components/ui/CommitmentPage";
