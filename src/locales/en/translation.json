@@ -1,5 +1,7 @@
 {
   "navbar": {
+    "disclaimer_short": "Project Demo — Not a real e-commerce store",
+    "disclaimer_long": "Notice: This is an academic project website, not a real e-commerce store. All data and transactions are for demonstration purposes only.",
     "promo_freeship_short": "Freeship over 500k",
     "promo_freeship_long": "Free shipping on orders over 500.000đ",
     "promo_return": "7-day return",

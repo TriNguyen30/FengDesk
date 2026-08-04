@@ -1,5 +1,7 @@
 {
   "navbar": {
+    "disclaimer_short": "Dự án thử nghiệm — Không phải web bán hàng thật",
+    "disclaimer_long": "Lưu ý: Đây là website dự án thử nghiệm, không phải sàn thương mại điện tử thực tế. Mọi dữ liệu và thanh toán chỉ mang tính chất minh họa.",
     "promo_freeship_short": "Freeship từ 500k",
     "promo_freeship_long": "Miễn phí vận chuyển từ 500.000đ",
     "promo_return": "Đổi trả trong 7 ngày",
