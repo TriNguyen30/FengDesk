@@ -34,9 +34,8 @@ const SUGGESTIONS = [
  *
  * Mốc nhỏ nhất trước đây là 448px cố định — quá hẹp trên màn rộng, tin nhắn vỡ
  * dòng liên tục. Giờ mốc nhỏ nhất chính là mốc GIỮA của thang cũ, và cả thang
- * đẩy lên: 40% / 50% / 75%.
  */
-const DRAWER_WIDTH_STOPS = [0.4, 0.5, 0.65] as const;
+const DRAWER_WIDTH_STOPS = [0.35, 0.45, 0.6] as const;
 
 /** Sàn tuyệt đối: hẹp hơn ngần này thì bong bóng chat vỡ dòng từng chữ. */
 const DRAWER_MIN_WIDTH = 448;

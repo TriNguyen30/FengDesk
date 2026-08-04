@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, HelpCircle } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -205,6 +205,16 @@ function NewArrivalTile() {
  * giờ rơi vào trạng thái trắng rỗng.
  * Cả ô là link sang trang sản phẩm; riêng công tắc 3D chặn sự kiện để không kéo theo điều hướng.
  */
+/** Chờ hero + Ngũ Hành chạy xong hiệu ứng vào trang trước khi xin nhịp rảnh để dựng WebGL. */
+const AUTO_REVEAL_DELAY_MS = 1400;
+
+/**
+ * Cờ ở tầm module (không phải state): 3D chỉ tự bật MỘT lần cho mỗi lần tải trang. Điều hướng
+ * trong SPA rồi quay lại trang chủ sẽ remount ô này, nhưng cờ vẫn còn nên không loang lại từ đầu;
+ * chỉ khi F5 (module nạp lại) mới chạy lượt mới.
+ */
+let autoRevealDone = false;
+
 function ArrivalModelTile({ product }: { product: Product }) {
   const { t } = useTranslation();
 
@@ -217,7 +227,35 @@ function ArrivalModelTile({ product }: { product: Product }) {
    */
   const [phase, setPhase] = useState<"poster" | "reveal" | "model" | "hiding" | "failed">("poster");
   // Tách khỏi phase: lúc đang loang ngược thì công tắc đã tắt nhưng viewer vẫn phải còn sống.
-  const [enabled, setEnabled] = useState(true);
+  // Mở trang ở 2D: dựng WebGL ngay lúc trang đang tải làm nặng thêm đúng lúc bận nhất.
+  const [enabled, setEnabled] = useState(autoRevealDone);
+
+  // Tự bật 3D một lần cho mỗi lần tải trang, sau khi phần còn lại của trang đã lắng.
+  useEffect(() => {
+    if (autoRevealDone) return;
+
+    let idleHandle: number | undefined;
+    // Chờ tối thiểu để hero + Ngũ Hành chạy xong hiệu ứng vào trang, rồi mới xin một nhịp rảnh.
+    const delayHandle = window.setTimeout(() => {
+      const start = () => {
+        autoRevealDone = true;
+        setEnabled(true);
+        setPhase("poster");
+      };
+      // requestIdleCallback: chỉ dựng WebGL khi main thread thật sự rảnh; timeout để máy yếu
+      // (không bao giờ rảnh) vẫn bật được thay vì kẹt mãi ở 2D.
+      idleHandle = window.requestIdleCallback
+        ? window.requestIdleCallback(start, { timeout: 1200 })
+        : window.setTimeout(start, 300);
+    }, AUTO_REVEAL_DELAY_MS);
+
+    return () => {
+      window.clearTimeout(delayHandle);
+      if (idleHandle === undefined) return;
+      if (window.cancelIdleCallback) window.cancelIdleCallback(idleHandle);
+      else window.clearTimeout(idleHandle);
+    };
+  }, []);
 
   const handleReady = useCallback(() => {
     setPhase((current) => (current === "poster" ? "reveal" : current));

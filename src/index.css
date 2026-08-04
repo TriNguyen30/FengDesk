@@ -70,7 +70,7 @@
   --fd-ev-attention-bg: #f6ead8;
   --fd-ev-attention-text: #8a6a3f;
 
-  /* ── Dải nội dung (.fd-rail) — ba núm chỉnh độ đục, gom về một chỗ ─────────
+  /* ── Dải nội dung (.fd-rail) — núm chỉnh gom về một chỗ ───────────────────
      Hai chất liệu dùng hai cơ chế khác hẳn nhau nên không có một con số "độ đục"
      chung; đây là núm tương ứng của từng bên.
 
@@ -79,12 +79,11 @@
      theo bán kính, nên đẩy lên cao là thấy máy nóng lên ngay. */
   --fd-rail-blur: 8px;
 
-  /* Đục màu: alpha thật. Càng cao càng che mây, càng dễ đọc chữ.
-     Dưới ~70% thì chữ gray-900 bắt đầu mất tương phản ở chỗ mây chồng nhau. */
-  --fd-rail-tint-opacity: 78%;
-
   /* Sắc của dải đục: phần --color-neutral trong hỗn hợp với --color-primary.
-     100% = đúng màu nền trang (không xanh); giảm xuống là xanh dần lên. */
+     100% = đúng màu nền trang (không xanh); giảm xuống là xanh dần lên.
+     Alpha của dải đục KHÔNG ở đây mà nằm ngay trong .fd-rail-tint (cuối tệp) —
+     nó là một tham số của color-mix lồng nhau, tách ra biến riêng chỉ khiến phải
+     đọc hai chỗ mới hiểu một công thức. */
   --fd-rail-tint-mix: 84%;
 }
 
@@ -1023,8 +1022,10 @@ body {
    nhạt hơn hẳn chúng. Cả hai token đều đổi theo theme nên nền tối tự ra bản
    xanh trầm, không phải chỉnh riêng.
 
-   Hai núm chỉnh (--fd-rail-tint-opacity / --fd-rail-tint-mix) khai báo ở :root
-   đầu tệp, xem ghi chú tại đó. */
+   Hai núm chỉnh:
+   - SẮC: --fd-rail-tint-mix, khai báo ở :root đầu tệp (xem ghi chú tại đó).
+   - ALPHA: con số 68% ngay dưới đây — càng cao càng che mây, càng dễ đọc chữ;
+     hạ xuống thấp quá thì chữ gray-900 mất tương phản ở chỗ mây chồng nhau. */
 .fd-rail-tint {
   background: color-mix(
     in oklab,
