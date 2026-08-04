@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { ChevronDown, SlidersHorizontal } from "lucide-react";
+import { ChevronDown, Monitor } from "lucide-react";
 import ThemeToggle from "@/components/ui/ThemeToggle";
 import {
   CHAT_SURFACES,
@@ -184,8 +184,8 @@ export default function AppearanceSettings() {
         aria-label="Cài đặt hiệu ứng"
         className="flex min-w-[36px] cursor-pointer flex-col items-center gap-0.5 rounded-lg px-1 py-1 text-gray-700 transition-colors hover:text-primary sm:min-w-[44px]"
       >
-        <SlidersHorizontal size={22} strokeWidth={1.8} />
-        <span className="hidden text-[10px] font-medium sm:block sm:text-xs">Hiệu ứng</span>
+        <Monitor size={22} strokeWidth={1.8} />
+        <span className="hidden text-[10px] font-medium sm:block sm:text-xs">Giao diện</span>
       </button>
 
       {open && (

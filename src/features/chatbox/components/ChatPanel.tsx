@@ -100,13 +100,12 @@ export default function ChatPanel({
       aria-label="Tin nhắn FengDesk"
       onClick={() => setIsFocused(true)}
       onFocusCapture={() => setIsFocused(true)}
-      className={`flex h-[min(36rem,calc(100dvh-8rem))] w-[min(calc(100vw-1.5rem),24rem)] flex-col overflow-hidden rounded-t-2xl border-x border-t bg-white transition-all duration-200 sm:h-[min(38rem,calc(100dvh-8rem))] sm:w-96 ${
-        composerAiActive
+      className={`flex h-[min(36rem,calc(100dvh-8rem))] w-[min(calc(100vw-1.5rem),24rem)] flex-col overflow-hidden rounded-t-2xl border-x border-t bg-white transition-all duration-200 sm:h-[min(38rem,calc(100dvh-8rem))] sm:w-96 ${composerAiActive
           ? "border-primary ring-2 ring-primary/40 shadow-2xl"
           : isFocused
             ? "border-gray-300 shadow-2xl"
             : "border-gray-200 shadow-md"
-      }`}
+        }`}
     >
       <header
         className={`flex items-center justify-between gap-2 border-b border-gray-100 px-3 py-3 text-white transition-colors duration-200 ${isFocused ? "bg-primary" : "bg-primary/80"}`}
