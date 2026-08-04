@@ -809,7 +809,7 @@ export default function ManageOrderReturnPage() {
               <div>
                 <h3 className="text-base font-bold text-gray-900">Đồng ý yêu cầu trả hàng?</h3>
                 <p className="mt-1 text-sm text-gray-500">
-                  Yêu cầu sẽ được chuyển sang trạng thái "Đã duyệt" và khách hàng sẽ được hoàn tiền.
+                  Yêu cầu sẽ được chuyển sang trạng thái "Đang xem xét"
                 </p>
               </div>
             </div>

@@ -157,6 +157,14 @@ export interface ApproveRefundResponse {
   errors: any;
 }
 
+export interface ConfirmReceivedResponse {
+  data: ReturnDetail;
+  isSuccess: boolean;
+  statusCode: number;
+  message: string | null;
+  errors: any;
+}
+
 export interface RequestMoreEvidenceResponse {
   data: ReturnDetail;
   isSuccess: boolean;
