@@ -194,7 +194,7 @@ export default function ManageOrdersPage() {
                   <th className="p-4 w-32">Phương thức</th>
                   <th className="p-4 w-32">Tổng tiền</th>
                   <th className="p-4 w-44">Trạng thái thanh toán</th>
-                  <th className="p-4 w-24 text-center">Thao tác</th>
+                  <th className="p-4 w-32 text-right">Thao tác</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -238,19 +238,24 @@ export default function ManageOrdersPage() {
                       </td>
 
                       {/* View Actions */}
-                      <td className="p-4 text-center">
-                        <button
-                          onClick={() => handleViewDetail(order.id)}
-                          disabled={isDetailLoading}
-                          title="Xem chi tiết đơn hàng"
-                          className="inline-flex items-center justify-center rounded-lg p-1.5 text-gray-500 hover:bg-gray-100 hover:text-primary transition-all disabled:opacity-50 cursor-pointer"
-                        >
-                          {isDetailLoading ? (
-                            <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                          ) : (
-                            <Eye size={16} />
-                          )}
-                        </button>
+                      <td className="p-4 text-right">
+                        <div className="flex items-center justify-end gap-1">
+                          <button
+                            onClick={() => handleViewDetail(order.id)}
+                            disabled={isDetailLoading}
+                            title="Xem chi tiết đơn hàng"
+                            className="group flex items-center rounded-lg border border-gray-200 bg-gray-50 px-2 py-1.5 text-xs font-semibold text-gray-600 hover:bg-gray-100 transition-all duration-300 disabled:opacity-50 cursor-pointer"
+                          >
+                            {isDetailLoading ? (
+                              <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                            ) : (
+                              <Eye size={16} />
+                            )}
+                            <span className="max-w-0 overflow-hidden whitespace-nowrap opacity-0 transition-all duration-300 group-hover:max-w-[80px] group-hover:ml-1.5 group-hover:opacity-100">
+                              Chi tiết
+                            </span>
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );
