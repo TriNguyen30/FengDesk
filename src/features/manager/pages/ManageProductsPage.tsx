@@ -298,21 +298,27 @@ export default function ManageProductsPage() {
                         )}
                       </td>
                       <td className="whitespace-nowrap px-6 py-4 text-right">
-                        <div className="flex justify-end gap-2">
+                        <div className="flex items-center justify-end gap-1">
                           <Link
                             to={`/products/${product.id}`}
                             target="_blank"
                             title="Xem chi tiết (cửa hàng)"
-                            className="inline-flex items-center justify-center p-2 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors cursor-pointer"
+                            className="group flex items-center rounded-lg border border-gray-200 bg-gray-50 px-2 py-1.5 text-xs font-semibold text-gray-600 hover:bg-gray-100 transition-all duration-300 cursor-pointer"
                           >
-                            <Eye size={18} />
+                            <Eye size={16} />
+                            <span className="max-w-0 overflow-hidden whitespace-nowrap opacity-0 transition-all duration-300 group-hover:max-w-[80px] group-hover:ml-1.5 group-hover:opacity-100">
+                              Chi tiết
+                            </span>
                           </Link>
                           <button
                             onClick={() => setEditingProductId(product.id)}
                             title="Chỉnh sửa sản phẩm"
-                            className="inline-flex items-center justify-center p-2 rounded-lg text-primary hover:bg-primary/5 transition-colors cursor-pointer"
+                            className="group flex items-center rounded-lg border border-green-200 bg-green-50 px-2 py-1.5 text-xs font-semibold text-green-600 hover:bg-green-100 transition-all duration-300 cursor-pointer"
                           >
-                            <Edit size={18} />
+                            <Edit size={16} />
+                            <span className="max-w-0 overflow-hidden whitespace-nowrap opacity-0 transition-all duration-300 group-hover:max-w-[80px] group-hover:ml-1.5 group-hover:opacity-100">
+                              Chỉnh sửa
+                            </span>
                           </button>
                           <button
                             onClick={() => {
@@ -320,9 +326,12 @@ export default function ManageProductsPage() {
                               setDeleteName(product.name);
                             }}
                             title="Xóa sản phẩm"
-                            className="inline-flex items-center justify-center p-2 rounded-lg text-red-500 hover:bg-red-50 transition-colors cursor-pointer"
+                            className="group flex items-center rounded-lg border border-red-200 bg-red-50 px-2 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-100 transition-all duration-300 cursor-pointer"
                           >
-                            <Trash2 size={18} />
+                            <Trash2 size={16} />
+                            <span className="max-w-0 overflow-hidden whitespace-nowrap opacity-0 transition-all duration-300 group-hover:max-w-[80px] group-hover:ml-1.5 group-hover:opacity-100">
+                              Xóa
+                            </span>
                           </button>
                         </div>
                       </td>
