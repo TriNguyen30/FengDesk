@@ -101,6 +101,12 @@ interface RejectModalState {
   returnId: string | null;
 }
 
+// ── Confirm Received modal state ─────────────────────────────────────────────
+interface ConfirmReceivedModalState {
+  open: boolean;
+  returnId: string | null;
+}
+
 
 // ── Detail modal state ───────────────────────────────────────────────────────
 interface DetailModalState {
@@ -140,6 +146,10 @@ export default function ShopReturnsView({ storeId }: ShopReturnsViewProps) {
   const [detailModal, setDetailModal] = useState<DetailModalState>({ open: false, returnId: null });
   const [returnDetail, setReturnDetail] = useState<ReturnDetail | null>(null);
   const [loadingDetail, setLoadingDetail] = useState(false);
+
+  // Confirm Received modal
+  const [confirmReceivedModal, setConfirmReceivedModal] = useState<ConfirmReceivedModalState>({ open: false, returnId: null });
+  const [confirmingReceived, setConfirmingReceived] = useState(false);
 
   // Original order (delivery) detail modal — mở từ nút "Xem đơn gốc"
   const [orderDetailDeliveryId, setOrderDetailDeliveryId] = useState<string | null>(null);
@@ -302,6 +312,32 @@ export default function ShopReturnsView({ storeId }: ShopReturnsViewProps) {
     }
   };
 
+  // ── Confirm Received handlers ────────────────────────────────────────────────
+  const openConfirmReceivedModal = (returnId: string) => {
+    setConfirmReceivedModal({ open: true, returnId });
+  };
+
+  const closeConfirmReceivedModal = () => setConfirmReceivedModal({ open: false, returnId: null });
+
+  const handleConfirmReceived = async () => {
+    if (!confirmReceivedModal.returnId) return;
+    setConfirmingReceived(true);
+    try {
+      const res = await returnApi.confirmReceived(confirmReceivedModal.returnId);
+      if (res.data.isSuccess) {
+        toast.success("Đã xác nhận nhận hàng");
+        closeConfirmReceivedModal();
+        fetchReturns(page);
+      } else {
+        toast.error(res.data.message || "Không thể xác nhận nhận hàng");
+      }
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || "Có lỗi xảy ra khi xác nhận");
+    } finally {
+      setConfirmingReceived(false);
+    }
+  };
+
 
 
   return (
@@ -414,7 +450,7 @@ export default function ShopReturnsView({ storeId }: ShopReturnsViewProps) {
                       className="p-4 text-right flex items-center justify-end gap-1"
                       onClick={(e) => e.stopPropagation()}
                     >
-                      <button
+                      {/* <button
                         onClick={() => openAcceptModal(r.id)}
                         className="group flex items-center rounded-lg border border-indigo-200 bg-indigo-50 px-2 py-1.5 text-xs font-semibold text-indigo-600 hover:bg-indigo-100 transition-all duration-300 cursor-pointer"
                       >
@@ -434,7 +470,16 @@ export default function ShopReturnsView({ storeId }: ShopReturnsViewProps) {
                       >
                         <Ban size={16} />
                         <span className="max-w-0 overflow-hidden whitespace-nowrap opacity-0 transition-all duration-300 group-hover:max-w-[80px] group-hover:ml-1.5 group-hover:opacity-100">Từ chối</span>
-                      </button>
+                      </button> */}
+                      {r.status === "ReturnInTransit" && (
+                        <button
+                          onClick={() => openConfirmReceivedModal(r.id)}
+                          className="group flex items-center rounded-lg border border-indigo-200 bg-indigo-50 px-2 py-1.5 text-xs font-semibold text-indigo-600 hover:bg-indigo-100 transition-all duration-300 cursor-pointer"
+                        >
+                          <Check size={16} />
+                          <span className="max-w-0 overflow-hidden whitespace-nowrap opacity-0 transition-all duration-300 group-hover:max-w-[80px] group-hover:ml-1.5 group-hover:opacity-100">Đã nhận hàng</span>
+                        </button>
+                      )}
                       <button
                         onClick={() => openDetailModal(r.id)}
                         className="group flex items-center rounded-lg border border-gray-200 bg-gray-50 px-2 py-1.5 text-xs font-semibold text-gray-600 hover:bg-gray-100 transition-all duration-300 cursor-pointer"
@@ -723,6 +768,22 @@ export default function ShopReturnsView({ storeId }: ShopReturnsViewProps) {
                 </button>
               </div>
             )}
+            
+            {/* Footer: quick actions when ReturnInTransit */}
+            {returnDetail && returnDetail.status === "ReturnInTransit" && (
+              <div className="flex gap-2 border-t border-gray-100 px-6 py-4 bg-gray-50/50">
+                <button
+                  onClick={() => {
+                    closeDetailModal();
+                    openConfirmReceivedModal(returnDetail.id);
+                  }}
+                  className="flex-1 flex items-center justify-center gap-1.5 rounded-lg border border-teal-200 bg-teal-50 px-3 py-2 text-sm font-semibold text-teal-600 hover:bg-teal-100 transition-colors cursor-pointer"
+                >
+                  <Package className="h-4 w-4" />
+                  Xác nhận đã nhận hàng
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -883,6 +944,47 @@ export default function ShopReturnsView({ storeId }: ShopReturnsViewProps) {
                   </>
                 ) : (
                   "Xác nhận từ chối"
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Confirm Received Modal ───────────────────────────────────────────── */}
+      {confirmReceivedModal.open && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="w-full max-w-sm rounded-2xl bg-white shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-start gap-3 px-6 py-5 border-b border-gray-100">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-teal-50">
+                <Package className="h-5 w-5 text-teal-500" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-gray-900">Xác nhận đã nhận hàng?</h3>
+                <p className="mt-1 text-sm text-gray-500">
+                  Bạn có chắc chắn đã nhận được hàng trả về từ khách không?
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-3 px-6 py-4 border-t border-gray-100">
+              <button
+                onClick={closeConfirmReceivedModal}
+                className="flex-1 rounded-lg border border-gray-200 px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
+              >
+                Hủy
+              </button>
+              <button
+                onClick={handleConfirmReceived}
+                disabled={confirmingReceived}
+                className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-teal-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-teal-600 disabled:opacity-60 transition-colors cursor-pointer"
+              >
+                {confirmingReceived ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Đang xử lý...
+                  </>
+                ) : (
+                  "Xác nhận"
                 )}
               </button>
             </div>
