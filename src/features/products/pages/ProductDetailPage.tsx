@@ -43,6 +43,7 @@ import {
   upsertChatbox,
 } from "@/features/chatbox/store/chatboxSlice";
 import { setAuthModal } from "@/features/auth/store/authSlice";
+import { cleanRichTextHtml } from "@/utils";
 import ProductFitPanel from "@/features/recommendation/components/element-vector/ProductFitPanel";
 import FeatureBar from "@/components/ui/FeatureBar";
 import CommitmentPage from "@/components/ui/CommitmentPage"
@@ -859,8 +860,8 @@ export default function ProductDetailPage() {
             {t("product_detail.labels.description")}
           </h2>
           <div
-            className="text-sm leading-relaxed text-gray-600 quill-content"
-            dangerouslySetInnerHTML={{ __html: product.description.replace(/&nbsp;/g, " ") }}
+            className="text-sm leading-relaxed text-gray-700 dark:text-gray-100 quill-content"
+            dangerouslySetInnerHTML={{ __html: cleanRichTextHtml(product.description) }}
           />
         </div>
       )}

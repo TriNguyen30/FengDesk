@@ -371,7 +371,7 @@ export default function CreateProductPage() {
               </div>
 
               <div className="space-y-1.5 sm:col-span-2">
-                <label className="text-sm font-semibold text-gray-700">Mô tả sản phẩm</label>
+                <label className="text-sm font-semibold text-gray-700 dark:text-gray-200">Mô tả sản phẩm</label>
                 <RichTextEditor
                   value={description}
                   onChange={setDescription}
