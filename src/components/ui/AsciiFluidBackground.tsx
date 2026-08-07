@@ -62,7 +62,7 @@ const DRIFT_PUFFS_PER_LEVEL = 4;
  * Lấn vào vài ô, dưới lớp đục 78% của dải, thì phần lấn chỉ còn mờ mờ và trông
  * như fluid chui xuống dưới dải.
  */
-const RAIL_BLEED_CELLS = 1;
+const RAIL_BLEED_CELLS = 0;
 
 type Rgb = [number, number, number];
 

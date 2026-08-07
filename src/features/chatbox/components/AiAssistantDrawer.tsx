@@ -7,9 +7,21 @@ import {
   type KeyboardEvent,
   type MouseEvent,
 } from "react";
-import { Bot, ImagePlus, Loader2, Pencil, Pin, PinOff, Send, Sparkles, User, X } from "lucide-react";
+import {
+  Bot,
+  ImagePlus,
+  Loader2,
+  Pencil,
+  Pin,
+  PinOff,
+  Send,
+  Sparkles,
+  User,
+  X,
+} from "lucide-react";
 import { useAiChat, type AiMessage } from "@/features/chatbox/hooks/useAiChat";
 import { useImageAttachments } from "@/features/chatbox/hooks/useImageAttachments";
+import { AnimatePresence } from "framer-motion";
 import { AiActivityIndicator } from "@/features/shared/ai-activity";
 // TẠM GỠ (perf): nền "Nước" dựng bằng WebGL — mỗi khung hình phải đọc lại
 // canvas ASCII bằng drawImage rồi upload thành texture, tức là một vòng
@@ -53,7 +65,10 @@ const getDrawerStops = (viewportWidth: number) => {
   const stops: number[] = [];
 
   for (const ratio of DRAWER_WIDTH_STOPS) {
-    const width = Math.min(viewportWidth, Math.max(DRAWER_MIN_WIDTH, Math.round(viewportWidth * ratio)));
+    const width = Math.min(
+      viewportWidth,
+      Math.max(DRAWER_MIN_WIDTH, Math.round(viewportWidth * ratio)),
+    );
 
     if (stops.length === 0 || width > stops[stops.length - 1] + 8) stops.push(width);
   }
@@ -102,6 +117,22 @@ export default function AiAssistantDrawer({ open, onClose, productId }: AiAssist
       if (messages[i].role === "user") return i;
     }
     return -1;
+  })();
+
+  /**
+   * Khối lời dẫn có nằm SÁT NGAY TRÊN khe trạng thái không.
+   *
+   * Nó chỉ render tại `idx === lastUserIdx`, còn khe render sau toàn bộ danh sách — nên hai khối
+   * chỉ dính nhau khi tin user đó cũng là tin CUỐI được render (tin `system` không render). Đúng
+   * trường hợp thường gặp: user vừa gửi, câu trả lời chưa lưu xong. Kiểm cả hai vế thay vì chỉ
+   * `narrations.length > 0`, nếu không khe sẽ bỏ mép trên trong khi phía trên nó là một tin nhắn.
+   */
+  const hasNarrationAbove = (() => {
+    if (narrations.length === 0 || lastUserIdx < 0) return false;
+    for (let i = messages.length - 1; i >= 0; i--) {
+      if (messages[i].role !== "system") return i === lastUserIdx;
+    }
+    return false;
   })();
 
   // Mốc "AI context limit": index tin CŨ NHẤT còn nằm trong cửa sổ nhớ gửi LLM.
@@ -659,8 +690,11 @@ export default function AiAssistantDrawer({ open, onClose, productId }: AiAssist
                       {/* Lời dẫn trung gian (narration) — ephemeral, không lưu DB: không bọc khung,
                       chỉ 2 gạch trên/dưới, chữ mờ, giới hạn chiều cao + scroll. Neo sau tin user
                       của lượt hiện tại → câu trả lời cuối về vẫn đứng đúng thứ tự thời gian. */}
+                      {/* pr-10 cân với pl-10: mỗi hàng tin nhắn có một cột avatar 32px + gap 10px ở
+                          MỖI bên (avatar user nằm bên phải). Thiếu pr-10 thì lời dẫn chạy tràn sang
+                          dưới cột avatar user. */}
                       {idx === lastUserIdx && narrations.length > 0 && (
-                        <div className="pl-10">
+                        <div className="pl-10 pr-10">
                           <div className="max-h-30 overflow-y-auto border-y border-gray-200 py-2 font-medium text-gray-500 opacity-90 [&_.fd-md]:text-xs [&_.fd-md]:text-gray-400">
                             {narrations.map((n, i) => (
                               <Markdown key={i} text={n} />
@@ -671,11 +705,23 @@ export default function AiAssistantDrawer({ open, onClose, productId }: AiAssist
                     </Fragment>
                   );
                 })}
-                {activity && (
-                  <div className="pl-10">
-                    <AiActivityIndicator activity={activity} />
-                  </div>
-                )}
+                {/* Khe trạng thái AI.
+                    - CÓ lời dẫn ở trên: khe nối thẳng vào đáy khối đó (bỏ mép trên, `-mt-4` triệt
+                      tiêu gap-4 của container, lề ngang khớp pl-10/pr-10 = 2.5rem) → chữ streaming
+                      trông như đang nạp tiếp lên phần trả lời tạm.
+                    - KHÔNG có lời dẫn: khe đứng độc lập, có đủ hai mép, thụt lề ít hơn (1.5rem) cho
+                      dải chữ dài hơn.
+                    AnimatePresence để hoạt cảnh khép khe kịp chạy trước khi bị gỡ khỏi DOM. */}
+                <AnimatePresence initial={false}>
+                  {activity && (
+                    <AiActivityIndicator
+                      activity={activity}
+                      attachedAbove={hasNarrationAbove}
+                      insetRem={hasNarrationAbove ? 2.5 : 1.5}
+                      className={hasNarrationAbove ? "-mt-4" : ""}
+                    />
+                  )}
+                </AnimatePresence>
               </div>
             )}
           </div>

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef } from "react";
+import { AnimatePresence } from "framer-motion";
 import { MessageCircle } from "lucide-react";
 import type { ChatMessage } from "@/features/chatbox/types/chatbox";
 import { AiActivityIndicator, type AiActivity } from "@/features/shared/ai-activity";
@@ -81,7 +82,10 @@ export default function ChatMessageList({
       {uniqueMessages.map((message) => (
         <ChatMessageBubble key={message.id} message={message} isOwn={message.senderId === meId} />
       ))}
-      {aiActivity && <AiActivityIndicator activity={aiActivity} />}
+      {/* AnimatePresence để hoạt cảnh khép khe kịp chạy trước khi component bị gỡ khỏi DOM. */}
+      <AnimatePresence initial={false}>
+        {aiActivity && <AiActivityIndicator activity={aiActivity} />}
+      </AnimatePresence>
     </div>
   );
 }
