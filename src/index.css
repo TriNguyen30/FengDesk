@@ -80,11 +80,20 @@
   --fd-rail-blur: 8px;
 
   /* Sắc của dải đục: phần --color-neutral trong hỗn hợp với --color-primary.
-     100% = đúng màu nền trang (không xanh); giảm xuống là xanh dần lên.
-     Alpha của dải đục KHÔNG ở đây mà nằm ngay trong .fd-rail-tint (cuối tệp) —
-     nó là một tham số của color-mix lồng nhau, tách ra biến riêng chỉ khiến phải
-     đọc hai chỗ mới hiểu một công thức. */
-  --fd-rail-tint-mix: 84%;
+     100% = đúng màu nền trang (không xanh); giảm xuống là xanh dần lên. */
+  --fd-rail-tint-mix: 80%;
+
+  /* Alpha của dải đục. Càng cao càng che mây, càng dễ đọc chữ; hạ xuống thì dải
+     chỉ còn hơi ngả màu, mây hiện rõ hơn qua nó.
+     Phải tách theo theme: nền sáng gần trắng nên cùng một alpha đọc ra đặc hơn
+     hẳn so với nền tối. Theme tối ghi đè bên dưới. */
+  --fd-rail-tint-alpha: 48%;
+
+  /* Kính mờ vốn chỉ làm nhoè chứ không phủ màu, nên nền sau nó giữ nguyên sắc của
+     mảng mây. Thêm một lớp màu RẤT nhạt (dùng lại đúng công thức sắc của dải đục,
+     nên hai chất liệu không lệch tông nhau) — đây là alpha của lớp đó.
+     Để 0% là quay về kính mờ thuần như trước. Theme tối ghi đè bên dưới. */
+  --fd-rail-blur-tint: 12%;
 }
 
 /* Hairline: gray-100 dùng làm VIỀN thì phải đậm hơn khi dùng làm NỀN, không thì
@@ -207,6 +216,12 @@
   --fd-ev-surplus-text: #f08b8b;
   --fd-ev-attention-bg: #3a2f1e;
   --fd-ev-attention-text: #d9b884;
+
+  /* Dải nội dung (.fd-rail) — xem ghi chú đầy đủ ở :root đầu tệp.
+     Nền tối nuốt màu nhiều hơn nền sáng, nên cả hai chất liệu đều cần đậm tay hơn
+     mới đọc ra được cùng một mức "có dải" như bản sáng. */
+  --fd-rail-tint-alpha: 68%;
+  --fd-rail-blur-tint: 16%;
 
   /* Trung tính ấm, ngả sage theo brand — thay cho thang gray của Tailwind.
      Đầu sáng của thang cố tình DỪNG dưới mức trắng: tiêu đề ~11:1 thay vì 15:1.
@@ -1011,7 +1026,19 @@ body {
    lượt gaussian blur trên gần trọn màn hình. Đẹp nhất, nhưng là thứ đầu tiên
    nên hạ khi máy yếu. */
 .fd-rail-blur {
-  backdrop-filter: blur(var(--fd-rail-blur)) saturate(1.05);
+  backdrop-filter: blur(12px) saturate(1.1);
+  -webkit-backdrop-filter: blur(12px) saturate(1.1);
+
+  /* Lớp màu mỏng phủ LÊN kết quả đã làm mờ (background luôn vẽ sau backdrop-filter
+     trên cùng một phần tử). Cố ý dùng lại y hệt công thức sắc của .fd-rail-tint —
+     đổi --fd-rail-tint-mix là cả hai chất liệu cùng đổi, không bị lệch tông.
+     Núm chỉnh: --fd-rail-blur-tint (:root cho theme sáng, ghi đè ở khối dark). */
+  background: color-mix(
+    in oklab,
+    color-mix(in oklab, var(--color-neutral) var(--fd-rail-tint-mix), var(--color-primary))
+      var(--fd-rail-blur-tint),
+    transparent
+  );
 }
 
 /* Đục màu. Không blur, không phụ thuộc nền → trình duyệt cache dải này thành
@@ -1022,15 +1049,14 @@ body {
    nhạt hơn hẳn chúng. Cả hai token đều đổi theo theme nên nền tối tự ra bản
    xanh trầm, không phải chỉnh riêng.
 
-   Hai núm chỉnh:
-   - SẮC: --fd-rail-tint-mix, khai báo ở :root đầu tệp (xem ghi chú tại đó).
-   - ALPHA: con số 68% ngay dưới đây — càng cao càng che mây, càng dễ đọc chữ;
-     hạ xuống thấp quá thì chữ gray-900 mất tương phản ở chỗ mây chồng nhau. */
+   Hai núm chỉnh, cả hai khai báo ở :root đầu tệp (xem ghi chú tại đó):
+   - SẮC:  --fd-rail-tint-mix   (dùng chung với .fd-rail-blur)
+   - ALPHA: --fd-rail-tint-alpha (theme tối ghi đè riêng) */
 .fd-rail-tint {
   background: color-mix(
     in oklab,
     color-mix(in oklab, var(--color-neutral) var(--fd-rail-tint-mix), var(--color-primary))
-      68%,
+      var(--fd-rail-tint-alpha),
     transparent
   );
 }

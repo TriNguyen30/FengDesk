@@ -299,17 +299,22 @@ export default function OrderDetailPage() {
 
   const getSteps = () => {
     if (order.status === "Cancelled") {
+      const cancelLog = order.statusLogs?.find((l: any) => l.toStatus === "Cancelled");
       return [
         {
+          id: "Pending",
           label: t("order_detail.steps.placed"),
           date: order.createdAt,
+          note: null,
           completed: true,
           isError: false,
           icon: <ClipboardList className="h-4 w-4" />,
         },
         {
+          id: "Cancelled",
           label: t("order_detail.steps.cancelled"),
-          date: order.statusLogs?.find((l: any) => l.toStatus === "Cancelled")?.changedAt,
+          date: cancelLog?.changedAt,
+          note: cancelLog?.note || null,
           completed: true,
           isError: true,
           icon: <X className="h-4 w-4" />,
@@ -317,17 +322,22 @@ export default function OrderDetailPage() {
       ];
     }
     if (order.status === "Expired") {
+      const expiredLog = order.statusLogs?.find((l: any) => l.toStatus === "Expired");
       return [
         {
+          id: "Pending",
           label: t("order_detail.steps.placed"),
           date: order.createdAt,
+          note: null,
           completed: true,
           isError: false,
           icon: <ClipboardList className="h-4 w-4" />,
         },
         {
+          id: "Expired",
           label: t("order_detail.steps.expired"),
-          date: order.statusLogs?.find((l: any) => l.toStatus === "Expired")?.changedAt,
+          date: expiredLog?.changedAt,
+          note: expiredLog?.note || null,
           completed: true,
           isError: true,
           icon: <X className="h-4 w-4" />,
@@ -350,14 +360,20 @@ export default function OrderDetailPage() {
 
     return steps.map((s, idx) => {
       let date = null;
-      if (s.id === "Pending") date = order.createdAt;
-      else {
+      let note = null;
+      if (s.id === "Pending") {
+        date = order.createdAt;
+      } else {
         const log = order.statusLogs?.find((l: any) => l.toStatus === s.id);
-        if (log) date = log.changedAt;
+        if (log) {
+          date = log.changedAt;
+          note = log.note || null;
+        }
       }
       return {
         ...s,
         date,
+        note,
         completed: currentIdx >= idx || order.status === "Completed",
         isError: false,
       };
@@ -427,8 +443,8 @@ export default function OrderDetailPage() {
           </div>
 
           {/* Stepper */}
-          <div className="px-5 pt-5 pb-4 overflow-x-auto">
-            <div className="flex items-start min-w-[400px]">
+          <div className="px-5 pt-12 pb-6 overflow-x-auto">
+            <div className="flex items-start min-w-[500px]">
               {steps.map((step, idx) => {
                 const isLast = idx === steps.length - 1;
                 const isActive = idx === activeIdx;
@@ -437,46 +453,121 @@ export default function OrderDetailPage() {
                 const rightReached = idx < reachedIdx;
 
                 return (
-                  <div key={idx} className="flex-1 flex flex-col items-center gap-2">
+                  <div key={idx} className="group relative flex-1 flex flex-col items-center gap-2 cursor-pointer select-none">
+                    {/* Hover Floating Tooltip */}
+                    <div className="absolute -top-11 left-1/2 -translate-x-1/2 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:-top-13 transition-all duration-300 ease-out z-30 flex flex-col items-center">
+                      <div className="bg-gray-900/95 backdrop-blur-md text-white text-[11px] font-medium py-1.5 px-3 rounded-xl shadow-xl whitespace-nowrap flex flex-col items-center gap-0.5 border border-white/10">
+                        <div className="flex items-center gap-1.5">
+                          {step.isError ? (
+                            <span className="inline-block w-1.5 h-1.5 rounded-full bg-red-400" />
+                          ) : step.completed ? (
+                            <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                          ) : isActive ? (
+                            <span className="relative flex h-2 w-2">
+                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-violet-400 opacity-75" />
+                              <span className="relative inline-flex rounded-full h-2 w-2 bg-violet-500" />
+                            </span>
+                          ) : (
+                            <span className="inline-block w-1.5 h-1.5 rounded-full bg-gray-400" />
+                          )}
+                          <span className="font-semibold text-white">{step.label}</span>
+                          <span className="text-gray-400 text-[10px]">
+                            {step.isError
+                              ? `• ${t("order_detail.steps.cancelled")}`
+                              : step.completed
+                                ? `• ${t("order_detail.steps.completed")}`
+                                : isActive
+                                  ? `• ${t("order_detail.steps.processing")}`
+                                  : `• ${t("order_detail.delivery_status.pending")}`}
+                          </span>
+                        </div>
+                        {step.date && (
+                          <div className="text-[10px] text-gray-300 font-normal">
+                            {formatOrderDate(step.date)}
+                          </div>
+                        )}
+                        {step.note && (
+                          <div className="text-[10px] text-violet-200 italic max-w-[160px] truncate">
+                            {step.note}
+                          </div>
+                        )}
+                      </div>
+                      {/* Tooltip pointer triangle */}
+                      <div className="w-2 h-2 bg-gray-900/95 rotate-45 -mt-1 border-r border-b border-white/10" />
+                    </div>
+
                     <div className="w-full flex items-center">
                       {/* left line */}
                       <div
-                        className={`flex-1 h-0.5 ${idx === 0 ? "invisible" : step.isError ? "bg-red-400" : leftReached ? "bg-primary" : "bg-gray-100"}`}
+                        className={`flex-1 h-0.5 transition-all duration-500 ${
+                          idx === 0
+                            ? "invisible"
+                            : step.isError
+                              ? "bg-red-400"
+                              : leftReached
+                                ? "bg-primary group-hover:brightness-110"
+                                : "bg-gray-100 group-hover:bg-gray-200"
+                        }`}
                       />
-                      {/* dot: đã xong (tô đậm) ưu tiên trước — đang tiến hành (viền sáng) chỉ áp dụng cho bước kế tiếp chưa xong */}
-                      <div
-                        className={[
-                          "w-9 h-9 rounded-full flex items-center justify-center shrink-0 z-10 transition-all",
-                          step.isError
-                            ? "bg-red-500 text-white"
-                            : step.completed
-                              ? "bg-primary text-white"
-                              : isActive
-                                ? "bg-white border-2 border-primary text-primary shadow-[0_0_0_4px_#ede9fe]"
-                                : "bg-gray-100 text-gray-400 border border-gray-200",
-                        ].join(" ")}
-                      >
-                        {step.icon}
+
+                      {/* Dot icon with pulse effect & hover animation */}
+                      <div className="relative shrink-0 flex items-center justify-center">
+                        {/* Active pulsing glow */}
+                        {isActive && !step.isError && (
+                          <>
+                            <span className="absolute -inset-1.5 rounded-full bg-primary/20 animate-ping opacity-75 pointer-events-none" />
+                            <span className="absolute -inset-1 rounded-full bg-primary/30 animate-pulse pointer-events-none" />
+                          </>
+                        )}
+
+                        <div
+                          className={[
+                            "w-9 h-9 rounded-full flex items-center justify-center shrink-0 z-10",
+                            "transition-all duration-300 ease-out transform",
+                            "group-hover:scale-115 group-hover:shadow-lg",
+                            step.isError
+                              ? "bg-red-500 text-white group-hover:bg-red-600 group-hover:ring-4 group-hover:ring-red-100 shadow-sm shadow-red-200"
+                              : step.completed
+                                ? "bg-primary text-white group-hover:bg-primary/95 group-hover:ring-4 group-hover:ring-primary/20 shadow-sm shadow-violet-200"
+                                : isActive
+                                  ? "bg-white border-2 border-primary text-primary shadow-[0_0_0_4px_#ede9fe] group-hover:ring-4 group-hover:ring-primary/25"
+                                  : "bg-gray-100 text-gray-400 border border-gray-200 group-hover:border-primary/40 group-hover:text-primary group-hover:bg-violet-50/40",
+                          ].join(" ")}
+                        >
+                          <div className="transition-transform duration-300 group-hover:scale-110 group-hover:-translate-y-0.5">
+                            {step.icon}
+                          </div>
+                        </div>
                       </div>
+
                       {/* right line */}
                       <div
-                        className={`flex-1 h-0.5 ${isLast ? "invisible" : step.isError ? "bg-red-400" : rightReached ? "bg-primary" : "bg-gray-100"}`}
+                        className={`flex-1 h-0.5 transition-all duration-500 ${
+                          isLast
+                            ? "invisible"
+                            : step.isError
+                              ? "bg-red-400"
+                              : rightReached
+                                ? "bg-primary group-hover:brightness-110"
+                                : "bg-gray-100 group-hover:bg-gray-200"
+                        }`}
                       />
                     </div>
-                    <div className="text-center px-1">
+
+                    <div className="text-center px-1 transition-transform duration-200 group-hover:-translate-y-0.5">
                       <p
-                        className={`text-xs font-semibold leading-tight ${
+                        className={`text-xs font-semibold leading-tight transition-colors duration-200 ${
                           step.isError
-                            ? "text-red-600"
+                            ? "text-red-600 group-hover:text-red-700"
                             : step.completed || isActive
-                              ? "text-gray-900"
-                              : "text-gray-400"
+                              ? "text-gray-900 group-hover:text-primary"
+                              : "text-gray-400 group-hover:text-gray-600"
                         }`}
                       >
                         {step.label}
                       </p>
                       {step.date && (
-                        <p className="text-[11px] text-gray-400 mt-0.5">
+                        <p className="text-[11px] text-gray-400 mt-0.5 transition-colors duration-200 group-hover:text-gray-600">
                           {formatOrderDate(step.date)}
                         </p>
                       )}
@@ -500,26 +591,40 @@ export default function OrderDetailPage() {
 
           {/* Product rows */}
           <ul className="divide-y divide-gray-100">
-            {(order.items ?? []).map((item) => (
-              <li key={item.id} className="flex gap-3 px-4 py-3.5 items-start">
-                <OrderItemImage imageUrl={item.imageUrl} alt={item.productName} />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900 leading-snug">
-                    {item.productName}
-                  </p>
-                  {(item as any).variantName && (
-                    <span className="mt-1 inline-block text-xs text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">
-                      {(item as any).variantName}
-                    </span>
-                  )}
-                  <p className="mt-1 text-xs text-gray-400">x{item.quantity}</p>
-                </div>
-                <div className="text-right shrink-0">
-                  <p className="text-sm font-semibold text-gray-900">{formatVnd(item.lineTotal)}</p>
-                  <p className="text-xs text-gray-400 mt-0.5">{formatVnd(item.unitPrice)} {t("order_detail.product.per_item")}</p>
-                </div>
-              </li>
-            ))}
+            {(order.items ?? []).map((item) => {
+              const productUrl = `/products/${(item as any).productId || item.productItemId}`;
+              return (
+                <li key={item.id} className="flex gap-3 px-4 py-3.5 items-start hover:bg-gray-50/50 transition-colors">
+                  <Link to={productUrl} className="shrink-0 group/img">
+                    <OrderItemImage
+                      imageUrl={item.imageUrl}
+                      alt={item.productName}
+                      className="h-14 w-14 group-hover/img:opacity-90 transition-opacity"
+                    />
+                  </Link>
+                  <div className="flex-1 min-w-0">
+                    <Link
+                      to={productUrl}
+                      className="text-sm font-medium text-gray-900 leading-snug hover:text-primary transition-colors line-clamp-2 block"
+                    >
+                      {item.productName}
+                    </Link>
+                    {(item as any).variantName && (
+                      <span className="mt-1 inline-block text-xs text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">
+                        {(item as any).variantName}
+                      </span>
+                    )}
+                    <p className="mt-1 text-xs text-gray-400">x{item.quantity}</p>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <p className="text-sm font-semibold text-gray-900">{formatVnd(item.lineTotal)}</p>
+                    <p className="text-xs text-gray-400 mt-0.5">
+                      {formatVnd(item.unitPrice)} {t("order_detail.product.per_item")}
+                    </p>
+                  </div>
+                </li>
+              );
+            })}
           </ul>
 
           {/* Price breakdown */}
