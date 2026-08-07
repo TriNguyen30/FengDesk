@@ -54,9 +54,8 @@ function Segmented<T extends string | number>({
     <div
       role="radiogroup"
       aria-label={label}
-      className={`flex gap-1 rounded-lg bg-neutral-dark/60 p-1 ${
-        highlight ? "ring-2 ring-primary" : ""
-      }`}
+      className={`flex gap-1 rounded-lg bg-neutral-dark/60 p-1 ${highlight ? "ring-2 ring-primary" : ""
+        }`}
     >
       {choices.map((choice) => {
         const selected = value === choice.value;
@@ -68,11 +67,10 @@ function Segmented<T extends string | number>({
             role="radio"
             aria-checked={selected}
             onClick={() => onChange(choice.value)}
-            className={`flex-1 cursor-pointer rounded-md px-2 py-1.5 text-xs font-semibold transition-colors ${
-              selected
+            className={`flex-1 cursor-pointer rounded-md px-2 py-1.5 text-xs font-semibold transition-colors ${selected
                 ? "bg-primary text-white"
                 : "text-text-secondary hover:bg-neutral-dark hover:text-text-primary"
-            }`}
+              }`}
           >
             {choice.label}
           </button>
@@ -110,14 +108,12 @@ function Toggle({
         role="switch"
         aria-checked={on}
         aria-label={label}
-        className={`relative block h-5 w-9 shrink-0 rounded-full transition-colors duration-200 ${
-          on ? "bg-primary" : "bg-border-dark"
-        }`}
+        className={`relative block h-5 w-9 shrink-0 rounded-full transition-colors duration-200 ${on ? "bg-primary" : "bg-border-dark"
+          }`}
       >
         <span
-          className={`absolute top-0.5 block h-4 w-4 rounded-full bg-neutral shadow transition-transform duration-200 ${
-            on ? "translate-x-4.5" : "translate-x-0.5"
-          }`}
+          className={`absolute top-0.5 block h-4 w-4 rounded-full bg-neutral shadow transition-transform duration-200 ${on ? "translate-x-4.5" : "translate-x-0.5"
+            }`}
         />
       </span>
     </button>
@@ -231,9 +227,8 @@ export default function AppearanceSettings() {
               `inert` chặn tab-focus vào các nút đang bị thu gọn. */}
           <div
             inert={!advanced}
-            className={`grid transition-[grid-template-rows] duration-300 ease-out ${
-              advanced ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
-            }`}
+            className={`grid transition-[grid-template-rows] duration-300 ease-out ${advanced ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+              }`}
           >
             <div className="overflow-hidden">
               <div className="flex flex-col divide-y divide-border-light/60 border-t border-border-light/60 pt-1">
@@ -257,9 +252,8 @@ export default function AppearanceSettings() {
                 </Field>
 
                 <Field
-                  label={`Fluid frequency: ${
-                    effects.fluidDrift === 0 ? "Tắt" : `${effects.fluidDrift}/${FLUID_DRIFT_MAX}`
-                  }`}
+                  label={`Fluid frequency: ${effects.fluidDrift === 0 ? "Tắt" : `${effects.fluidDrift}/${FLUID_DRIFT_MAX}`
+                    }`}
                 >
                   <input
                     type="range"

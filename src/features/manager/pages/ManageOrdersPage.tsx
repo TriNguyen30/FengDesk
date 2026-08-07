@@ -25,19 +25,19 @@ import { STATUS_MAP } from "@/features/orders/utils/orderUtils";
 import { useQueryClient } from "@tanstack/react-query";
 
 const DELIVERY_STATUS_MAP: Record<string, { label: string; className: string }> = {
-  Pending: { label: "Đang chờ", className: "bg-amber-50 text-amber-700 border-amber-200" },
+  Pending: { label: "Đang chờ", className: "bg-amber-50 text-amber-600 border border-amber-200" },
   Confirmed: {
     label: "Đã xác nhận",
-    className: "bg-indigo-50 text-indigo-700 border-indigo-200",
+    className: "bg-indigo-50 text-indigo-600 border border-indigo-200",
   },
-  Preparing: { label: "Đang chuẩn bị", className: "bg-blue-50 text-blue-700 border-blue-200" },
-  Shipped: { label: "Đang giao hàng", className: "bg-blue-50 text-blue-700 border-blue-200" },
+  Preparing: { label: "Đang chuẩn bị", className: "bg-blue-50 text-blue-600 border border-blue-200" },
+  Shipped: { label: "Đang giao hàng", className: "bg-sky-50 text-sky-600 border border-sky-200" },
   Delivered: {
     label: "Đã giao hàng",
-    className: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    className: "bg-emerald-50 text-emerald-600 border border-emerald-200",
   },
-  Cancelled: { label: "Đã hủy", className: "bg-red-50 text-red-700 border-red-200" },
-  Returned: { label: "Đã trả hàng", className: "bg-red-50 text-red-700 border-red-200" },
+  Cancelled: { label: "Đã hủy", className: "bg-red-50 text-red-500 border border-red-200" },
+  Returned: { label: "Đã trả hàng", className: "bg-purple-50 text-purple-600 border border-purple-200" },
 };
 
 const TABS = [
@@ -201,7 +201,7 @@ export default function ManageOrdersPage() {
                 {filteredOrders.map((order) => {
                   const statusMeta = STATUS_MAP[order.status] || {
                     label: order.status,
-                    className: "bg-gray-100 text-gray-700 border-gray-200",
+                    className: "bg-gray-100 text-gray-500 border border-gray-200",
                   };
 
                   const isDetailLoading = loadingDetailId === order.id;
@@ -231,7 +231,7 @@ export default function ManageOrdersPage() {
                       {/* Payment Status */}
                       <td className="p-4 whitespace-nowrap">
                         <span
-                          className={`rounded-lg border px-2.5 py-1 text-xs font-semibold ${statusMeta.className}`}
+                          className={`inline-block rounded-lg border px-2.5 py-1 text-xs font-semibold ${statusMeta.className}`}
                         >
                           {statusMeta.label}
                         </span>
@@ -321,7 +321,7 @@ export default function ManageOrdersPage() {
                     <span
                       className={`inline-block mt-1 rounded-md border px-2 py-0.5 text-xs font-semibold ${
                         STATUS_MAP[selectedOrder.status]?.className ??
-                        "bg-gray-100 text-gray-700 border-gray-200"
+                        "bg-gray-100 text-gray-500 border border-gray-200"
                       }`}
                     >
                       {STATUS_MAP[selectedOrder.status]?.label ?? selectedOrder.status}
@@ -406,7 +406,7 @@ export default function ManageOrdersPage() {
                             disabled={updateDeliveryStatusMutation.isPending}
                             className={`shrink-0 rounded-md border px-2 py-1 text-xs font-semibold focus:outline-none transition-all cursor-pointer ${
                               DELIVERY_STATUS_MAP[delivery.status]?.className ??
-                              "bg-gray-100 text-gray-700 border-gray-200"
+                              "bg-gray-100 text-gray-500 border border-gray-200"
                             }`}
                           >
                             {Object.entries(DELIVERY_STATUS_MAP).map(([key, meta]) => (
@@ -492,13 +492,23 @@ export default function ManageOrdersPage() {
                           <div className="flex items-center gap-1.5 flex-wrap">
                             {log.fromStatus && (
                               <>
-                                <span className="text-gray-400 font-medium">
+                                <span
+                                  className={`inline-block rounded-md border px-2 py-0.5 text-xs font-semibold ${
+                                    STATUS_MAP[log.fromStatus]?.className ??
+                                    "bg-gray-100 text-gray-500 border border-gray-200"
+                                  }`}
+                                >
                                   {STATUS_MAP[log.fromStatus]?.label ?? log.fromStatus}
                                 </span>
                                 <span className="text-gray-300">→</span>
                               </>
                             )}
-                            <span className="font-semibold text-gray-700">
+                            <span
+                              className={`inline-block rounded-md border px-2 py-0.5 text-xs font-semibold ${
+                                STATUS_MAP[log.toStatus]?.className ??
+                                "bg-gray-100 text-gray-500 border border-gray-200"
+                              }`}
+                            >
                               {STATUS_MAP[log.toStatus]?.label ?? log.toStatus}
                             </span>
                           </div>

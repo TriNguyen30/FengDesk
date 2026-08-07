@@ -1,21 +1,21 @@
 export const STATUS_MAP: Record<string, { label: string; className: string }> = {
-  Pending: { label: "Đang chờ", className: "bg-amber-50 text-amber-700" },
-  Paid: { label: "Đã thanh toán", className: "bg-emerald-50 text-emerald-700" },
-  Processing: { label: "Đang xử lý", className: "bg-blue-50 text-blue-700" },
-  Shipping: { label: "Đang vận chuyển", className: "bg-indigo-50 text-indigo-700" },
-  Completed: { label: "Đã hoàn thành", className: "bg-green-50 text-green-700" },
-  Cancelled: { label: "Đã hủy", className: "bg-red-50 text-red-700" },
-  Expired: { label: "Đã hết hạn", className: "bg-gray-100 text-gray-500" },
+  Pending: { label: "Đang chờ", className: "bg-amber-50 text-amber-600 border-amber-200" },
+  Paid: { label: "Đã thanh toán", className: "bg-emerald-50 text-emerald-600 border-emerald-200" },
+  Processing: { label: "Đang xử lý", className: "bg-blue-50 text-blue-600 border-blue-200" },
+  Shipping: { label: "Đang vận chuyển", className: "bg-sky-50 text-sky-600 border-sky-200" },
+  Completed: { label: "Đã hoàn thành", className: "bg-emerald-50 text-emerald-600 border-emerald-200" },
+  Cancelled: { label: "Đã hủy", className: "bg-red-50 text-red-500 border-red-200" },
+  Expired: { label: "Đã hết hạn", className: "bg-gray-100 text-gray-500 border-gray-200" },
 };
 
 export function getOrderStatusMeta(status: string, paymentMethod?: string) {
   if (status === "Pending" && paymentMethod === "COD") {
-    return { label: "Đang xử lý", className: "bg-amber-50 text-amber-700" };
+    return { label: "Đang xử lý", className: "bg-amber-50 text-amber-600 border-amber-200" };
   }
   return (
     STATUS_MAP[status] ?? {
       label: status,
-      className: "bg-gray-100 text-gray-700",
+      className: "bg-gray-100 text-gray-500 border-gray-200",
     }
   );
 }
