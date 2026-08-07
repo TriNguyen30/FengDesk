@@ -1340,25 +1340,40 @@ body {
   animation: tag-progress-slide 1s ease-in-out infinite;
 }
 
-/* =========================
-   Quill Content Styles
-========================= */
+/* ==========================================================================
+   Quill Content Styles (Viewer / Rendered HTML)
+========================================================================== */
+.quill-content {
+  color: var(--color-text-primary);
+  line-height: 1.7;
+  font-size: 0.9375rem;
+  word-break: break-word;
+}
+
 .quill-content > :first-child {
   margin-top: 0;
 }
 .quill-content > :last-child {
   margin-bottom: 0;
 }
+
 .quill-content p {
-  margin: 0.5rem 0;
+  margin: 0.6rem 0;
+  line-height: 1.7;
 }
+
 .quill-content h1,
 .quill-content h2,
-.quill-content h3 {
-  margin: 1rem 0 0.5rem;
+.quill-content h3,
+.quill-content h4,
+.quill-content h5,
+.quill-content h6 {
+  margin: 1.25rem 0 0.5rem;
   font-weight: 700;
   color: var(--color-text-primary);
+  line-height: 1.35;
 }
+
 .quill-content h1 {
   font-size: 1.5rem;
 }
@@ -1368,42 +1383,485 @@ body {
 .quill-content h3 {
   font-size: 1.125rem;
 }
+.quill-content h4 {
+  font-size: 1rem;
+}
+
 .quill-content ul {
-  margin: 0.5rem 0;
+  margin: 0.6rem 0;
   padding-left: 1.5rem;
-  list-style: disc;
+  list-style-type: disc;
 }
 .quill-content ol {
-  margin: 0.5rem 0;
+  margin: 0.6rem 0;
   padding-left: 1.5rem;
-  list-style: decimal;
+  list-style-type: decimal;
 }
 .quill-content li {
   margin: 0.25rem 0;
+  line-height: 1.6;
 }
-.quill-content strong {
+
+.quill-content strong,
+.quill-content b {
   font-weight: 700;
   color: var(--color-text-primary);
 }
-.quill-content em {
+
+.quill-content em,
+.quill-content i {
   font-style: italic;
 }
+
+.quill-content u {
+  text-decoration: underline;
+}
+
+.quill-content s,
+.quill-content strike {
+  text-decoration: line-through;
+}
+
 .quill-content blockquote {
   border-left: 3px solid var(--color-primary);
-  padding-left: 1rem;
+  padding: 0.5rem 1rem;
   margin: 1rem 0;
   color: var(--color-text-secondary);
   font-style: italic;
+  background: color-mix(in oklab, var(--color-primary) 6%, transparent);
+  border-radius: 0 0.5rem 0.5rem 0;
 }
+
 .quill-content a {
   color: var(--color-primary);
   text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: color 0.15s ease;
 }
+.quill-content a:hover {
+  color: var(--color-primary-dark);
+}
+
 .quill-content img {
   max-width: 100%;
   height: auto !important;
   object-fit: contain;
-  border-radius: 0.5rem;
+  border-radius: 0.75rem;
   margin: 1rem auto;
   display: block;
 }
+
+.quill-content pre,
+.quill-content code {
+  font-family: monospace;
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 0.375rem;
+  padding: 0.2rem 0.4rem;
+  font-size: 0.875em;
+}
+
+.quill-content pre {
+  padding: 0.75rem 1rem;
+  overflow-x: auto;
+  margin: 0.75rem 0;
+}
+
+.quill-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
+}
+
+.quill-content th,
+.quill-content td {
+  border: 1px solid var(--color-border-light);
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+}
+
+.quill-content th {
+  background: var(--color-gray-50);
+  font-weight: 600;
+}
+
+/* Quill standard formatting classes */
+.quill-content .ql-align-center {
+  text-align: center;
+}
+.quill-content .ql-align-right {
+  text-align: right;
+}
+.quill-content .ql-align-justify {
+  text-align: justify;
+}
+.quill-content .ql-size-small {
+  font-size: 0.75em;
+}
+.quill-content .ql-size-large {
+  font-size: 1.25em;
+}
+.quill-content .ql-size-huge {
+  font-size: 1.75em;
+}
+.quill-content .ql-font-serif {
+  font-family: Georgia, Times New Roman, serif;
+}
+.quill-content .ql-font-monospace {
+  font-family: Monaco, Courier New, monospace;
+}
+.quill-content .ql-direction-rtl {
+  direction: rtl;
+  text-align: inherit;
+}
+.quill-content .ql-video {
+  display: block;
+  max-width: 100%;
+  aspect-ratio: 16 / 9;
+  width: 100%;
+  margin: 1rem auto;
+  border-radius: 0.5rem;
+}
+
+/* Quill text & background color presets (Light Theme) */
+.quill-content .ql-color-white { color: #ffffff !important; }
+.quill-content .ql-color-red { color: #dc2626 !important; }
+.quill-content .ql-color-orange { color: #ea580c !important; }
+.quill-content .ql-color-yellow { color: #ca8a04 !important; }
+.quill-content .ql-color-green { color: #16a34a !important; }
+.quill-content .ql-color-blue { color: #2563eb !important; }
+.quill-content .ql-color-purple { color: #9333ea !important; }
+
+.quill-content .ql-bg-black { background-color: #000000; color: #ffffff; padding: 0 0.25rem; border-radius: 0.25rem; }
+.quill-content .ql-bg-red { background-color: #fee2e2; color: #991b1b; padding: 0 0.25rem; border-radius: 0.25rem; }
+.quill-content .ql-bg-orange { background-color: #ffedd5; color: #9a3412; padding: 0 0.25rem; border-radius: 0.25rem; }
+.quill-content .ql-bg-yellow { background-color: #fef9c3; color: #854d0e; padding: 0 0.25rem; border-radius: 0.25rem; }
+.quill-content .ql-bg-green { background-color: #dcfce7; color: #166534; padding: 0 0.25rem; border-radius: 0.25rem; }
+.quill-content .ql-bg-blue { background-color: #dbeafe; color: #1e40af; padding: 0 0.25rem; border-radius: 0.25rem; }
+.quill-content .ql-bg-purple { background-color: #f3e8ff; color: #6b21a8; padding: 0 0.25rem; border-radius: 0.25rem; }
+
+/* Strip accidental white/near-white pasted background boxes in Light Mode */
+.quill-content [style*="background-color: rgb(255, 255, 255)"],
+.quill-content [style*="background-color:rgb(255,255,255)"],
+.quill-content [style*="background-color: #ffffff"],
+.quill-content [style*="background-color:#ffffff"],
+.quill-content [style*="background-color: #fff"],
+.quill-content [style*="background-color:#fff"],
+.quill-content [style*="background-color: white"],
+.quill-content [style*="background-color:white"],
+.quill-content [style*="background-color: transparent"],
+.quill-content [style*="background: rgb(255, 255, 255)"],
+.quill-content [style*="background: #ffffff"],
+.quill-content [style*="background: #fff"],
+.quill-content [style*="background: white"],
+.quill-content [style*="background-color: initial"],
+.quill-content [style*="background-color: inherit"] {
+  background-color: transparent !important;
+  background: transparent !important;
+}
+
+/* ==========================================================================
+   Quill Content — DARK MODE (:root[data-theme="dark"])
+========================================================================== */
+:root[data-theme="dark"] .quill-content {
+  color: #f3f4f6 !important;
+}
+
+/* Force crisp light/white text on all general elements in Dark Mode */
+:root[data-theme="dark"] .quill-content,
+:root[data-theme="dark"] .quill-content p,
+:root[data-theme="dark"] .quill-content span:not([class*="ql-color-"]),
+:root[data-theme="dark"] .quill-content div,
+:root[data-theme="dark"] .quill-content li,
+:root[data-theme="dark"] .quill-content font,
+:root[data-theme="dark"] .quill-content em,
+:root[data-theme="dark"] .quill-content i,
+:root[data-theme="dark"] .quill-content u,
+:root[data-theme="dark"] .quill-content s,
+:root[data-theme="dark"] .quill-content label {
+  color: #f3f4f6 !important;
+  background-color: transparent !important;
+  background: transparent !important;
+}
+
+/* Headings and Bold text are crisp pure white in Dark Mode */
+:root[data-theme="dark"] .quill-content h1,
+:root[data-theme="dark"] .quill-content h2,
+:root[data-theme="dark"] .quill-content h3,
+:root[data-theme="dark"] .quill-content h4,
+:root[data-theme="dark"] .quill-content h5,
+:root[data-theme="dark"] .quill-content h6,
+:root[data-theme="dark"] .quill-content strong,
+:root[data-theme="dark"] .quill-content b {
+  color: #ffffff !important;
+  background-color: transparent !important;
+  background: transparent !important;
+}
+
+/* Clear all pasted inline white/light backgrounds in Dark Mode */
+:root[data-theme="dark"] .quill-content span:not([class*="ql-bg-"]),
+:root[data-theme="dark"] .quill-content p,
+:root[data-theme="dark"] .quill-content div,
+:root[data-theme="dark"] .quill-content strong,
+:root[data-theme="dark"] .quill-content em,
+:root[data-theme="dark"] .quill-content b,
+:root[data-theme="dark"] .quill-content i,
+:root[data-theme="dark"] .quill-content u,
+:root[data-theme="dark"] .quill-content li,
+:root[data-theme="dark"] .quill-content font,
+:root[data-theme="dark"] .quill-content h1,
+:root[data-theme="dark"] .quill-content h2,
+:root[data-theme="dark"] .quill-content h3,
+:root[data-theme="dark"] .quill-content h4 {
+  background-color: transparent !important;
+  background: transparent !important;
+}
+
+/* Override any inline style color attribute in Dark Mode (unless explicit highlight color class) */
+:root[data-theme="dark"] .quill-content [style]:not([class*="ql-color-"]) {
+  color: #f3f4f6 !important;
+  background-color: transparent !important;
+}
+:root[data-theme="dark"] .quill-content strong[style],
+:root[data-theme="dark"] .quill-content b[style],
+:root[data-theme="dark"] .quill-content h1[style],
+:root[data-theme="dark"] .quill-content h2[style],
+:root[data-theme="dark"] .quill-content h3[style],
+:root[data-theme="dark"] .quill-content h4[style] {
+  color: #ffffff !important;
+}
+
+/* Links in Dark Mode */
+:root[data-theme="dark"] .quill-content a {
+  color: #6ee7b7 !important;
+}
+:root[data-theme="dark"] .quill-content a:hover {
+  color: #a7f3d0 !important;
+}
+
+/* Quill code and quote in Dark Mode */
+:root[data-theme="dark"] .quill-content pre,
+:root[data-theme="dark"] .quill-content code {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #ffffff !important;
+  border: 1px solid var(--color-border-light);
+}
+
+:root[data-theme="dark"] .quill-content blockquote {
+  background: rgba(255, 255, 255, 0.03) !important;
+  color: #e5e7eb !important;
+  border-left-color: var(--color-primary);
+}
+
+:root[data-theme="dark"] .quill-content th {
+  background: var(--color-gray-100) !important;
+  color: #ffffff !important;
+}
+
+:root[data-theme="dark"] .quill-content td {
+  border-color: var(--color-border-light);
+  color: #f3f4f6 !important;
+}
+
+/* Quill colors in Dark Mode */
+:root[data-theme="dark"] .quill-content .ql-color-red { color: #f87171 !important; }
+:root[data-theme="dark"] .quill-content .ql-color-orange { color: #fb923c !important; }
+:root[data-theme="dark"] .quill-content .ql-color-yellow { color: #fde047 !important; }
+:root[data-theme="dark"] .quill-content .ql-color-green { color: #4ade80 !important; }
+:root[data-theme="dark"] .quill-content .ql-color-blue { color: #60a5fa !important; }
+:root[data-theme="dark"] .quill-content .ql-color-purple { color: #c084fc !important; }
+
+:root[data-theme="dark"] .quill-content .ql-bg-black { background-color: rgba(255, 255, 255, 0.15) !important; color: #ffffff !important; }
+:root[data-theme="dark"] .quill-content .ql-bg-red { background-color: rgba(220, 38, 38, 0.25) !important; color: #fca5a5 !important; }
+:root[data-theme="dark"] .quill-content .ql-bg-orange { background-color: rgba(234, 88, 12, 0.25) !important; color: #fdba74 !important; }
+:root[data-theme="dark"] .quill-content .ql-bg-yellow { background-color: rgba(202, 138, 4, 0.25) !important; color: #fde047 !important; }
+:root[data-theme="dark"] .quill-content .ql-bg-green { background-color: rgba(22, 163, 74, 0.25) !important; color: #86efac !important; }
+:root[data-theme="dark"] .quill-content .ql-bg-blue { background-color: rgba(37, 99, 235, 0.25) !important; color: #93c5fd !important; }
+:root[data-theme="dark"] .quill-content .ql-bg-purple { background-color: rgba(147, 51, 234, 0.25) !important; color: #d8b4fe !important; }
+
+/* ==========================================================================
+   Quill Editor Component (RichTextEditor) — Comprehensive Dark Theme
+========================================================================== */
+:root[data-theme="dark"] .rich-text-editor-container {
+  background-color: var(--fd-surface) !important;
+  border-color: var(--color-border-light) !important;
+}
+
+:root[data-theme="dark"] .rich-text-editor-container .ql-toolbar.ql-snow {
+  background-color: var(--color-gray-100) !important;
+  border-bottom: 1px solid var(--color-border-light) !important;
+}
+
+:root[data-theme="dark"] .rich-text-editor-container .ql-snow .ql-stroke {
+  stroke: #cbd5e1 !important;
+}
+
+:root[data-theme="dark"] .rich-text-editor-container .ql-snow .ql-fill {
+  fill: #cbd5e1 !important;
+}
+
+:root[data-theme="dark"] .rich-text-editor-container .ql-snow .ql-picker {
+  color: #cbd5e1 !important;
+}
+
+:root[data-theme="dark"] .rich-text-editor-container .ql-snow .ql-picker-label {
+  color: #cbd5e1 !important;
+}
+
+:root[data-theme="dark"] .rich-text-editor-container .ql-snow.ql-toolbar button:hover .ql-stroke,
+:root[data-theme="dark"] .rich-text-editor-container .ql-snow.ql-toolbar button:focus .ql-stroke,
+:root[data-theme="dark"] .rich-text-editor-container .ql-snow.ql-toolbar button.ql-active .ql-stroke,
+:root[data-theme="dark"] .rich-text-editor-container .ql-snow.ql-toolbar .ql-picker-label:hover .ql-stroke,
+:root[data-theme="dark"] .rich-text-editor-container .ql-snow.ql-toolbar .ql-picker-label.ql-active .ql-stroke,
+:root[data-theme="dark"] .rich-text-editor-container .ql-snow.ql-toolbar .ql-picker-item:hover .ql-stroke,
+:root[data-theme="dark"] .rich-text-editor-container .ql-snow.ql-toolbar .ql-picker-item.ql-selected .ql-stroke {
+  stroke: var(--color-primary) !important;
+}
+
+:root[data-theme="dark"] .rich-text-editor-container .ql-snow.ql-toolbar button:hover .ql-fill,
+:root[data-theme="dark"] .rich-text-editor-container .ql-snow.ql-toolbar button:focus .ql-fill,
+:root[data-theme="dark"] .rich-text-editor-container .ql-snow.ql-toolbar button.ql-active .ql-fill,
+:root[data-theme="dark"] .rich-text-editor-container .ql-snow.ql-toolbar .ql-picker-label:hover .ql-fill,
+:root[data-theme="dark"] .rich-text-editor-container .ql-snow.ql-toolbar .ql-picker-label.ql-active .ql-fill,
+:root[data-theme="dark"] .rich-text-editor-container .ql-snow.ql-toolbar .ql-picker-item:hover .ql-fill,
+:root[data-theme="dark"] .rich-text-editor-container .ql-snow.ql-toolbar .ql-picker-item.ql-selected .ql-fill {
+  fill: var(--color-primary) !important;
+}
+
+:root[data-theme="dark"] .rich-text-editor-container .ql-snow.ql-toolbar button:hover,
+:root[data-theme="dark"] .rich-text-editor-container .ql-snow.ql-toolbar button:focus,
+:root[data-theme="dark"] .rich-text-editor-container .ql-snow.ql-toolbar button.ql-active,
+:root[data-theme="dark"] .rich-text-editor-container .ql-snow.ql-toolbar .ql-picker-label:hover,
+:root[data-theme="dark"] .rich-text-editor-container .ql-snow.ql-toolbar .ql-picker-label.ql-active {
+  color: var(--color-primary) !important;
+}
+
+:root[data-theme="dark"] .rich-text-editor-container .ql-snow .ql-picker-options {
+  background-color: var(--fd-surface) !important;
+  border: 1px solid var(--color-border-light) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4) !important;
+  border-radius: 0.5rem !important;
+  color: #f3f4f6 !important;
+}
+
+:root[data-theme="dark"] .rich-text-editor-container .ql-snow .ql-picker-options .ql-picker-item {
+  color: #f3f4f6 !important;
+  border-radius: 0.25rem !important;
+}
+
+:root[data-theme="dark"] .rich-text-editor-container .ql-snow .ql-picker-options .ql-picker-item:hover {
+  background-color: var(--color-gray-100) !important;
+  color: var(--color-primary) !important;
+}
+
+:root[data-theme="dark"] .rich-text-editor-container .ql-snow .ql-picker-options .ql-picker-item.ql-selected {
+  color: var(--color-primary) !important;
+}
+
+:root[data-theme="dark"] .rich-text-editor-container .ql-snow .ql-color-picker .ql-picker-item {
+  border-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+:root[data-theme="dark"] .rich-text-editor-container .ql-snow .ql-color-picker .ql-picker-item:hover,
+:root[data-theme="dark"] .rich-text-editor-container .ql-snow .ql-color-picker .ql-picker-item.ql-selected {
+  border-color: #ffffff !important;
+}
+
+:root[data-theme="dark"] .rich-text-editor-container .ql-snow .ql-tooltip {
+  background-color: var(--fd-surface) !important;
+  border: 1px solid var(--color-border-light) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5) !important;
+  border-radius: 0.5rem !important;
+  color: #f3f4f6 !important;
+}
+
+:root[data-theme="dark"] .rich-text-editor-container .ql-snow .ql-tooltip input[type="text"] {
+  background-color: var(--color-gray-100) !important;
+  border: 1px solid var(--color-border-light) !important;
+  border-radius: 0.375rem !important;
+  color: #f3f4f6 !important;
+}
+
+:root[data-theme="dark"] .rich-text-editor-container .ql-snow .ql-tooltip a.ql-action::after,
+:root[data-theme="dark"] .rich-text-editor-container .ql-snow .ql-tooltip a.ql-remove::before,
+:root[data-theme="dark"] .rich-text-editor-container .ql-snow .ql-tooltip a {
+  color: #6ee7b7 !important;
+}
+
+:root[data-theme="dark"] .rich-text-editor-container .ql-container.ql-snow {
+  background-color: var(--fd-surface) !important;
+  color: #f3f4f6 !important;
+}
+
+/* Strip hardcoded white/near-white backgrounds from pasted HTML in both light & dark themes */
+.rich-text-editor-container .ql-editor [style*="background-color: rgb(255, 255, 255)"],
+.rich-text-editor-container .ql-editor [style*="background-color:rgb(255,255,255)"],
+.rich-text-editor-container .ql-editor [style*="background-color: #ffffff"],
+.rich-text-editor-container .ql-editor [style*="background-color:#ffffff"],
+.rich-text-editor-container .ql-editor [style*="background-color: #fff"],
+.rich-text-editor-container .ql-editor [style*="background-color:#fff"],
+.rich-text-editor-container .ql-editor [style*="background-color: white"],
+.rich-text-editor-container .ql-editor [style*="background-color:white"],
+.rich-text-editor-container .ql-editor [style*="background: rgb(255, 255, 255)"],
+.rich-text-editor-container .ql-editor [style*="background:rgb(255,255,255)"],
+.rich-text-editor-container .ql-editor [style*="background: #ffffff"],
+.rich-text-editor-container .ql-editor [style*="background:#ffffff"],
+.rich-text-editor-container .ql-editor [style*="background: #fff"],
+.rich-text-editor-container .ql-editor [style*="background:#fff"],
+.rich-text-editor-container .ql-editor [style*="background: white"],
+.rich-text-editor-container .ql-editor [style*="background:white"],
+.rich-text-editor-container .ql-editor [style*="background-color: initial"],
+.rich-text-editor-container .ql-editor [style*="background-color: inherit"] {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+:root[data-theme="dark"] .rich-text-editor-container .ql-editor,
+:root[data-theme="dark"] .rich-text-editor-container .ql-editor p,
+:root[data-theme="dark"] .rich-text-editor-container .ql-editor span:not([class*="ql-color-"]),
+:root[data-theme="dark"] .rich-text-editor-container .ql-editor div,
+:root[data-theme="dark"] .rich-text-editor-container .ql-editor font,
+:root[data-theme="dark"] .rich-text-editor-container .ql-editor em,
+:root[data-theme="dark"] .rich-text-editor-container .ql-editor i,
+:root[data-theme="dark"] .rich-text-editor-container .ql-editor u,
+:root[data-theme="dark"] .rich-text-editor-container .ql-editor s,
+:root[data-theme="dark"] .rich-text-editor-container .ql-editor label,
+:root[data-theme="dark"] .rich-text-editor-container .ql-editor li {
+  color: #f3f4f6 !important;
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+:root[data-theme="dark"] .rich-text-editor-container .ql-editor *:not([class*="ql-bg-"]) {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+:root[data-theme="dark"] .rich-text-editor-container .ql-editor [style]:not([class*="ql-bg-"]) {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+:root[data-theme="dark"] .rich-text-editor-container .ql-editor [style]:not([class*="ql-color-"]) {
+  color: #f3f4f6 !important;
+}
+
+:root[data-theme="dark"] .rich-text-editor-container .ql-editor h1,
+:root[data-theme="dark"] .rich-text-editor-container .ql-editor h2,
+:root[data-theme="dark"] .rich-text-editor-container .ql-editor h3,
+:root[data-theme="dark"] .rich-text-editor-container .ql-editor h4,
+:root[data-theme="dark"] .rich-text-editor-container .ql-editor strong,
+:root[data-theme="dark"] .rich-text-editor-container .ql-editor b {
+  color: #ffffff !important;
+}
+
+:root[data-theme="dark"] .rich-text-editor-container .ql-editor a {
+  color: #6ee7b7 !important;
+}
+
+:root[data-theme="dark"] .rich-text-editor-container .ql-editor.ql-blank::before {
+  color: var(--color-text-secondary) !important;
+  opacity: 0.6;
+}
+
+
+

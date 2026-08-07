@@ -22,8 +22,8 @@ export default function AdminUsersPage() {
     return () => clearTimeout(timer);
   }, [searchInput]);
 
-  const { data: responseData, isLoading: loading, isError, error } = useAdminUsers({ 
-    page, 
+  const { data: responseData, isLoading: loading, isError, error } = useAdminUsers({
+    page,
     pageSize: 15,
     ...(searchTerm.trim() ? { [searchField]: searchTerm.trim() } : {}),
     ...(filterRole ? { role: filterRole } : {})
@@ -44,7 +44,7 @@ export default function AdminUsersPage() {
     if (filterRole && !user.roles.includes(filterRole)) {
       return false;
     }
-    
+
     // Search filter
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
@@ -56,7 +56,7 @@ export default function AdminUsersPage() {
         if (!emailMatch) return false;
       }
     }
-    
+
     return true;
   });
 
@@ -146,13 +146,12 @@ export default function AdminUsersPage() {
                         {user.roles.map((r) => (
                           <span
                             key={r}
-                            className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
-                              r === "Admin"
+                            className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${r === "Admin"
                                 ? "bg-red-100 text-red-700"
                                 : r === "Manager" || r === "Staff"
-                                ? "bg-blue-100 text-blue-700"
-                                : "bg-slate-100 text-slate-700"
-                            }`}
+                                  ? "bg-blue-100 text-blue-700"
+                                  : "bg-slate-100 text-slate-700"
+                              }`}
                           >
                             {r}
                           </span>
@@ -161,16 +160,14 @@ export default function AdminUsersPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span
-                        className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${
-                          user.isActive
+                        className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${user.isActive
                             ? "bg-green-50 text-green-700"
                             : "bg-red-50 text-red-700"
-                        }`}
+                          }`}
                       >
                         <span
-                          className={`h-1.5 w-1.5 rounded-full ${
-                            user.isActive ? "bg-green-600" : "bg-red-600"
-                          }`}
+                          className={`h-1.5 w-1.5 rounded-full ${user.isActive ? "bg-green-600" : "bg-red-600"
+                            }`}
                         />
                         {user.isActive ? "Hoạt động" : "Khóa"}
                       </span>
