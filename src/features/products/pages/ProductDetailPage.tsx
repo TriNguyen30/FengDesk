@@ -46,7 +46,8 @@ import { setAuthModal } from "@/features/auth/store/authSlice";
 import { cleanRichTextHtml } from "@/utils";
 import ProductFitPanel from "@/features/recommendation/components/element-vector/ProductFitPanel";
 import FeatureBar from "@/components/ui/FeatureBar";
-import CommitmentPage from "@/components/ui/CommitmentPage"
+import CommitmentPage from "@/components/ui/CommitmentPage";
+import { getVibes, getStyles } from "@/features/products/api/taxonomy.api";
 
 const ELEMENT_LABELS: Record<string, string> = {
   Kim: "Kim",
@@ -91,6 +92,7 @@ export default function ProductDetailPage() {
   }, [activeImage, models3D, sortedImages]);
   const [quantity, setQuantity] = useState<number>(1);
   const [shop, setShop] = useState<Shop | null>(null);
+  const [vibeStyleMap, setVibeStyleMap] = useState<Record<string, string>>({});
 
   // Zoom on hover state (Desktop main image)
   const [zoomPos, setZoomPos] = useState({ x: 0, y: 0 });
@@ -106,6 +108,19 @@ export default function ProductDetailPage() {
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
+    
+    Promise.all([getVibes(), getStyles()])
+      .then(([vibeRes, styleRes]) => {
+        const map: Record<string, string> = {};
+        if (vibeRes.isSuccess && vibeRes.data) {
+          vibeRes.data.forEach((v: any) => { map[v.code] = v.name; });
+        }
+        if (styleRes.isSuccess && styleRes.data) {
+          styleRes.data.forEach((s: any) => { map[s.code] = s.name; });
+        }
+        setVibeStyleMap(map);
+      })
+      .catch(console.error);
   }, [id]);
 
   useEffect(() => {
@@ -705,7 +720,7 @@ export default function ProductDetailPage() {
                     key={code}
                     className="rounded-md bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-500"
                   >
-                    {code}
+                    {vibeStyleMap[code] || code}
                   </span>
                 ))}
               </div>
