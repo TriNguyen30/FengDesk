@@ -1,7 +1,7 @@
 import { Leaf, Mail, Phone, MapPin } from "lucide-react";
 import { FaFacebook, FaInstagram, FaTiktok } from "react-icons/fa";
 import Logo from "@/assets/image/fengdesk_logo_2.png";
-import DTBBCT from "@/assets/image/DTBBCT.png";
+// import DTBBCT from "@/assets/image/DTBBCT.png";
 import { useTranslation } from "react-i18next";
 
 export default function Footer() {
@@ -66,7 +66,7 @@ export default function Footer() {
                 </a>
               </li>
             </ul>
-            <div className="mt-4">
+            {/* <div className="mt-4">
               <a href="#" className="inline-block hover:opacity-80 transition-opacity">
                 <img
                   src={DTBBCT}
@@ -74,7 +74,7 @@ export default function Footer() {
                   className="h-16 w-auto object-contain"
                 />
               </a>
-            </div>
+            </div> */}
           </div>
 
           {/* Customer Support */}
