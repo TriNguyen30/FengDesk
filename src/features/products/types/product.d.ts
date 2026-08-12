@@ -49,6 +49,10 @@ export interface GetProductsParams {
   search?: string;
   /** Hành phong thủy — khớp cả hành chính lẫn hành phụ của sản phẩm. */
   element?: "Kim" | "Moc" | "Thuy" | "Hoa" | "Tho";
+  /** Vibe (cảm hứng không gian) */
+  vibe?: string;
+  /** Style (phong cách) */
+  style?: string;
   /** true = chỉ lấy sản phẩm có model 3D xem được. Trang chủ dùng để bốc ngẫu nhiên 1 model. */
   hasModel3D?: boolean;
   page?: number;

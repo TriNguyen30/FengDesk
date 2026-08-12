@@ -205,7 +205,11 @@
       "price": "Price Range",
       "all_prices": "All prices",
       "element": "Element",
-      "all_elements": "All elements"
+      "all_elements": "All elements",
+      "vibe": "Vibe",
+      "all_vibes": "All vibes",
+      "style": "Style",
+      "all_styles": "All styles"
     },
     "elements": {
       "kim": "Metal",

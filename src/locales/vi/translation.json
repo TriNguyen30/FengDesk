@@ -205,7 +205,11 @@
       "price": "Mức Giá",
       "all_prices": "Tất cả mức giá",
       "element": "Mệnh (Hành)",
-      "all_elements": "Tất cả các mệnh"
+      "all_elements": "Tất cả các mệnh",
+      "vibe": "Cảm hứng không gian",
+      "all_vibes": "Tất cả cảm hứng",
+      "style": "Phong cách",
+      "all_styles": "Tất cả phong cách"
     },
     "elements": {
       "kim": "Kim (Kim loại)",
