@@ -1,5 +1,5 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap");
-@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap');@import "tailwindcss";
 
 /* =========================
    Tailwind v4 Theme Tokens
@@ -7,7 +7,7 @@
 
 @theme {
   /* Fonts */
-  --font-sans: "Inter", sans-serif;
+  --font-sans: "Plus Jakarta Sans", sans-serif;
 
   /* Brand — Sage Green (theme gốc) */
   --color-primary: #7d8f69;

@@ -645,22 +645,41 @@ export default function ProductDetailPage() {
                   {product.items.map((item) => {
                     const isSelected = selectedItem?.id === item.id;
                     return (
-                      <button
+                      <motion.button
                         key={item.id}
+                        whileTap={{ scale: 0.95 }}
                         onClick={() => setSelectedItem(item)}
-                        className={`relative flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-all focus:outline-none cursor-not-allowed ${isSelected
-                          ? "border-primary bg-primary/5 text-primary"
+                        className={`relative flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-colors focus:outline-none cursor-not-allowed ${isSelected
+                          ? "border-primary text-primary"
                           : "border-gray-200 text-gray-600 hover:border-primary/40 hover:bg-gray-50 cursor-pointer"
                           }`}
                       >
-                        {item.name}
-                        <span className="text-xs opacity-60">
+                        {isSelected && (
+                          <motion.div
+                            layoutId={`active-variant-bg-${product.id}`}
+                            className="absolute inset-0 rounded-lg bg-primary/10"
+                            initial={false}
+                            transition={{ type: "spring", stiffness: 500, damping: 35 }}
+                          />
+                        )}
+                        <span className="relative z-10">{item.name}</span>
+                        <span className="relative z-10 text-xs opacity-60">
                           {item.price.toLocaleString("vi-VN")}đ
                         </span>
-                        {isSelected && (
-                          <Check className="absolute -top-1.5 -right-1.5 h-3.5 w-3.5 rounded-full bg-primary p-0.5 text-white" />
-                        )}
-                      </button>
+                        <AnimatePresence>
+                          {isSelected && (
+                            <motion.div
+                              initial={{ scale: 0, opacity: 0 }}
+                              animate={{ scale: 1, opacity: 1 }}
+                              exit={{ scale: 0, opacity: 0 }}
+                              transition={{ type: "spring", stiffness: 500, damping: 35 }}
+                              className="absolute -top-2 -right-2 z-20 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-white shadow-sm"
+                            >
+                              <Check className="h-2.5 w-2.5" strokeWidth={3} />
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </motion.button>
                     );
                   })}
                 </div>

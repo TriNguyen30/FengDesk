@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ChevronRight, Loader2, Package, MessageCircle, Store, Truck, Star } from "lucide-react";
+import { motion } from "framer-motion";
 import { useOrdersList } from "../hooks/useOrders";
 import { formatOrderDate, formatVnd, getOrderStatusMeta } from "../utils/orderUtils";
 import { useAppDispatch } from "@/app/store";
@@ -70,23 +71,38 @@ export default function OrdersPage() {
         </div>
       </div>
 
-      {/* Tabs — 8 nhãn tiếng Việt không vừa một hàng ở khung /profile, nên xuống dòng dạng pill
-          thay vì cuộn ngang: cuộn ngang làm tab cuối bị góc bo của thẻ cắt cụt. */}
-      <div className="mb-6 w-full rounded-lg border border-gray-100 bg-white p-2 shadow-sm">
-        <div className="flex flex-wrap gap-1">
+      {/* Tabs */}
+      <div className="mb-6 w-full rounded-xl border border-gray-100 bg-white p-1.5 shadow-sm overflow-hidden">
+        <style>{`
+          .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+          }
+        `}</style>
+        <div 
+          className="flex overflow-x-auto gap-1 hide-scrollbar"
+          style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+        >
           {TABS.map((tab) => {
             const isActive = activeTab === tab.value;
             return (
               <button
                 key={tab.value}
                 onClick={() => setActiveTab(tab.value)}
-                className={`whitespace-nowrap rounded-md px-4 py-2 text-sm font-medium transition-colors cursor-pointer ${
+                className={`relative whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium transition-colors cursor-pointer shrink-0 outline-none ${
                   isActive
-                    ? "bg-primary/10 text-primary"
-                    : "text-gray-500 hover:bg-gray-50 hover:text-gray-700"
+                    ? "text-primary"
+                    : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
                 }`}
               >
-                {tab.label}
+                {isActive && (
+                  <motion.div
+                    layoutId="active-order-tab"
+                    className="absolute inset-0 rounded-lg bg-primary/10"
+                    initial={false}
+                    transition={{ type: "spring", stiffness: 500, damping: 35 }}
+                  />
+                )}
+                <span className="relative z-10">{tab.label}</span>
               </button>
             );
           })}

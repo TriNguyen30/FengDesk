@@ -44,11 +44,16 @@ export default function ProfileLayout() {
 
   return (
     <div className="mx-auto max-w-screen-xl px-4 py-8 sm:px-6 lg:px-10">
-      <div className="flex flex-col gap-6 md:flex-row">
+      <div className="flex flex-col gap-6 md:flex-row md:items-start">
         {/* Sidebar */}
-        <aside className="w-full shrink-0 md:w-64">
-          <div className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm">
-            <h2 className="mb-4 px-2 text-lg font-bold text-gray-900">
+        <motion.aside
+          initial={reduceMotion ? false : { opacity: 0, x: -8 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+          className="w-full shrink-0 md:sticky md:top-24 md:w-64 z-20"
+        >
+          <div className="rounded-2xl border border-gray-100/90 bg-white/95 p-4 shadow-sm backdrop-blur-sm transition-all duration-300 ease-out hover:shadow-md hover:border-gray-200">
+            <h2 className="mb-4 px-2 text-lg font-bold text-gray-900 tracking-tight">
               {t("profile_layout.title")}
             </h2>
             <nav className="flex flex-col gap-1">
@@ -59,26 +64,49 @@ export default function ProfileLayout() {
                     key={item.path}
                     to={item.path}
                     className={({ isActive }) =>
-                      `flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
+                      `group relative flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-medium transition-colors duration-200 ${
                         isActive
-                          ? "bg-primary/10 text-primary"
-                          : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                          ? "text-primary font-semibold"
+                          : "text-gray-600 hover:text-gray-900 hover:bg-gray-50/80"
                       }`
                     }
                   >
-                    <Icon size={18} />
-                    <span className="flex-1">{item.name}</span>
-                    {item.badge && item.badge > 0 ? (
-                      <span className="inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-primary px-1.5 text-[10px] font-bold text-white">
-                        {item.badge > 99 ? "99+" : item.badge}
-                      </span>
-                    ) : null}
+                    {({ isActive }) => (
+                      <>
+                        {isActive &&
+                          (reduceMotion ? (
+                            <span className="absolute inset-0 rounded-xl bg-primary/10 border border-primary/20" />
+                          ) : (
+                            <motion.span
+                              layoutId="profile-nav-active-pill"
+                              className="absolute inset-0 rounded-xl bg-primary/10 border border-primary/20"
+                              transition={{ type: "spring", stiffness: 400, damping: 32 }}
+                            />
+                          ))}
+                        <Icon
+                          size={18}
+                          className={`relative z-10 shrink-0 transition-transform duration-200 group-hover:scale-110 ${
+                            isActive ? "text-primary" : "text-gray-500 group-hover:text-gray-800"
+                          }`}
+                        />
+                        <span className="relative z-10 flex-1">{item.name}</span>
+                        {item.badge && item.badge > 0 ? (
+                          <motion.span
+                            initial={{ scale: 0.8, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            className="relative z-10 inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-primary px-1.5 text-[10px] font-bold text-white shadow-xs"
+                          >
+                            {item.badge > 99 ? "99+" : item.badge}
+                          </motion.span>
+                        ) : null}
+                      </>
+                    )}
                   </NavLink>
                 );
               })}
             </nav>
           </div>
-        </aside>
+        </motion.aside>
 
         {/* Main Content */}
         <main className="flex-1 min-w-0">

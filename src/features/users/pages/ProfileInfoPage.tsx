@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useAppDispatch, useAppSelector } from "@/app/store";
 import { logout } from "@/features/auth/store/authSlice";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Loader2, Calendar as CalendarIcon } from "lucide-react";
+import Calendar from "@/components/ui/Calendar";
 import {
   logoutRequest,
   myProfileRequest,
@@ -56,6 +57,19 @@ export default function ProfileInfoPage() {
   const [saving, setSaving] = useState(false);
   // Đổi ngày sinh làm engine tính lại mệnh Nạp Âm/cung Kua → hỏi lại trước khi lưu.
   const [dobWarningOpen, setDobWarningOpen] = useState(false);
+
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  const calendarRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (calendarRef.current && !calendarRef.current.contains(event.target as Node)) {
+        setIsCalendarOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const savedForm: ProfileForm = {
     fullName: profile?.fullName ?? "",
@@ -244,13 +258,31 @@ export default function ProfileInfoPage() {
               <label className="mb-1.5 block text-sm font-medium text-gray-700">
                 {t("profile_info.fields.dob")}
               </label>
-              <input
-                type="date"
-                max={new Date().toISOString().slice(0, 10)}
-                value={form.dateOfBirth}
-                onChange={(e) => setForm((f) => ({ ...f, dateOfBirth: e.target.value }))}
-                className={inputClass}
-              />
+              <div className="relative" ref={calendarRef}>
+                <button
+                  type="button"
+                  onClick={() => setIsCalendarOpen(!isCalendarOpen)}
+                  className={`flex w-full items-center justify-between rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/20 cursor-pointer ${!form.dateOfBirth ? "text-gray-500" : ""}`}
+                >
+                  {form.dateOfBirth ? (
+                    new Date(form.dateOfBirth).toLocaleDateString("vi-VN")
+                  ) : (
+                    <span>{t("profile_info.values.not_updated")}</span>
+                  )}
+                  <CalendarIcon className="h-4 w-4 text-gray-400" />
+                </button>
+                {isCalendarOpen && (
+                  <div className="absolute top-full left-0 z-50 mt-1">
+                    <Calendar
+                      value={form.dateOfBirth}
+                      onChange={(val) => {
+                        setForm((f) => ({ ...f, dateOfBirth: val }));
+                        setIsCalendarOpen(false);
+                      }}
+                    />
+                  </div>
+                )}
+              </div>
             </div>
             <div>
               {/* Mệnh là giá trị phái sinh do BE tính từ ngày sinh + giới tính — luôn chỉ đọc. */}
