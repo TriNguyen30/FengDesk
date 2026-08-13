@@ -97,10 +97,6 @@ export default function ProductDetailPage() {
   const [shop, setShop] = useState<Shop | null>(null);
   const [vibeStyleMap, setVibeStyleMap] = useState<Record<string, string>>({});
 
-  // Zoom on hover state (Desktop main image)
-  const [zoomPos, setZoomPos] = useState({ x: 0, y: 0 });
-  const [isHovering, setIsHovering] = useState(false);
-
   // Lightbox modal state
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
@@ -220,13 +216,6 @@ export default function ProductDetailPage() {
     }
   };
 
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
-    const x = ((e.clientX - left) / width) * 100;
-    const y = ((e.clientY - top) / height) * 100;
-    setZoomPos({ x, y });
-  };
-
   const openLightbox = () => {
     if (!product || sortedImages.length === 0) return;
     const idx = sortedImages.findIndex((img) => img.url === activeImage);
@@ -302,6 +291,15 @@ export default function ProductDetailPage() {
     }
   };
 
+  const handleWheel = (e: React.WheelEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    if (e.deltaY < 0) {
+      handleZoomIn();
+    } else {
+      handleZoomOut();
+    }
+  };
+
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
     if (scale <= 1) return;
     setIsDragging(true);
@@ -355,7 +353,7 @@ export default function ProductDetailPage() {
 
   // Auto swipe main image every 5 seconds
   useEffect(() => {
-    if (!product || sortedImages.length <= 1 || isLightboxOpen || isHovering || viewMode === "3d") return;
+    if (!product || sortedImages.length <= 1 || isLightboxOpen || viewMode === "3d") return;
 
     const intervalId = setInterval(() => {
       setActiveImage((currentImage) => {
@@ -366,7 +364,7 @@ export default function ProductDetailPage() {
     }, 5000);
 
     return () => clearInterval(intervalId);
-  }, [product, sortedImages, isLightboxOpen, isHovering, viewMode]);
+  }, [product, sortedImages, isLightboxOpen, viewMode]);
 
   const error = failed ? t("product_detail.error.load_failed") : null;
 
@@ -476,11 +474,8 @@ export default function ProductDetailPage() {
             {/* Main image / 3D viewer */}
             <div
               id="product-media-viewer"
-              className={`relative aspect-square w-full overflow-hidden rounded-2xl shadow-inner ring-1 ring-black/5 group select-none ${viewMode === "3d" ? "" : "cursor-zoom-in"
+              className={`relative aspect-square w-full overflow-hidden rounded-2xl shadow-inner ring-1 ring-black/5 group select-none ${viewMode === "3d" ? "" : "cursor-pointer"
                 }`}
-              onMouseMove={viewMode === "3d" ? undefined : handleMouseMove}
-              onMouseEnter={viewMode === "3d" ? undefined : () => setIsHovering(true)}
-              onMouseLeave={viewMode === "3d" ? undefined : () => setIsHovering(false)}
               onClick={viewMode === "3d" ? undefined : openLightbox}
             >
               {elementLabel && (
@@ -506,11 +501,7 @@ export default function ProductDetailPage() {
                     transition={{ duration: 0.4, ease: "easeOut" }}
                     src={activeImage}
                     alt={product.name}
-                    style={{
-                      transformOrigin: `${zoomPos.x}% ${zoomPos.y}%`,
-                      transform: isHovering ? "scale(2.2)" : "scale(1)",
-                    }}
-                    className="h-full w-full object-contain transition-transform duration-300 ease-out"
+                    className="h-full w-full object-contain"
                   />
                   {/* Slider Controls */}
                   {sortedImages.length > 1 && (
@@ -1015,6 +1006,7 @@ export default function ProductDetailPage() {
                 onTouchStart={handleTouchStart}
                 onTouchMove={handleTouchMove}
                 onTouchEnd={handleMouseUp}
+                onWheel={handleWheel}
               >
                 {sortedImages[lightboxIndex] && (
                   <img

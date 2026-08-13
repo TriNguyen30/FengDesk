@@ -248,7 +248,7 @@ export default function EditProductModal({
     );
   } else {
     content = (
-      <div className="space-y-6 max-w-5xl mx-auto pb-6">
+      <div className="space-y-6 max-w-7xl mx-auto pb-6">
 
         {/* Tabs list */}
         <div className="border-b border-gray-200 bg-white">
@@ -358,7 +358,7 @@ export default function EditProductModal({
     <Modal
       open={open}
       onClose={onClose}
-      size="max-w-5xl"
+      size="max-w-7xl !max-h-[90vh] h-[90vh]"
       title={
         product ? (
           <div>
