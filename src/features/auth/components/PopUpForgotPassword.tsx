@@ -14,6 +14,11 @@ import {
   type ForgotPasswordResetFormValues,
 } from "@/features/auth/schemas/auth-schema";
 import { getAuthErrorMessage } from "@/features/auth/utils/getAuthErrorMessage";
+import {
+  forgotPasswordRequest,
+  verifyForgotPasswordRequest,
+  resetForgotPasswordRequest,
+} from "@/features/auth/api/auth.api";
 
 export interface PopUpForgotPasswordProps {
   open: boolean;
@@ -75,11 +80,11 @@ export default function PopUpForgotPassword({
   const onEmailSubmit = async (values: ForgotPasswordEmailFormValues) => {
     try {
       setIsSendingOtp(true);
-      // TODO: Call API to send OTP for forgot password
-      // const response = await forgotPasswordInitiateRequest({ email: values.email });
+      const response = await forgotPasswordRequest({ email: values.email });
       
-      // MOCK:
-      await new Promise((res) => setTimeout(res, 1000));
+      if (!response.isSuccess) {
+        throw new Error(response.message || "Failed to initiate password reset");
+      }
       
       setEmail(values.email);
       setStep("OTP");
@@ -95,14 +100,14 @@ export default function PopUpForgotPassword({
     setOtp(code);
     try {
       setIsVerifying(true);
-      // TODO: Call API to verify OTP
-      // const response = await forgotPasswordVerifyRequest({ email, otp: code });
+      const response = await verifyForgotPasswordRequest({ email, otp: code });
       
-      // MOCK:
-      await new Promise((res) => setTimeout(res, 1000));
-      const mockToken = "mock_reset_token_123";
+      if (!response.isSuccess || !response.data?.resetPasswordToken) {
+        throw new Error(response.message || "Invalid OTP");
+      }
       
-      setResetToken(mockToken);
+      const token = response.data.resetPasswordToken;
+      setResetToken(token);
       setStep("RESET");
       toast.success(t("forgot_password.toast.verify_success"));
     } catch (error) {
@@ -115,11 +120,14 @@ export default function PopUpForgotPassword({
 
   const onResetSubmit = async (values: ForgotPasswordResetFormValues) => {
     try {
-      // TODO: Call API to reset password using token
-      // await forgotPasswordResetRequest({ token: resetToken, newPassword: values.password });
+      const response = await resetForgotPasswordRequest({ 
+        resetPasswordToken: resetToken, 
+        newPassword: values.password 
+      });
       
-      // MOCK:
-      await new Promise((res) => setTimeout(res, 1000));
+      if (!response.isSuccess) {
+        throw new Error(response.message || "Failed to reset password");
+      }
       
       toast.success(t("forgot_password.toast.reset_success"));
       handleClose();
@@ -177,12 +185,24 @@ export default function PopUpForgotPassword({
               {t("forgot_password.otp_step.desc", { email })}
             </p>
             <OtpInput length={6} value={otp} onChange={setOtp} onComplete={onOtpComplete} />
-            {isVerifying && (
-              <p className="text-sm text-primary flex items-center gap-2">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                {t("forgot_password.otp_step.submitting")}
-              </p>
-            )}
+            <button
+              type="button"
+              onClick={() => onOtpComplete(otp)}
+              disabled={otp.length !== 6 || isVerifying}
+              className={submitButtonClass}
+            >
+              {isVerifying ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  {t("forgot_password.otp_step.submitting")}
+                </>
+              ) : (
+                <>
+                  {t("forgot_password.otp_step.submit")}
+                  <ChevronRight size={16} />
+                </>
+              )}
+            </button>
             <button
               type="button"
               onClick={() => onEmailSubmit({ email })}

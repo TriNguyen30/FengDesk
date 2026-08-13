@@ -19,6 +19,8 @@ import {
   Tags,
   ChevronDown,
   Box,
+  User,
+  Lock
 } from "lucide-react";
 import { useAppSelector, useAppDispatch } from "@/app/store";
 import { logout } from "@/features/auth/store/authSlice";
@@ -48,15 +50,24 @@ const navigation = [
       { name: "Trả hàng", href: "/manager/order-returns", icon: TicketX },
     ],
   },
-  { name: "Cửa hàng", href: "/manager/stores", icon: Store },
+  // { name: "Cửa hàng", href: "/manager/stores", icon: Store },
+  { name: "Cửa hàng", href: "/manager/shop", icon: Store },
   { name: "Khách hàng", href: "/manager/customers", icon: Users },
-  // { name: "Cài đặt", href: "/manager/settings", icon: Settings },
+  { name: "Cài đặt", href: "/manager/settings/account", icon: Settings },
+  // {
+  //   name: "Cài đặt",
+  //   icon: Settings,
+  //   children: [
+  //     { name: "Tài khoản", href: "/manager/settings/account", icon: User },
+  //     { name: "Bảo mật", href: "/manager/settings/security", icon: Lock },
+  //   ],
+  // },
 ];
 
 const roleLabels: Record<string, string> = {
-  manager: "Quản lý",
-  admin: "Quản trị viên",
-  staff: "Nhân viên",
+  Manager: "Quản lý",
+  Admin: "Quản trị viên",
+  Staff: "Nhân viên",
 };
 
 const notifications = [

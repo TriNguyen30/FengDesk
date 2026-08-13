@@ -259,11 +259,13 @@
       "buy_now": "MUA NGAY",
       "out_of_stock": "HẾT HÀNG",
       "out_of_stock_sm": "Hết hàng",
+      "in_stock": "Còn hàng",
       "login": "Đăng nhập"
     },
     "labels": {
       "no_image": "Không có ảnh",
       "store": "Cửa hàng:",
+      "status": "Tình trạng:",
       "sku": "Mã sản phẩm:",
       "variant": "Phân loại",
       "stock": "Kho: {{stock}} sản phẩm",
@@ -504,8 +506,12 @@
     "subtitle": "Quản lý thông tin cá nhân và thiết lập tài khoản của bạn.",
     "default_user": "Người dùng",
     "roles": {
-      "customer": "Khách hàng",
-      "staff": "Nhân viên"
+      "admin": "Quản trị viên",
+      "manager": "Quản lý",
+      "staff": "Nhân viên",
+      "garden_owner": "Chủ cửa hàng",
+      "garden_staff": "Nhân viên cửa hàng",
+      "customer": "Khách hàng"
     },
     "fields": {
       "fullname": "Họ và tên",
@@ -1019,6 +1025,9 @@
       "full": "Kín màn",
       "clip": "Chừa dải",
       "stitch": "Nối mép"
+    },
+    "consult": {
+      "title": "Tư vấn AI"
     }
   }
 }

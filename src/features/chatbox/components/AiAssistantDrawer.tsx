@@ -420,9 +420,8 @@ export default function AiAssistantDrawer({ open, onClose, productId }: AiAssist
       {/* Lớp phủ tối. Khi đã gắn thì bỏ hẳn: trang phía sau phải bấm được, mà
           đó cũng chính là lý do tồn tại của chế độ gắn. */}
       <div
-        className={`fixed inset-0 z-40 bg-gray-900/30 backdrop-blur-[1px] transition-opacity duration-300 ${
-          open && !pinned ? "opacity-100" : "pointer-events-none opacity-0"
-        }`}
+        className={`fixed inset-0 z-40 bg-gray-900/30 backdrop-blur-[1px] transition-opacity duration-300 ${open && !pinned ? "opacity-100" : "pointer-events-none opacity-0"
+          }`}
         onClick={onClose}
         aria-hidden
       />
@@ -441,20 +440,18 @@ export default function AiAssistantDrawer({ open, onClose, productId }: AiAssist
             ? "translate 300ms cubic-bezier(0, 0, 0.2, 1), transform 300ms cubic-bezier(0, 0, 0.2, 1)"
             : "width 300ms cubic-bezier(0, 0, 0.2, 1), translate 300ms cubic-bezier(0, 0, 0.2, 1), transform 300ms cubic-bezier(0, 0, 0.2, 1)",
         }}
-        className={`fixed right-0 top-0 z-50 flex h-dvh flex-col border-l-2 border-primary/40 shadow-2xl ring-1 ring-primary/10 transition-transform duration-300 ease-out ${
-          open ? "translate-x-0" : "translate-x-full"
-        }`}
+        className={`fixed right-0 top-0 z-50 flex h-dvh flex-col border-l-2 border-primary/40 shadow-2xl ring-1 ring-primary/10 transition-transform duration-300 ease-out ${open ? "translate-x-0" : "translate-x-full"
+          }`}
       >
         <div
           data-drawer-interaction="resize-handle"
           // z-10: phải nằm trên nội dung, vì giờ đây CHỈ dải viền này mới kích hoạt resize.
-          className={`absolute left-0 top-0 z-10 h-full w-4 cursor-ew-resize touch-none transition-colors duration-200 ${
-            isResizing
+          className={`absolute left-0 top-0 z-10 h-full w-4 cursor-ew-resize touch-none transition-colors duration-200 ${isResizing
               ? "bg-primary/10"
               : isHoveringResizeHandle
                 ? "bg-primary/5"
                 : "bg-transparent"
-          }`}
+            }`}
           onMouseDown={startResize}
           onMouseEnter={() => setIsHoveringResizeHandle(true)}
           onMouseLeave={() => setIsHoveringResizeHandle(false)}
@@ -483,9 +480,8 @@ export default function AiAssistantDrawer({ open, onClose, productId }: AiAssist
               type="button"
               onClick={() => setPinned((v) => !v)}
               aria-pressed={pinned}
-              className={`rounded-lg p-1.5 transition-colors cursor-pointer ${
-                pinned ? "bg-white/20 text-white" : "text-white/90 hover:bg-white/15"
-              }`}
+              className={`rounded-lg p-1.5 transition-colors cursor-pointer ${pinned ? "bg-white/20 text-white" : "text-white/90 hover:bg-white/15"
+                }`}
               aria-label={pinned ? "Bỏ gắn khung chat" : "Gắn khung chat vào màn hình"}
               title={pinned ? "Bỏ gắn" : "Gắn vào màn hình"}
             >
@@ -508,15 +504,14 @@ export default function AiAssistantDrawer({ open, onClose, productId }: AiAssist
             dung); bg-gray-50 của lớp bọc là nền dự phòng khi WebGL không dựng
             được hoặc người dùng bật "giảm chuyển động". */}
         <div
-          className={`relative isolate flex-1 overflow-hidden ${
-            chatSurface === "blur"
+          className={`relative isolate flex-1 overflow-hidden ${chatSurface === "blur"
               ? // Kính mờ KHÔNG PHỦ MÀU — cùng công thức với dải .fd-rail ở trang
-                // chính: chỉ làm đục thứ nằm dưới, không đắp thêm lớp màu nào.
-                // Rẻ hơn hẳn chế độ nước: không WebGL, không vòng lặp mỗi khung
-                // hình, chỉ một lượt hợp thành do trình duyệt lo.
-                "backdrop-blur-[8px] backdrop-saturate-[1.05]"
+              // chính: chỉ làm đục thứ nằm dưới, không đắp thêm lớp màu nào.
+              // Rẻ hơn hẳn chế độ nước: không WebGL, không vòng lặp mỗi khung
+              // hình, chỉ một lượt hợp thành do trình duyệt lo.
+              "backdrop-blur-[8px] backdrop-saturate-[1.05]"
               : "bg-gray-50"
-          }`}
+            }`}
         >
           {/* TẠM GỠ (perf) — xem ghi chú ở phần import LiquidMeshBackground.
           {chatSurface === "liquid" && (
@@ -590,14 +585,12 @@ export default function AiAssistantDrawer({ open, onClose, productId }: AiAssist
                       )}
                       <div
                         data-drawer-interaction="message-bubble-wrapper"
-                        className={`group flex items-start gap-2.5 transition-opacity duration-200 ${
-                          isUser ? "flex-row-reverse" : ""
-                        } ${isDimmed ? "pointer-events-none opacity-40" : ""}`}
+                        className={`group flex items-start gap-2.5 transition-opacity duration-200 ${isUser ? "flex-row-reverse" : ""
+                          } ${isDimmed ? "pointer-events-none opacity-40" : ""}`}
                       >
                         <span
-                          className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${
-                            isUser ? "bg-gray-200 text-gray-600" : "bg-primary/15 text-primary"
-                          }`}
+                          className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${isUser ? "bg-gray-200 text-gray-600" : "bg-primary/15 text-primary"
+                            }`}
                         >
                           {isUser ? <User size={16} /> : <Bot size={16} />}
                         </span>
@@ -633,11 +626,10 @@ export default function AiAssistantDrawer({ open, onClose, productId }: AiAssist
                         ) : (
                           <div
                             data-drawer-interaction="message-bubble"
-                            className={`max-w-[92%] min-w-0 rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed ${
-                              isUser
+                            className={`max-w-[92%] min-w-0 rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed ${isUser
                                 ? "rounded-tr-md bg-primary text-white"
                                 : "rounded-tl-md border border-gray-200 bg-white text-gray-800"
-                            }`}
+                              }`}
                           >
                             {m.images.length > 0 && (
                               <div className="mb-2 flex flex-wrap gap-1.5">
