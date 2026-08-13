@@ -4,11 +4,13 @@ import { Toaster } from "sonner";
 import {
   LayoutDashboard,
   Users,
+  Store,
   LogOut,
   Menu,
   X,
   ChevronsLeft,
   ChevronsRight,
+  Settings,
 } from "lucide-react";
 import { useAppSelector, useAppDispatch } from "@/app/store";
 import { logout } from "@/features/auth/store/authSlice";
@@ -22,6 +24,8 @@ const toasterStyle = { "--width": "min(100vw - 1.5rem, 356px)" } as CSSPropertie
 const navigation = [
   { name: "Tổng quan", href: "/admin/dashboard", icon: LayoutDashboard },
   { name: "Người dùng", href: "/admin/users", icon: Users },
+  { name: "Cửa hàng", href: "/admin/stores", icon: Store },
+  { name: "Cài đặt", href: "/admin/settings", icon: Settings },
 ];
 
 const roleLabels: Record<string, string> = {

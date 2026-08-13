@@ -44,6 +44,8 @@ import NotificationPage from "@/features/notification/pages/NotificationPage";
 import ProfileReturnOrder from "@/features/users/pages/ProfileReturnOrder";
 import MyInvitationsPage from "@/features/shop/pages/MyInvitationsPage";
 import NotFoundPage from "@/features/shared/404Page";
+import SettingsPage from "@/features/shared/SettingsPage";
+import ShopInformationSetting from "@/features/shared/ShopInformationSetting";
 
 export default function AppRoutes() {
   return (
@@ -164,10 +166,14 @@ export default function AppRoutes() {
         <Route path="products" element={<ManageProductsPage />} />
         <Route path="products/new" element={<CreateProductPage />} />
         <Route path="model3d-queue" element={<Model3DQueuePage />} />
-        <Route path="stores" element={<ManageStoresPage />} />
         <Route path="orders" element={<ManageOrdersPage />} />
         <Route path="order-returns" element={<ManageOrderReturnPage />} />
         <Route path="customers" element={<StaffSupportPage />} />
+        <Route path="shop" element={<ShopInformationSetting />} />
+        <Route path="settings">
+          <Route index element={<Navigate to="account" replace />} />
+          <Route path="account" element={<SettingsPage />} />
+        </Route>
       </Route>
       <Route
         path="/admin"
@@ -181,6 +187,11 @@ export default function AppRoutes() {
         <Route path="dashboard" element={<AdminDashboardPage />} />
         <Route path="users" element={<AdminUsersPage />} />
         <Route path="users/:id" element={<AdminUserDetailPage />} />
+        <Route path="stores" element={<ManageStoresPage />} />
+        <Route path="settings">
+          <Route index element={<Navigate to="account" replace />} />
+          <Route path="account" element={<SettingsPage />} />
+        </Route>
       </Route>
       {/* 404 Fallback */}
       <Route path="*" element={<NotFoundPage />} />

@@ -97,3 +97,22 @@ export interface RefreshTokenPayload {
 export interface LogoutPayload {
   refreshToken: string;
 }
+
+export interface ForgotPasswordPayload {
+  email: string;
+}
+
+export interface ForgotPasswordVerifyPayload {
+  email: string;
+  otp: string;
+}
+
+export interface ForgotPasswordVerifyResponseData {
+  message?: string;
+  resetPasswordToken?: string;
+}
+
+export interface ForgotPasswordResetPayload {
+  resetPasswordToken: string;
+  newPassword: string;
+}

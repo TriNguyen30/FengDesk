@@ -177,6 +177,25 @@ export default function ProfileInfoPage() {
   const inputClass =
     "block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm text-gray-900 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/20";
 
+  const getRoleLabel = (roleStr?: string, rolesArr?: string[]) => {
+    const rolesList = rolesArr?.length ? rolesArr : (roleStr ? roleStr.split(",").map(r => r.trim()) : []);
+    if (rolesList.length === 0) return t("profile_info.roles.customer");
+
+    const translatedRoles = rolesList.map(r => {
+      switch (r) {
+        case "Admin": return t("profile_info.roles.admin");
+        case "Manager": return t("profile_info.roles.manager");
+        case "Staff": return t("profile_info.roles.staff");
+        case "GardenOwner": return t("profile_info.roles.garden_owner");
+        case "GardenStaff": return t("profile_info.roles.garden_staff");
+        case "Customer": return t("profile_info.roles.customer");
+        default: return r;
+      }
+    });
+
+    return translatedRoles.join(", ");
+  };
+
   return (
     <div className="w-full">
       <div className="mb-6">
@@ -194,9 +213,7 @@ export default function ProfileInfoPage() {
               {profile.fullName || t("profile_info.default_user")}
             </h2>
             <p className="text-sm text-gray-500">
-              {profile.role === "Customer"
-                ? t("profile_info.roles.customer")
-                : t("profile_info.roles.staff")}
+              {getRoleLabel(profile.role, profile.roles)}
             </p>
           </div>
         </div>

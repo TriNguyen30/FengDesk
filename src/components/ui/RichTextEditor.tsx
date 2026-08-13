@@ -182,6 +182,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
       toolbar: {
         container: [
           [{ header: [1, 2, 3, false] }],
+          [{ size: ['small', false, 'large', 'huge'] }],
           ["bold", "italic", "underline", "strike"],
           [{ list: "ordered" }, { list: "bullet" }],
           [{ color: [] }, { background: [] }],

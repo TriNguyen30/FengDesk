@@ -60,7 +60,9 @@ export default function PopUpLogin({ open, onClose, onSwitchToSignUp, onSwitchTo
 
       // Staff/Manager/Admin → vào khu điều hành. role có thể là chuỗi nhiều giá trị ("Customer, Staff").
       const roles = (response.data.user.role ?? "").split(",").map((r) => r.trim());
-      if (roles.some((r) => r === "Staff" || r === "Manager" || r === "Admin")) {
+      if (roles.includes("Admin")) {
+        window.location.assign("/admin");
+      } else if (roles.some((r) => r === "Staff" || r === "Manager")) {
         window.location.assign("/manager");
       }
     } catch (error) {

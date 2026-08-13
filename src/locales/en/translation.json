@@ -259,11 +259,13 @@
       "buy_now": "BUY NOW",
       "out_of_stock": "OUT OF STOCK",
       "out_of_stock_sm": "Out of stock",
+      "in_stock": "In stock",
       "login": "Login"
     },
     "labels": {
       "no_image": "No image",
       "store": "Store:",
+      "status": "Status:",
       "sku": "SKU:",
       "variant": "Variant",
       "stock": "Stock: {{stock}} items",
@@ -504,8 +506,12 @@
     "subtitle": "Manage your personal info and account settings.",
     "default_user": "User",
     "roles": {
-      "customer": "Customer",
-      "staff": "Staff"
+      "admin": "Administrator",
+      "manager": "Manager",
+      "staff": "Staff",
+      "garden_owner": "Garden Owner",
+      "garden_staff": "Garden Staff",
+      "customer": "Customer"
     },
     "fields": {
       "fullname": "Full name",
@@ -1019,6 +1025,9 @@
       "full": "Full screen",
       "clip": "Clipped",
       "stitch": "Stitched"
+    },
+    "consult": {
+      "title": "AI Consult"
     }
   }
 }

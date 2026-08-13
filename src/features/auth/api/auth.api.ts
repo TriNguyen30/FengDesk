@@ -13,6 +13,10 @@ import type {
   RefreshTokenPayload,
   UpdateProfilePayload,
   ChangeEmailTokenData,
+  ForgotPasswordPayload,
+  ForgotPasswordVerifyPayload,
+  ForgotPasswordResetPayload,
+  ForgotPasswordVerifyResponseData,
 } from "@/features/auth/types/auth";
 
 export async function loginRequest(payload: LoginPayload) {
@@ -116,6 +120,30 @@ export async function logoutRequest(payload: LogoutPayload) {
 export async function refreshTokenRequest(payload: RefreshTokenPayload) {
   const { data } = await fetchHttpClient.post<ApiResponse<LoginResponseData>>(
     "/Auth/refresh",
+    payload,
+  );
+  return data;
+}
+
+export async function forgotPasswordRequest(payload: ForgotPasswordPayload) {
+  const { data } = await fetchHttpClient.post<ApiResponse<void>>(
+    "/Auth/forgot-password/initiate",
+    payload,
+  );
+  return data;
+}
+
+export async function verifyForgotPasswordRequest(payload: ForgotPasswordVerifyPayload) {
+  const { data } = await fetchHttpClient.post<ApiResponse<ForgotPasswordVerifyResponseData>>(
+    "/Auth/forgot-password/verify",
+    payload,
+  );
+  return data;
+}
+
+export async function resetForgotPasswordRequest(payload: ForgotPasswordResetPayload) {
+  const { data } = await fetchHttpClient.post<ApiResponse<void>>(
+    "/Auth/forgot-password/reset",
     payload,
   );
   return data;

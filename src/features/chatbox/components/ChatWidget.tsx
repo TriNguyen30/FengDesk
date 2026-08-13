@@ -36,11 +36,10 @@ export default function ChatWidget() {
 
   return (
     <div
-      className={`fixed z-40 flex flex-col items-end gap-3 ${
-        isOpen
+      className={`fixed z-40 flex flex-col items-end gap-3 ${isOpen
           ? "bottom-0 right-[max(1rem,env(safe-area-inset-right))]"
           : "bottom-[max(1rem,env(safe-area-inset-bottom))] right-[max(1rem,env(safe-area-inset-right))]"
-      }`}
+        }`}
     >
       {isOpen && user && (
         <ChatPanel
@@ -73,6 +72,9 @@ export default function ChatWidget() {
           aria-label={activeName ? `Mở chat với ${activeName}` : "Mở tin nhắn"}
           aria-expanded={isOpen}
         >
+          {/* Constant breathe effect */}
+          <span className="pointer-events-none absolute inset-0 -z-10 rounded-full ring-[8px] ring-primary/20 animate-pulse opacity-100" />
+
           {/* Pulse vòng tròn khi có tin chưa đọc — cùng kiểu nháy của panel consent khi nhân viên join phòng. */}
           {unreadCount > 0 && (
             <span className="pointer-events-none absolute inset-0 rounded-full ring-2 ring-primary/60 animate-ping" />

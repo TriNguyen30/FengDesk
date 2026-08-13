@@ -19,6 +19,7 @@ import {
   Maximize2,
   X,
   Truck,
+  Sparkles,
 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { toast } from "sonner";
@@ -45,6 +46,7 @@ import {
 import { setAuthModal } from "@/features/auth/store/authSlice";
 import { cleanRichTextHtml } from "@/utils";
 import ProductFitPanel from "@/features/recommendation/components/element-vector/ProductFitPanel";
+import { useAiAssistant } from "@/features/chatbox/hooks/useAiAssistant";
 import FeatureBar from "@/components/ui/FeatureBar";
 import CommitmentPage from "@/components/ui/CommitmentPage";
 import { getVibes, getStyles } from "@/features/products/api/taxonomy.api";
@@ -78,6 +80,7 @@ export default function ProductDetailPage() {
   const [viewMode, setViewMode] = useState<"image" | "3d">("image");
   const dispatch = useAppDispatch();
   const isAuthenticated = useAppSelector((s) => !!s.auth.token);
+  const { open: openAiAssistant } = useAiAssistant();
 
   // Guard chống double-click: ref chặn đồng bộ (2 click cùng tick), state để disable nút cho UX.
   const openingChatRef = useRef(false);
@@ -108,7 +111,7 @@ export default function ProductDetailPage() {
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
-    
+
     Promise.all([getVibes(), getStyles()])
       .then(([vibeRes, styleRes]) => {
         const map: Record<string, string> = {};
@@ -473,9 +476,8 @@ export default function ProductDetailPage() {
             {/* Main image / 3D viewer */}
             <div
               id="product-media-viewer"
-              className={`relative aspect-square w-full overflow-hidden rounded-2xl shadow-inner ring-1 ring-black/5 group select-none ${
-                viewMode === "3d" ? "" : "cursor-zoom-in"
-              }`}
+              className={`relative aspect-square w-full overflow-hidden rounded-2xl shadow-inner ring-1 ring-black/5 group select-none ${viewMode === "3d" ? "" : "cursor-zoom-in"
+                }`}
               onMouseMove={viewMode === "3d" ? undefined : handleMouseMove}
               onMouseEnter={viewMode === "3d" ? undefined : () => setIsHovering(true)}
               onMouseLeave={viewMode === "3d" ? undefined : () => setIsHovering(false)}
@@ -594,19 +596,29 @@ export default function ProductDetailPage() {
 
           {/* ── Right: Info ───────────────────────────────────────────────── */}
           <div className="flex flex-1 flex-col gap-5 border-t border-gray-100 p-4 sm:border-l sm:border-t-0 sm:p-6">
-            {/* Categories */}
-            {product.categories.length > 0 && (
-              <div className="flex flex-wrap gap-1.5">
-                {product.categories.map((cat) => (
-                  <span
-                    key={cat.id}
-                    className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary"
-                  >
-                    {cat.name}
-                  </span>
-                ))}
+            {/* Categories & AI Assistant */}
+            <div className="flex flex-wrap items-center gap-1.5">
+              {product.categories.length > 0 && product.categories.map((cat) => (
+                <span
+                  key={cat.id}
+                  className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary"
+                >
+                  {cat.name}
+                </span>
+              ))}
+
+              <div className="relative inline-flex shrink-0 overflow-hidden rounded-full p-[1px]">
+                <span className="absolute inset-[-1000%] animate-[spin_2s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,transparent_0%,transparent_60%,var(--color-primary)_100%)]" />
+                <button
+                  onClick={openAiAssistant}
+                  className="relative flex items-center gap-1 rounded-full bg-white px-2.5 py-0.5 text-xs font-semibold text-primary transition-colors hover:bg-gray-50 cursor-pointer"
+                  title="Tư vấn phong thủy & không gian với AI"
+                >
+                  <Sparkles className="h-3.5 w-3.5" />
+                  <span>{t("appearance.consult.title")}</span>
+                </button>
               </div>
-            )}
+            </div>
 
             {/* Name + store */}
             <div>
@@ -634,6 +646,13 @@ export default function ProductDetailPage() {
                     </p>
                   </>
                 )}
+                <span className="hidden sm:block h-3 w-px bg-gray-300"></span>
+                <p>
+                  {t("product_detail.labels.status")}{" "}
+                  <span className={`font-medium ${outOfStock ? 'text-red-500' : 'text-green-600'}`}>
+                    {outOfStock ? t("product_detail.actions.out_of_stock_sm") : t("product_detail.actions.in_stock")}
+                  </span>
+                </p>
               </div>
             </div>
 
