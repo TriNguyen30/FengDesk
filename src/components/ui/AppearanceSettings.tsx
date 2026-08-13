@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { ChevronDown, Monitor } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import ThemeToggle from "@/components/ui/ThemeToggle";
 import {
   CHAT_SURFACES,
@@ -19,20 +20,20 @@ import {
 type Choice<T> = { value: T; label: string };
 
 const CLOUD_MODES: ReadonlyArray<Choice<EffectSettings["cloudMode"]>> = [
-  { value: "playing", label: "Chạy" },
-  { value: "paused", label: "Đứng im" },
-  { value: "hidden", label: "Ẩn" },
+  { value: "playing", label: "appearance.cloud.playing" },
+  { value: "paused", label: "appearance.cloud.paused" },
+  { value: "hidden", label: "appearance.cloud.hidden" },
 ];
 
 const RAIL_SURFACES: ReadonlyArray<Choice<EffectSettings["railSurface"]>> = [
-  { value: "blur", label: "Kính mờ" },
-  { value: "tint", label: "Đục màu" },
+  { value: "blur", label: "appearance.rail.blur" },
+  { value: "tint", label: "appearance.rail.tint" },
 ];
 
 const FLUID_RAILS: ReadonlyArray<Choice<EffectSettings["fluidRail"]>> = [
-  { value: "full", label: "Kín màn" },
-  { value: "clip", label: "Chừa dải" },
-  { value: "stitch", label: "Nối mép" },
+  { value: "full", label: "appearance.fluid.full" },
+  { value: "clip", label: "appearance.fluid.clip" },
+  { value: "stitch", label: "appearance.fluid.stitch" },
 ];
 
 /** Nhóm nút chọn một-trong-nhiều. `value` là null khi không mục nào khớp. */
@@ -50,6 +51,7 @@ function Segmented<T extends string | number>({
   /** Viền sáng để báo "đang ở trạng thái tùy chỉnh". */
   highlight?: boolean;
 }) {
+  const { t } = useTranslation();
   return (
     <div
       role="radiogroup"
@@ -72,7 +74,7 @@ function Segmented<T extends string | number>({
                 : "text-text-secondary hover:bg-neutral-dark hover:text-text-primary"
               }`}
           >
-            {choice.label}
+            {t(choice.label)}
           </button>
         );
       })}
@@ -141,6 +143,7 @@ function Field({ label, hint, children }: { label: string; hint?: string; childr
  * hiện tại thôi khớp preset nào, nhóm nút bỏ chọn hết và sáng viền xanh.
  */
 export default function AppearanceSettings() {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [advanced, setAdvanced] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -177,21 +180,21 @@ export default function AppearanceSettings() {
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-haspopup="dialog"
-        aria-label="Cài đặt hiệu ứng"
+        aria-label={t("appearance.title")}
         className="flex min-w-[36px] cursor-pointer flex-col items-center gap-0.5 rounded-lg px-1 py-1 text-gray-700 transition-colors hover:text-primary sm:min-w-[44px]"
       >
         <Monitor size={22} strokeWidth={1.8} />
-        <span className="hidden text-[10px] font-medium sm:block sm:text-xs">Giao diện</span>
+        <span className="hidden text-[10px] font-medium sm:block sm:text-xs">{t("appearance.theme")}</span>
       </button>
 
       {open && (
         <div
           role="dialog"
-          aria-label="Cài đặt hiệu ứng"
+          aria-label={t("appearance.title")}
           className="nav-dropdown-enter absolute right-0 top-full z-50 flex w-72 flex-col gap-1 rounded-lg bg-white p-3 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] ring-1 ring-black/5"
         >
           <Field
-            label="Hiệu ứng nền"
+            label={t("appearance.bg_effect")}
             hint={
               preset === null
                 ? ""
@@ -199,7 +202,7 @@ export default function AppearanceSettings() {
             }
           >
             <Segmented
-              label="Mức hiệu ứng nền"
+              label={t("appearance.bg_effect_level")}
               value={preset}
               choices={EFFECT_PRESET_LABELS}
               onChange={applyEffectPreset}
@@ -213,7 +216,7 @@ export default function AppearanceSettings() {
             aria-expanded={advanced}
             className="flex w-full cursor-pointer items-center gap-2 rounded-lg px-1 py-2 text-sm font-medium text-text-secondary transition-colors hover:text-text-primary"
           >
-            <span className="flex-1 text-left">Nâng cao</span>
+            <span className="flex-1 text-left">{t("appearance.advanced")}</span>
 
             <ChevronDown
               size={16}
@@ -237,7 +240,7 @@ export default function AppearanceSettings() {
                 </div>
 
                 <Field
-                  label={`Fluid: ${effects.fluidFps === 0 ? "Tắt" : `${effects.fluidFps} FPS`}`}
+                  label={effects.fluidFps === 0 ? t("appearance.fluid_fps_off") : t("appearance.fluid_fps", { fps: effects.fluidFps })}
                 >
                   <input
                     type="range"
@@ -246,14 +249,13 @@ export default function AppearanceSettings() {
                     step={1}
                     value={Math.max(0, FPS_STEPS.indexOf(effects.fluidFps as never))}
                     onChange={(e) => setEffects({ fluidFps: FPS_STEPS[Number(e.target.value)] })}
-                    aria-label="Khung hình mỗi giây của lớp fluid"
+                    aria-label={t("appearance.fluid_fps_aria")}
                     className="w-full cursor-pointer accent-primary"
                   />
                 </Field>
 
                 <Field
-                  label={`Fluid frequency: ${effects.fluidDrift === 0 ? "Tắt" : `${effects.fluidDrift}/${FLUID_DRIFT_MAX}`
-                    }`}
+                  label={effects.fluidDrift === 0 ? t("appearance.fluid_drift_off") : t("appearance.fluid_drift", { drift: effects.fluidDrift, max: FLUID_DRIFT_MAX })}
                 >
                   <input
                     type="range"
@@ -262,26 +264,26 @@ export default function AppearanceSettings() {
                     step={1}
                     value={effects.fluidDrift}
                     onChange={(e) => setEffects({ fluidDrift: Number(e.target.value) })}
-                    aria-label="Cường độ fluid trôi nổi ngẫu nhiên"
+                    aria-label={t("appearance.fluid_drift_aria")}
                     className="w-full cursor-pointer accent-primary"
                   />
                 </Field>
 
                 <Field
-                  label="Fluid sau dải nội dung"
-                  hint="Nối mép: bỏ hẳn phần giữa khỏi lưới nên rẻ hơn, đổi lại sóng hất vào mép trái sẽ bật ra ở mép phải ngay lập tức."
+                  label={t("appearance.fluid_rail")}
+                  hint={t("appearance.fluid_rail_hint")}
                 >
                   <Segmented
-                    label="Fluid sau dải nội dung"
+                    label={t("appearance.fluid_rail")}
                     value={effects.fluidRail}
                     choices={FLUID_RAILS}
                     onChange={(fluidRail) => setEffects({ fluidRail })}
                   />
                 </Field>
 
-                <Field label="Mảng mây">
+                <Field label={t("appearance.cloud_mode")}>
                   <Segmented
-                    label="Mảng mây"
+                    label={t("appearance.cloud_mode")}
                     value={effects.cloudMode}
                     choices={CLOUD_MODES}
                     onChange={(cloudMode) => setEffects({ cloudMode })}
@@ -289,20 +291,20 @@ export default function AppearanceSettings() {
                 </Field>
 
                 <Field
-                  label="Dải nội dung"
-                  hint="Kính mờ đẹp nhất nhưng đắt nhất: mỗi khung hình là một lượt làm mờ gần kín màn."
+                  label={t("appearance.rail_surface")}
+                  hint={t("appearance.rail_surface_hint")}
                 >
                   <Segmented
-                    label="Chất liệu dải nội dung"
+                    label={t("appearance.rail_surface_label")}
                     value={effects.railSurface}
                     choices={RAIL_SURFACES}
                     onChange={(railSurface) => setEffects({ railSurface })}
                   />
                 </Field>
 
-                <Field label="Nền khung chat AI">
+                <Field label={t("appearance.chat_bg")}>
                   <Segmented
-                    label="Chất liệu nền khung chat AI"
+                    label={t("appearance.chat_bg_label")}
                     value={chatSurface}
                     choices={CHAT_SURFACES}
                     onChange={setChatSurface}
@@ -311,13 +313,13 @@ export default function AppearanceSettings() {
 
                 <div className="py-1">
                   <Toggle
-                    label="Hiệu ứng rê chuột"
+                    label={t("appearance.hover_effects")}
                     on={effects.hoverEffects}
                     onChange={(hoverEffects) => setEffects({ hoverEffects })}
                   />
 
                   <Toggle
-                    label="Chuyển cảnh giữa trang"
+                    label={t("appearance.page_transition")}
                     on={effects.pageTransition}
                     onChange={(pageTransition) => setEffects({ pageTransition })}
                   />

@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ChevronRight, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 import Modal from "@/components/ui/Modal";
 import Calendar from "@/components/ui/Calendar";
 import {
@@ -33,6 +34,7 @@ const submitButtonClass =
   "mt-1 flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-primary py-2.5 text-sm font-semibold text-white transition hover:bg-primary-dark active:bg-green-800 disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer";
 
 export default function PopUpSignUp({ open, onClose, onSwitchToLogin }: PopUpSignUpProps) {
+  const { t } = useTranslation();
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [email, setEmail] = useState("");
   const [registrationToken, setRegistrationToken] = useState("");
@@ -93,14 +95,14 @@ export default function PopUpSignUp({ open, onClose, onSwitchToLogin }: PopUpSig
     try {
       const response = await registerInitiateRequest({ email: values.email });
       if (!response.isSuccess) {
-        toast.error(response.message || "Không thể gửi OTP");
+        toast.error(response.message || t("signup.toast.init_failed"));
         return;
       }
       setEmail(values.email);
       setStep(2);
-      toast.success(response.message || "Mã OTP đã được gửi đến email");
+      toast.success(response.message || t("signup.toast.init_success"));
     } catch (error) {
-      toast.error(getAuthErrorMessage(error, "Có lỗi xảy ra. Vui lòng thử lại."));
+      toast.error(getAuthErrorMessage(error, t("signup.toast.init_error")));
     }
   };
 
@@ -108,14 +110,14 @@ export default function PopUpSignUp({ open, onClose, onSwitchToLogin }: PopUpSig
     try {
       const response = await registerVerifyRequest({ email, otp: values.otp });
       if (!response.isSuccess || !response.data?.registrationToken) {
-        toast.error(response.message || "Xác thực OTP thất bại");
+        toast.error(response.message || t("signup.toast.verify_failed"));
         return;
       }
       setRegistrationToken(response.data.registrationToken);
       setStep(3);
-      toast.success("Xác thực email thành công");
+      toast.success(t("signup.toast.verify_success"));
     } catch (error) {
-      toast.error(getAuthErrorMessage(error, "Mã OTP không hợp lệ"));
+      toast.error(getAuthErrorMessage(error, t("signup.toast.verify_error")));
     }
   };
 
@@ -131,15 +133,15 @@ export default function PopUpSignUp({ open, onClose, onSwitchToLogin }: PopUpSig
       });
 
       if (!response.isSuccess) {
-        toast.error(response.message || "Đăng ký thất bại");
+        toast.error(response.message || t("signup.toast.finalize_failed"));
         return;
       }
 
-      toast.success(response.message || "Đăng ký thành công! Vui lòng đăng nhập.");
+      toast.success(response.message || t("signup.toast.finalize_success"));
       handleClose();
       if (onSwitchToLogin) onSwitchToLogin();
     } catch (error) {
-      toast.error(getAuthErrorMessage(error, "Đăng ký thất bại. Vui lòng thử lại."));
+      toast.error(getAuthErrorMessage(error, t("signup.toast.finalize_error")));
     }
   };
 
@@ -153,12 +155,11 @@ export default function PopUpSignUp({ open, onClose, onSwitchToLogin }: PopUpSig
             noValidate
           >
             <p className="text-sm text-gray-600 mb-2">
-              Vui lòng nhập email của bạn để bắt đầu đăng ký. Chúng tôi sẽ gửi mã xác nhận đến email
-              này.
+              {t("signup.step1.desc")}
             </p>
             <AuthField
               id="signup-initiate-email"
-              label="Email"
+              label={t("signup.step1.email_label")}
               error={initiateForm.formState.errors.email?.message}
             >
               <input
@@ -170,7 +171,7 @@ export default function PopUpSignUp({ open, onClose, onSwitchToLogin }: PopUpSig
                   initiateForm.formState.errors.email ? "signup-initiate-email-error" : undefined
                 }
                 className={inputClassName(Boolean(initiateForm.formState.errors.email))}
-                placeholder="you@example.com"
+                placeholder={t("signup.step1.email_placeholder")}
                 {...initiateForm.register("email")}
               />
             </AuthField>
@@ -180,7 +181,7 @@ export default function PopUpSignUp({ open, onClose, onSwitchToLogin }: PopUpSig
               disabled={initiateForm.formState.isSubmitting}
               className={submitButtonClass}
             >
-              {initiateForm.formState.isSubmitting ? "Đang gửi OTP..." : "Tiếp tục"}
+              {initiateForm.formState.isSubmitting ? t("signup.step1.submitting") : t("signup.step1.submit")}
               <ChevronRight size={16} />
             </button>
           </form>
@@ -195,7 +196,7 @@ export default function PopUpSignUp({ open, onClose, onSwitchToLogin }: PopUpSig
           >
             <div>
               <p className="mb-1 text-sm text-gray-600">
-                Nhập mã 6 chữ số vừa gửi đến{" "}
+                {t("signup.step2.desc_part1")}{" "}
                 <span className="font-semibold text-gray-900">{email}</span>
               </p>
               <button
@@ -203,7 +204,7 @@ export default function PopUpSignUp({ open, onClose, onSwitchToLogin }: PopUpSig
                 onClick={() => setStep(1)}
                 className="text-xs text-green-600 hover:text-green-700 cursor-pointer"
               >
-                Đổi email
+                {t("signup.step2.change_email")}
               </button>
             </div>
 
@@ -215,13 +216,13 @@ export default function PopUpSignUp({ open, onClose, onSwitchToLogin }: PopUpSig
             />
 
             <p className="text-center text-xs text-gray-500">
-              Không nhận được mã?{" "}
+              {t("signup.step2.no_code")}{" "}
               <button
                 type="button"
                 onClick={() => initiateForm.handleSubmit(onInitiateSubmit)()}
                 className="font-medium text-green-600 hover:text-green-700 cursor-pointer"
               >
-                Gửi lại
+                {t("signup.step2.resend")}
               </button>
             </p>
 
@@ -230,7 +231,7 @@ export default function PopUpSignUp({ open, onClose, onSwitchToLogin }: PopUpSig
               disabled={verifyForm.formState.isSubmitting || verifyForm.watch("otp").length < 6}
               className={submitButtonClass}
             >
-              Xác nhận
+              {t("signup.step2.submit")}
               <ChevronRight size={16} />
             </button>
           </form>
@@ -245,7 +246,7 @@ export default function PopUpSignUp({ open, onClose, onSwitchToLogin }: PopUpSig
           >
             <AuthField
               id="signup-fullname"
-              label="Họ và tên"
+              label={t("signup.step3.fullname_label")}
               error={finalizeForm.formState.errors.fullName?.message}
             >
               <input
@@ -257,7 +258,7 @@ export default function PopUpSignUp({ open, onClose, onSwitchToLogin }: PopUpSig
                   finalizeForm.formState.errors.fullName ? "signup-fullname-error" : undefined
                 }
                 className={inputClassName(Boolean(finalizeForm.formState.errors.fullName))}
-                placeholder="Nguyễn Văn A"
+                placeholder={t("signup.step3.fullname_placeholder")}
                 {...finalizeForm.register("fullName")}
               />
             </AuthField>
@@ -265,7 +266,7 @@ export default function PopUpSignUp({ open, onClose, onSwitchToLogin }: PopUpSig
             <div className="flex gap-3">
               <AuthField
                 id="signup-phone"
-                label="Số điện thoại"
+                label={t("signup.step3.phone_label")}
                 error={finalizeForm.formState.errors.phone?.message}
               >
                 <input
@@ -277,7 +278,7 @@ export default function PopUpSignUp({ open, onClose, onSwitchToLogin }: PopUpSig
                     finalizeForm.formState.errors.phone ? "signup-phone-error" : undefined
                   }
                   className={inputClassName(Boolean(finalizeForm.formState.errors.phone))}
-                  placeholder="09xxxxxxxx"
+                  placeholder={t("signup.step3.phone_placeholder")}
                   {...finalizeForm.register("phone", {
                     setValueAs: (value) => String(value).replace(/\D/g, ""),
                   })}
@@ -286,7 +287,7 @@ export default function PopUpSignUp({ open, onClose, onSwitchToLogin }: PopUpSig
 
               <AuthField
                 id="signup-dob"
-                label="Ngày sinh"
+                label={t("signup.step3.dob_label")}
                 error={finalizeForm.formState.errors.dateOfBirth?.message}
               >
                 <div className="relative" ref={calendarRef}>
@@ -308,7 +309,7 @@ export default function PopUpSignUp({ open, onClose, onSwitchToLogin }: PopUpSig
                       inputClassName(Boolean(finalizeForm.formState.errors.dateOfBirth)) +
                       " cursor-pointer bg-white"
                     }
-                    placeholder="DD/MM/YYYY"
+                    placeholder={t("signup.step3.dob_placeholder")}
                   />
                   {showCalendar && (
                     <div className="absolute top-full right-0 z-50 mt-1">
@@ -327,7 +328,7 @@ export default function PopUpSignUp({ open, onClose, onSwitchToLogin }: PopUpSig
 
             <AuthField
               id="signup-gender"
-              label="Giới tính"
+              label={t("signup.step3.gender_label")}
               error={finalizeForm.formState.errors.gender?.message}
             >
               <select
@@ -335,18 +336,18 @@ export default function PopUpSignUp({ open, onClose, onSwitchToLogin }: PopUpSig
                 className={inputClassName(Boolean(finalizeForm.formState.errors.gender))}
                 {...finalizeForm.register("gender")}
               >
-                <option value={1}>Nam</option>
-                <option value={2}>Nữ</option>
-                <option value={3}>Khác</option>
+                <option value={1}>{t("signup.step3.gender_male")}</option>
+                <option value={2}>{t("signup.step3.gender_female")}</option>
+                <option value={3}>{t("signup.step3.gender_other")}</option>
               </select>
             </AuthField>
 
             <AuthField
               id="signup-password"
-              label="Mật khẩu"
+              label={t("signup.step3.password_label")}
               error={finalizeForm.formState.errors.password?.message}
               hint={
-                <span className="text-xs text-gray-400">Tối thiểu 5 ký tự, có hoa/thường/số</span>
+                <span className="text-xs text-gray-400">{t("signup.step3.password_hint")}</span>
               }
             >
               <div className="relative">
@@ -359,14 +360,14 @@ export default function PopUpSignUp({ open, onClose, onSwitchToLogin }: PopUpSig
                     finalizeForm.formState.errors.password ? "signup-password-error" : undefined
                   }
                   className={inputClassName(Boolean(finalizeForm.formState.errors.password))}
-                  placeholder="••••••••"
+                  placeholder={t("signup.step3.password_placeholder")}
                   {...finalizeForm.register("password")}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword((v) => !v)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer"
-                  aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                  aria-label={showPassword ? t("signup.step3.hide_password") : t("signup.step3.show_password")}
                 >
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
@@ -375,7 +376,7 @@ export default function PopUpSignUp({ open, onClose, onSwitchToLogin }: PopUpSig
 
             <AuthField
               id="signup-confirm-password"
-              label="Xác nhận mật khẩu"
+              label={t("signup.step3.confirm_password_label")}
               error={finalizeForm.formState.errors.confirmPassword?.message}
             >
               <div className="relative">
@@ -390,14 +391,14 @@ export default function PopUpSignUp({ open, onClose, onSwitchToLogin }: PopUpSig
                       : undefined
                   }
                   className={inputClassName(Boolean(finalizeForm.formState.errors.confirmPassword))}
-                  placeholder="••••••••"
+                  placeholder={t("signup.step3.confirm_password_placeholder")}
                   {...finalizeForm.register("confirmPassword")}
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword((v) => !v)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer"
-                  aria-label={showConfirmPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                  aria-label={showConfirmPassword ? t("signup.step3.hide_password") : t("signup.step3.show_password")}
                 >
                   {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
@@ -409,7 +410,7 @@ export default function PopUpSignUp({ open, onClose, onSwitchToLogin }: PopUpSig
               disabled={finalizeForm.formState.isSubmitting}
               className={submitButtonClass}
             >
-              {finalizeForm.formState.isSubmitting ? "Đang đăng ký..." : "Hoàn tất đăng ký"}
+              {finalizeForm.formState.isSubmitting ? t("signup.step3.submitting") : t("signup.step3.submit")}
               <ChevronRight size={16} />
             </button>
           </form>
@@ -421,20 +422,20 @@ export default function PopUpSignUp({ open, onClose, onSwitchToLogin }: PopUpSig
   };
 
   return (
-    <Modal open={open} title="Đăng ký" onClose={handleClose}>
+    <Modal open={open} title={t("signup.title")} onClose={handleClose}>
       <div className="flex flex-col gap-5">
         {renderStep()}
 
         {step === 1 && <SocialAuthButtons dividerLabel="HOẶC" onSuccess={handleClose} />}
 
         <p className="text-center text-sm text-gray-600">
-          Đã có tài khoản?{" "}
+          {t("signup.has_account")}{" "}
           <button
             type="button"
             onClick={onSwitchToLogin}
             className="font-semibold text-primary hover:text-primary-dark cursor-pointer"
           >
-            Đăng nhập ngay
+            {t("signup.login_now")}
           </button>
         </p>
       </div>

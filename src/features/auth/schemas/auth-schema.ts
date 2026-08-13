@@ -56,3 +56,21 @@ export const signUpFinalizeSchema = z
   });
 
 export type SignUpFinalizeFormValues = z.infer<typeof signUpFinalizeSchema>;
+
+export const forgotPasswordEmailSchema = z.object({
+  email: emailField,
+});
+
+export type ForgotPasswordEmailFormValues = z.infer<typeof forgotPasswordEmailSchema>;
+
+export const forgotPasswordResetSchema = z
+  .object({
+    password: passwordField,
+    confirmPassword: z.string().min(1, "Vui lòng xác nhận mật khẩu"),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Mật khẩu xác nhận không khớp",
+    path: ["confirmPassword"],
+  });
+
+export type ForgotPasswordResetFormValues = z.infer<typeof forgotPasswordResetSchema>;

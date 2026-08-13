@@ -859,7 +859,7 @@
       "title": "No invitations",
       "desc": "When someone invites you to be a staff member, the invitation will appear here."
     },
-    "card": {
+      "card": {
       "title": "Store staff invitation",
       "inviter": "Invited by:",
       "note": "If you accept, you will have permission to receive and deliver orders for this store.",
@@ -872,6 +872,153 @@
         "reject_success": "Successfully rejected invitation.",
         "exception": "An error occurred."
       }
+    }
+  },
+  "forgot_password": {
+    "title": "Forgot Password",
+    "email_step": {
+      "desc": "Enter your email to receive a password recovery code.",
+      "submit": "Send code",
+      "submitting": "Sending..."
+    },
+    "otp_step": {
+      "desc": "Enter the 6-digit OTP code sent to {{email}}.",
+      "submit": "Confirm",
+      "submitting": "Confirming...",
+      "resend": "Resend code"
+    },
+    "reset_step": {
+      "desc": "Enter your new password.",
+      "new_password": "New Password",
+      "confirm_password": "Confirm New Password",
+      "submit": "Reset Password",
+      "submitting": "Resetting..."
+    },
+    "back_to_login": "Back to login",
+    "toast": {
+      "init_success": "OTP code sent to your email.",
+      "init_error": "Failed to send OTP code. Please try again.",
+      "verify_success": "Verified successfully.",
+      "verify_error": "Invalid or expired OTP code.",
+      "reset_success": "Password reset successfully. Please login again.",
+      "reset_error": "Failed to reset password. Please try again."
+    }
+  },
+  "login": {
+    "title": "Login",
+    "email_label": "Email",
+    "email_placeholder": "you@example.com",
+    "password_label": "Password",
+    "password_placeholder": "••••••••",
+    "hide_password": "Hide password",
+    "show_password": "Show password",
+    "remember_me": "Remember me",
+    "submitting": "Logging in...",
+    "submit": "Login",
+    "forgot_password": "Forgot password?",
+    "no_account": "Don't have an account?",
+    "register_now": "Register now",
+    "toast": {
+      "login_failed": "Login failed",
+      "login_success": "Login successful",
+      "login_failed_retry": "Login failed. Please try again."
+    }
+  },
+  "signup": {
+    "title": "Register",
+    "step1": {
+      "desc": "Please enter your email to start registering. We will send a verification code to this email.",
+      "email_label": "Email",
+      "email_placeholder": "you@example.com",
+      "submitting": "Sending OTP...",
+      "submit": "Continue"
+    },
+    "step2": {
+      "desc_part1": "Enter the 6-digit code sent to",
+      "change_email": "Change email",
+      "no_code": "Didn't receive the code?",
+      "resend": "Resend",
+      "submit": "Confirm"
+    },
+    "step3": {
+      "fullname_label": "Full Name",
+      "fullname_placeholder": "John Doe",
+      "phone_label": "Phone Number",
+      "phone_placeholder": "09xxxxxxxx",
+      "dob_label": "Date of Birth",
+      "dob_placeholder": "DD/MM/YYYY",
+      "gender_label": "Gender",
+      "gender_male": "Male",
+      "gender_female": "Female",
+      "gender_other": "Other",
+      "password_label": "Password",
+      "password_hint": "Min 5 chars, with upper/lower/number",
+      "password_placeholder": "••••••••",
+      "confirm_password_label": "Confirm Password",
+      "confirm_password_placeholder": "••••••••",
+      "hide_password": "Hide password",
+      "show_password": "Show password",
+      "submitting": "Registering...",
+      "submit": "Complete Registration"
+    },
+    "has_account": "Already have an account?",
+    "login_now": "Login now",
+    "toast": {
+      "init_failed": "Failed to send OTP",
+      "init_success": "OTP sent to email",
+      "init_error": "An error occurred. Please try again.",
+      "verify_failed": "OTP verification failed",
+      "verify_success": "Email verified successfully",
+      "verify_error": "Invalid OTP code",
+      "finalize_failed": "Registration failed",
+      "finalize_success": "Registered successfully! Please login.",
+      "finalize_error": "Registration failed. Please try again."
+    }
+  },
+  "appearance": {
+    "title": "Effect Settings",
+    "theme": "Appearance",
+    "bg_effect": "Background Effects",
+    "bg_effect_level": "Effect Level",
+    "advanced": "Advanced",
+    "fluid_fps": "Fluid: {{fps}} FPS",
+    "fluid_fps_off": "Fluid: Off",
+    "fluid_fps_aria": "Fluid frames per second",
+    "fluid_drift": "Fluid frequency: {{drift}}/{{max}}",
+    "fluid_drift_off": "Fluid frequency: Off",
+    "fluid_drift_aria": "Random fluid drift intensity",
+    "fluid_rail": "Fluid behind content rail",
+    "fluid_rail_hint": "Stitch: removes middle part from grid so it's cheaper, but waves hitting left edge instantly bounce out on right edge.",
+    "cloud_mode": "Cloud Mode",
+    "rail_surface": "Content Rail",
+    "rail_surface_hint": "Glass is nicest but most expensive: every frame is a near full-screen gaussian blur.",
+    "rail_surface_label": "Content Rail Material",
+    "chat_bg": "AI Chat Background",
+    "chat_bg_label": "AI Chat Background Material",
+    "hover_effects": "Hover Effects",
+    "page_transition": "Page Transitions",
+    "presets": {
+      "full": "Full",
+      "medium": "Medium",
+      "off": "Off"
+    },
+    "chat": {
+      "blur": "Blur",
+      "off": "Off"
+    },
+    "cloud": {
+      "playing": "Playing",
+      "paused": "Paused",
+      "hidden": "Hidden"
+    },
+    "rail": {
+      "blur": "Glass",
+      "tint": "Tinted"
+    },
+    "fluid": {
+      "full": "Full screen",
+      "clip": "Clipped",
+      "stitch": "Stitched"
     }
   }
 }

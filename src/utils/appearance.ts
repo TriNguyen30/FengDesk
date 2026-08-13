@@ -32,8 +32,8 @@ const LEGACY_LIQUID_CHAT_KEY = "fd-liquid-chat";
 export type ChatSurface = "blur" | "off";
 
 export const CHAT_SURFACES: ReadonlyArray<{ value: ChatSurface; label: string }> = [
-  { value: "blur", label: "Mờ" },
-  { value: "off", label: "Tắt" },
+  { value: "blur", label: "appearance.chat.blur" },
+  { value: "off", label: "appearance.chat.off" },
 ];
 
 // ── Hiệu ứng nền ─────────────────────────────────────────────────────────────
@@ -139,9 +139,9 @@ export const EFFECT_PRESETS: Record<EffectPreset, EffectSettings> = {
 };
 
 export const EFFECT_PRESET_LABELS: ReadonlyArray<{ value: EffectPreset; label: string }> = [
-  { value: "full", label: "Đầy đủ" },
-  { value: "medium", label: "Vừa" },
-  { value: "off", label: "Tắt" },
+  { value: "full", label: "appearance.presets.full" },
+  { value: "medium", label: "appearance.presets.medium" },
+  { value: "off", label: "appearance.presets.off" },
 ];
 
 const EFFECTS_DEFAULT = EFFECT_PRESETS.full;

@@ -873,5 +873,152 @@
         "exception": "Đã xảy ra lỗi."
       }
     }
+  },
+  "forgot_password": {
+    "title": "Quên mật khẩu",
+    "email_step": {
+      "desc": "Nhập email của bạn để nhận mã khôi phục mật khẩu.",
+      "submit": "Gửi mã",
+      "submitting": "Đang gửi..."
+    },
+    "otp_step": {
+      "desc": "Nhập mã OTP gồm 6 chữ số đã được gửi đến email {{email}}.",
+      "submit": "Xác nhận",
+      "submitting": "Đang xác nhận...",
+      "resend": "Gửi lại mã"
+    },
+    "reset_step": {
+      "desc": "Nhập mật khẩu mới của bạn.",
+      "new_password": "Mật khẩu mới",
+      "confirm_password": "Xác nhận mật khẩu mới",
+      "submit": "Đổi mật khẩu",
+      "submitting": "Đang đổi..."
+    },
+    "back_to_login": "Quay lại đăng nhập",
+    "toast": {
+      "init_success": "Đã gửi mã OTP đến email của bạn.",
+      "init_error": "Không thể gửi mã OTP. Vui lòng thử lại.",
+      "verify_success": "Xác thực thành công.",
+      "verify_error": "Mã OTP không hợp lệ hoặc đã hết hạn.",
+      "reset_success": "Đổi mật khẩu thành công. Vui lòng đăng nhập lại.",
+      "reset_error": "Không thể đổi mật khẩu. Vui lòng thử lại."
+    }
+  },
+  "login": {
+    "title": "Đăng nhập",
+    "email_label": "Email",
+    "email_placeholder": "you@example.com",
+    "password_label": "Mật khẩu",
+    "password_placeholder": "••••••••",
+    "hide_password": "Ẩn mật khẩu",
+    "show_password": "Hiện mật khẩu",
+    "remember_me": "Ghi nhớ đăng nhập",
+    "submitting": "Đang đăng nhập...",
+    "submit": "Đăng nhập",
+    "forgot_password": "Quên mật khẩu?",
+    "no_account": "Chưa có tài khoản?",
+    "register_now": "Đăng ký ngay",
+    "toast": {
+      "login_failed": "Đăng nhập thất bại",
+      "login_success": "Đăng nhập thành công",
+      "login_failed_retry": "Đăng nhập thất bại. Vui lòng thử lại."
+    }
+  },
+  "signup": {
+    "title": "Đăng ký",
+    "step1": {
+      "desc": "Vui lòng nhập email của bạn để bắt đầu đăng ký. Chúng tôi sẽ gửi mã xác nhận đến email này.",
+      "email_label": "Email",
+      "email_placeholder": "you@example.com",
+      "submitting": "Đang gửi OTP...",
+      "submit": "Tiếp tục"
+    },
+    "step2": {
+      "desc_part1": "Nhập mã 6 chữ số vừa gửi đến",
+      "change_email": "Đổi email",
+      "no_code": "Không nhận được mã?",
+      "resend": "Gửi lại",
+      "submit": "Xác nhận"
+    },
+    "step3": {
+      "fullname_label": "Họ và tên",
+      "fullname_placeholder": "Nguyễn Văn A",
+      "phone_label": "Số điện thoại",
+      "phone_placeholder": "09xxxxxxxx",
+      "dob_label": "Ngày sinh",
+      "dob_placeholder": "DD/MM/YYYY",
+      "gender_label": "Giới tính",
+      "gender_male": "Nam",
+      "gender_female": "Nữ",
+      "gender_other": "Khác",
+      "password_label": "Mật khẩu",
+      "password_hint": "Tối thiểu 5 ký tự, có hoa/thường/số",
+      "password_placeholder": "••••••••",
+      "confirm_password_label": "Xác nhận mật khẩu",
+      "confirm_password_placeholder": "••••••••",
+      "hide_password": "Ẩn mật khẩu",
+      "show_password": "Hiện mật khẩu",
+      "submitting": "Đang đăng ký...",
+      "submit": "Hoàn tất đăng ký"
+    },
+    "has_account": "Đã có tài khoản?",
+    "login_now": "Đăng nhập ngay",
+    "toast": {
+      "init_failed": "Không thể gửi OTP",
+      "init_success": "Mã OTP đã được gửi đến email",
+      "init_error": "Có lỗi xảy ra. Vui lòng thử lại.",
+      "verify_failed": "Xác thực OTP thất bại",
+      "verify_success": "Xác thực email thành công",
+      "verify_error": "Mã OTP không hợp lệ",
+      "finalize_failed": "Đăng ký thất bại",
+      "finalize_success": "Đăng ký thành công! Vui lòng đăng nhập.",
+      "finalize_error": "Đăng ký thất bại. Vui lòng thử lại."
+    }
+  },
+  "appearance": {
+    "title": "Cài đặt hiệu ứng",
+    "theme": "Giao diện",
+    "bg_effect": "Hiệu ứng nền",
+    "bg_effect_level": "Mức hiệu ứng nền",
+    "advanced": "Nâng cao",
+    "fluid_fps": "Fluid: {{fps}} FPS",
+    "fluid_fps_off": "Fluid: Tắt",
+    "fluid_fps_aria": "Khung hình mỗi giây của lớp fluid",
+    "fluid_drift": "Fluid frequency: {{drift}}/{{max}}",
+    "fluid_drift_off": "Fluid frequency: Tắt",
+    "fluid_drift_aria": "Cường độ fluid trôi nổi ngẫu nhiên",
+    "fluid_rail": "Fluid sau dải nội dung",
+    "fluid_rail_hint": "Nối mép: bỏ hẳn phần giữa khỏi lưới nên rẻ hơn, đổi lại sóng hất vào mép trái sẽ bật ra ở mép phải ngay lập tức.",
+    "cloud_mode": "Mảng mây",
+    "rail_surface": "Dải nội dung",
+    "rail_surface_hint": "Kính mờ đẹp nhất nhưng đắt nhất: mỗi khung hình là một lượt làm mờ gần kín màn.",
+    "rail_surface_label": "Chất liệu dải nội dung",
+    "chat_bg": "Nền khung chat AI",
+    "chat_bg_label": "Chất liệu nền khung chat AI",
+    "hover_effects": "Hiệu ứng rê chuột",
+    "page_transition": "Chuyển cảnh giữa trang",
+    "presets": {
+      "full": "Đầy đủ",
+      "medium": "Vừa",
+      "off": "Tắt"
+    },
+    "chat": {
+      "blur": "Mờ",
+      "off": "Tắt"
+    },
+    "cloud": {
+      "playing": "Chạy",
+      "paused": "Đứng im",
+      "hidden": "Ẩn"
+    },
+    "rail": {
+      "blur": "Kính mờ",
+      "tint": "Đục màu"
+    },
+    "fluid": {
+      "full": "Kín màn",
+      "clip": "Chừa dải",
+      "stitch": "Nối mép"
+    }
   }
 }
