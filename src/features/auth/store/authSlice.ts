@@ -7,7 +7,7 @@ interface AuthState {
   refreshToken: string | null;
   user: AuthUser | null;
   role: string | null;
-  authModal: "login" | "signup" | null;
+  authModal: "login" | "signup" | "forgot_password" | null;
 }
 
 const initialState: AuthState = {
@@ -40,7 +40,7 @@ const authSlice = createSlice({
       state.refreshToken = refreshToken;
     },
     // Open/Close auth modal
-    setAuthModal(state, action: PayloadAction<"login" | "signup" | null>) {
+    setAuthModal(state, action: PayloadAction<"login" | "signup" | "forgot_password" | null>) {
       state.authModal = action.payload;
     },
     // Clear credentials on logout (pure action, side-effects should be handled by the caller)

@@ -78,7 +78,7 @@ export default function OrdersPage() {
             display: none;
           }
         `}</style>
-        <div 
+        <div
           className="flex overflow-x-auto gap-1 hide-scrollbar"
           style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
         >
@@ -88,11 +88,10 @@ export default function OrdersPage() {
               <button
                 key={tab.value}
                 onClick={() => setActiveTab(tab.value)}
-                className={`relative whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium transition-colors cursor-pointer shrink-0 outline-none ${
-                  isActive
-                    ? "text-primary"
-                    : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
-                }`}
+                className={`relative whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium transition-colors cursor-pointer shrink-0 outline-none ${isActive
+                  ? "text-primary"
+                  : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+                  }`}
               >
                 {isActive && (
                   <motion.div
@@ -381,7 +380,7 @@ export default function OrdersPage() {
                 <button
                   type="button"
                   onClick={() => setReviewModal({ ...reviewModal, open: false })}
-                  className="rounded border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                  className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 cursor-pointer"
                   disabled={submittingReview}
                 >
                   {t("orders_page.review_modal.cancel")}
@@ -412,7 +411,7 @@ export default function OrdersPage() {
                       setSubmittingReview(false);
                     }
                   }}
-                  className="flex items-center justify-center rounded bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-dark min-w-[100px]"
+                  className="flex items-center justify-center rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-dark min-w-[100px] cursor-pointer"
                   disabled={submittingReview}
                 >
                   {submittingReview ? <Loader2 className="h-4 w-4 animate-spin" /> : t("orders_page.review_modal.submit")}

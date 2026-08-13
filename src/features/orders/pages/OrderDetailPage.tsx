@@ -171,7 +171,7 @@ export default function OrderDetailPage() {
   const handleUploadImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return;
     const filesArray = Array.from(e.target.files);
-    
+
     setUploadingImage(true);
     try {
       const newUrls: string[] = [];
@@ -404,13 +404,12 @@ export default function OrderDetailPage() {
         <div className="rounded-xl bg-white border border-gray-100 overflow-hidden">
           {/* Banner */}
           <div
-            className={`flex items-center justify-between px-5 py-4 border-b-2 ${
-              order.status === "Cancelled" || order.status === "Expired"
+            className={`flex items-center justify-between px-5 py-4 border-b-2 ${order.status === "Cancelled" || order.status === "Expired"
                 ? "bg-red-50 border-red-400"
                 : order.status === "Completed"
                   ? "bg-emerald-50 border-emerald-500"
                   : "bg-violet-50 border-primary"
-            }`}
+              }`}
           >
             <div className="flex items-center gap-3">
               {order.status === "Cancelled" || order.status === "Expired" ? (
@@ -422,13 +421,12 @@ export default function OrderDetailPage() {
               )}
               <div>
                 <p
-                  className={`font-semibold text-base leading-tight ${
-                    order.status === "Cancelled" || order.status === "Expired"
+                  className={`font-semibold text-base leading-tight ${order.status === "Cancelled" || order.status === "Expired"
                       ? "text-red-700"
                       : order.status === "Completed"
                         ? "text-emerald-700"
                         : "text-violet-800"
-                  }`}
+                    }`}
                 >
                   {statusMeta.label}
                 </p>
@@ -499,15 +497,14 @@ export default function OrderDetailPage() {
                     <div className="w-full flex items-center">
                       {/* left line */}
                       <div
-                        className={`flex-1 h-0.5 transition-all duration-500 ${
-                          idx === 0
+                        className={`flex-1 h-0.5 transition-all duration-500 ${idx === 0
                             ? "invisible"
                             : step.isError
                               ? "bg-red-400"
                               : leftReached
                                 ? "bg-primary group-hover:brightness-110"
                                 : "bg-gray-100 group-hover:bg-gray-200"
-                        }`}
+                          }`}
                       />
 
                       {/* Dot icon with pulse effect & hover animation */}
@@ -542,27 +539,25 @@ export default function OrderDetailPage() {
 
                       {/* right line */}
                       <div
-                        className={`flex-1 h-0.5 transition-all duration-500 ${
-                          isLast
+                        className={`flex-1 h-0.5 transition-all duration-500 ${isLast
                             ? "invisible"
                             : step.isError
                               ? "bg-red-400"
                               : rightReached
                                 ? "bg-primary group-hover:brightness-110"
                                 : "bg-gray-100 group-hover:bg-gray-200"
-                        }`}
+                          }`}
                       />
                     </div>
 
                     <div className="text-center px-1 transition-transform duration-200 group-hover:-translate-y-0.5">
                       <p
-                        className={`text-xs font-semibold leading-tight transition-colors duration-200 ${
-                          step.isError
+                        className={`text-xs font-semibold leading-tight transition-colors duration-200 ${step.isError
                             ? "text-red-600 group-hover:text-red-700"
                             : step.completed || isActive
                               ? "text-gray-900 group-hover:text-primary"
                               : "text-gray-400 group-hover:text-gray-600"
-                        }`}
+                          }`}
                       >
                         {step.label}
                       </p>
@@ -814,24 +809,26 @@ export default function OrderDetailPage() {
             )}
 
             {/* Buy again */}
-            <button
-              onClick={() => {
-                if (order.items && order.items.length > 0) {
-                  const firstItem = order.items[0];
-                  navigate(`/products/${(firstItem as any).productId || firstItem.productItemId}`);
-                }
-              }}
-              className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-primary text-white text-sm font-semibold py-2.5 hover:bg-primary/90 cursor-pointer transition-colors"
-            >
-              <ShoppingCart className="h-4 w-4" />
-              {t("order_detail.actions.buy_again")}
-            </button>
+            {["Completed", "Cancelled", "Expired"].includes(order.status) && (
+              <button
+                onClick={() => {
+                  if (order.items && order.items.length > 0) {
+                    const firstItem = order.items[0];
+                    navigate(`/products/${(firstItem as any).productId || firstItem.productItemId}`);
+                  }
+                }}
+                className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-primary text-white text-sm font-semibold py-2.5 hover:bg-primary/90 cursor-pointer transition-colors"
+              >
+                <ShoppingCart className="h-4 w-4" />
+                {t("order_detail.actions.buy_again")}
+              </button>
+            )}
 
             {/* Cancel */}
             {canCancel && (
               <button
                 onClick={() => setIsCancelModalOpen(true)}
-                className="flex items-center justify-center gap-1.5 rounded-lg border border-gray-200 text-gray-500 text-sm font-medium px-3 py-2.5 hover:bg-gray-50 cursor-pointer transition-colors"
+                className="flex-1 flex items-center justify-center gap-1.5 rounded-lg border border-gray-200 text-gray-500 text-sm font-medium px-3 py-2.5 hover:bg-gray-50 cursor-pointer transition-colors"
               >
                 <X className="h-4 w-4" />
                 {t("order_detail.actions.cancel")}
@@ -1058,11 +1055,10 @@ export default function OrderDetailPage() {
                       key={opt.value}
                       type="button"
                       onClick={() => setReturnType(opt.value)}
-                      className={`rounded-lg border px-3 py-2.5 text-sm font-semibold transition-all cursor-pointer ${
-                        returnType === opt.value
+                      className={`rounded-lg border px-3 py-2.5 text-sm font-semibold transition-all cursor-pointer ${returnType === opt.value
                           ? "border-orange-400 bg-orange-50 text-orange-600"
                           : "border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50"
-                      }`}
+                        }`}
                     >
                       {opt.label}
                     </button>

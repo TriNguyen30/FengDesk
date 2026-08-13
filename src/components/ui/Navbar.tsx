@@ -8,6 +8,7 @@ import AiAssistantDrawer from "@/features/chatbox/components/AiAssistantDrawer";
 import { useAiAssistant } from "@/features/chatbox/hooks/useAiAssistant";
 import PopUpLogin from "@/features/auth/components/PopUpLogin";
 import PopUpSignUp from "@/features/auth/components/PopUpSignUp";
+import PopUpForgotPassword from "@/features/auth/components/PopUpForgotPassword";
 import { CartDropDown, useCart } from "@/features/cart";
 import { NotificationDropdown } from "@/features/notification";
 import AppearanceSettings from "@/components/ui/AppearanceSettings";
@@ -372,9 +373,15 @@ export default function Navbar() {
         open={authModal === "login"}
         onClose={() => dispatch(setAuthModal(null))}
         onSwitchToSignUp={() => dispatch(setAuthModal("signup"))}
+        onSwitchToForgotPassword={() => dispatch(setAuthModal("forgot_password"))}
       />
       <PopUpSignUp
         open={authModal === "signup"}
+        onClose={() => dispatch(setAuthModal(null))}
+        onSwitchToLogin={() => dispatch(setAuthModal("login"))}
+      />
+      <PopUpForgotPassword
+        open={authModal === "forgot_password"}
         onClose={() => dispatch(setAuthModal(null))}
         onSwitchToLogin={() => dispatch(setAuthModal("login"))}
       />

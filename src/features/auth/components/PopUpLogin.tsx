@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ChevronRight, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 import Modal from "@/components/ui/Modal";
 import { loginRequest } from "@/features/auth/api/auth.api";
 import AuthField, { inputClassName } from "@/features/auth/components/AuthField";
@@ -15,12 +16,14 @@ export interface PopUpLoginProps {
   open: boolean;
   onClose: () => void;
   onSwitchToSignUp?: () => void;
+  onSwitchToForgotPassword?: () => void;
 }
 
 const submitButtonClass =
   "mt-1 flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-primary py-2.5 text-sm font-semibold text-white transition hover:bg-primary-dark active:bg-green-800 disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer";
 
-export default function PopUpLogin({ open, onClose, onSwitchToSignUp }: PopUpLoginProps) {
+export default function PopUpLogin({ open, onClose, onSwitchToSignUp, onSwitchToForgotPassword }: PopUpLoginProps) {
+  const { t } = useTranslation();
   const { persistSession } = useAuthSession();
   const [showPassword, setShowPassword] = useState(false);
 
@@ -47,12 +50,12 @@ export default function PopUpLogin({ open, onClose, onSwitchToSignUp }: PopUpLog
       });
 
       if (!response.isSuccess || !response.data) {
-        toast.error(response.message || "Đăng nhập thất bại");
+        toast.error(response.message || t("login.toast.login_failed"));
         return;
       }
 
       persistSession(response.data);
-      toast.success(response.message || "Đăng nhập thành công");
+      toast.success(response.message || t("login.toast.login_success"));
       handleClose();
 
       // Staff/Manager/Admin → vào khu điều hành. role có thể là chuỗi nhiều giá trị ("Customer, Staff").
@@ -61,21 +64,21 @@ export default function PopUpLogin({ open, onClose, onSwitchToSignUp }: PopUpLog
         window.location.assign("/manager");
       }
     } catch (error) {
-      toast.error(getAuthErrorMessage(error, "Đăng nhập thất bại. Vui lòng thử lại."));
+      toast.error(getAuthErrorMessage(error, t("login.toast.login_failed_retry")));
     }
   };
 
   const emailErrors = emailForm.formState.errors;
 
   return (
-    <Modal open={open} title="Đăng nhập" onClose={handleClose}>
+    <Modal open={open} title={t("login.title")} onClose={handleClose}>
       <div className="flex flex-col gap-5">
         <form
           onSubmit={emailForm.handleSubmit(onEmailSubmit)}
           className="flex flex-col gap-3"
           noValidate
         >
-          <AuthField id="login-email" label="Email" error={emailErrors.email?.message}>
+          <AuthField id="login-email" label={t("login.email_label")} error={emailErrors.email?.message}>
             <input
               id="login-email"
               type="email"
@@ -83,12 +86,12 @@ export default function PopUpLogin({ open, onClose, onSwitchToSignUp }: PopUpLog
               aria-invalid={Boolean(emailErrors.email)}
               aria-describedby={emailErrors.email ? "login-email-error" : undefined}
               className={inputClassName(Boolean(emailErrors.email))}
-              placeholder="you@example.com"
+              placeholder={t("login.email_placeholder")}
               {...emailForm.register("email")}
             />
           </AuthField>
 
-          <AuthField id="login-password" label="Mật khẩu" error={emailErrors.password?.message}>
+          <AuthField id="login-password" label={t("login.password_label")} error={emailErrors.password?.message}>
             <div className="relative">
               <input
                 id="login-password"
@@ -97,14 +100,14 @@ export default function PopUpLogin({ open, onClose, onSwitchToSignUp }: PopUpLog
                 aria-invalid={Boolean(emailErrors.password)}
                 aria-describedby={emailErrors.password ? "login-password-error" : undefined}
                 className={inputClassName(Boolean(emailErrors.password))}
-                placeholder="••••••••"
+                placeholder={t("login.password_placeholder")}
                 {...emailForm.register("password")}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword((v) => !v)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer"
-                aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                aria-label={showPassword ? t("login.hide_password") : t("login.show_password")}
               >
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
@@ -117,7 +120,7 @@ export default function PopUpLogin({ open, onClose, onSwitchToSignUp }: PopUpLog
               className="size-4 rounded border-gray-300 accent-green-600"
               {...emailForm.register("remember")}
             />
-            Ghi nhớ đăng nhập
+            {t("login.remember_me")}
           </label>
 
           <button
@@ -125,7 +128,7 @@ export default function PopUpLogin({ open, onClose, onSwitchToSignUp }: PopUpLog
             disabled={emailForm.formState.isSubmitting}
             className={submitButtonClass}
           >
-            {emailForm.formState.isSubmitting ? "Đang đăng nhập..." : "Đăng nhập"}
+            {emailForm.formState.isSubmitting ? t("login.submitting") : t("login.submit")}
             <ChevronRight size={16} />
           </button>
 
@@ -133,9 +136,9 @@ export default function PopUpLogin({ open, onClose, onSwitchToSignUp }: PopUpLog
             <button
               type="button"
               className="text-sm text-primary hover:text-primary-dark cursor-pointer transition-colors"
-              onClick={() => toast.info("Chức năng quên mật khẩu đang được hoàn thiện")}
+              onClick={onSwitchToForgotPassword}
             >
-              Quên mật khẩu?
+              {t("login.forgot_password")}
             </button>
           </div>
         </form>
@@ -143,13 +146,13 @@ export default function PopUpLogin({ open, onClose, onSwitchToSignUp }: PopUpLog
         <SocialAuthButtons onSuccess={handleClose} />
 
         <p className="text-center text-sm text-gray-600">
-          Chưa có tài khoản?{" "}
+          {t("login.no_account")}{" "}
           <button
             type="button"
             onClick={onSwitchToSignUp}
             className="font-semibold text-primary hover:text-primary-dark cursor-pointer"
           >
-            Đăng ký ngay
+            {t("login.register_now")}
           </button>
         </p>
       </div>
