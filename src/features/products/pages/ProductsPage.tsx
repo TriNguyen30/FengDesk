@@ -9,6 +9,7 @@ import { SearchX, List, Filter, Banknote } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import FeatureBar from "@/components/ui/FeatureBar";
 import CommitmentPage from "@/components/ui/CommitmentPage";
+import Pagination from "@/components/ui/Pagination";
 
 export default function ProductsPage() {
   const { t } = useTranslation();
@@ -60,6 +61,8 @@ export default function ProductsPage() {
   const sort = searchParams.get("sort") || "default";
   const element = searchParams.get("element") || "";
   const priceRangeId = searchParams.get("price") || "";
+  const page = parseInt(searchParams.get("page") || "1", 10);
+  const pageSize = 20;
 
   const handlePriceSelect = (id: string) => {
     const newParams = new URLSearchParams(searchParams);
@@ -68,6 +71,7 @@ export default function ProductsPage() {
     } else {
       newParams.delete("price");
     }
+    newParams.set("page", "1");
     setSearchParams(newParams);
   };
 
@@ -78,6 +82,7 @@ export default function ProductsPage() {
     } else {
       newParams.delete("element");
     }
+    newParams.set("page", "1");
     setSearchParams(newParams);
   };
 
@@ -88,6 +93,7 @@ export default function ProductsPage() {
     } else {
       newParams.set("sort", e.target.value);
     }
+    newParams.set("page", "1");
     setSearchParams(newParams);
   };
 
@@ -96,11 +102,12 @@ export default function ProductsPage() {
 
   // Filter hành đẩy xuống BE (?element=...) — lọc trên TOÀN BỘ catalog (khớp cả hành
   // chính lẫn hành phụ qua product_elements), thay vì lọc client-side 1 trang như trước.
-  const { products, loading } = useProductList({
+  const { products, loading, totalCount } = useProductList({
     search: search || undefined,
     categoryId: categoryId || undefined,
     element: (element || undefined) as GetProductsParams["element"],
-    pageSize: 20,
+    pageSize,
+    page,
   });
 
   const sortedProducts = useMemo(() => {
@@ -146,7 +153,7 @@ export default function ProductsPage() {
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
-  }, [search, categoryId, element, priceRangeId]);
+  }, [search, categoryId, element, priceRangeId, page]);
 
   const handleCategorySelect = (id: string) => {
     const newParams = new URLSearchParams(searchParams);
@@ -155,12 +162,20 @@ export default function ProductsPage() {
     } else {
       newParams.delete("categoryId");
     }
+    newParams.set("page", "1");
     setSearchParams(newParams);
   };
 
   const handleSearchReset = () => {
     const newParams = new URLSearchParams(searchParams);
     newParams.delete("search");
+    newParams.set("page", "1");
+    setSearchParams(newParams);
+  };
+
+  const handlePageChange = (newPage: number) => {
+    const newParams = new URLSearchParams(searchParams);
+    newParams.set("page", newPage.toString());
     setSearchParams(newParams);
   };
 
@@ -202,9 +217,8 @@ export default function ProductsPage() {
                       className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
                     />
                     <span
-                      className={`text-sm font-medium transition-colors ${
-                        !categoryId ? "text-primary" : "text-gray-600 group-hover:text-gray-900"
-                      }`}
+                      className={`text-sm font-medium transition-colors ${!categoryId ? "text-primary" : "text-gray-600 group-hover:text-gray-900"
+                        }`}
                     >
                       {t("products_page.filters.all_products")}
                     </span>
@@ -218,11 +232,10 @@ export default function ProductsPage() {
                         className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
                       />
                       <span
-                        className={`text-sm font-medium transition-colors ${
-                          categoryId === cat.id
+                        className={`text-sm font-medium transition-colors ${categoryId === cat.id
                             ? "text-primary"
                             : "text-gray-600 group-hover:text-gray-900"
-                        }`}
+                          }`}
                       >
                         {cat.name}
                       </span>
@@ -246,9 +259,8 @@ export default function ProductsPage() {
                     className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
                   />
                   <span
-                    className={`text-sm font-medium transition-colors ${
-                      !priceRangeId ? "text-primary" : "text-gray-600 group-hover:text-gray-900"
-                    }`}
+                    className={`text-sm font-medium transition-colors ${!priceRangeId ? "text-primary" : "text-gray-600 group-hover:text-gray-900"
+                      }`}
                   >
                     {t("products_page.filters.all_prices")}
                   </span>
@@ -262,11 +274,10 @@ export default function ProductsPage() {
                       className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
                     />
                     <span
-                      className={`text-sm font-medium transition-colors ${
-                        priceRangeId === pr.id
+                      className={`text-sm font-medium transition-colors ${priceRangeId === pr.id
                           ? "text-primary"
                           : "text-gray-600 group-hover:text-gray-900"
-                      }`}
+                        }`}
                     >
                       {pr.label}
                     </span>
@@ -289,9 +300,8 @@ export default function ProductsPage() {
                     className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
                   />
                   <span
-                    className={`text-sm font-medium transition-colors ${
-                      !element ? "text-primary" : "text-gray-600 group-hover:text-gray-900"
-                    }`}
+                    className={`text-sm font-medium transition-colors ${!element ? "text-primary" : "text-gray-600 group-hover:text-gray-900"
+                      }`}
                   >
                     {t("products_page.filters.all_elements")}
                   </span>
@@ -305,11 +315,10 @@ export default function ProductsPage() {
                       className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
                     />
                     <span
-                      className={`text-sm font-medium transition-colors ${
-                        element === el.code
+                      className={`text-sm font-medium transition-colors ${element === el.code
                           ? "text-primary"
                           : "text-gray-600 group-hover:text-gray-900"
-                      }`}
+                        }`}
                     >
                       {el.label}
                     </span>
@@ -375,11 +384,23 @@ export default function ProductsPage() {
               ))}
             </div>
           ) : sortedProducts.length > 0 ? (
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 sm:gap-4 lg:gap-6">
-              {sortedProducts.map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
-            </div>
+            <>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 sm:gap-4 lg:gap-6">
+                {sortedProducts.map((product) => (
+                  <ProductCard key={product.id} product={product} />
+                ))}
+              </div>
+              {totalCount > pageSize && (
+                <div className="mt-8 flex justify-center">
+                  <Pagination
+                    currentPage={page}
+                    totalCount={totalCount}
+                    pageSize={pageSize}
+                    onPageChange={handlePageChange}
+                  />
+                </div>
+              )}
+            </>
           ) : (
             <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-gray-200 bg-gray-50 py-20 text-center">
               <SearchX className="h-12 w-12 text-gray-300" />
