@@ -8,6 +8,8 @@ import lampIcon from "@/assets/icon/Lamp.png";
 import plantPotIcon from "@/assets/icon/PlantPot.png";
 import crystalIcon from "@/assets/icon/Crystal.png";
 import agarwoodIcon from "@/assets/icon/TramHuong.png";
+import terrariumIcon from "@/assets/icon/Terrarium.png";
+import fountainIcon from "@/assets/icon/Fountain.png";
 
 const CATEGORY_ICONS = [plantPotIcon, dragonStatueIcon, lampIcon];
 
@@ -19,6 +21,12 @@ const getIconForCategory = (name: string, index: number) => {
   }
   if (lowerName.includes("đèn") || lowerName.includes("trang trí")) {
     return lampIcon;
+  }
+  if (lowerName.includes("terrarium")) {
+    return terrariumIcon;
+  }
+  if (lowerName.includes("thác nước")) {
+    return fountainIcon;
   }
   if (
     lowerName.includes("cây") ||
@@ -90,27 +98,27 @@ export default function PopularCategories() {
       </div>
 
       <div className="flex flex-wrap gap-4 sm:gap-6 px-1 py-2 sm:px-2 sm:py-3">
-          {categories.map((cat, index) => {
-            const icon = getIconForCategory(cat.name, index);
-            return (
-              <Link
-                key={cat.id}
-                to={`/products?categoryId=${cat.id}`}
-                className="group flex flex-col items-center justify-between gap-3 rounded-2xl bg-gray-50 p-4 transition-all duration-300 hover:-translate-y-1.5 hover:bg-white hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] sm:p-5 w-28 sm:w-36 border border-gray-200 hover:border-primary/40"
-              >
-                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white shadow-sm ring-1 ring-gray-200 transition-transform duration-500 group-hover:scale-110 sm:h-16 sm:w-16">
-                  <img
-                    src={icon}
-                    alt={cat.name}
-                    className="h-10 w-10 sm:h-12 sm:w-12 object-contain drop-shadow-sm transition-transform duration-500 group-hover:-rotate-3"
-                  />
-                </div>
-                <span className="text-center text-xs font-semibold text-gray-700 transition-colors duration-300 group-hover:text-primary sm:text-sm line-clamp-2">
-                  {cat.name}
-                </span>
-              </Link>
-            );
-          })}
+        {categories.map((cat, index) => {
+          const icon = getIconForCategory(cat.name, index);
+          return (
+            <Link
+              key={cat.id}
+              to={`/products?categoryId=${cat.id}`}
+              className="group flex flex-col items-center justify-between gap-3 rounded-2xl bg-gray-50 p-4 transition-all duration-300 hover:-translate-y-1.5 hover:bg-white hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] sm:p-5 w-28 sm:w-36 border border-gray-200 hover:border-primary/40"
+            >
+              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white shadow-sm ring-1 ring-gray-200 transition-transform duration-500 group-hover:scale-110 sm:h-16 sm:w-16">
+                <img
+                  src={icon}
+                  alt={cat.name}
+                  className="h-10 w-10 sm:h-12 sm:w-12 object-contain drop-shadow-sm transition-transform duration-500 group-hover:-rotate-3"
+                />
+              </div>
+              <span className="text-center text-xs font-semibold text-gray-700 transition-colors duration-300 group-hover:text-primary sm:text-sm line-clamp-2">
+                {cat.name}
+              </span>
+            </Link>
+          );
+        })}
       </div>
     </section>
   );
