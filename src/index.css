@@ -439,6 +439,10 @@
   background-color: var(--fd-surface);
 }
 
+:root[data-theme="dark"] .bg-white\/95 {
+  background-color: color-mix(in oklab, var(--fd-surface) 95%, transparent);
+}
+
 :root[data-theme="dark"] .bg-white\/90 {
   background-color: color-mix(in oklab, var(--fd-surface) 90%, transparent);
 }

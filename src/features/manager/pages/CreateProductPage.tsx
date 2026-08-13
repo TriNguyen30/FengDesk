@@ -527,15 +527,23 @@ export default function CreateProductPage() {
 
             {/* Dropzone File Upload */}
             <div
-              onClick={() => document.getElementById("file-upload-input")?.click()}
+              onClick={() => {
+                if (!images.some(img => img.uploading)) {
+                  document.getElementById("file-upload-input")?.click();
+                }
+              }}
               onDragOver={(e) => e.preventDefault()}
               onDrop={async (e) => {
                 e.preventDefault();
-                if (e.dataTransfer.files) {
+                if (!images.some(img => img.uploading) && e.dataTransfer.files) {
                   await uploadImages(Array.from(e.dataTransfer.files));
                 }
               }}
-              className="border-2 border-dashed border-gray-200 hover:border-primary hover:bg-primary/5 rounded-2xl p-6 text-center cursor-pointer transition-all duration-200 flex flex-col items-center justify-center gap-2 group"
+              className={`border-2 border-dashed border-gray-200 rounded-2xl p-6 text-center cursor-pointer transition-all duration-200 flex flex-col items-center justify-center gap-2 group ${
+                images.some(img => img.uploading)
+                  ? "opacity-60 cursor-not-allowed bg-gray-50"
+                  : "hover:border-primary hover:bg-primary/5"
+              }`}
             >
               <input
                 id="file-upload-input"
@@ -543,6 +551,7 @@ export default function CreateProductPage() {
                 multiple
                 accept="image/*"
                 onChange={handleFileChange}
+                disabled={images.some(img => img.uploading)}
                 className="hidden"
               />
               <div className="h-10 w-10 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 group-hover:bg-primary/10 group-hover:text-primary transition-colors">
@@ -568,7 +577,7 @@ export default function CreateProductPage() {
                   {images.map((img, idx) => (
                     <div
                       key={img.id}
-                      className="relative group rounded-xl overflow-hidden bg-gray-50 ring-1 ring-gray-150 flex flex-col items-center p-2"
+                      className="relative group rounded-xl overflow-hidden bg-gray-50 ring-1 ring-gray-100 flex flex-col items-center justify-center p-2"
                     >
                       <div className="aspect-square w-full overflow-hidden flex items-center justify-center rounded-lg bg-white relative">
                         <img
