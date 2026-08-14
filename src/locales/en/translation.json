@@ -446,6 +446,7 @@
     "roles": {
       "shop": "Shopping",
       "seller": "Store",
+      "management": "Management",
       "admin": "Admin"
     }
   },

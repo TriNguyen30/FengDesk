@@ -3,9 +3,10 @@ import { useNavigate, useLocation } from "react-router-dom";
 import {
   ShoppingBag,
   Store,
-  LayoutDashboard,
   ChevronDown,
   Check,
+  Shield,
+  LayoutDashboard,
   type LucideIcon,
 } from "lucide-react";
 import { useAppSelector } from "@/app/store";
@@ -23,7 +24,8 @@ import { useTranslation } from "react-i18next";
 const ICONS: Record<WorkspaceKey, LucideIcon> = {
   shop: ShoppingBag,
   seller: Store,
-  admin: LayoutDashboard,
+  management: LayoutDashboard,
+  admin: Shield,
 };
 
 /** Switcher "Đổi khu" — chỉ hiện các khu user có quyền, và chỉ render khi có >1 khu. */
@@ -88,11 +90,14 @@ export default function WorkspaceSwitcher() {
 
   if (!user || visible.length <= 1) return null;
 
-  const currentKey: WorkspaceKey = location.pathname.startsWith("/manager")
-    ? "admin"
-    : location.pathname.startsWith("/seller")
-      ? "seller"
-      : "shop";
+  const currentKey: WorkspaceKey =
+    location.pathname.startsWith("/admin")
+      ? "admin"
+      : location.pathname.startsWith("/manager")
+        ? "management"
+        : location.pathname.startsWith("/seller")
+          ? "seller"
+          : "shop";
   const current = visible.find((w) => w.key === currentKey) ?? visible[0];
   const CurrentIcon = ICONS[current.key];
 
@@ -160,9 +165,8 @@ export default function WorkspaceSwitcher() {
         {open && (
           <div className="absolute right-0 top-full z-50 pt-1">
             <div
-              className={`w-52 overflow-hidden rounded-lg bg-white shadow-[0_4px_20px_-4px_rgba(0,0,0,0.15)] ring-1 ring-black/5 ${
-                closing ? "workspace-dropdown-exit" : "workspace-dropdown-enter"
-              }`}
+              className={`w-52 overflow-hidden rounded-lg bg-white shadow-[0_4px_20px_-4px_rgba(0,0,0,0.15)] ring-1 ring-black/5 ${closing ? "workspace-dropdown-exit" : "workspace-dropdown-enter"
+                }`}
             >
               <div className="border-b border-gray-100 bg-gray-50/50 px-3 py-2">
                 <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">
@@ -180,8 +184,8 @@ export default function WorkspaceSwitcher() {
                       type="button"
                       onClick={() => go(w)}
                       className={`flex w-full cursor-pointer items-center gap-2.5 rounded-md px-3 py-2 text-left text-sm font-medium transition-colors ${active
-                          ? "bg-primary/5 text-primary font-semibold"
-                          : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                        ? "bg-primary/5 text-primary font-semibold"
+                        : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
                         }`}
                     >
                       <Icon size={16} />
