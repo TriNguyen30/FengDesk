@@ -446,6 +446,7 @@
     "roles": {
       "shop": "Mua sắm",
       "seller": "Cửa hàng",
+      "management": "Quản lý",
       "admin": "Quản trị"
     }
   },

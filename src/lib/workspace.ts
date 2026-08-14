@@ -6,7 +6,7 @@ import type { AuthUser } from "@/features/auth/types/auth";
  * Map vào route đang có: Mua sắm `/`, Kênh người bán `/seller`, Quản trị `/manager`.
  * Xem Documents/localDocs/MULTI_ROLE_WORKSPACE.md.
  */
-export type WorkspaceKey = "shop" | "seller" | "admin";
+export type WorkspaceKey = "shop" | "seller" | "management" | "admin";
 
 export interface WorkspaceDef {
   key: WorkspaceKey;
@@ -17,7 +17,12 @@ export interface WorkspaceDef {
 }
 
 export const WORKSPACES: WorkspaceDef[] = [
-  { key: "shop", label: "Mua sắm", route: "/", allow: () => true },
+  {
+    key: "shop",
+    label: "Mua sắm",
+    route: "/",
+    allow: () => true,
+  },
   {
     key: "seller",
     label: "Cửa hàng",
@@ -25,10 +30,19 @@ export const WORKSPACES: WorkspaceDef[] = [
     allow: (r) => r.includes("GardenOwner"),
   },
   {
-    key: "admin",
-    label: "Quản trị",
+    key: "management",
+    label: "Quản lý",
     route: "/manager",
-    allow: (r) => r.includes("Staff") || r.includes("Manager") || r.includes("Admin"),
+    allow: (r) =>
+      r.includes("Staff") ||
+      r.includes("Manager") ||
+      r.includes("Admin"),
+  },
+  {
+    key: "admin",
+    label: "Quản trị hệ thống",
+    route: "/admin",
+    allow: (r) => r.includes("Admin"),
   },
 ];
 
