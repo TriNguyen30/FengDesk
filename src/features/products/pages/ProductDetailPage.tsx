@@ -145,20 +145,27 @@ export default function ProductDetailPage() {
   const handleAddToCart = async (e: React.MouseEvent) => {
     e.preventDefault();
     if (product && selectedItem) {
-      addItem({ productItemId: selectedItem.id, quantity });
-      toast.success(t("product_detail.toast.added_to_cart"));
-
-      // Birthday popper animation
+      // Get coordinates before await because e.currentTarget might be null afterwards
       const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
       const x = (rect.left + rect.width / 2) / window.innerWidth;
       const y = (rect.top + rect.height / 2) / window.innerHeight;
 
-      confetti({
-        particleCount: 100,
-        spread: 70,
-        origin: { x, y },
-        colors: ['#26aa99', '#f39c12', '#e74c3c', '#9b59b6', '#3498db']
-      });
+      try {
+        const response = await addItem({ productItemId: selectedItem.id, quantity });
+        if (response?.isSuccess) {
+          toast.success(t("product_detail.toast.added_to_cart"));
+
+          // Birthday popper animation
+          confetti({
+            particleCount: 100,
+            spread: 70,
+            origin: { x, y },
+            colors: ['#26aa99', '#f39c12', '#e74c3c', '#9b59b6', '#3498db']
+          });
+        }
+      } catch (error) {
+        console.error("Add to cart failed:", error);
+      }
     }
   };
 
