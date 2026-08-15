@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
+import { useQueryClient, useQuery } from "@tanstack/react-query";
 import {
   ChevronLeft,
   Loader2,
@@ -89,7 +90,14 @@ export default function OrderDetailPage() {
   const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { currentOrder, detailStatus } = useOrderDetail(id);
+  const { data: returnsData } = useQuery({
+    queryKey: ["my-returns", id],
+    queryFn: () => returnApi.getMyReturns({ PageSize: 50 }).then((res) => res.data),
+    enabled: !!id,
+  });
+  const orderReturns = returnsData?.isSuccess ? returnsData.data.items.filter((r: any) => r.orderId === id) : [];
   const { address: shippingAddress } = useAddressDetail(currentOrder?.shippingAddressId);
   const cancelOrderMutation = useCancelOrder();
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
@@ -226,6 +234,8 @@ export default function OrderDetailPage() {
       const res = await returnApi.createReturn(payload);
       if (res.data.isSuccess) {
         toast.success(t("order_detail.toast.return_success"));
+        queryClient.invalidateQueries({ queryKey: ["order", id] });
+        queryClient.invalidateQueries({ queryKey: ["my-returns", id] });
         closeReturnModal();
       } else {
         toast.error(res.data.message || t("order_detail.toast.return_error"));
@@ -283,13 +293,25 @@ export default function OrderDetailPage() {
   const order = currentOrder;
   const statusMeta = getOrderStatusMeta(order.status, order.paymentMethod);
   const canCancel = !["Cancelled", "Completed", "Expired"].includes(order.status);
-  const deliveries: any[] = (order as any).deliveries ?? [];
+  const deliveries: any[] = ((order as any).deliveries ?? []).map((d: any) => {
+    const rr = d.returnRequest || orderReturns.find((r: any) => r.deliveryId === d.id && !["Rejected", "Cancelled", "Completed"].includes(r.status));
+    if (rr && !d.returnRequest) {
+      return { ...d, returnRequest: { id: rr.id, status: rr.status } };
+    }
+    return d;
+  });
   const returnableDeliveries = deliveries.filter((d) => {
     if (d.status !== "Delivered") return false;
     const rr = d.returnRequest;
-    return !rr || ["Rejected", "Cancelled"].includes(rr.status);
+    return !rr || ["Rejected", "Cancelled", "Completed"].includes(rr.status);
   });
   const hasReturnableDelivery = returnableDeliveries.length > 0;
+
+  const activeReturnDeliveries = deliveries.filter((d) => {
+    const rr = d.returnRequest;
+    return rr && !["Rejected", "Cancelled", "Completed"].includes(rr.status);
+  });
+  const hasActiveReturnForAnyDelivery = activeReturnDeliveries.length > 0;
 
   const getDeliveryItems = (deliveryId: string): OrderLineItem[] =>
     (order.items ?? []).filter((item) => item.deliveryId === deliveryId);
@@ -662,13 +684,18 @@ export default function OrderDetailPage() {
                 <Truck className="h-4 w-4 text-primary" />
                 {t("order_detail.delivery.title")}
               </div>
-              {hasReturnableDelivery && (
+              {(hasReturnableDelivery || hasActiveReturnForAnyDelivery) && (
                 <button
                   onClick={() => setDeliveryPickerOpen(true)}
-                  className="flex items-center gap-1.5 text-xs font-semibold text-orange-600 bg-orange-50 border border-orange-200 px-3 py-1.5 rounded-lg hover:bg-orange-100 transition-colors cursor-pointer"
+                  disabled={!hasReturnableDelivery}
+                  className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors ${
+                    hasReturnableDelivery
+                      ? "text-orange-600 bg-orange-50 border border-orange-200 hover:bg-orange-100 cursor-pointer"
+                      : "text-gray-400 bg-gray-50 border border-gray-200 cursor-not-allowed"
+                  }`}
                 >
                   <RotateCcw className="h-3.5 w-3.5" />
-                  {t("order_detail.delivery.request_return")}
+                  {!hasReturnableDelivery ? t("order_detail.delivery.return_pending") : t("order_detail.delivery.request_return")}
                 </button>
               )}
             </div>
@@ -683,7 +710,7 @@ export default function OrderDetailPage() {
                 const returnRequest: { id: string; status: string } | null =
                   delivery.returnRequest ?? null;
                 const hasActiveReturn =
-                  returnRequest && !["Rejected", "Cancelled"].includes(returnRequest.status);
+                  returnRequest && !["Rejected", "Cancelled", "Completed"].includes(returnRequest.status);
                 const multiDelivered =
                   deliveries.filter((d) => d.status === "Delivered").length > 1;
 
@@ -719,15 +746,20 @@ export default function OrderDetailPage() {
                       )}
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
-                      {isDelivered && !hasActiveReturn && multiDelivered && (
+                      {isDelivered && multiDelivered && (
                         <button
                           onClick={() =>
                             openReturnModal(delivery.id, getDeliveryItems(delivery.id))
                           }
-                          className="flex items-center gap-1 text-xs font-semibold text-orange-600 bg-orange-50 border border-orange-200 px-2.5 py-1 rounded-lg hover:bg-orange-100 transition-colors cursor-pointer"
+                          disabled={hasActiveReturn}
+                          className={`flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-lg transition-colors ${
+                            !hasActiveReturn
+                              ? "text-orange-600 bg-orange-50 border border-orange-200 hover:bg-orange-100 cursor-pointer"
+                              : "text-gray-400 bg-gray-50 border border-gray-200 cursor-not-allowed"
+                          }`}
                         >
                           <RotateCcw className="h-3 w-3" />
-                          {t("order_detail.delivery.return_btn")}
+                          {hasActiveReturn ? t("order_detail.delivery.return_pending") : t("order_detail.delivery.return_btn")}
                         </button>
                       )}
                       <span
@@ -798,13 +830,19 @@ export default function OrderDetailPage() {
             )}
 
             {/* Return — shown when there's a delivered delivery and payment is done */}
-            {hasReturnableDelivery && order.status !== "Pending" && (
+            {/* Return — shown when there's a delivered delivery and payment is done */}
+            {(hasReturnableDelivery || hasActiveReturnForAnyDelivery) && order.status !== "Pending" && (
               <button
                 onClick={() => setDeliveryPickerOpen(true)}
-                className="flex-1 flex items-center justify-center gap-2 rounded-lg border border-orange-300 text-orange-600 bg-orange-50 text-sm font-semibold py-2.5 hover:bg-orange-100 cursor-pointer transition-colors"
+                disabled={!hasReturnableDelivery}
+                className={`flex-1 flex items-center justify-center gap-2 rounded-lg border text-sm font-semibold py-2.5 transition-colors ${
+                  hasReturnableDelivery
+                    ? "border-orange-300 text-orange-600 bg-orange-50 hover:bg-orange-100 cursor-pointer"
+                    : "border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed"
+                }`}
               >
                 <RotateCcw className="h-4 w-4" />
-                {t("order_detail.actions.return")}
+                {!hasReturnableDelivery ? t("order_detail.delivery.return_pending") : t("order_detail.actions.return")}
               </button>
             )}
 
