@@ -9,6 +9,10 @@ import {
   useState,
   type KeyboardEvent,
 } from "react";
+import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { productApi } from "@/features/products/api/product.api";
+import { useDebounce } from "@/hooks/useDebounce";
 
 import { useSearch } from "@/features/search";
 import { filterPlantKeywordSuggestions } from "@/data/plantSearchKeywords";
@@ -35,8 +39,48 @@ export default function SearchBar({
   const rootRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
   const [highlight, setHighlight] = useState(-1);
+  const navigate = useNavigate();
 
-  const suggestions = useMemo(() => filterPlantKeywordSuggestions(keyword, 8), [keyword]);
+  const debouncedKeyword = useDebounce(keyword, 300);
+
+  const { data: productSuggestions } = useQuery({
+    queryKey: ["productSuggestions", debouncedKeyword],
+    queryFn: async () => {
+      if (!debouncedKeyword.trim()) return [];
+      const res = await productApi.getProducts({ search: debouncedKeyword.trim(), pageSize: 5 });
+      return res.data?.data?.items || [];
+    },
+    enabled: !!debouncedKeyword.trim(),
+  });
+
+  const keywordSuggestions = useMemo(() => filterPlantKeywordSuggestions(keyword, 3), [keyword]);
+
+  const suggestions = useMemo(() => {
+    const items: Array<
+      | { type: "keyword"; text: string }
+      | { type: "product"; id: string; name: string; image: string; price: number }
+    > = [];
+
+    if (productSuggestions && productSuggestions.length > 0) {
+      productSuggestions.forEach((p) => {
+        items.push({
+          type: "product",
+          id: p.id,
+          name: p.name,
+          image: p.primaryImageUrl || "",
+          price: p.minPrice || 0,
+        });
+      });
+    }
+
+    keywordSuggestions.forEach((k) => {
+      if (!items.find((i) => i.name === k || (i.type === "keyword" && i.text === k))) {
+        items.push({ type: "keyword", text: k });
+      }
+    });
+
+    return items;
+  }, [productSuggestions, keywordSuggestions]);
 
   const showPanel = open && suggestions.length > 0;
 
@@ -151,7 +195,14 @@ export default function SearchBar({
     if (e.key === "Enter") {
       if (open && highlight >= 0 && suggestions[highlight]) {
         e.preventDefault();
-        applySuggestion(suggestions[highlight]);
+        const item = suggestions[highlight];
+        if (item.type === "product") {
+          navigate(`/products/${item.id}`);
+          setOpen(false);
+          setHighlight(-1);
+        } else {
+          applySuggestion(item.text);
+        }
         return;
       }
       handleSearch();
@@ -198,8 +249,8 @@ export default function SearchBar({
           role="listbox"
           className="absolute left-0 right-0 top-full z-30 mt-1 max-h-64 overflow-auto rounded-lg border border-gray-200 bg-white py-1 shadow-lg"
         >
-          {suggestions.map((text, i) => (
-            <li key={text} role="presentation">
+          {suggestions.map((item, i) => (
+            <li key={item.type === "product" ? item.id : item.text} role="presentation">
               <button
                 type="button"
                 role="option"
@@ -207,15 +258,40 @@ export default function SearchBar({
                 aria-selected={highlight === i ? "true" : "false"}
                 onMouseDown={(e) => {
                   e.preventDefault();
-                  applySuggestion(text);
+                  if (item.type === "product") {
+                    navigate(`/products/${item.id}`);
+                    setOpen(false);
+                    setHighlight(-1);
+                  } else {
+                    applySuggestion(item.text);
+                  }
                 }}
                 onMouseEnter={() => setHighlight(i)}
                 className={[
-                  "flex w-full cursor-pointer px-3 py-2 text-left text-sm text-gray-800 transition-colors sm:px-4",
+                  "flex w-full items-center gap-3 cursor-pointer px-3 py-2 text-left text-sm text-gray-800 transition-colors sm:px-4",
                   highlight === i ? "bg-green-50 text-green-800" : "hover:bg-gray-50",
                 ].join(" ")}
               >
-                {text}
+                {item.type === "product" ? (
+                  <>
+                    <img
+                      src={item.image || "/placeholder.svg"}
+                      alt={item.name}
+                      className="h-10 w-10 rounded object-cover shadow-sm"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="truncate font-medium">{item.name}</div>
+                      <div className="text-xs font-semibold text-green-600">
+                        {item.price.toLocaleString()}đ
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex items-center gap-2 py-1 text-gray-600">
+                    <Search size={14} />
+                    <span>{item.text}</span>
+                  </div>
+                )}
               </button>
             </li>
           ))}
