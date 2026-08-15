@@ -43,4 +43,8 @@ export const model3DApi = {
       isEnabled,
     });
   },
+
+  deleteModel3D: (productId: string, modelId: string) => {
+    return fetchHttpClient.delete<ApiResponse<null>>(`/products/${productId}/model-3d/${modelId}`);
+  },
 };

@@ -13,8 +13,10 @@ import {
   XCircle,
   Eye,
   EyeOff,
+  Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
+import Modal from "@/components/ui/Modal";
 import { model3DApi } from "@/features/products/api/model3d.api";
 import type { ProductDetail } from "@/features/products/types/product";
 import type {
@@ -57,6 +59,8 @@ export function ProductModel3DSection({ productId, images, onRefreshProduct }: P
   const [requests, setRequests] = useState<Model3DRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [toggling, setToggling] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showPicker, setShowPicker] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [selectedImageIds, setSelectedImageIds] = useState<string[]>([]);
@@ -214,6 +218,27 @@ export function ProductModel3DSection({ productId, images, onRefreshProduct }: P
     }
   };
 
+  const handleDelete = async () => {
+    if (!model) return;
+    
+    setDeleting(true);
+    try {
+      const res = await model3DApi.deleteModel3D(productId, model.id);
+      if (res.data.isSuccess) {
+        toast.success(res.data.message || "Đã xóa mô hình 3D");
+        setModels((current) => current.filter((item) => item.id !== model.id));
+        setShowDeleteModal(false);
+        onRefreshProduct();
+      } else {
+        toast.error(res.data.message || "Xóa thất bại");
+      }
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || "Lỗi khi xóa");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-16">
@@ -292,27 +317,44 @@ export function ProductModel3DSection({ productId, images, onRefreshProduct }: P
                 <p className="text-xs text-red-500">{model.errorMessage}</p>
               )}
 
-              {model.status === "Succeeded" && (
-                <button
-                  type="button"
-                  onClick={() => handleToggle(!model.isEnabled)}
-                  disabled={toggling}
-                  className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer disabled:opacity-60 ${
-                    model.isEnabled
-                      ? "border-primary text-primary hover:bg-primary/5"
-                      : "border-gray-200 text-gray-500 hover:bg-gray-50"
-                  }`}
-                >
-                  {toggling ? (
-                    <RefreshCw size={14} className="animate-spin" />
-                  ) : model.isEnabled ? (
-                    <Eye size={14} />
-                  ) : (
-                    <EyeOff size={14} />
-                  )}
-                  {model.isEnabled ? "Đang hiển thị trên trang sản phẩm" : "Đang ẩn — bấm để hiển thị lại"}
-                </button>
-              )}
+              <div className="flex flex-wrap items-center gap-2 pt-1">
+                {model.status === "Succeeded" && (
+                  <button
+                    type="button"
+                    onClick={() => handleToggle(!model.isEnabled)}
+                    disabled={toggling || deleting}
+                    className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer disabled:opacity-60 ${
+                      model.isEnabled
+                        ? "border-primary text-primary hover:bg-primary/5"
+                        : "border-gray-200 text-gray-500 hover:bg-gray-50"
+                    }`}
+                  >
+                    {toggling ? (
+                      <RefreshCw size={14} className="animate-spin" />
+                    ) : model.isEnabled ? (
+                      <Eye size={14} />
+                    ) : (
+                      <EyeOff size={14} />
+                    )}
+                    {model.isEnabled ? "Đang hiển thị trên trang sản phẩm" : "Đang ẩn — bấm để hiển thị lại"}
+                  </button>
+                )}
+                {["Succeeded", "Failed"].includes(model.status) && (
+                  <button
+                    type="button"
+                    onClick={() => setShowDeleteModal(true)}
+                    disabled={toggling || deleting}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 px-3 py-1.5 text-xs font-semibold text-red-600 transition-colors cursor-pointer hover:bg-red-50 disabled:opacity-60"
+                  >
+                    {deleting ? (
+                      <Loader2 size={14} className="animate-spin" />
+                    ) : (
+                      <Trash2 size={14} />
+                    )}
+                    Xóa mô hình
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         )}
@@ -412,6 +454,38 @@ export function ProductModel3DSection({ productId, images, onRefreshProduct }: P
           </div>
         </div>
       )}
+
+      {/* ── Modal xác nhận xóa ────────────────────────────────────────── */}
+      <Modal
+        open={showDeleteModal}
+        onClose={() => !deleting && setShowDeleteModal(false)}
+        title="Xóa mô hình 3D"
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-gray-600">
+            Bạn có chắc chắn muốn xóa mô hình 3D này không? Hành động này không thể hoàn tác.
+          </p>
+          <div className="flex justify-end gap-3 pt-2">
+            <button
+              type="button"
+              onClick={() => setShowDeleteModal(false)}
+              disabled={deleting}
+              className="rounded-lg px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-100 disabled:opacity-60 cursor-pointer"
+            >
+              Hủy
+            </button>
+            <button
+              type="button"
+              onClick={handleDelete}
+              disabled={deleting}
+              className="inline-flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-60 shadow-sm cursor-pointer"
+            >
+              {deleting && <Loader2 size={16} className="animate-spin" />}
+              Xác nhận xóa
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }
