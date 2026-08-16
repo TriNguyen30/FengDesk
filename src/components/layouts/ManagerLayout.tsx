@@ -51,7 +51,7 @@ const navigation = [
     ],
   },
   // { name: "Cửa hàng", href: "/manager/stores", icon: Store },
-  { name: "Cửa hàng", href: "/manager/shop", icon: Store },
+  { name: "Cửa hàng", href: "/manager/stores", icon: Store },
   { name: "Khách hàng", href: "/manager/customers", icon: Users },
   { name: "Cài đặt", href: "/manager/settings/account", icon: Settings },
   // {
@@ -176,8 +176,8 @@ export default function ManagerLayout() {
                     onClick={() => toggleMenu(item.name)}
                     title={collapsed ? item.name : undefined}
                     className={`group relative flex w-full items-center justify-between gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors cursor-pointer ${isActive
-                        ? "bg-primary/5 text-primary"
-                        : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                      ? "bg-primary/5 text-primary"
+                      : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
                       } ${collapsed ? "justify-center" : ""}`}
                   >
                     <div className="flex items-center gap-3 truncate">
@@ -202,8 +202,8 @@ export default function ManagerLayout() {
                     to={item.href!}
                     title={collapsed ? item.name : undefined}
                     className={`group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${isActive
-                        ? "bg-primary/10 text-primary"
-                        : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                      ? "bg-primary/10 text-primary"
+                      : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
                       } ${collapsed ? "justify-center" : ""}`}
                   >
                     {isActive && (
@@ -226,8 +226,8 @@ export default function ManagerLayout() {
                           key={child.name}
                           to={child.href!}
                           className={`group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${isChildActive
-                              ? "bg-primary/10 text-primary"
-                              : "text-gray-500 hover:bg-gray-100 hover:text-gray-900"
+                            ? "bg-primary/10 text-primary"
+                            : "text-gray-500 hover:bg-gray-100 hover:text-gray-900"
                             }`}
                         >
                           <child.icon
