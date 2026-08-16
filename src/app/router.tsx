@@ -169,7 +169,7 @@ export default function AppRoutes() {
         <Route path="orders" element={<ManageOrdersPage />} />
         <Route path="order-returns" element={<ManageOrderReturnPage />} />
         <Route path="customers" element={<StaffSupportPage />} />
-        <Route path="shop" element={<ShopInformationSetting />} />
+        <Route path="stores" element={<ManageStoresPage />} />
         <Route path="settings">
           <Route index element={<Navigate to="account" replace />} />
           <Route path="account" element={<SettingsPage />} />
