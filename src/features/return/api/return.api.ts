@@ -15,6 +15,8 @@ import type {
   ApproveRefundRequest,
   ApproveRefundResponse,
   ConfirmReceivedResponse,
+  ManagerConfirmRefundRequest,
+  ManagerConfirmRefundResponse,
 } from "@/features/return/types/return.d.ts";
 
 export const returnApi = {
@@ -78,6 +80,13 @@ export const returnApi = {
           "Content-Type": "multipart/form-data",
         },
       }
+    );
+  },
+
+  managerConfirmRefund: async (refundId: string, payload: ManagerConfirmRefundRequest) => {
+    return fetchHttpClient.post<ManagerConfirmRefundResponse>(
+      `/refunds/${refundId}/manager-confirm`,
+      payload
     );
   },
 };

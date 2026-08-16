@@ -15,8 +15,10 @@ import {
   Package,
   Clock,
   FileWarning,
+  Upload,
 } from "lucide-react";
 import { returnApi } from "@/features/return/api/return.api";
+import { uploadFile } from "@/services/upload.service";
 import type { ReturnItem, ReturnDetail } from "@/features/return/types/return.d.ts";
 import { formatOrderDate, formatVnd } from "@/features/orders/utils/orderUtils";
 import { useQueryClient } from "@tanstack/react-query";
@@ -113,6 +115,13 @@ interface ApproveRefundModalState {
   returnId: string | null;
 }
 
+// ── Manager Confirm Refund modal state ───────────────────────────────────────
+interface ManagerConfirmModalState {
+  open: boolean;
+  returnId: string | null;
+  refundId: string | null;
+}
+
 export default function ManageOrderReturnPage() {
   const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
@@ -148,6 +157,13 @@ export default function ManageOrderReturnPage() {
   const [refundRestock, setRefundRestock] = useState(true);
   const [refundNote, setRefundNote] = useState("");
   const [approvingRefund, setApprovingRefund] = useState(false);
+
+  // Manager Confirm Refund modal
+  const [managerConfirmModal, setManagerConfirmModal] = useState<ManagerConfirmModalState>({ open: false, returnId: null, refundId: null });
+  const [managerConfirmReason, setManagerConfirmReason] = useState("");
+  const [managerConfirmEvidence, setManagerConfirmEvidence] = useState("");
+  const [uploadingEvidence, setUploadingEvidence] = useState(false);
+  const [managerConfirming, setManagerConfirming] = useState(false);
 
   const fetchReturns = useCallback(
     async (p: number) => {
@@ -276,6 +292,72 @@ export default function ManageOrderReturnPage() {
       toast.error(err?.response?.data?.message || "Có lỗi xảy ra khi duyệt hoàn tiền");
     } finally {
       setApprovingRefund(false);
+    }
+  };
+
+  // ── Manager Confirm Refund handlers ──────────────────────────────────────────
+  const openManagerConfirmModal = (returnId: string, refundId?: string) => {
+    setManagerConfirmReason("");
+    setManagerConfirmEvidence("");
+    setManagerConfirmModal({ open: true, returnId, refundId: refundId || null });
+  };
+
+  const closeManagerConfirmModal = () => setManagerConfirmModal({ open: false, returnId: null, refundId: null });
+
+  const handleUploadEvidence = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingEvidence(true);
+    try {
+      const res = await uploadFile(file);
+      const uploadedUrl = (res.data as any)?.data || (res.data as any)?.url || res.data;
+      if (uploadedUrl && typeof uploadedUrl === "string") {
+        setManagerConfirmEvidence(uploadedUrl);
+        toast.success("Tải ảnh lên thành công");
+      } else {
+        toast.error("Định dạng phản hồi không hợp lệ");
+      }
+    } catch (err) {
+      toast.error("Không thể tải ảnh lên, vui lòng thử lại");
+    } finally {
+      setUploadingEvidence(false);
+    }
+  };
+
+  const handleManagerConfirm = async () => {
+    if (!managerConfirmModal.returnId) return;
+    setManagerConfirming(true);
+    try {
+      let targetRefundId = managerConfirmModal.refundId;
+
+      if (!targetRefundId) {
+        const detailRes = await returnApi.getReturnById(managerConfirmModal.returnId);
+        if (detailRes.data.isSuccess && detailRes.data.data.refund?.id) {
+          targetRefundId = detailRes.data.data.refund.id;
+        } else {
+          toast.error("Không tìm thấy thông tin hoàn tiền");
+          setManagerConfirming(false);
+          return;
+        }
+      }
+
+      const res = await returnApi.managerConfirmRefund(targetRefundId, {
+        manualReason: managerConfirmReason || null,
+        evidenceUrl: managerConfirmEvidence || null,
+      });
+      if (res.data.isSuccess) {
+        toast.success("Đã xác nhận hoàn tiền thành công");
+        closeManagerConfirmModal();
+        fetchReturns(page);
+        queryClient.invalidateQueries({ queryKey: ["admin-stats"] });
+      } else {
+        toast.error(res.data.message || "Không thể xác nhận hoàn tiền");
+      }
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || "Có lỗi xảy ra khi xác nhận hoàn tiền");
+    } finally {
+      setManagerConfirming(false);
     }
   };
 
@@ -487,6 +569,15 @@ export default function ManageOrderReturnPage() {
                           >
                             <CheckCircle2 size={16} />
                             <span className="max-w-0 overflow-hidden whitespace-nowrap opacity-0 transition-all duration-300 group-hover:max-w-[105px] group-hover:ml-1.5 group-hover:opacity-100">Duyệt hoàn tiền</span>
+                          </button>
+                        )}
+                        {r.status === "Refunding" && (
+                          <button
+                            onClick={() => openManagerConfirmModal(r.id)}
+                            className="group flex items-center rounded-lg border border-teal-200 bg-teal-50 px-2 py-1.5 text-xs font-semibold text-teal-600 hover:bg-teal-100 transition-all duration-300 cursor-pointer"
+                          >
+                            <CheckCircle2 size={16} />
+                            <span className="max-w-0 overflow-hidden whitespace-nowrap opacity-0 transition-all duration-300 group-hover:max-w-[110px] group-hover:ml-1.5 group-hover:opacity-100">Xác nhận hoàn tiền</span>
                           </button>
                         )}
                         {(r.status === "Requested" || r.status === "Reviewing") && (
@@ -793,6 +884,22 @@ export default function ManageOrderReturnPage() {
                 </button>
               </div>
             )}
+
+            {/* Footer: quick actions when manager confirm refund */}
+            {returnDetail && returnDetail.status === "Refunding" && returnDetail.refund?.id && (
+              <div className="flex gap-2 border-t border-gray-100 px-6 py-4 bg-gray-50/50">
+                <button
+                  onClick={() => {
+                    closeDetailModal();
+                    openManagerConfirmModal(returnDetail.id, returnDetail.refund.id);
+                  }}
+                  className="flex-1 flex items-center justify-center gap-1.5 rounded-lg border border-teal-200 bg-teal-50 px-3 py-2 text-sm font-semibold text-teal-600 hover:bg-teal-100 transition-colors cursor-pointer"
+                >
+                  <CheckCircle2 className="h-4 w-4" />
+                  Xác nhận hoàn tiền
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -1013,6 +1120,101 @@ export default function ManageOrderReturnPage() {
                 className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-violet-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-violet-700 disabled:opacity-60 transition-colors cursor-pointer"
               >
                 {approvingRefund ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Đang xử lý...
+                  </>
+                ) : (
+                  "Xác nhận"
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Manager Confirm Refund Modal ─────────────────────────────────── */}
+      {managerConfirmModal.open && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="w-full max-w-sm rounded-2xl bg-white shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-start gap-3 px-6 py-5 border-b border-gray-100">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-teal-50">
+                <CheckCircle2 className="h-5 w-5 text-teal-500" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-gray-900">Xác nhận hoàn tiền?</h3>
+                <p className="mt-1 text-sm text-gray-500">
+                  Xác nhận đã chuyển khoản hoàn tiền cho khách hàng thành công.
+                </p>
+              </div>
+            </div>
+            <div className="px-6 py-4 space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1.5">
+                  Lý do thủ công <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  value={managerConfirmReason}
+                  onChange={(e) => setManagerConfirmReason(e.target.value)}
+                  placeholder="Ghi chú xác nhận..."
+                  rows={2}
+                  className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-700 placeholder-gray-400 focus:border-teal-400 focus:outline-none focus:ring-1 focus:ring-teal-200 transition-all resize-none"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1.5">
+                  Hình ảnh Bằng chứng <span className="text-red-500">*</span>
+                </label>
+                {managerConfirmEvidence ? (
+                  <div className="relative inline-block mt-2">
+                    <img src={managerConfirmEvidence} alt="Bằng chứng" className="h-32 w-32 object-cover rounded-lg border border-gray-200" />
+                    <button
+                      onClick={() => setManagerConfirmEvidence("")}
+                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors cursor-pointer"
+                      title="Xóa ảnh"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                ) : (
+                  <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
+                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                      {uploadingEvidence ? (
+                        <>
+                          <Loader2 className="w-8 h-8 text-gray-400 animate-spin mb-2" />
+                          <p className="text-sm text-gray-500 font-semibold">Đang tải lên...</p>
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="w-8 h-8 text-gray-400 mb-2" />
+                          <p className="text-sm text-gray-500 font-semibold">Nhấn để tải ảnh lên</p>
+                        </>
+                      )}
+                    </div>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleUploadEvidence}
+                      disabled={uploadingEvidence}
+                    />
+                  </label>
+                )}
+              </div>
+            </div>
+            <div className="flex gap-3 px-6 py-4 border-t border-gray-100 bg-gray-50/50">
+              <button
+                onClick={closeManagerConfirmModal}
+                className="flex-1 rounded-lg border border-gray-200 px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-100 transition-colors cursor-pointer"
+              >
+                Hủy
+              </button>
+              <button
+                onClick={handleManagerConfirm}
+                disabled={managerConfirming}
+                className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-teal-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-teal-700 disabled:opacity-60 transition-colors cursor-pointer"
+              >
+                {managerConfirming ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin" />
                     Đang xử lý...
