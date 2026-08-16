@@ -7,6 +7,7 @@ export interface ReturnItem {
   status: string;
   reason: string;
   refundAmount: number;
+  refundId?: string;
   itemCount: number;
   createdAt: string;
 }
@@ -158,6 +159,19 @@ export interface ApproveRefundResponse {
 }
 
 export interface ConfirmReceivedResponse {
+  data: ReturnDetail;
+  isSuccess: boolean;
+  statusCode: number;
+  message: string | null;
+  errors: any;
+}
+
+export interface ManagerConfirmRefundRequest {
+  manualReason?: string | null;
+  evidenceUrl?: string | null;
+}
+
+export interface ManagerConfirmRefundResponse {
   data: ReturnDetail;
   isSuccess: boolean;
   statusCode: number;
