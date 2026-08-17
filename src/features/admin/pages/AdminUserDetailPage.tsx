@@ -273,14 +273,13 @@ export default function AdminUserDetailPage() {
                   <tr>
                     <th className="px-5 py-3">Hành động</th>
                     <th className="px-5 py-3">Lý do / Chi tiết</th>
-                    <th className="px-5 py-3">IP Address</th>
                     <th className="px-5 py-3">Thời gian</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200">
                   {loadingLogs ? (
                     <tr>
-                      <td colSpan={4} className="px-5 py-8 text-center text-slate-500">
+                      <td colSpan={3} className="px-5 py-8 text-center text-slate-500">
                         Đang tải lịch sử...
                       </td>
                     </tr>
@@ -302,9 +301,6 @@ export default function AdminUserDetailPage() {
                           ) : (
                             <span className="italic text-slate-400">Không có</span>
                           )}
-                        </td>
-                        <td className="px-5 py-3 whitespace-nowrap">
-                          {log.ipAddress || "N/A"}
                         </td>
                         <td className="px-5 py-3 whitespace-nowrap">
                           {new Date(log.createdAt).toLocaleString("vi-VN")}
