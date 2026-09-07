@@ -1,6 +1,7 @@
 import React from "react";
 import { MapPin, Plus, Info, Users, Shield, UserMinus, UserPlus, Loader2 } from "lucide-react";
-import type { Shop, StoreAddress, StoreStaff } from "@/features/shop/types/shop";
+import type { Shop, StoreAddress, StoreStaff, UserSearchItem } from "@/features/shop/types/shop";
+import UserSearchCombobox from "@/features/shop/components/UserSearchCombobox";
 
 interface StoreDetailCardProps {
   selectedStore: Shop;
@@ -12,10 +13,9 @@ interface StoreDetailCardProps {
   onOpenAddressModal: (addr: StoreAddress | null) => void;
   onDeleteAddress: (hard: boolean) => void;
   deletingAddress: boolean;
-  staffUserId: string;
-  onStaffUserIdChange: (val: string) => void;
-  staffRole: string;
-  onStaffRoleChange: (val: string) => void;
+  selectedStaffUser: UserSearchItem | null;
+  onSelectedStaffUserChange: (user: UserSearchItem | null) => void;
+  disabledStaffUserIds?: Record<string, string>;
   onAddStaff: (e: React.FormEvent) => void;
   submittingStaff: boolean;
   onRemoveStaff: (assignmentId: string) => void;
@@ -32,10 +32,9 @@ export function StoreDetailCard({
   onOpenAddressModal,
   onDeleteAddress,
   deletingAddress,
-  staffUserId,
-  onStaffUserIdChange,
-  staffRole,
-  onStaffRoleChange,
+  selectedStaffUser,
+  onSelectedStaffUserChange,
+  disabledStaffUserIds,
   onAddStaff,
   submittingStaff,
   onRemoveStaff,
@@ -213,46 +212,41 @@ export function StoreDetailCard({
           <div className="space-y-6">
             {/* Add Staff form */}
             <div className="rounded-2xl border border-gray-100 bg-gray-50/50 p-4">
-              <h4 className="text-xs text-gray-400 font-bold uppercase tracking-wider mb-3 flex items-center gap-1.5">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-3 flex items-center gap-1.5">
                 <UserPlus size={14} className="text-primary" />
                 Giao việc cho nhân viên mới
               </h4>
-              <form onSubmit={onAddStaff} className="grid gap-4 sm:grid-cols-3 items-end">
-                <div className="sm:col-span-2">
-                  <label className="block text-xs font-semibold text-gray-600 mb-1">
-                    Mã người dùng (User ID)
+              <form onSubmit={onAddStaff} className="space-y-3">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 mb-1.5">
+                    Tìm & chọn người dùng <span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="Nhập mã GUID của tài khoản nhân viên..."
-                    value={staffUserId}
-                    onChange={(e) => onStaffUserIdChange(e.target.value)}
-                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                  <UserSearchCombobox
+                    value={selectedStaffUser}
+                    onChange={onSelectedStaffUserChange}
+                    disabledUserIds={disabledStaffUserIds}
+                    disabled={submittingStaff}
+                    placeholder="Tìm theo email, họ tên hoặc số điện thoại…"
                   />
                 </div>
-                <div>
-                  <label className="block text-xs font-semibold text-gray-600 mb-1">
-                    Vai trò trong cửa hàng
-                  </label>
-                  <div className="flex gap-2">
-                    <select
-                      value={staffRole}
-                      onChange={(e) => onStaffRoleChange(e.target.value)}
-                      className="w-full rounded-lg border border-gray-300 bg-white px-2 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer"
-                    >
-                      <option value="staff">Nhân viên bán hàng</option>
-                      <option value="manager">Trưởng ca/Quản lý</option>
-                      <option value="shipper">Người giao hàng</option>
-                    </select>
-                    <button
-                      type="submit"
-                      disabled={submittingStaff}
-                      className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-dark transition-colors disabled:opacity-50 flex items-center justify-center cursor-pointer min-w-fit"
-                    >
-                      {submittingStaff ? <Loader2 className="animate-spin" size={16} /> : "Thêm"}
-                    </button>
-                  </div>
+                <div className="flex justify-end">
+                  <button
+                    type="submit"
+                    disabled={!selectedStaffUser || submittingStaff}
+                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:bg-primary-dark disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"
+                  >
+                    {submittingStaff ? (
+                      <>
+                        <Loader2 className="animate-spin" size={16} />
+                        Đang thêm…
+                      </>
+                    ) : (
+                      <>
+                        <UserPlus size={16} />
+                        Thêm nhân viên
+                      </>
+                    )}
+                  </button>
                 </div>
               </form>
             </div>
@@ -272,7 +266,7 @@ export function StoreDetailCard({
                 <table className="w-full text-left border-collapse bg-white">
                   <thead>
                     <tr className="border-b border-gray-100 bg-gray-50/50 text-xs font-bold uppercase tracking-wider text-gray-500">
-                      <th className="px-4 py-3">Nhân viên (User ID)</th>
+                      <th className="px-4 py-3">Nhân viên</th>
                       <th className="px-4 py-3">Vai trò</th>
                       <th className="px-4 py-3 text-right">Hành động</th>
                     </tr>
@@ -289,8 +283,11 @@ export function StoreDetailCard({
                               <p className="font-semibold text-gray-900">
                                 {member.staffName || "Chưa cập nhật họ tên"}
                               </p>
-                              <p className="text-[10px] text-gray-400 font-mono mt-0.5">
-                                UID: {member.staffId}
+                              <p className="text-[12px] text-gray-400 font-mono mt-0.5">
+                                <span className="mr-0.5">SĐT:</span>
+                                <span className="font-bold">
+                                  {member.staffPhone || "Chưa cập nhật"}
+                                </span>
                               </p>
                               {member.staffEmail && (
                                 <p className="text-xs text-gray-500">{member.staffEmail}</p>
