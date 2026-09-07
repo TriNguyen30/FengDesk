@@ -303,7 +303,14 @@
       "view_3d": "View 3D model",
       "hint": "Drag to rotate, scroll to zoom",
       "loading": "Loading 3D model...",
-      "load_error": "Failed to load 3D model"
+      "load_error": "Failed to load 3D model",
+      "reload": "Reload model",
+      "load_error_access": "The link may have expired or access was denied. Reload to request a fresh link.",
+      "load_error_missing": "The model file was not found. Try refreshing the preview.",
+      "load_error_decoder": "The 3D model decoder could not be loaded or run. Try reloading.",
+      "load_error_webgl": "The browser could not initialize 3D graphics. Try reloading the page.",
+      "load_error_network": "The file could not be downloaded. The network or browser access permissions may be blocking it.",
+      "load_error_data": "The 3D model data could not be read. Try reloading."
     }
   },
   "cart_page": {
