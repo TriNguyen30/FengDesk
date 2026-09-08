@@ -56,6 +56,15 @@ export const model3DQueueApi = {
     return fetchHttpClient.get<ApiResponse<Model3DPreview>>(`/model3d-requests/${requestId}/preview`);
   },
 
+  /** Download through the authenticated API: Meshy's asset CDN does not allow browser CORS. */
+  previewModel: (requestId: string, signal: AbortSignal) => {
+    return fetchHttpClient.get<Blob>(`/model3d-requests/${requestId}/preview/model`, undefined, {
+      responseType: "blob",
+      signal,
+      timeout: 120_000,
+    });
+  },
+
   /** Ưng ý — tải GLB từ Meshy, re-host storage vĩnh viễn, ghi đè model hiện tại của sản phẩm. */
   accept: (requestId: string) => {
     return fetchHttpClient.post<ApiResponse<null>>(`/model3d-requests/${requestId}/accept`);
