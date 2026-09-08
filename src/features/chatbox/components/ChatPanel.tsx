@@ -79,7 +79,7 @@ export default function ChatPanel({
 
   const statusLabel =
     connectionStatus === "connected"
-      ? "Đang kết nối"
+      ? "Trực tuyến"
       : connectionStatus === "connecting"
         ? "Đang kết nối..."
         : connectionStatus === "error"
@@ -101,10 +101,10 @@ export default function ChatPanel({
       onClick={() => setIsFocused(true)}
       onFocusCapture={() => setIsFocused(true)}
       className={`flex h-[min(36rem,calc(100dvh-8rem))] w-[min(calc(100vw-1.5rem),24rem)] flex-col overflow-hidden rounded-t-2xl border-x border-t bg-white transition-all duration-200 sm:h-[min(38rem,calc(100dvh-8rem))] sm:w-96 ${composerAiActive
-          ? "border-primary ring-2 ring-primary/40 shadow-2xl"
-          : isFocused
-            ? "border-gray-300 shadow-2xl"
-            : "border-gray-200 shadow-md"
+        ? "border-primary ring-2 ring-primary/40 shadow-2xl"
+        : isFocused
+          ? "border-gray-300 shadow-2xl"
+          : "border-gray-200 shadow-md"
         }`}
     >
       <header
