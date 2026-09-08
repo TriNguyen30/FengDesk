@@ -10,6 +10,7 @@ import {
 } from "react";
 import { Canvas, useThree } from "@react-three/fiber";
 import {
+  ContactShadows,
   Environment,
   Lightformer,
   OrbitControls,
@@ -183,31 +184,42 @@ export default function Product3DViewer({
         <Canvas
           className="relative z-10 cursor-grab active:cursor-grabbing"
           camera={{ fov: 38, position: [0, 0.05, 4] }}
-          dpr={1}
+          dpr={[1, 2]}
           gl={{
             preserveDrawingBuffer: false,
-            antialias: false,
+            antialias: true,
             alpha: true,
             powerPreference: "high-performance",
           }}
           onCreated={handleCanvasCreated}
+          shadows
         >
           <Suspense fallback={null}>
             <ambientLight intensity={0.55} />
             <hemisphereLight args={["#fff8e8", "#718067", 1.15]} />
             <directionalLight
+              castShadow
               position={[3.5, 5, 4]}
               intensity={2.15}
               color="#fff4dc"
+              shadow-mapSize={[1024, 1024]}
             />
             <directionalLight position={[-4, 1.5, 2]} intensity={1.05} color="#d9e9ff" />
             <directionalLight position={[0, -1, -4]} intensity={0.65} color="#d8e6cd" />
-            <Environment resolution={64}>
+            <Environment resolution={128}>
               <Lightformer intensity={1.6} position={[0, 4, -3]} scale={[5, 5, 1]} />
               <Lightformer intensity={1.2} position={[-4, 1, 2]} scale={[3, 3, 1]} />
               <Lightformer intensity={0.9} position={[4, 0, 1]} scale={[2, 4, 1]} />
             </Environment>
             <FitModel url={modelUrl} onLuminance={handleModelLuminance} onReady={handleReady} />
+            <ContactShadows
+              position={[0, -0.83, 0]}
+              opacity={0.34}
+              scale={2.8}
+              blur={2.6}
+              far={3.5}
+              color="#253022"
+            />
           </Suspense>
           <OrbitControls
             makeDefault
