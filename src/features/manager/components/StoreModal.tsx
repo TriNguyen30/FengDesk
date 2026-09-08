@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from "react";
 import Modal from "@/components/ui/Modal";
 import { Loader2 } from "lucide-react";
-import type { Shop } from "@/features/shop/types/shop";
+import type { Shop, UserSearchItem } from "@/features/shop/types/shop";
 import { joinOpeningHours, splitOpeningHours } from "@/features/shop/utils/opening-hours";
 import AddressLocationFields from "@/features/users/components/AddressLocationFields";
 import type { Provinces, District, Ward } from "@/features/users/types/location";
+import UserSearchCombobox from "@/features/shop/components/UserSearchCombobox";
 
 interface StoreFormState {
   ownerUserId: string;
@@ -73,12 +74,29 @@ export function StoreModal({
   const initialHours = splitOpeningHours(storeForm.openingHours);
   const [openTime, setOpenTime] = useState(initialHours.open);
   const [closeTime, setCloseTime] = useState(initialHours.close);
+  const [selectedOwnerUser, setSelectedOwnerUser] = useState<UserSearchItem | null>(null);
 
   useEffect(() => {
     const nextHours = splitOpeningHours(storeForm.openingHours);
     setOpenTime(nextHours.open);
     setCloseTime(nextHours.close);
   }, [storeForm.openingHours, open]);
+
+  useEffect(() => {
+    if (!open) {
+      setSelectedOwnerUser(null);
+    } else if (storeForm.ownerUserId) {
+      if (!selectedOwnerUser || selectedOwnerUser.id !== storeForm.ownerUserId) {
+        setSelectedOwnerUser({
+          id: storeForm.ownerUserId,
+          fullName: storeForm.ownerUserId,
+          email: "Chủ cửa hàng hiện tại",
+        });
+      }
+    } else {
+      setSelectedOwnerUser(null);
+    }
+  }, [open, storeForm.ownerUserId]);
 
   const handleTimeChange = (nextOpen: string, nextClose: string) => {
     const nextOpeningHours = joinOpeningHours(nextOpen, nextClose);
@@ -108,16 +126,21 @@ export function StoreModal({
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-1">
-            Mã quản trị chủ cửa hàng (Owner User ID)
+          <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+            Chủ sở hữu cửa hàng (Store Owner)
           </label>
-          <input
-            type="text"
-            value={storeForm.ownerUserId}
-            onChange={(e) => onFormChange({ ...storeForm, ownerUserId: e.target.value })}
-            className="w-full rounded-lg border border-gray-300 px-3.5 py-2.5 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-            placeholder="Nhập GUID tài khoản quản lý..."
+          <UserSearchCombobox
+            value={selectedOwnerUser}
+            onChange={(user) => {
+              setSelectedOwnerUser(user);
+              onFormChange({ ...storeForm, ownerUserId: user?.id || "" });
+            }}
+            disabled={submitting}
+            placeholder="Tìm theo email, họ tên hoặc số điện thoại…"
           />
+          <p className="mt-1.5 text-xs text-gray-500">
+            Tìm người dùng theo email, họ tên hoặc số điện thoại để gán làm chủ sở hữu chi nhánh.
+          </p>
         </div>
 
         <div className="space-y-3 rounded-lg border border-gray-200 bg-gray-50 p-3">

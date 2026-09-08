@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { Store, Plus } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -28,7 +28,7 @@ import {
   addShopStaffRequest,
   removeShopStaffRequest,
 } from "@/features/shop/api/shop.api";
-import type { Shop, StoreAddress, StoreStaff } from "@/features/shop/types/shop";
+import type { Shop, StoreAddress, StoreStaff, UserSearchItem } from "@/features/shop/types/shop";
 import {
   StoreList,
   StoreDetailCard,
@@ -100,9 +100,16 @@ export default function ManageStoresPage() {
   const [deletingAddress, setDeletingAddress] = useState(false);
 
   // Staff Form
-  const [staffUserId, setStaffUserId] = useState("");
-  const [staffRole, setStaffRole] = useState("staff");
+  const [selectedStaffUser, setSelectedStaffUser] = useState<UserSearchItem | null>(null);
   const [submittingStaff, setSubmittingStaff] = useState(false);
+
+  const disabledStaffUserIds = useMemo(() => {
+    const map: Record<string, string> = {};
+    for (const s of staff) {
+      map[s.staffId] = s.status === "Pending" ? "Đã mời" : "Nhân viên";
+    }
+    return map;
+  }, [staff]);
 
   // Staff Deletion
   const [deletingStaffId, setDeletingStaffId] = useState<string | null>(null);
@@ -602,21 +609,20 @@ export default function ManageStoresPage() {
   const handleAddStaff = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedStore) return;
-    if (!staffUserId.trim()) {
-      toast.error("Vui lòng nhập Mã người dùng (User ID)");
+    if (!selectedStaffUser) {
+      toast.error("Vui lòng chọn người dùng để thêm làm nhân viên.");
       return;
     }
 
     setSubmittingStaff(true);
     try {
-      // BE chỉ lưu phân công store-scoped, không có "role"; chuyển thẳng GUID sang staffId.
       const res = await addShopStaffRequest(selectedStore.id, {
-        staffId: staffUserId.trim(),
+        staffId: selectedStaffUser.id,
       });
 
       if (res.isSuccess) {
         toast.success("Thêm nhân viên thành công");
-        setStaffUserId("");
+        setSelectedStaffUser(null);
         fetchStaff(selectedStore.id);
       } else {
         toast.error(res.message || "Lỗi khi thêm nhân viên");
@@ -694,10 +700,9 @@ export default function ManageStoresPage() {
               onOpenAddressModal={handleOpenAddressModal}
               onDeleteAddress={handleDeleteAddress}
               deletingAddress={deletingAddress}
-              staffUserId={staffUserId}
-              onStaffUserIdChange={setStaffUserId}
-              staffRole={staffRole}
-              onStaffRoleChange={setStaffRole}
+              selectedStaffUser={selectedStaffUser}
+              onSelectedStaffUserChange={setSelectedStaffUser}
+              disabledStaffUserIds={disabledStaffUserIds}
               onAddStaff={handleAddStaff}
               submittingStaff={submittingStaff}
               onRemoveStaff={handleRemoveStaff}

@@ -11,6 +11,7 @@ interface Props {
   disabledUserIds?: Record<string, string>;
   disabled?: boolean;
   autoFocus?: boolean;
+  placeholder?: string;
 }
 
 const MIN_QUERY = 3;
@@ -22,6 +23,7 @@ export default function UserSearchCombobox({
   disabledUserIds = {},
   disabled,
   autoFocus,
+  placeholder,
 }: Props) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<UserSearchItem[]>([]);
@@ -136,14 +138,14 @@ export default function UserSearchCombobox({
             <UserCircle2 size={20} />
           </span>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-semibold text-gray-900">{value.fullName}</p>
-            <p className="truncate text-xs text-gray-500">{value.email}</p>
+            <p className="truncate text-sm font-semibold text-gray-900">{value.fullName || value.id}</p>
+            <p className="truncate text-xs text-gray-500">{value.email || value.id}</p>
           </div>
           <button
             type="button"
             onClick={handleClear}
             disabled={disabled}
-            className="text-xs font-semibold text-red-500 hover:underline disabled:opacity-50"
+            className="text-xs font-semibold text-red-500 hover:underline disabled:opacity-50 cursor-pointer"
           >
             Đổi
           </button>
@@ -170,7 +172,7 @@ export default function UserSearchCombobox({
           onFocus={() => setOpen(true)}
           onKeyDown={onKeyDown}
           disabled={disabled}
-          placeholder="Tìm theo email / họ tên / số điện thoại…"
+          placeholder={placeholder || "Tìm theo email / họ tên / số điện thoại…"}
           className="w-full rounded-xl border border-gray-200 py-2.5 pl-10 pr-10 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-60"
           autoComplete="off"
         />
