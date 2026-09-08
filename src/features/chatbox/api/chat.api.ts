@@ -1,10 +1,14 @@
 import fetchHttpClient from "@/lib/axios";
 import type { ApiResponse } from "@/types/api";
 import type { Chatbox, ChatMessage, SendMessagePayload } from "@/features/chatbox/types/chatbox";
+import { AI_REQUEST_TIMEOUT_MS } from "@/config/axios.config";
+import { normalizeImageForUpload } from "@/utils/imageResize";
 
 /** Timeout riêng cho request gọi LLM (chat có tool-loop có thể chạy 30-50s) — vượt xa timeout mặc định 30s.
  *  Chỉ áp cho các call LLM nặng; các endpoint còn lại giữ mặc định. */
-export const AI_REQUEST_TIMEOUT_MS = 120_000;
+// Định nghĩa gốc nằm ở config/axios.config.ts (cạnh timeout mặc định) — re-export để các
+// import cũ trỏ vào đây không phải sửa.
+export { AI_REQUEST_TIMEOUT_MS } from "@/config/axios.config";
 
 export interface ChatboxListResponse {
   items: Chatbox[];
@@ -117,9 +121,11 @@ export const chatApi = {
     fetchHttpClient.post<ApiResponse<null>>(`/chat/chatbox/${chatboxId}/participants`, { userId }),
 
   /** Tải ảnh chat lên storage → trả link để gắn vào tin nhắn. signal để hủy upload (nút x khi quá chậm). */
-  uploadImage: (chatboxId: string, file: File, signal?: AbortSignal) => {
+  uploadImage: async (chatboxId: string, file: File, signal?: AbortSignal) => {
+    // Backend chỉ nhận JPG/PNG/BMP/GIF — .webp phải đổi sang JPEG trước, nếu không sẽ bị trả 422.
+    const normalized = await normalizeImageForUpload(file);
     const formData = new FormData();
-    formData.append("file", file);
+    formData.append("file", normalized);
     return fetchHttpClient.post<ApiResponse<string>>(
       `/chat/chatbox/${chatboxId}/images`,
       formData,

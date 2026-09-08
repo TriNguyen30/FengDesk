@@ -1,5 +1,5 @@
 import { useQuery, useQueries } from "@tanstack/react-query";
-import { getProductFit } from "../api/recommendation.api";
+import { getPersonalFit, getProductFit } from "../api/recommendation.api";
 
 export function useProductFit(productId?: string, workspaceProfileId?: string) {
   const query = useQuery({
@@ -33,4 +33,24 @@ export function useProductFitAcrossWorkspaces(
   );
 
   return { byWorkspaceId };
+}
+
+/**
+ * Chấm 1 sản phẩm theo bản mệnh user (vật mang theo người).
+ *
+ * Không retry: lỗi hay gặp nhất ở đây là `422 thiếu ngày sinh` — thử lại không bao giờ đổi kết quả,
+ * chỉ làm user chờ lâu hơn trước khi thấy lời mời khai ngày sinh.
+ */
+export function usePersonalFit(productId?: string) {
+  const query = useQuery({
+    queryKey: ["personal-fit", productId],
+    queryFn: () => {
+      if (!productId) throw new Error("Missing productId");
+      return getPersonalFit(productId);
+    },
+    enabled: !!productId,
+    retry: false,
+  });
+
+  return { fit: query.data ?? null, status: query.status, error: query.error };
 }

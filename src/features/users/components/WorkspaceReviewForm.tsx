@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { AlertTriangle, Sparkles } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { createWorkspace, updateWorkspace } from "../api/workspace.api";
 import { toCm2, fromCm2 } from "../utils/deskArea";
@@ -32,6 +32,11 @@ interface WorkspaceReviewFormProps {
   inputVocabulary: ElementInputVocabulary | null;
   onSuccess: () => void;
   onCancel: () => void;
+  /** Giá trị form từ bản nháp lần trước (create mode) — ưu tiên hơn draft AI vì đây là công user đã bỏ ra. */
+  initialValues?: WorkspaceFormValues | null;
+  initialInputs?: WorkspaceProfileInputDto[] | null;
+  /** Báo lên modal mỗi khi form/tag đổi, để modal ghi nháp. */
+  onDraftChange?: (values: WorkspaceFormValues, inputs: WorkspaceProfileInputDto[]) => void;
 }
 
 function toFormValues(
@@ -87,6 +92,9 @@ export default function WorkspaceReviewForm({
   inputVocabulary,
   onSuccess,
   onCancel,
+  initialValues,
+  initialInputs,
+  onDraftChange,
 }: WorkspaceReviewFormProps) {
   const isEditMode = !!workspace;
 
@@ -96,14 +104,16 @@ export default function WorkspaceReviewForm({
     watch,
     reset,
     setValue,
+    getValues,
     formState: { errors, isSubmitting, dirtyFields },
   } = useForm<WorkspaceFormValues>({
     resolver: zodResolver(workspaceFormSchema),
-    defaultValues: toFormValues(workspace, draft),
+    // Nháp lần trước thắng draft AI: đó là những gì user đã tự tay sửa.
+    defaultValues: initialValues ?? toFormValues(workspace, draft),
   });
 
   const [inputs, setInputs] = useState<WorkspaceProfileInputDto[]>(
-    () => draft?.inputs ?? workspace?.inputs ?? [],
+    () => initialInputs ?? draft?.inputs ?? workspace?.inputs ?? [],
   );
 
   useEffect(() => {
@@ -149,6 +159,17 @@ export default function WorkspaceReviewForm({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [workspace, draft]);
+
+  // Ghi nháp mỗi khi form hoặc tag đổi. watch() dạng subscribe (không phải watch("field")) nên
+  // không kéo theo re-render toàn form ở mỗi phím gõ — nó chỉ gọi callback.
+  useEffect(() => {
+    if (isEditMode || !onDraftChange) return;
+    const sub = watch((values) => onDraftChange(values as WorkspaceFormValues, inputs));
+    // watch() chỉ bắn khi FIELD đổi — tag hiện trạng nằm ngoài react-hook-form nên phải ghi thêm
+    // một lần ngay đây, nếu không thì chọn/bỏ tag xong đóng tab là mất.
+    onDraftChange(getValues(), inputs);
+    return () => sub.unsubscribe();
+  }, [watch, getValues, inputs, isEditMode, onDraftChange]);
 
   const noDesk = watch("noDesk");
 
@@ -223,12 +244,15 @@ export default function WorkspaceReviewForm({
 
   return (
     <form onSubmit={onSubmit} className="p-6">
-      {draft && draft.confidence < 0.5 && (
-        <div className="mb-4 flex items-start gap-2 rounded-lg bg-amber-50 px-3 py-2.5 text-xs text-amber-700">
-          <AlertTriangle size={14} className="mt-0.5 shrink-0" />
-          <span>AI chưa chắc chắn lắm với mô tả này, vui lòng kiểm tra kỹ các field bên dưới.</span>
-        </div>
-      )}
+      {/*
+        Không còn banner "AI chưa chắc chắn" theo draft.confidence.
+        Lý do: confidence đo mức TỰ NHẤT QUÁN của model (tỉ lệ field nó tự khai là "có nhắc" mà
+        map được), không đo chất lượng trích xuất. Model khai thật thà những thứ nó không map nổi
+        thì bị trừ điểm; mô tả ngắn khiến mentionedFields rỗng thì tụt thẳng về 0 — cảnh báo bật
+        lên ngay cả khi mọi ô đều điền đúng.
+        Thay vào đó dùng tín hiệu THEO TỪNG Ô: icon Sparkles ở ô nào AI điền (aiFilled) — cụ thể,
+        đúng chỗ, và không doạ user về toàn bộ form.
+      */}
       {draft && draft.unrecognized.length > 0 && (
         <div className="mb-4 rounded-lg bg-amber-50 px-3 py-2.5 text-xs text-amber-700">
           <p className="font-medium">Chưa hiểu — bạn chọn giúp nhé:</p>

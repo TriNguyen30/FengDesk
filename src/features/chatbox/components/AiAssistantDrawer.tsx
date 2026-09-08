@@ -33,6 +33,7 @@ import ConfirmDeleteButton from "./ConfirmDeleteButton";
 import Markdown from "./Markdown";
 import PaymentAttachment from "./PaymentAttachment";
 import { extractPaymentBlock } from "@/features/chatbox/utils/paymentBlock";
+import { IMAGE_UPLOAD_ACCEPT } from "@/utils/imageResize";
 
 const SUGGESTIONS = [
   "Cây để bàn nào hợp mệnh Mộc?",
@@ -666,7 +667,8 @@ export default function AiAssistantDrawer({ open, onClose, productId }: AiAssist
                           </div>
                         )}
 
-                        {isUser && !isEditingThis && !sending && (
+                        {/* m.pending = tin optimistic chưa có GUID server → rewind sẽ 404. Ẩn nút sửa. */}
+                        {isUser && !isEditingThis && !sending && !m.pending && (
                           <button
                             type="button"
                             onClick={() => startEdit(m)}
@@ -727,7 +729,7 @@ export default function AiAssistantDrawer({ open, onClose, productId }: AiAssist
               <input
                 ref={fileRef}
                 type="file"
-                accept="image/png,image/jpeg,image/gif,image/bmp"
+                accept={IMAGE_UPLOAD_ACCEPT}
                 className="hidden"
                 onChange={(e) => {
                   const file = e.target.files?.[0];

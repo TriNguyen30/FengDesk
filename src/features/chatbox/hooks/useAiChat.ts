@@ -9,7 +9,19 @@ export interface AiMessage {
   role: "user" | "ai" | "system";
   content: string;
   images: string[];
+  /**
+   * Tin optimistic do FE tự vẽ, id là mã tạm (`u-…`) chứ KHÔNG phải GUID của server.
+   * Mọi thao tác cần id thật (rewind/sửa) phải bị chặn trên tin này, nếu không BE trả
+   * 404 "Không tìm thấy tin nhắn." mãi cho tới khi user reload trang.
+   */
+  pending?: boolean;
+  /** Lượt gửi này đã thất bại (LLM lỗi/mất mạng) — giữ chữ cho user copy lại, không cho sửa & gửi lại. */
+  failed?: boolean;
 }
+
+/** Id tạm của tin optimistic — phân biệt với GUID thật do BE cấp. */
+const TEMP_ID_PREFIX = "u-";
+export const isTempMessageId = (id: string) => id.startsWith(TEMP_ID_PREFIX);
 
 function mapHistory(history: AiChatTurn[]): AiMessage[] {
   return history.map((t) => ({
@@ -142,14 +154,22 @@ export function useAiChat(productId?: string) {
     setHasMore(false);
   }, []);
 
+  /** Đánh dấu tin optimistic là gửi hỏng: giữ chữ trên màn hình nhưng khoá thao tác cần id thật. */
+  const markFailed = useCallback((tempId: string) => {
+    setMessages((p) => p.map((m) => (m.id === tempId ? { ...m, failed: true } : m)));
+  }, []);
+
   const send = useCallback(
     async (text: string, imageUrls?: string[]) => {
       const t = text.trim();
       if ((!t && !(imageUrls && imageUrls.length)) || sending) return;
 
+      // Giữ lại id tạm để còn ĐÁNH DẤU khi lượt thất bại. Trước đây id này bị bỏ rơi trong list,
+      // user bấm "sửa & gửi lại" trên nó → rewind với id không phải GUID → BE 404 vĩnh viễn.
+      const tempId = `${TEMP_ID_PREFIX}${Date.now()}`;
       setMessages((p) => [
         ...p,
-        { id: `u-${Date.now()}`, role: "user", content: t, images: imageUrls ?? [] },
+        { id: tempId, role: "user", content: t, images: imageUrls ?? [], pending: true },
       ]);
       setSending(true);
       try {
@@ -168,14 +188,16 @@ export function useAiChat(productId?: string) {
           setHasMore(true);
         } else {
           toast.error(res.data.message || "Trợ lý AI không phản hồi.");
+          markFailed(tempId);
         }
       } catch {
         toast.error("Không kết nối được trợ lý AI. Thử lại sau.");
+        markFailed(tempId);
       } finally {
         setSending(false);
       }
     },
-    [sending, productId],
+    [sending, productId, markFailed],
   );
 
   // Sửa & gửi lại 1 tin nhắn cũ của mình: BE soft-delete tin đó + mọi tin sau nó rồi trả lịch sử mới
@@ -184,6 +206,12 @@ export function useAiChat(productId?: string) {
     async (messageId: string, newText: string) => {
       const t = newText.trim();
       if (!t || sending) return;
+      // Chốt chặn: id tạm chưa tồn tại ở server → gọi rewind chỉ tổ nhận 404. Reload sẽ nạp lại
+      // lịch sử với GUID thật; trước đó không có gì để "sửa & gửi lại".
+      if (isTempMessageId(messageId)) {
+        toast.error("Tin nhắn này chưa gửi được lên máy chủ — hãy gửi lại nội dung mới.");
+        return;
+      }
       // Optimistic: cắt ngay đuôi (tin sau điểm sửa) + hiển thị nội dung mới, để UI phản ánh liền
       // thay vì chờ LLM (Ollama có thể chậm/lỗi). Server trả history chính thức thì replace lại.
       setMessages((prev) => {

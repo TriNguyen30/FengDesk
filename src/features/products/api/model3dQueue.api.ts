@@ -1,4 +1,5 @@
 import fetchHttpClient from "@/lib/httpClient";
+import { normalizeImageForUpload } from "@/utils/imageResize";
 import type { ApiResponse } from "../types/product";
 import type {
   Model3DFailureReason,
@@ -9,11 +10,13 @@ import type {
   RequestModel3DPayload,
 } from "../types/model3d";
 
-function buildRequestFormData(payload: RequestModel3DPayload): FormData {
+/** Ảnh mới được chuẩn hoá trước: backend chỉ nhận JPG/PNG/BMP/GIF nên .webp phải đổi sang JPEG. */
+async function buildRequestFormData(payload: RequestModel3DPayload): Promise<FormData> {
   const form = new FormData();
   if (payload.productImageId) form.append("ProductImageId", payload.productImageId);
   (payload.sourceImageIds ?? []).forEach((id) => form.append("SourceImageIds", id));
-  (payload.newImageFiles ?? []).forEach((file) => form.append("NewImages", file));
+  const newImages = await Promise.all((payload.newImageFiles ?? []).map(normalizeImageForUpload));
+  newImages.forEach((file) => form.append("NewImages", file));
   return form;
 }
 
@@ -34,19 +37,19 @@ export const model3DQueueApi = {
   },
 
   /** Chọn ảnh (tick có sẵn + upload mới, 1–4 ảnh) rồi gửi task Meshy lần đầu cho request Regenerate. */
-  generate: (requestId: string, payload: RequestModel3DPayload) => {
+  generate: async (requestId: string, payload: RequestModel3DPayload) => {
     return fetchHttpClient.post<ApiResponse<Model3DRequestQueueItem>>(
       `/model3d-requests/${requestId}/generate`,
-      buildRequestFormData(payload),
+      await buildRequestFormData(payload),
       { headers: { "Content-Type": "multipart/form-data" } },
     );
   },
 
   /** Chưa ưng ý kết quả trước — chọn lại ảnh, gửi lại Meshy. Không giới hạn số lần. */
-  retry: (requestId: string, payload: RequestModel3DPayload) => {
+  retry: async (requestId: string, payload: RequestModel3DPayload) => {
     return fetchHttpClient.post<ApiResponse<Model3DRequestQueueItem>>(
       `/model3d-requests/${requestId}/retry`,
-      buildRequestFormData(payload),
+      await buildRequestFormData(payload),
       { headers: { "Content-Type": "multipart/form-data" } },
     );
   },

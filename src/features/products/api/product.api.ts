@@ -1,4 +1,5 @@
 import fetchHttpClient from "@/lib/httpClient";
+import { normalizeImageForUpload } from "@/utils/imageResize";
 import type {
   ApiResponse,
   GetProductsParams,
@@ -48,13 +49,14 @@ export const productApi = {
     return fetchHttpClient.delete<ApiResponse<null>>(`/products/${id}/items/${itemId}`);
   },
 
-  addProductImage: (id: string, data: AddProductImageRequest | FormData) => {
+  addProductImage: async (id: string, data: AddProductImageRequest | FormData) => {
     let payload: FormData;
     if (data instanceof FormData) {
       payload = data;
     } else {
+      // Backend chỉ nhận JPG/PNG/BMP/GIF — .webp phải đổi sang JPEG trước, nếu không sẽ bị trả 422.
       payload = new FormData();
-      payload.append("file", data.file);
+      payload.append("file", await normalizeImageForUpload(data.file));
       payload.append("sortOrder", String(data.sortOrder));
     }
     return fetchHttpClient.post<ApiResponse<ProductImage>>(`/products/${id}/images`, payload, {

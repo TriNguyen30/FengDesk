@@ -1,4 +1,5 @@
 import fetchHttpClient from "@/lib/httpClient";
+import { normalizeImageForUpload } from "@/utils/imageResize";
 import type {
   ReturnQueryParams,
   ReturnListResponse,
@@ -68,8 +69,10 @@ export const returnApi = {
   },
 
   resubmitEvidence: async (returnId: string, files: File[]) => {
+    // Backend chỉ nhận JPG/PNG/BMP/GIF — .webp phải đổi sang JPEG trước, nếu không sẽ bị trả 422.
+    const normalized = await Promise.all(files.map(normalizeImageForUpload));
     const formData = new FormData();
-    files.forEach((file) => {
+    normalized.forEach((file) => {
       formData.append("files", file);
     });
     return fetchHttpClient.post<ResubmitEvidenceResponse>(

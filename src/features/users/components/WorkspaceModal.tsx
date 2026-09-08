@@ -1,10 +1,18 @@
-import { useEffect, useState } from "react";
-import { X } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { ArrowLeft, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { getElementInputVocabulary, getStyles, getWorkspaceTypes } from "../api/workspace.api";
 import { useWorkspaceIntake } from "../hooks/useWorkspaceIntake";
-import type { ElementInputVocabulary, Style, Workspace, WorkspaceType } from "../types/workspace";
+import { useWorkspaceIntakeDraft } from "../hooks/useWorkspaceIntakeDraft";
+import type { WorkspaceFormValues } from "../schemas/workspace-schema";
+import type {
+  ElementInputVocabulary,
+  Style,
+  Workspace,
+  WorkspaceProfileInputDto,
+  WorkspaceType,
+} from "../types/workspace";
 import WorkspaceDescribeStep from "./WorkspaceDescribeStep";
 import WorkspaceIntakeProgress from "./WorkspaceIntakeProgress";
 import WorkspaceReviewForm from "./WorkspaceReviewForm";
@@ -25,8 +33,21 @@ export default function WorkspaceModal({
   workspace,
 }: WorkspaceModalProps) {
   const isEditMode = !!workspace;
-  const [step, setStep] = useState<Step>(isEditMode ? "review" : "describe");
+
+  // Bản nháp lần trước (chỉ create mode). Đọc 1 lần lúc mount, dùng làm giá trị khởi tạo.
+  const draftStore = useWorkspaceIntakeDraft(!isEditMode);
+  const saved = draftStore.initial;
+
+  const [step, setStep] = useState<Step>(
+    isEditMode ? "review" : (saved?.step ?? "describe"),
+  );
   const [sessionKey, setSessionKey] = useState<string | null>(null);
+
+  // Nội dung nháp đang giữ trong bộ nhớ — cả 2 bước cùng ghi vào đây rồi đẩy xuống localStorage.
+  const draftRef = useRef({
+    describe: saved?.describe ?? { description: "", imageUrls: [] as string[], deepThink: false },
+    review: saved?.review,
+  });
 
   const [workspaceTypes, setWorkspaceTypes] = useState<WorkspaceType[]>([]);
   const [styles, setStyles] = useState<Style[]>([]);
@@ -42,7 +63,10 @@ export default function WorkspaceModal({
   if (currentKey !== sessionKey) {
     setSessionKey(currentKey);
     if (currentKey !== null) {
-      setStep(isEditMode ? "review" : "describe");
+      // Create mode: quay lại ĐÚNG bước user đang dở (nháp), thay vì luôn về bước mô tả.
+      setStep(isEditMode ? "review" : (draftRef.current.review ? "review" : "describe"));
+      // intake là trạng thái của LƯỢT CHẠY AI (operationId, tiến trình) — không sống qua lần mở mới,
+      // nên vẫn reset. Nội dung user gõ thì do nháp lo, không liên quan.
       intake.reset();
     }
   }
@@ -124,6 +148,61 @@ export default function WorkspaceModal({
     setStep("review");
   };
 
+  // ── Ghi nháp ────────────────────────────────────────────────────────────
+  // Hai bước con báo thay đổi về đây; hook tự debounce trước khi chạm localStorage.
+
+  const persist = useCallback(
+    (nextStep: Step) => {
+      draftStore.save({
+        step: nextStep,
+        describe: draftRef.current.describe,
+        review: draftRef.current.review,
+      });
+    },
+    [draftStore],
+  );
+
+  const handleDescribeChange = useCallback(
+    (d: { description: string; imageUrls: string[]; deepThink: boolean }) => {
+      draftRef.current.describe = d;
+      persist(step);
+    },
+    [persist, step],
+  );
+
+  const handleReviewChange = useCallback(
+    (values: WorkspaceFormValues, inputs: WorkspaceProfileInputDto[]) => {
+      draftRef.current.review = { values, inputs };
+      persist("review");
+    },
+    [persist],
+  );
+
+  /**
+   * Đóng modal bằng nút X / bấm nền: GIỮ nháp.
+   * Đây là chỗ user hay bấm nhầm nhất — mất công gõ vì một cú click là quá đắt.
+   */
+  const handleDismiss = () => {
+    draftStore.flush();
+    onClose();
+  };
+
+  /**
+   * Quay lại bước mô tả. Giữ nguyên mọi thứ user đã nhập ở bước 2 (nháp lo phần đó) và cũng
+   * KHÔNG hủy lượt AI đang chạy — quay lại rồi sang lại vẫn thấy tiến trình/draft như cũ.
+   */
+  const handleBackToDescribe = () => {
+    setStep("describe");
+    persist("describe");
+  };
+
+  /** Bấm "Hủy" là ý định RÕ RÀNG muốn bỏ → xóa nháp. */
+  const handleCancel = () => {
+    draftStore.clear();
+    draftRef.current = { describe: { description: "", imageUrls: [], deepThink: false }, review: undefined };
+    onClose();
+  };
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -134,7 +213,7 @@ export default function WorkspaceModal({
             animate="visible"
             exit="hidden"
             className="absolute inset-0 bg-black/50 backdrop-blur-[2px]"
-            onClick={onClose}
+            onClick={handleDismiss}
           />
           <motion.div
             variants={modalVariants}
@@ -144,15 +223,31 @@ export default function WorkspaceModal({
             className="relative z-[101] w-full max-w-lg rounded-2xl bg-white shadow-xl max-h-[90vh] overflow-y-auto"
           >
             <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4 sticky top-0 bg-white z-10">
-          <h2 className="text-lg font-bold text-gray-900">
-            {isEditMode
-              ? "Chỉnh sửa không gian làm việc"
-              : step === "describe"
-                ? "Mô tả không gian làm việc"
-                : "Kiểm tra & lưu"}
-          </h2>
+          <div className="flex min-w-0 items-center gap-2">
+            {/* Quay lại bước mô tả — chỉ có ở create mode. Nội dung đã gõ được nháp giữ nguyên,
+                nên đi tới đi lui giữa 2 bước không mất gì. */}
+            {!isEditMode && step === "review" && (
+              <button
+                type="button"
+                onClick={handleBackToDescribe}
+                title="Quay lại phần mô tả"
+                aria-label="Quay lại phần mô tả"
+                className="-ml-1.5 rounded-full p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 cursor-pointer"
+              >
+                <ArrowLeft size={20} />
+              </button>
+            )}
+            <h2 className="truncate text-lg font-bold text-gray-900">
+              {isEditMode
+                ? "Chỉnh sửa không gian làm việc"
+                : step === "describe"
+                  ? "Mô tả không gian làm việc"
+                  : "Kiểm tra & lưu"}
+            </h2>
+          </div>
           <button
-            onClick={onClose}
+            onClick={handleDismiss}
+            title="Đóng — nội dung đang nhập vẫn được giữ lại"
             className="rounded-full p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors cursor-pointer"
           >
             <X size={20} />
@@ -164,6 +259,10 @@ export default function WorkspaceModal({
             onAnalyze={handleAnalyze}
             onSkip={handleSkip}
             isAnalyzing={intake.status === "starting"}
+            initialDescription={draftRef.current.describe.description}
+            initialImageUrls={draftRef.current.describe.imageUrls}
+            initialDeepThink={draftRef.current.describe.deepThink}
+            onDraftChange={handleDescribeChange}
           />
         ) : loadingOptions ? (
           <div className="flex h-40 items-center justify-center">
@@ -184,11 +283,16 @@ export default function WorkspaceModal({
               workspaceTypes={workspaceTypes}
               styles={styles}
               inputVocabulary={inputVocabulary}
+              initialValues={isEditMode ? null : draftRef.current.review?.values}
+              initialInputs={isEditMode ? null : draftRef.current.review?.inputs}
+              onDraftChange={handleReviewChange}
               onSuccess={() => {
+                // Lưu được rồi thì nháp hết ý nghĩa.
+                draftStore.clear();
                 onSuccess();
                 onClose();
               }}
-              onCancel={onClose}
+              onCancel={handleCancel}
             />
           </>
         )}

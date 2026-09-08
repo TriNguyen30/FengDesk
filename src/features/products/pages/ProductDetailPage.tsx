@@ -25,7 +25,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { toast } from "sonner";
 import confetti from "canvas-confetti";
 import { useTranslation } from "react-i18next";
-import { ProductItem } from "../types/product";
+import { ProductDetail, ProductItem } from "../types/product";
 import { useProductDetail, useProductList } from "../hooks/useProducts";
 import { useProductModel3D } from "../hooks/useProductModel3D";
 import Product3DViewer, { Model3DViewSwitcher } from "@/components/ui/3DSection";
@@ -46,6 +46,7 @@ import {
 import { setAuthModal } from "@/features/auth/store/authSlice";
 import { cleanRichTextHtml } from "@/utils";
 import ProductFitPanel from "@/features/recommendation/components/element-vector/ProductFitPanel";
+import PersonalFitPanel from "@/features/recommendation/components/element-vector/PersonalFitPanel";
 import { useAiAssistant } from "@/features/chatbox/hooks/useAiAssistant";
 import FeatureBar from "@/components/ui/FeatureBar";
 import CommitmentPage from "@/components/ui/CommitmentPage";
@@ -837,7 +838,9 @@ export default function ProductDetailPage() {
       </div>
 
       {/* ── Độ phù hợp phong thủy với không gian của bạn ─────────────────── */}
-      {product.primaryElement && <ProductFitSection productId={product.id} />}
+      {product.primaryElement && (
+        <ProductFitSection productId={product.id} placement={product.placement} />
+      )}
 
       {/* ── Store Info ─────────────────────────────────────────────────── */}
       {shop && (
@@ -1075,7 +1078,16 @@ export default function ProductDetailPage() {
   );
 }
 
-function ProductFitSection({ productId }: { productId: string }) {
+function ProductFitSection({
+  productId,
+  placement,
+}: {
+  productId: string;
+  placement?: ProductDetail["placement"];
+}) {
+  // Vật mang theo người đi hẳn một luồng khác: chấm theo dụng thần của user chứ không theo phòng nào.
+  // Dùng panel của phòng cho nó sẽ hiện "phòng đang thiếu hành gì" cho một cái vòng tay — vô nghĩa.
+  const isCarry = placement === "Carry";
   const { t } = useTranslation();
   const dispatch = useAppDispatch();
   const isAuthenticated = useAppSelector((s) => !!s.auth.token);
@@ -1083,7 +1095,11 @@ function ProductFitSection({ productId }: { productId: string }) {
   return (
     <div className="mt-6 rounded-2xl bg-white shadow-sm ring-1 ring-gray-100 p-4 sm:p-6">
       {isAuthenticated ? (
-        <ProductFitPanel productId={productId} />
+        isCarry ? (
+          <PersonalFitPanel productId={productId} />
+        ) : (
+          <ProductFitPanel productId={productId} />
+        )
       ) : (
         <div className="flex flex-col items-center gap-3 py-4 text-center">
           <span className="text-sm font-bold text-gray-900">

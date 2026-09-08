@@ -1,6 +1,7 @@
 import { useEffect, useRef, type FormEvent, type KeyboardEvent } from "react";
 import { ImagePlus, Loader2, Send, Sparkles } from "lucide-react";
 import { useImageAttachments, type UploadFn } from "@/features/chatbox/hooks/useImageAttachments";
+import { IMAGE_UPLOAD_ACCEPT } from "@/utils/imageResize";
 import AttachmentPreviewRow from "./AttachmentPreviewRow";
 
 /** Phát hiện lệnh @AI trong nội dung đang gõ (khớp regex BE: word-boundary, không phân biệt hoa thường). */
@@ -82,7 +83,7 @@ export default function ChatInput({
             <input
               ref={fileRef}
               type="file"
-              accept="image/png,image/jpeg,image/gif,image/bmp"
+              accept={IMAGE_UPLOAD_ACCEPT}
               className="hidden"
               onChange={(e) => {
                 const file = e.target.files?.[0];

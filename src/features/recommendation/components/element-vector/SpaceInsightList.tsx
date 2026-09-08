@@ -1,4 +1,11 @@
-import { Check, AlertTriangle, AlertCircle, Info, Target, type LucideIcon } from "lucide-react";
+import {
+  Check,
+  AlertTriangle,
+  AlertCircle,
+  Compass,
+  Target,
+  type LucideIcon,
+} from "lucide-react";
 import type { SpaceInsights } from "@/features/users/types/workspace";
 import InfoRow, { type InfoRowTone } from "./InfoRow";
 
@@ -23,16 +30,21 @@ const STATUS_ICON: Record<SpaceInsights["case"], LucideIcon> = {
 
 function iconFor(kind: string, caseType: SpaceInsights["case"]): LucideIcon {
   switch (kind) {
+    // Đặc tính loại phòng — mang tính định hướng, không phải cảnh báo.
+    case "trait":
+      return Compass;
     case "status":
       return STATUS_ICON[caseType];
-    case "detail":
-      return Info;
     default:
       return Target;
   }
 }
 
-/** Render 3 dòng nhận định (status/detail/action) đã sinh sẵn ở BE (SpaceInsightBuilder) — FE chỉ map icon + màu theo case. */
+/**
+ * Render 3 dòng nhận định (trait → status → action) đã sinh sẵn ở BE (SpaceInsightBuilder):
+ * đặc tính loại phòng → hiện trạng kèm NGUYÊN DO (tag user khai) → đề xuất chỉnh.
+ * FE chỉ map icon + màu theo case.
+ */
 export default function SpaceInsightList({ insights }: SpaceInsightListProps) {
   const tone = CASE_TONE[insights.case];
 
