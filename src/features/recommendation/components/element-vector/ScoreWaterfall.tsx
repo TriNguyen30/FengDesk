@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { ChevronDown, Minus, Plus } from "lucide-react";
 import type { ScoreBreakdown } from "../../types/recommendation";
 
@@ -17,7 +17,9 @@ interface ScoreWaterfallProps {
  * tại", và người dùng cần thấy hệ thống không giấu luật nào.
  */
 export default function ScoreWaterfall({ breakdown }: ScoreWaterfallProps) {
-  const [open, setOpen] = useState(false);
+  // Mở sẵn: đây là phần GIẢI THÍCH điểm số, mà điểm số là thứ user tới đây để hiểu. Giấu sau một
+  // cú bấm nghĩa là mặc định user chỉ thấy con số trần, không thấy vì sao.
+  const [open, setOpen] = useState(true);
 
   const appliedPenalties = breakdown.penalties.filter((p) => p.applied);
   const skippedPenalties = breakdown.penalties.filter((p) => !p.applied);
@@ -104,7 +106,7 @@ export default function ScoreWaterfall({ breakdown }: ScoreWaterfallProps) {
                 {skippedPenalties.map((p) => (
                   <li key={p.code} className="text-[11px] leading-snug text-gray-500">
                     <span className="font-medium text-gray-600">{p.labelVi}</span>
-                    {" — "}
+                    {" - "}
                     {p.reasonVi}
                   </li>
                 ))}

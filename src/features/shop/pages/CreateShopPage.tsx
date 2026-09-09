@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+﻿import { useEffect, useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "react-router-dom";
@@ -457,7 +457,7 @@ export default function CreateShopPage() {
             ))}
           </ul>
           <p className="mt-5 border-t border-primary/15 pt-4 text-xs text-gray-500">
-            Tài khoản của bạn vẫn dùng để mua sắm như bình thường — chỉ được bổ sung thêm kênh người
+            Tài khoản của bạn vẫn dùng để mua sắm như bình thường - chỉ được bổ sung thêm kênh người
             bán.
           </p>
         </aside>

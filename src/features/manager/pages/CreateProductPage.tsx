@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   ChevronLeft,
@@ -273,7 +273,7 @@ export default function CreateProductPage() {
         toast.success("Đã tạo sản phẩm mới thành công");
         if (elementInputs.length === 0 && !fengShui.primaryElement) {
           toast.warning(
-            "Sản phẩm chưa có dữ liệu phong thủy nên sẽ không xuất hiện trong gợi ý — bổ sung Đặc điểm sản phẩm nhé",
+            "Sản phẩm chưa có dữ liệu phong thủy nên sẽ không xuất hiện trong gợi ý - bổ sung Đặc điểm sản phẩm nhé",
           );
         }
         navigate(lockedStoreId ? `/stores/${lockedStoreId}` : "/manager/products");
@@ -663,7 +663,7 @@ export default function CreateProductPage() {
               />
             </summary>
             <p className="mb-4 text-xs text-gray-400 italic">
-              Chỉ dùng nếu bạn đã biết chính xác — thường không cần, hệ thống tự tính từ Đặc điểm
+              Chỉ dùng nếu bạn đã biết chính xác - thường không cần, hệ thống tự tính từ Đặc điểm
               sản phẩm.
             </p>
             <div className="border-t border-gray-100 pt-4">

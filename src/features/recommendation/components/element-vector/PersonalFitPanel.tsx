@@ -1,4 +1,4 @@
-import {
+﻿import {
   RadarChart,
   PolarGrid,
   PolarAngleAxis,
@@ -119,7 +119,7 @@ export default function PersonalFitPanel({ productId }: PersonalFitPanelProps) {
               </div>
 
               <p className="mt-1.5 text-center text-[11px] leading-snug text-gray-400">
-                Vật mang theo người — chấm theo bản mệnh, không phụ thuộc phòng hay hướng đặt.
+                Vật mang theo người - chấm theo bản mệnh, không phụ thuộc phòng hay hướng đặt.
               </p>
             </div>
 

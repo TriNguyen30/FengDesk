@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+﻿import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { chatApi, type AiChatTurn } from "@/features/chatbox/api/chat.api";
 import { useAiActivity } from "@/features/shared/ai-activity";
@@ -209,7 +209,7 @@ export function useAiChat(productId?: string) {
       // Chốt chặn: id tạm chưa tồn tại ở server → gọi rewind chỉ tổ nhận 404. Reload sẽ nạp lại
       // lịch sử với GUID thật; trước đó không có gì để "sửa & gửi lại".
       if (isTempMessageId(messageId)) {
-        toast.error("Tin nhắn này chưa gửi được lên máy chủ — hãy gửi lại nội dung mới.");
+        toast.error("Tin nhắn này chưa gửi được lên máy chủ - hãy gửi lại nội dung mới.");
         return;
       }
       // Optimistic: cắt ngay đuôi (tin sau điểm sửa) + hiển thị nội dung mới, để UI phản ánh liền

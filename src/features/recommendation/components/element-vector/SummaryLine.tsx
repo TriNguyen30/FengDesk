@@ -1,4 +1,4 @@
-import { elementColor, elementVi } from "./constants";
+﻿import { elementColor, elementVi } from "./constants";
 
 interface SummaryLineProps {
   /** Hành trội của sản phẩm. */
@@ -17,7 +17,7 @@ export default function SummaryLine({ productDominant, roomNeed, matches }: Summ
   return (
     <p className="text-xs text-gray-400">
       Sản phẩm này thuộc <b style={{ color: elementColor(productDominant) }}>hành {productVi}</b>{" "}
-      trội —{" "}
+      trội -{" "}
       {matches ? (
         <>
           hợp phòng đang thiếu <b style={{ color: elementColor(roomNeed) }}>{needVi}</b>.

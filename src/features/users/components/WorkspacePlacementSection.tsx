@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Loader2, PackagePlus, PackageX, Truck } from "lucide-react";
@@ -79,7 +79,7 @@ export default function WorkspacePlacementSection({ workspaceId, placedProducts 
                 ? "Đang tải sản phẩm đã mua..."
                 : candidates.length === 0
                   ? "Không có sản phẩm đã mua để đặt"
-                  : "— Chọn sản phẩm đã mua để đặt vào phòng —"}
+                  : "- Chọn sản phẩm đã mua để đặt vào phòng -"}
             </option>
             {candidates.map((i) => (
               <option key={i.orderItemId} value={i.orderItemId}>
@@ -100,7 +100,7 @@ export default function WorkspacePlacementSection({ workspaceId, placedProducts 
           </button>
           <p className="text-[11px] text-gray-400">
             Đặt sản phẩm đã mua vào phòng để radar ngũ hành phản ánh không gian thực tế. Mỗi món chỉ
-            nằm ở một phòng — muốn chuyển phòng, hãy gỡ khỏi phòng cũ trước.
+            nằm ở một phòng - muốn chuyển phòng, hãy gỡ khỏi phòng cũ trước.
           </p>
         </div>
 

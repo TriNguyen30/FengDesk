@@ -1,4 +1,4 @@
-import {
+﻿import {
   RadarChart,
   PolarGrid,
   PolarAngleAxis,
@@ -58,7 +58,7 @@ interface ElementRadarChartProps {
  * của riêng nó. Thiếu một trong hai là đọc sót.
  */
 function ratioLabel(current: number, ideal: number): string {
-  if (ideal <= 0) return current > 0 ? "không có trong mức lý tưởng" : "—";
+  if (ideal <= 0) return current > 0 ? "không có trong mức lý tưởng" : "-";
 
   const ratio = current / ideal;
   if (ratio >= 1.15) return `gấp ${ratio.toFixed(1)} lần`;
@@ -139,7 +139,7 @@ export default function ElementRadarChart({
     const element = labelToElement[payload?.value] ?? payload?.value;
     // Thừa và thiếu đều là "lệch" và đều đáng biết — đánh dấu CẢ HAI chiều, chỉ khi vượt ngưỡng.
     const mark = gapMark(element);
-    const color = mark === "balanced" ? elementColor(element) : markColor(mark);
+    const color = elementColor(element);
     const size = 16;
 
     const icon = (element: string) => {

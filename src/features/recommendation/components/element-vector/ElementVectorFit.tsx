@@ -97,6 +97,7 @@ export default function ElementVectorFit({ analysis, variant = "full" }: Element
           personVotes,
           analysis.totalVotes,
           simulatedVotes,
+          analysis.saturationAlpha ?? 1,
         )
       : null;
 

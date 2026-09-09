@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useWorkspaces } from "@/features/users/hooks/useWorkspace";
 import { useProductFitAcrossWorkspaces } from "../../hooks/useProductFit";
@@ -14,6 +14,7 @@ import SummaryLine from "./SummaryLine";
 import ScoreWaterfall from "./ScoreWaterfall";
 import PersonalWeightControls from "./PersonalWeightControls";
 import { ClashBadge, ConflictResolutionBanner } from "./ClashNotices";
+import OccupationInfluencePanel from "./OccupationInfluencePanel";
 import { ELEMENT_ORDER, GAP_THRESHOLD, elementVi, scorePercent } from "./constants";
 import type { ElementCode } from "../../types/recommendation";
 import {
@@ -124,6 +125,7 @@ export default function ProductFitPanel({ productId }: ProductFitPanelProps) {
                     onSimulate={setSimulatedWp}
                   />
                 )}
+                {fit.breakdown && <OccupationInfluencePanel breakdown={fit.breakdown} />}
               </div>
             </div>
 
@@ -225,7 +227,7 @@ function productMatchesNeed(fit: ProductFitResponse): boolean {
 function findMenhLine(fit: ProductFitResponse): string {
   const all = [...fit.matchFacts, ...fit.cautionFacts];
   const menhFact = all.find((f) => f.includes("mệnh"));
-  return menhFact ?? "Chưa xác định — thiếu ngày sinh trong hồ sơ cá nhân.";
+  return menhFact ?? "Chưa xác định - thiếu ngày sinh trong hồ sơ cá nhân.";
 }
 
 /**

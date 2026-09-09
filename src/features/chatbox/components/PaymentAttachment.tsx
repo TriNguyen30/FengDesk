@@ -1,4 +1,4 @@
-import QRCode from "react-qr-code";
+﻿import QRCode from "react-qr-code";
 import { ExternalLink, QrCode as QrIcon } from "lucide-react";
 import type { PaymentBlock } from "@/features/chatbox/utils/paymentBlock";
 
@@ -35,7 +35,7 @@ export default function PaymentAttachment({ payment }: { payment: PaymentBlock }
       </a>
 
       <p className="mt-1.5 text-center text-[10px] text-gray-400">
-        Link hết hạn sau {payment.expiresInMinutes} phút — quét QR bằng app ngân hàng hoặc bấm nút.
+        Link hết hạn sau {payment.expiresInMinutes} phút - quét QR bằng app ngân hàng hoặc bấm nút.
       </p>
     </div>
   );

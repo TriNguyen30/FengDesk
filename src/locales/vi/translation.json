@@ -1,6 +1,6 @@
-{
+﻿{
   "navbar": {
-    "disclaimer_short": "Dự án thử nghiệm — Không phải web bán hàng thật",
+    "disclaimer_short": "Dự án thử nghiệm - Không phải web bán hàng thật",
     "disclaimer_long": "Lưu ý: Đây là website dự án thử nghiệm, không phải sàn thương mại điện tử thực tế. Mọi dữ liệu và thanh toán chỉ mang tính chất minh họa.",
     "promo_freeship_short": "Freeship từ 500k",
     "promo_freeship_long": "Miễn phí vận chuyển từ 500.000đ",
@@ -860,7 +860,7 @@
   },
   "my_invitations": {
     "title": "Lời mời làm nhân viên",
-    "desc": "Các cửa hàng đã mời bạn tham gia — chấp nhận để có quyền nhận đơn và giao hàng.",
+    "desc": "Các cửa hàng đã mời bạn tham gia - chấp nhận để có quyền nhận đơn và giao hàng.",
     "refresh": "Làm mới",
     "empty": {
       "title": "Không có lời mời nào",

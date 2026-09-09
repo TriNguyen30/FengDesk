@@ -58,8 +58,21 @@ export interface ScoreVectors {
   product: ProductElementRow[];
   /** ĝ = gap / (|gap|₁/2), mỗi trục ∈ [−1,+1]. Nhánh Carry: vector dụng thần đã chuẩn hoá. */
   normalizedGap: ProductElementRow[];
-  /** r = ruleScore(bản mệnh, ·), CÓ DẤU. null khi trục cá nhân tắt. */
+  /** r' = điểm quan hệ ĐÃ tính nghề nghiệp, CÓ DẤU. null khi trục cá nhân tắt. */
   ruleScore: ProductElementRow[] | null;
+  /** r TRƯỚC delta nghề. null khi nghề nghiệp không áp — khi đó `ruleScore` đã là r gốc. */
+  baseRuleScore: ProductElementRow[] | null;
+  /**
+   * `r' − r` — nghề của bạn đã kéo hành nào lên/xuống bao nhiêu.
+   *
+   * ⚠️ Là mức dịch THẬT, đo SAU khi chặn, nên **không bằng** `delta × share`: hành khắc bản mệnh bị
+   * chặn nên hiện ra gần 0 dù bảng delta khai lớn. Đúng con số cần hiển thị — nói "nghề của bạn nâng
+   * Kim" trong khi Kim vẫn khắc mệnh là nói dối bằng đồ hoạ.
+   *
+   * ⚠️ Thang [−1,+1] CÓ DẤU, **không cùng thang** với `current`/`adjustedIdeal` (Σ=1, không âm) —
+   * đừng vẽ chồng lên radar chính.
+   */
+  occupationShift: ProductElementRow[] | null;
   /** d = (1−Wp)·ĝ + Wp·r — thứ thật sự nhân với product. */
   combinedDirection: ProductElementRow[];
   /** normalize(max(d, 0)), Σ=1 — lớp vàng "Ưu tiên của bạn" trên radar. */
@@ -101,6 +114,22 @@ export interface ScoreBreakdown {
   destinyElement: ElementCode | null;
   destinyLabelVi: string | null;
   conflictResolution: ConflictResolution | null;
+  /**
+   * Nghề nghiệp đã tác động vào điểm này (P5). `null` khi user chưa khai nghề, nghề chưa có delta,
+   * `OCCUPATION_SHARE` đang tắt, hoặc delta chỉ trỏ vào hành khắc mệnh nên bị chặn sạch — cả bốn
+   * đều nghĩa là nghề nghiệp không đổi gì.
+   */
+  occupation: OccupationInfluence | null;
+}
+
+/** Nghề nghiệp bẻ vector điểm quan hệ thế nào — v3.2 §11 (P5). */
+export interface OccupationInfluence {
+  code: string;
+  nameVi: string;
+  /** `OCCUPATION_SHARE` đang áp. */
+  share: number;
+  shareCode: string;
+  reasonVi: string;
 }
 
 /** Độ phù hợp của 1 sản phẩm × 1 workspace — không loại sản phẩm, luôn có kết quả. */

@@ -1,4 +1,4 @@
-import {
+﻿import {
   Fragment,
   useEffect,
   useLayoutEffect,
@@ -771,7 +771,7 @@ export default function AiAssistantDrawer({ open, onClose, productId }: AiAssist
             </div>
           </div>
           <p className="mt-1.5 text-center text-[10px] text-gray-400">
-            Trợ lý có thể đưa thông tin chưa chính xác — hãy kiểm chứng khi cần.
+            Trợ lý có thể đưa thông tin chưa chính xác - hãy kiểm chứng khi cần.
           </p>
         </div>
       </aside>

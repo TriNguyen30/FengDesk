@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { Loader2, UserPlus } from "lucide-react";
 import StaffTable from "./StaffTable";
 import InviteStaffModal from "./InviteStaffModal";
@@ -22,7 +22,7 @@ export function ShopStaffSection({ storeId }: Props) {
         <div>
           <h2 className="text-lg font-bold text-gray-900">Quản lý nhân viên</h2>
           <p className="text-xs text-gray-500 mt-0.5">
-            Tìm và mời người dùng — họ sẽ nhận thông báo và cần đồng ý mới có quyền nhận đơn / ship.
+            Tìm và mời người dùng - họ sẽ nhận thông báo và cần đồng ý mới có quyền nhận đơn / ship.
           </p>
         </div>
         <button
