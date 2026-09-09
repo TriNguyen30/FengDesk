@@ -87,8 +87,10 @@ export const chatApi = {
     fetchHttpClient.post<ApiResponse<Chatbox>>(`/chat/chatbox/with/${otherUserId}`),
 
   /** Lấy/tạo phòng hỗ trợ. forceNew=true → luôn tạo phòng mới ("Trò chuyện mới"). */
-  startSupport: (forceNew = false) =>
-    fetchHttpClient.post<ApiResponse<Chatbox>>(`/chat/support?forceNew=${forceNew}`),
+  startSupport: (forceNew: boolean | unknown = false) => {
+    const isForceNew = typeof forceNew === "boolean" ? forceNew : false;
+    return fetchHttpClient.post<ApiResponse<Chatbox>>(`/chat/support?forceNew=${isForceNew}`);
+  },
 
   /** Xóa (ẩn) cuộc trò chuyện khỏi danh sách của tôi. */
   deleteChatbox: (chatboxId: string) =>

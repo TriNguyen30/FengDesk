@@ -149,8 +149,13 @@ export class FetchHttpClient {
     this.failedQueue = [];
   }
 
-  async get<T>(url: string, params?: AxiosRequestConfig["params"]): Promise<AxiosResponse<T>> {
+  async get<T>(
+    url: string,
+    params?: AxiosRequestConfig["params"],
+    config?: AxiosRequestConfig,
+  ): Promise<AxiosResponse<T>> {
     return this.axiosInstance.get(url, {
+      ...config,
       params: params ? { ...params } : {},
     });
   }

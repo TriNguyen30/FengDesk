@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import Modal from "@/components/ui/Modal";
-import Product3DViewer from "@/components/ui/3DSection";
+import Model3DQueuePreview from "./Model3DQueuePreview";
 import { productApi } from "@/features/products/api/product.api";
 import { model3DQueueApi } from "@/features/products/api/model3dQueue.api";
 import type { ProductImage } from "@/features/products/types/product";
@@ -417,7 +417,10 @@ export default function Model3DQueueItemModal({ item, onClose, onChanged }: Mode
                 ) : preview.state === "Succeeded" && preview.glbUrl ? (
                   <div className="space-y-3">
                     <div className="aspect-square w-full max-w-xs mx-auto rounded-xl overflow-hidden ring-1 ring-gray-100 bg-gray-50">
-                      <Product3DViewer modelUrl={preview.glbUrl} thumbnailUrl={preview.thumbnailUrl} autoRotate />
+                      <Model3DQueuePreview
+                        key={`${item.id}:${item.meshyTaskId}`}
+                        requestId={item.id}
+                      />
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
                       <button

@@ -10,7 +10,6 @@ import {
 } from "react";
 import { Canvas, useThree } from "@react-three/fiber";
 import {
-  Center,
   ContactShadows,
   Environment,
   Lightformer,
@@ -18,7 +17,7 @@ import {
   useGLTF,
 } from "@react-three/drei";
 import * as THREE from "three";
-import { Box, Image as ImageIcon, Loader2, AlertTriangle, Pointer } from "lucide-react";
+import { Box, Image as ImageIcon, Loader2, AlertTriangle, Pointer, RefreshCw } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 interface Product3DViewerProps {
@@ -44,6 +43,8 @@ interface Product3DViewerProps {
    * viewer trông như một ô trắng rỗng.
    */
   onModelUnavailable?: () => void;
+  /** Refresh a temporary model URL before retrying a failed load. */
+  onReload?: () => Promise<void>;
 }
 
 /**
@@ -58,10 +59,14 @@ export default function Product3DViewer({
   autoRotate = true,
   onModelReady,
   onModelUnavailable,
+  onReload,
   showHint = true,
 }: Product3DViewerProps) {
   const { t } = useTranslation();
   const [modelLuminance, setModelLuminance] = useState(0.46);
+  const [loadAttempt, setLoadAttempt] = useState(0);
+  const [reloading, setReloading] = useState(false);
+  const [webglLost, setWebglLost] = useState(false);
   const backdropUrl = backgroundImageUrl || thumbnailUrl;
   const handleModelLuminance = useCallback((value: number) => setModelLuminance(value), []);
 
@@ -76,6 +81,23 @@ export default function Product3DViewer({
 
   const handleReady = useCallback(() => readyRef.current?.(), []);
   const handleUnavailable = useCallback(() => unavailableRef.current?.(), []);
+
+  const reloadModel = async () => {
+    if (reloading) return;
+    setReloading(true);
+    try {
+      // Remounting alone rethrows useGLTF's cached rejection for the same URL.
+      // Clear before refreshing: the API may return exactly the same signed URL.
+      useGLTF.clear(modelUrl);
+      await onReload?.();
+      setWebglLost(false);
+      setLoadAttempt((attempt) => attempt + 1);
+    } catch {
+      // The caller reports API failures; keep the retry button available.
+    } finally {
+      setReloading(false);
+    }
+  };
 
   /**
    * Canvas đang sống + cờ mounted, để phân biệt MẤT CONTEXT THẬT với context loss do chính r3f gây ra.
@@ -101,6 +123,7 @@ export default function Product3DViewer({
     ({ gl }: { gl: THREE.WebGLRenderer }) => {
       const canvas = gl.domElement;
       activeCanvasRef.current = canvas;
+      setWebglLost(false);
 
       const onLost = (event: Event) => {
         event.preventDefault();
@@ -108,11 +131,13 @@ export default function Product3DViewer({
         // sự kiện của canvas đời trước (r3f dọn dẹp trễ) phải bỏ qua.
         if (!mountedRef.current || event.target !== activeCanvasRef.current) return;
         console.warn("[Product3DViewer] WebGL context bị thu hồi — quay về ảnh tĩnh.");
+        setWebglLost(true);
         handleUnavailable();
       };
 
       const onRestored = () => {
         if (!mountedRef.current || activeCanvasRef.current !== canvas) return;
+        setWebglLost(false);
         handleReady();
       };
 
@@ -127,28 +152,49 @@ export default function Product3DViewer({
       <ModelBackdrop imageUrl={backdropUrl} modelLuminance={modelLuminance} />
 
       <Model3DErrorBoundary
-        key={modelUrl}
-        onError={handleUnavailable}
-        fallback={
+        key={`${modelUrl}:${loadAttempt}`}
+        onError={() => {
+          // The failed Canvas is being unmounted. Its delayed forceContextLoss is cleanup.
+          activeCanvasRef.current = null;
+          handleUnavailable();
+        }}
+        fallback={(error) => (
           <div className="relative z-10 flex h-full w-full flex-col items-center justify-center gap-2 text-center">
             <div className="rounded-2xl border border-white/30 bg-white/55 p-4 shadow-lg backdrop-blur-md">
               <AlertTriangle className="mx-auto h-8 w-8 text-gray-400" />
               <p className="mt-2 text-xs font-medium text-gray-600">
                 {t("product_detail.model_3d.load_error")}
               </p>
+              <p className="mt-2 max-w-60 text-xs text-gray-600">
+                {t(`product_detail.model_3d.${getModelLoadErrorKey(error)}`)}
+              </p>
+              <button
+                type="button"
+                onClick={reloadModel}
+                disabled={reloading}
+                className="mt-3 inline-flex cursor-pointer items-center gap-2 rounded-lg bg-white px-3 py-2 text-xs font-semibold text-gray-700 shadow-sm disabled:opacity-60"
+              >
+                {reloading && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                {t("product_detail.model_3d.reload")}
+              </button>
             </div>
           </div>
-        }
+        )}
       >
-        <Suspense fallback={<ModelLoadingFallback />}>
-          <Canvas
-            className="relative z-10 cursor-grab active:cursor-grabbing"
-            camera={{ fov: 38, position: [0, 0.05, 4] }}
-            dpr={[1, 2]}
-            gl={{ preserveDrawingBuffer: true, antialias: true, alpha: true }}
-            onCreated={handleCanvasCreated}
-            shadows
-          >
+        <Canvas
+          className="relative z-10 cursor-grab active:cursor-grabbing"
+          camera={{ fov: 38, position: [0, 0.05, 4] }}
+          dpr={[1, 2]}
+          gl={{
+            preserveDrawingBuffer: false,
+            antialias: true,
+            alpha: true,
+            powerPreference: "high-performance",
+          }}
+          onCreated={handleCanvasCreated}
+          shadows
+        >
+          <Suspense fallback={null}>
             <ambientLight intensity={0.55} />
             <hemisphereLight args={["#fff8e8", "#718067", 1.15]} />
             <directionalLight
@@ -165,9 +211,7 @@ export default function Product3DViewer({
               <Lightformer intensity={1.2} position={[-4, 1, 2]} scale={[3, 3, 1]} />
               <Lightformer intensity={0.9} position={[4, 0, 1]} scale={[2, 4, 1]} />
             </Environment>
-            <Center>
-              <FitModel url={modelUrl} onLuminance={handleModelLuminance} onReady={handleReady} />
-            </Center>
+            <FitModel url={modelUrl} onLuminance={handleModelLuminance} onReady={handleReady} />
             <ContactShadows
               position={[0, -0.83, 0]}
               opacity={0.34}
@@ -176,17 +220,41 @@ export default function Product3DViewer({
               far={3.5}
               color="#253022"
             />
-            <OrbitControls
-              makeDefault
-              enablePan={false}
-              autoRotate={autoRotate}
-              autoRotateSpeed={2.2}
-              minDistance={1.2}
-              maxDistance={10}
-            />
-          </Canvas>
-        </Suspense>
+          </Suspense>
+          <OrbitControls
+            makeDefault
+            enablePan={false}
+            autoRotate={autoRotate}
+            autoRotateSpeed={2.2}
+            minDistance={1.2}
+            maxDistance={10}
+          />
+        </Canvas>
       </Model3DErrorBoundary>
+
+      {webglLost && (
+        <div className="absolute inset-0 z-30 flex items-center justify-center bg-[#e5eadf]/95 p-5 text-center">
+          <div className="rounded-2xl border border-white/50 bg-white/80 p-4 shadow-lg backdrop-blur-md">
+            <AlertTriangle className="mx-auto h-8 w-8 text-amber-600" />
+            <p className="mt-2 text-xs font-medium text-gray-700">
+              {t("product_detail.model_3d.load_error_webgl")}
+            </p>
+            <button
+              type="button"
+              onClick={reloadModel}
+              disabled={reloading}
+              className="mt-3 inline-flex cursor-pointer items-center gap-2 rounded-lg bg-white px-3 py-2 text-xs font-semibold text-gray-700 shadow-sm disabled:opacity-60"
+            >
+              {reloading ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <RefreshCw className="h-3.5 w-3.5" />
+              )}
+              {t("product_detail.model_3d.reload")}
+            </button>
+          </div>
+        </div>
+      )}
 
       {showHint && (
         <div className="pointer-events-none absolute bottom-3 left-1/2 z-20 flex max-w-[calc(100%-1.5rem)] -translate-x-1/2 items-center gap-1.5 whitespace-nowrap rounded-full border border-white/25 bg-gray-950/55 px-3 py-1.5 text-[11px] font-medium text-white/95 shadow-lg backdrop-blur-md sm:bottom-4">
@@ -213,11 +281,20 @@ function FitModel({
   const cloned = useMemo(() => scene.clone(true), [scene]);
   const { invalidate } = useThree();
 
-  const scale = useMemo(() => {
+  const transform = useMemo(() => {
+    // Meshy models do not always use the object's visual centre as their origin.
+    // Normalise both position and size here instead of relying on <Center>, whose
+    // measurement can happen before every matrix in an imported GLB is updated.
+    cloned.updateMatrixWorld(true);
     const box = new THREE.Box3().setFromObject(cloned);
     const size = box.getSize(new THREE.Vector3());
+    const center = box.getCenter(new THREE.Vector3());
     const maxDim = Math.max(size.x, size.y, size.z, 1e-6);
-    return 1.6 / maxDim;
+    const scale = 1.6 / maxDim;
+    return {
+      scale,
+      position: center.multiplyScalar(-scale),
+    };
   }, [cloned]);
 
   useEffect(() => {
@@ -243,18 +320,13 @@ function FitModel({
 
   // dispose={null}: hình học/vật liệu thuộc về cache của useGLTF và được dùng chung với mọi bản
   // clone khác, không được để vòng đời của instance này quyết định.
-  return <primitive object={cloned} scale={scale} dispose={null} />;
-}
-
-function ModelLoadingFallback() {
-  const { t } = useTranslation();
   return (
-    <div className="relative z-10 flex h-full w-full items-center justify-center">
-      <div className="flex flex-col items-center gap-2 rounded-2xl border border-white/30 bg-white/50 px-5 py-4 text-gray-600 shadow-lg backdrop-blur-md">
-        <Loader2 className="h-7 w-7 animate-spin" />
-        <span className="text-xs font-medium">{t("product_detail.model_3d.loading")}</span>
-      </div>
-    </div>
+    <primitive
+      object={cloned}
+      scale={transform.scale}
+      position={transform.position}
+      dispose={null}
+    />
   );
 }
 
@@ -406,18 +478,29 @@ function relativeLuminance(red: number, green: number, blue: number) {
 
 interface ErrorBoundaryState {
   hasError: boolean;
+  error?: unknown;
+}
+
+function getModelLoadErrorKey(error: unknown) {
+  const message = error instanceof Error ? error.message : String(error);
+  if (/\b(401|403)\b/.test(message)) return "load_error_access";
+  if (/\b404\b/.test(message)) return "load_error_missing";
+  if (/draco|ktx2|basis|decoder|wasm/i.test(message)) return "load_error_decoder";
+  if (/webgl|context|gpu/i.test(message)) return "load_error_webgl";
+  if (/fetch|network|load failed|networkerror/i.test(message)) return "load_error_network";
+  return "load_error_data";
 }
 
 /** useGLTF ném lỗi thật (không phải Promise) khi file GLB hỏng/URL sai — cần error boundary để
  * không sập cả trang sản phẩm. */
 class Model3DErrorBoundary extends Component<
-  { children: ReactNode; fallback: ReactNode; onError?: () => void },
+  { children: ReactNode; fallback: (error: unknown) => ReactNode; onError?: () => void },
   ErrorBoundaryState
 > {
   state: ErrorBoundaryState = { hasError: false };
 
-  static getDerivedStateFromError() {
-    return { hasError: true };
+  static getDerivedStateFromError(error: unknown) {
+    return { hasError: true, error };
   }
 
   componentDidCatch(error: unknown) {
@@ -426,7 +509,7 @@ class Model3DErrorBoundary extends Component<
   }
 
   render() {
-    if (this.state.hasError) return this.props.fallback;
+    if (this.state.hasError) return this.props.fallback(this.state.error);
     return this.props.children;
   }
 }

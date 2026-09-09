@@ -1,5 +1,14 @@
 # Model 3D — Flow tạo/hiển thị/duyệt mô hình 3D (FE, đã triển khai 31/07/2026)
 
+> Cập nhật 08/09/2026 — xem trước Meshy: CDN `assets.meshy.ai` trả GLB không có
+> `Access-Control-Allow-Origin`, nên browser không được tải trực tiếp `preview.glbUrl`.
+> `Model3DQueuePreview.tsx` tải Blob qua `GET /api/model3d-requests/{id}/preview/model`
+> bằng HTTP client có xác thực, sau đó truyền object URL vào viewer. Backend tự lấy URL mới
+> từ task hiện tại; endpoint giữ policy `StaffOrAbove`, không nhận URL tùy ý, không accept,
+> không lưu model và không tạo task mới. Khi đóng/đổi preview, FE hủy request, xóa cache GLTF
+> và thu hồi object URL. Nút “Tải lại mô hình” tải lại cùng task, không tốn credit tạo model.
+> Cần cập nhật cả backend và frontend để dùng endpoint mới.
+
 > FE cho thiết kế backend ở `FengDeskAI/docs/adr/refactor-model3d-request-flow.md` (đọc trước file
 > đó để hiểu rule nghiệp vụ: 1 request mở/product, Initial tự động vs Regenerate thủ công qua staff
 > sàn, lỗi hết credit Meshy bị giấu khỏi owner...). File này chỉ nói phần FE: chỗ đặt UI, actor nào

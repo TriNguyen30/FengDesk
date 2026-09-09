@@ -41,7 +41,7 @@ export default function ChatRoomList({
         </p>
         <button
           type="button"
-          onClick={onStartSupport}
+          onClick={() => onStartSupport()}
           className="mt-1 flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-dark cursor-pointer"
         >
           <Headphones size={16} />

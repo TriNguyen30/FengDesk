@@ -303,7 +303,14 @@
       "view_3d": "Xem mô hình 3D",
       "hint": "Kéo để xoay, cuộn để phóng to/thu nhỏ",
       "loading": "Đang tải mô hình 3D...",
-      "load_error": "Không thể tải mô hình 3D"
+      "load_error": "Không thể tải mô hình 3D",
+      "reload": "Tải lại mô hình",
+      "load_error_access": "Đường dẫn có thể đã hết hạn hoặc không cho phép truy cập. Hãy tải lại để lấy đường dẫn mới.",
+      "load_error_missing": "Không tìm thấy tệp mô hình. Hãy thử lấy lại bản xem trước.",
+      "load_error_decoder": "Không tải hoặc chạy được bộ giải mã mô hình 3D. Hãy thử tải lại.",
+      "load_error_webgl": "Trình duyệt không khởi tạo được đồ họa 3D. Hãy thử tải lại trang.",
+      "load_error_network": "Không tải được tệp từ máy chủ. Kết nối mạng hoặc quyền truy cập từ trình duyệt có thể đang chặn tệp.",
+      "load_error_data": "Không đọc được dữ liệu mô hình 3D. Hãy thử tải lại."
     }
   },
   "cart_page": {
