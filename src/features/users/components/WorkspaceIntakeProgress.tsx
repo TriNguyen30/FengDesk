@@ -58,7 +58,7 @@ export default function WorkspaceIntakeProgress({
         />
       </div>
       <p className="mt-1.5 text-[11px] text-gray-500">
-        Bạn có thể bắt đầu điền tay trong lúc chờ — AI xong sẽ tự điền các mục còn nhận ra được.
+        Bạn có thể bắt đầu điền thủ công trong lúc chờ AI phân tích.
       </p>
     </div>
   );

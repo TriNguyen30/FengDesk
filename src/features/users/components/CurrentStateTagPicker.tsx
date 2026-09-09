@@ -2,7 +2,11 @@ import { useState } from "react";
 import { Plus, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { classifyElementInput } from "../api/workspace.api";
-import type { ElementInputVocabulary, WorkspaceProfileInputDto } from "../types/workspace";
+import type {
+  ElementInputOption,
+  ElementInputVocabulary,
+  WorkspaceProfileInputDto,
+} from "../types/workspace";
 
 type InputKind = WorkspaceProfileInputDto["inputKind"];
 
@@ -14,12 +18,16 @@ interface CurrentStateTagPickerProps {
   aiFilled?: boolean;
 }
 
-const GROUPS: { kind: InputKind; label: string; codes: (v: ElementInputVocabulary) => string[] }[] =
-  [
-    { kind: "Color", label: "Màu chủ đạo", codes: (v) => v.colors },
-    { kind: "Material", label: "Nội thất — chất liệu nội thất", codes: (v) => v.materials },
-    { kind: "DecorItem", label: "Vật trang trí", codes: (v) => v.decorItems },
-  ];
+const GROUPS: {
+  kind: InputKind;
+  label: string;
+  options: (v: ElementInputVocabulary) => ElementInputOption[];
+}[] = [
+  { kind: "Color", label: "Màu chủ đạo", options: (v) => v.colors },
+  { kind: "Material", label: "Nội thất — chất liệu nội thất", options: (v) => v.materials },
+  { kind: "DecorItem", label: "Vật trang trí", options: (v) => v.decorItems },
+  { kind: "Shape", label: "Hình khối chủ đạo", options: (v) => v.shapes ?? [] },
+];
 
 const chipClass = (selected: boolean) =>
   `rounded-full border px-2.5 py-1 text-xs transition-colors cursor-pointer ${
@@ -44,7 +52,10 @@ export default function CurrentStateTagPicker({
   aiFilled = false,
 }: CurrentStateTagPickerProps) {
   const [expandedKind, setExpandedKind] = useState<InputKind | null>(null);
-  const [extraCodes, setExtraCodes] = useState<Partial<Record<InputKind, string[]>>>({});
+  // Tag user tự tạo trong phiên này — giữ cả nhãn để chip hiện đúng chữ user gõ.
+  const [extraOptions, setExtraOptions] = useState<Partial<Record<InputKind, ElementInputOption[]>>>(
+    {},
+  );
   const [drafts, setDrafts] = useState<Partial<Record<InputKind, string>>>({});
   const [classifyingKind, setClassifyingKind] = useState<InputKind | null>(null);
 
@@ -66,9 +77,14 @@ export default function CurrentStateTagPicker({
     setClassifyingKind(kind);
     try {
       const result = await classifyElementInput(kind, label);
-      setExtraCodes((prev) => {
+      setExtraOptions((prev) => {
         const list = prev[kind] ?? [];
-        return list.includes(result.code) ? prev : { ...prev, [kind]: [...list, result.code] };
+        return list.some((o) => o.code === result.code)
+          ? prev
+          : {
+              ...prev,
+              [kind]: [...list, { code: result.code, labelVi: result.labelVi || label }],
+            };
       });
       onChange([
         ...value.filter((i) => !(i.inputKind === kind && i.inputCode === result.code)),
@@ -104,8 +120,8 @@ export default function CurrentStateTagPicker({
 
       <div>
         {GROUPS.map((group, i) => {
-          const codes = [...group.codes(vocabulary), ...(extraCodes[group.kind] ?? [])];
-          const selectedCodes = codes.filter((code) => isSelected(group.kind, code));
+          const options = [...group.options(vocabulary), ...(extraOptions[group.kind] ?? [])];
+          const selectedOptions = options.filter((o) => isSelected(group.kind, o.code));
           const expanded = expandedKind === group.kind;
           const classifying = classifyingKind === group.kind;
 
@@ -131,17 +147,17 @@ export default function CurrentStateTagPicker({
               >
                 <div className="overflow-hidden">
                   <div className="flex flex-wrap items-center gap-1.5 pb-1">
-                    {codes.map((code) => {
-                      const selected = isSelected(group.kind, code);
+                    {options.map((option) => {
+                      const selected = isSelected(group.kind, option.code);
                       return (
                         <button
-                          key={code}
+                          key={option.code}
                           type="button"
-                          onClick={() => toggle(group.kind, code)}
+                          onClick={() => toggle(group.kind, option.code)}
                           aria-pressed={selected}
                           className={chipClass(selected)}
                         >
-                          {code}
+                          {option.labelVi}
                         </button>
                       );
                     })}
@@ -181,11 +197,11 @@ export default function CurrentStateTagPicker({
                 style={{ gridTemplateRows: expanded ? "0fr" : "1fr" }}
               >
                 <div className="overflow-hidden">
-                  {selectedCodes.length > 0 ? (
+                  {selectedOptions.length > 0 ? (
                     <div className="flex flex-wrap gap-1.5">
-                      {selectedCodes.map((code) => (
-                        <span key={code} className={chipClass(true)}>
-                          {code}
+                      {selectedOptions.map((option) => (
+                        <span key={option.code} className={chipClass(true)}>
+                          {option.labelVi}
                         </span>
                       ))}
                     </div>

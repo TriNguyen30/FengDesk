@@ -7,11 +7,18 @@ import { useMicLevel } from "../hooks/useMicLevel";
 import { useSpeechInput } from "../hooks/useSpeechInput";
 import { useWhisperTranscription } from "../hooks/useWhisperTranscription";
 import VoiceListeningOverlay from "./VoiceListeningOverlay";
+import { IMAGE_UPLOAD_ACCEPT } from "@/utils/imageResize";
 
 interface WorkspaceDescribeStepProps {
   onAnalyze: (description: string, imageUrls?: string[], think?: boolean) => void;
   onSkip: () => void;
   isAnalyzing: boolean;
+  /** Bản nháp lần trước — điền lại im lặng, user không cần biết có cơ chế lưu nháp. */
+  initialDescription?: string;
+  initialImageUrls?: string[];
+  initialDeepThink?: boolean;
+  /** Báo lên modal mỗi khi nội dung đổi, để modal ghi nháp. */
+  onDraftChange?: (draft: { description: string; imageUrls: string[]; deepThink: boolean }) => void;
 }
 
 const MIN_LENGTH = 10;
@@ -23,10 +30,14 @@ export default function WorkspaceDescribeStep({
   onAnalyze,
   onSkip,
   isAnalyzing,
+  initialDescription = "",
+  initialImageUrls,
+  initialDeepThink = false,
+  onDraftChange,
 }: WorkspaceDescribeStepProps) {
-  const [description, setDescription] = useState("");
+  const [description, setDescription] = useState(initialDescription);
   // Công tắc "suy nghĩ kỹ": bật thinking cho model → kỹ hơn nhưng CHẬM hơn nhiều (mặc định tắt cho nhanh).
-  const [deepThink, setDeepThink] = useState(false);
+  const [deepThink, setDeepThink] = useState(initialDeepThink);
   const [speechLang, setSpeechLang] = useState<"vi-VN" | "en-US">("vi-VN");
   const { isSupported, isListening, start, stop } = useSpeechInput();
   // Whisper (BE) chốt chính xác hơn, tự nhận diện vi/en/nói trộn. Web Speech vẫn chạy song song cho
@@ -38,6 +49,25 @@ export default function WorkspaceDescribeStep({
   const fileRef = useRef<HTMLInputElement>(null);
   // Chữ đã có TRƯỚC khi bấm mic (gõ tay hoặc lượt nói trước) — giữ lại để nói tiếp không đè mất.
   const voiceBaseRef = useRef("");
+
+  // Khôi phục ảnh của bản nháp: chỉ link server sống sót qua reload, object URL preview thì không.
+  // Chạy một lần lúc mount — restore() tự bỏ qua nếu danh sách ảnh đã có gì đó.
+  useEffect(() => {
+    if (initialImageUrls?.length) att.restore(initialImageUrls);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Đẩy nội dung hiện tại lên modal để ghi nháp. Phụ thuộc CHUỖI link ảnh (không phải att.items)
+  // để không ghi lại mỗi lần ảnh nhích trạng thái upload.
+  const imageUrlsKey = att.urls.join("|");
+  useEffect(() => {
+    onDraftChange?.({
+      description,
+      imageUrls: imageUrlsKey ? imageUrlsKey.split("|") : [],
+      deepThink,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [description, imageUrlsKey, deepThink]);
 
   // micLevel (audio visualizer) đi theo isListening bất kể lý do dừng là gì — kể cả khi
   // useSpeechInput tự dừng ngầm sau 6s im lặng (không có callback riêng cho case đó).
@@ -93,7 +123,7 @@ export default function WorkspaceDescribeStep({
   return (
     <div className="p-6">
       <p className="mb-3 text-sm text-gray-600">
-        Mô tả không gian làm việc bằng lời và/hoặc đính kèm ảnh chụp phòng — vị trí, ánh sáng, bàn,
+        Mô tả không gian làm việc bằng lời và/hoặc đính kèm ảnh chụp phòng, vị trí, ánh sáng, bàn,
         màu/vật liệu, mục đích sử dụng. AI sẽ điền sẵn form, bạn chỉ cần kiểm tra lại.
       </p>
 
@@ -112,7 +142,7 @@ export default function WorkspaceDescribeStep({
           <input
             ref={fileRef}
             type="file"
-            accept="image/jpeg,image/png,image/bmp,image/gif"
+            accept={IMAGE_UPLOAD_ACCEPT}
             className="hidden"
             onChange={(e) => {
               const file = e.target.files?.[0];
@@ -218,7 +248,7 @@ export default function WorkspaceDescribeStep({
           onClick={onSkip}
           className="flex-1 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
         >
-          Bỏ qua, điền thủ công
+          Điền thủ công
         </button>
         <button
           type="button"
@@ -231,7 +261,7 @@ export default function WorkspaceDescribeStep({
             ? "Đang phân tích..."
             : att.uploading
               ? "Đang tải ảnh..."
-              : "Để AI điền giúp"}
+              : "Để Lumi giúp bạn"}
         </button>
       </div>
     </div>

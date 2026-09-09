@@ -11,6 +11,7 @@ import {
   ChevronsLeft,
   ChevronsRight,
   Settings,
+  Sparkles,
 } from "lucide-react";
 import { useAppSelector, useAppDispatch } from "@/app/store";
 import { logout } from "@/features/auth/store/authSlice";
@@ -24,6 +25,7 @@ const toasterStyle = { "--width": "min(100vw - 1.5rem, 356px)" } as CSSPropertie
 const navigation = [
   { name: "Tổng quan", href: "/admin/dashboard", icon: LayoutDashboard },
   { name: "Người dùng", href: "/admin/users", icon: Users },
+  { name: "Tag ngũ hành", href: "/admin/element-tags", icon: Sparkles },
   { name: "Cửa hàng", href: "/admin/stores", icon: Store },
   { name: "Cài đặt", href: "/admin/settings", icon: Settings },
 ];

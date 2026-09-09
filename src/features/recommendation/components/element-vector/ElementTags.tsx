@@ -10,8 +10,8 @@ import {
 } from "./constants";
 
 const STATUS_TEXT: Record<GapStatus, string> = {
-  deficit: "↑ cần bù",
-  surplus: "↓ thừa",
+  deficit: "↓ thiếu",
+  surplus: "↑ thừa",
   balanced: "ổn",
 };
 

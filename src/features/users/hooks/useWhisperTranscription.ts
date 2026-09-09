@@ -1,6 +1,7 @@
 import { useCallback, useRef, useState } from "react";
 import fetchHttpClient from "@/lib/httpClient";
 import type { ApiResponse } from "@/types/api";
+import { AI_REQUEST_TIMEOUT_MS } from "@/config/axios.config";
 
 /**
  * Cờ bật/tắt Whisper LẤY TỪ BE (GET /workspace/speech-config → { enabled }). BE là nguồn điều khiển
@@ -85,6 +86,8 @@ export function useWhisperTranscription() {
         formData,
         {
           headers: { "Content-Type": "multipart/form-data" },
+          // Whisper/Moonshine chạy trên BE — đây là thời gian model phiên âm, không phải độ trễ mạng.
+          timeout: AI_REQUEST_TIMEOUT_MS,
         },
       );
       const text = res.data?.data?.trim();

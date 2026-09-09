@@ -30,6 +30,7 @@ import AdminLayout from "@/components/layouts/AdminLayout";
 import AdminDashboardPage from "@/features/admin/pages/AdminDashboardPage";
 import AdminUsersPage from "@/features/admin/pages/AdminUsersPage";
 import AdminUserDetailPage from "@/features/admin/pages/AdminUserDetailPage";
+import AdminElementTagsPage from "@/features/admin/pages/AdminElementTagsPage";
 
 // Profile Pages
 import ProfileLayout from "@/components/layouts/ProfileLayout";
@@ -187,6 +188,7 @@ export default function AppRoutes() {
         <Route path="dashboard" element={<AdminDashboardPage />} />
         <Route path="users" element={<AdminUsersPage />} />
         <Route path="users/:id" element={<AdminUserDetailPage />} />
+        <Route path="element-tags" element={<AdminElementTagsPage />} />
         <Route path="stores" element={<ManageStoresPage />} />
         <Route path="settings">
           <Route index element={<Navigate to="account" replace />} />
