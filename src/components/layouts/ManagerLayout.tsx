@@ -32,7 +32,7 @@ import FengDesk from "@/assets/image/fengdesk_logo_2.png";
 const toasterStyle = { "--width": "min(100vw - 1.5rem, 356px)" } as CSSProperties;
 
 const navigation = [
-  { name: "Tổng quan", href: "/manager/dashboard", icon: LayoutDashboard },
+  // { name: "Tổng quan", href: "/manager/dashboard", icon: LayoutDashboard },
   {
     name: "Sản phẩm",
     icon: Package,

@@ -31,7 +31,7 @@ export default function DashboardPage() {
         newOrders++;
       }
 
-      if (o.status === "Completed") {
+      if (["Completed", "Delivered"].includes(o.status)) {
         completedOrders++;
         totalRev += o.totalAmount || 0;
 

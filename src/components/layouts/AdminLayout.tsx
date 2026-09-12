@@ -26,7 +26,7 @@ const navigation = [
   { name: "Tổng quan", href: "/admin/dashboard", icon: LayoutDashboard },
   { name: "Người dùng", href: "/admin/users", icon: Users },
   { name: "Tag ngũ hành", href: "/admin/element-tags", icon: Sparkles },
-  { name: "Cửa hàng", href: "/admin/stores", icon: Store },
+  // { name: "Cửa hàng", href: "/admin/stores", icon: Store },
   { name: "Cài đặt", href: "/admin/settings", icon: Settings },
 ];
 

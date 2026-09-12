@@ -1,5 +1,5 @@
 import React from "react";
-import { MapPin, Plus, Info, Users, Shield, UserMinus, UserPlus, Loader2 } from "lucide-react";
+import { MapPin, Plus, Info, Users, Shield, UserMinus, UserPlus, Loader2, Crown } from "lucide-react";
 import type { Shop, StoreAddress, StoreStaff, UserSearchItem } from "@/features/shop/types/shop";
 import UserSearchCombobox from "@/features/shop/components/UserSearchCombobox";
 
@@ -20,6 +20,7 @@ interface StoreDetailCardProps {
   submittingStaff: boolean;
   onRemoveStaff: (assignmentId: string) => void;
   deletingStaffId: string | null;
+  currentUserId?: string;
 }
 
 export function StoreDetailCard({
@@ -39,6 +40,7 @@ export function StoreDetailCard({
   submittingStaff,
   onRemoveStaff,
   deletingStaffId,
+  currentUserId,
 }: StoreDetailCardProps) {
   const renderStoreAddressDetails = (storeDetails: Shop | null) => {
     if (!storeDetails) return null;
@@ -118,15 +120,25 @@ export function StoreDetailCard({
     );
   };
 
+  const isOwner = selectedStore.isOwner || (!!currentUserId && selectedStore.ownerUserId === currentUserId);
+
   return (
     <div className="rounded-2xl bg-white shadow-sm ring-1 ring-gray-100 overflow-hidden">
       {/* Card Header with tabs */}
       <div className="border-b border-gray-100 bg-gray-50/50 p-5">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <span className="text-xs text-gray-400 font-semibold uppercase tracking-wider font-mono">
-              Mã: {selectedStore.id}
-            </span>
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-xs text-gray-400 font-semibold uppercase tracking-wider font-mono">
+                Mã: {selectedStore.id}
+              </span>
+              {isOwner && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 text-emerald-800 px-2.5 py-0.5 text-xs font-bold border border-emerald-200">
+                  <Crown size={12} className="text-emerald-700" />
+                  Garden Owner (Chủ cửa hàng)
+                </span>
+              )}
+            </div>
             <h2 className="text-lg font-bold text-gray-900 mt-0.5">{selectedStore.name}</h2>
           </div>
           <div className="flex gap-1.5 p-1 bg-gray-200/60 rounded-xl max-w-fit">

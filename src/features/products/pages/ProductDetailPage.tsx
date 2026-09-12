@@ -126,6 +126,7 @@ export default function ProductDetailPage() {
   useEffect(() => {
     if (!product) return;
 
+    document.title = `${product.name} - Feng Shui Garden`;
     setSelectedItem(product.items[0] ?? null);
     setActiveImage(sortedImages[0]?.url ?? "");
     setQuantity(1);

@@ -48,155 +48,158 @@ import NotFoundPage from "@/features/shared/404Page";
 import SettingsPage from "@/features/shared/SettingsPage";
 import ShopInformationSetting from "@/features/shared/ShopInformationSetting";
 
+import PageTitleListener from "@/components/common/PageTitleListener";
+
 export default function AppRoutes() {
   return (
-    <Routes>
-      <Route element={<AppLayout />}>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/about" element={<AboutPage />} />
-        <Route path="/contact" element={<ContactPage />} />
-        <Route path="/news" element={<NewsPage />} />
-        <Route path="/products" element={<ProductsPage />} />
-        <Route path="/products/:id" element={<ProductDetailPage />} />
-        <Route path="/stores/:id" element={<ShopDetailPage />} />
-        <Route
-          path="/seller"
-          element={
-            <ProtectedRoute>
-              <MyShopsPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/seller/:storeId/deliveries"
-          element={
-            <ProtectedRoute>
-              <ShopDeliveriesPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/seller/:storeId/returns"
-          element={
-            <ProtectedRoute>
-              <ShopReturnsPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/seller/:storeId/staff"
-          element={
-            <ProtectedRoute>
-              <ShopStaffPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/seller/:storeId/products/new"
-          element={
-            <ProtectedRoute>
-              <CreateProductPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/become-seller"
-          element={
-            <ProtectedRoute>
-              <CreateShopPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route path="/cart" element={<CartPage />} />
-        <Route
-          path="/checkout"
-          element={
-            <ProtectedRoute>
-              <CheckoutPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/payment/success"
-          element={
-            <ProtectedRoute>
-              <PaymentSuccessPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/payment/cancel"
-          element={
-            <ProtectedRoute>
-              <PaymentCancelPage />
-            </ProtectedRoute>
-          }
-        />
+    <>
+      <PageTitleListener />
+      <Routes>
+        <Route element={<AppLayout />}>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/about" element={<AboutPage />} />
+          <Route path="/contact" element={<ContactPage />} />
+          <Route path="/news" element={<NewsPage />} />
+          <Route path="/products" element={<ProductsPage />} />
+          <Route path="/products/:id" element={<ProductDetailPage />} />
+          <Route path="/stores/:id" element={<ShopDetailPage />} />
+          <Route
+            path="/seller"
+            element={
+              <ProtectedRoute>
+                <MyShopsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/seller/:storeId/deliveries"
+            element={
+              <ProtectedRoute>
+                <ShopDeliveriesPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/seller/:storeId/returns"
+            element={
+              <ProtectedRoute>
+                <ShopReturnsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/seller/:storeId/staff"
+            element={
+              <ProtectedRoute>
+                <ShopStaffPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/seller/:storeId/products/new"
+            element={
+              <ProtectedRoute>
+                <CreateProductPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/become-seller"
+            element={
+              <ProtectedRoute>
+                <CreateShopPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="/cart" element={<CartPage />} />
+          <Route
+            path="/checkout"
+            element={
+              <ProtectedRoute>
+                <CheckoutPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/payment/success"
+            element={
+              <ProtectedRoute>
+                <PaymentSuccessPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/payment/cancel"
+            element={
+              <ProtectedRoute>
+                <PaymentCancelPage />
+              </ProtectedRoute>
+            }
+          />
 
-        {/* Protected Profile Routes */}
+          {/* Protected Profile Routes */}
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <ProfileLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<Navigate to="info" replace />} />
+            <Route path="info" element={<ProfileInfoPage />} />
+            <Route path="addresses" element={<AddressBookPage />} />
+            <Route path="workspace" element={<ProfileWorkspace />} />
+            <Route path="orders" element={<OrdersPage />} />
+            <Route path="orders/:id" element={<OrderDetailPage />} />
+            <Route path="returns" element={<ProfileReturnOrder />} />
+            <Route path="invitations" element={<MyInvitationsPage />} />
+            <Route path="notifications" element={<NotificationPage />} />
+          </Route>
+        </Route>
         <Route
-          path="/profile"
+          path="/manager"
           element={
-            <ProtectedRoute>
-              <ProfileLayout />
+            <ProtectedRoute requireStaffOrAbove>
+              <ManagerLayout />
             </ProtectedRoute>
           }
         >
-          <Route index element={<Navigate to="info" replace />} />
-          <Route path="info" element={<ProfileInfoPage />} />
-          <Route path="addresses" element={<AddressBookPage />} />
-          <Route path="workspace" element={<ProfileWorkspace />} />
-          <Route path="orders" element={<OrdersPage />} />
-          <Route path="orders/:id" element={<OrderDetailPage />} />
-          <Route path="returns" element={<ProfileReturnOrder />} />
-          <Route path="invitations" element={<MyInvitationsPage />} />
-          <Route path="notifications" element={<NotificationPage />} />
+          <Route index element={<Navigate to="products" replace />} />
+          <Route path="categories" element={<ManageCategoriesPage />} />
+          <Route path="products" element={<ManageProductsPage />} />
+          <Route path="products/new" element={<CreateProductPage />} />
+          <Route path="model3d-queue" element={<Model3DQueuePage />} />
+          <Route path="orders" element={<ManageOrdersPage />} />
+          <Route path="order-returns" element={<ManageOrderReturnPage />} />
+          <Route path="customers" element={<StaffSupportPage />} />
+          <Route path="stores" element={<ManageStoresPage />} />
+          <Route path="settings">
+            <Route index element={<Navigate to="account" replace />} />
+            <Route path="account" element={<SettingsPage />} />
+          </Route>
         </Route>
-      </Route>
-      <Route
-        path="/manager"
-        element={
-          <ProtectedRoute requireStaffOrAbove>
-            <ManagerLayout />
-          </ProtectedRoute>
-        }
-      >
-        <Route index element={<Navigate to="dashboard" replace />} />
-        <Route path="dashboard" element={<DashboardPage />} />
-        <Route path="categories" element={<ManageCategoriesPage />} />
-        <Route path="products" element={<ManageProductsPage />} />
-        <Route path="products/new" element={<CreateProductPage />} />
-        <Route path="model3d-queue" element={<Model3DQueuePage />} />
-        <Route path="orders" element={<ManageOrdersPage />} />
-        <Route path="order-returns" element={<ManageOrderReturnPage />} />
-        <Route path="customers" element={<StaffSupportPage />} />
-        <Route path="stores" element={<ManageStoresPage />} />
-        <Route path="settings">
-          <Route index element={<Navigate to="account" replace />} />
-          <Route path="account" element={<SettingsPage />} />
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute requireAdmin>
+              <AdminLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<Navigate to="dashboard" replace />} />
+          <Route path="dashboard" element={<AdminDashboardPage />} />
+          <Route path="users" element={<AdminUsersPage />} />
+          <Route path="users/:id" element={<AdminUserDetailPage />} />
+          <Route path="element-tags" element={<AdminElementTagsPage />} />
+          <Route path="stores" element={<ManageStoresPage />} />
+          <Route path="settings">
+            <Route index element={<Navigate to="account" replace />} />
+            <Route path="account" element={<SettingsPage />} />
+          </Route>
         </Route>
-      </Route>
-      <Route
-        path="/admin"
-        element={
-          <ProtectedRoute requireAdmin>
-            <AdminLayout />
-          </ProtectedRoute>
-        }
-      >
-        <Route index element={<Navigate to="dashboard" replace />} />
-        <Route path="dashboard" element={<AdminDashboardPage />} />
-        <Route path="users" element={<AdminUsersPage />} />
-        <Route path="users/:id" element={<AdminUserDetailPage />} />
-        <Route path="element-tags" element={<AdminElementTagsPage />} />
-        <Route path="stores" element={<ManageStoresPage />} />
-        <Route path="settings">
-          <Route index element={<Navigate to="account" replace />} />
-          <Route path="account" element={<SettingsPage />} />
-        </Route>
-      </Route>
-      {/* 404 Fallback */}
-      <Route path="*" element={<NotFoundPage />} />
-    </Routes>
-  );
+        {/* 404 Fallback */}
+        <Route path="*" element={<NotFoundPage />} />
+      </Routes>
+    </>);
 }

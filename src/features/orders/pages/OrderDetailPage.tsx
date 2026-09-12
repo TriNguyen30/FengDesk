@@ -108,6 +108,12 @@ export default function OrderDetailPage() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
 
+  useEffect(() => {
+    if (currentOrder) {
+      document.title = `Đơn hàng #${currentOrder.id.slice(0, 8).toUpperCase()} - Feng Shui Garden`;
+    }
+  }, [currentOrder]);
+
   const [returnModal, setReturnModal] = useState<ReturnModalState>({
     open: false,
     deliveryId: null,
