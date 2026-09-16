@@ -63,6 +63,34 @@ export function useShopChatSupport(storeId: string | undefined) {
 
     const onMessage = (m: ChatMessageBroadcast) => {
       if (activeRef.current === m.chatboxId) setMessages((prev) => upsert(prev, m));
+      
+      setMyRooms((prev) => {
+        const idx = prev.findIndex((r) => r.id === m.chatboxId);
+        if (idx === -1) return prev;
+        const room = prev[idx];
+        const isFromMe = m.senderId === meId;
+        const isFocused = activeRef.current === m.chatboxId;
+        const updatedRoom = {
+          ...room,
+          lastMessage: m,
+          unreadCount: (isFromMe || isFocused) ? 0 : room.unreadCount + 1,
+        };
+        const next = [...prev];
+        next.splice(idx, 1);
+        next.unshift(updatedRoom);
+        return next;
+      });
+
+      setQueue((prev) => {
+        const idx = prev.findIndex((r) => r.id === m.chatboxId);
+        if (idx === -1) return prev;
+        const room = prev[idx];
+        const updatedRoom = { ...room, lastMessage: m };
+        const next = [...prev];
+        next.splice(idx, 1);
+        next.unshift(updatedRoom);
+        return next;
+      });
     };
 
     (async () => {
@@ -132,7 +160,18 @@ export function useShopChatSupport(storeId: string | undefined) {
       setSending(true);
       try {
         const res = await chatApi.sendMessage(roomId, { content: trimmed });
-        if (res.data.isSuccess) setMessages((prev) => upsert(prev, res.data.data));
+        if (res.data.isSuccess) {
+          setMessages((prev) => upsert(prev, res.data.data));
+          setMyRooms((prev) => {
+            const idx = prev.findIndex((r) => r.id === roomId);
+            if (idx === -1) return prev;
+            const updatedRoom = { ...prev[idx], lastMessage: res.data.data, unreadCount: 0 };
+            const next = [...prev];
+            next.splice(idx, 1);
+            next.unshift(updatedRoom);
+            return next;
+          });
+        }
         else toast.error(res.data.message || "Không gửi được tin nhắn.");
       } catch {
         toast.error("Không gửi được tin nhắn.");

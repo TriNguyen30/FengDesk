@@ -165,7 +165,8 @@ export default function AppRoutes() {
             </ProtectedRoute>
           }
         >
-          <Route index element={<Navigate to="products" replace />} />
+          <Route index element={<Navigate to="dashboard" replace />} />
+          <Route path="dashboard" element={<DashboardPage />} />
           <Route path="categories" element={<ManageCategoriesPage />} />
           <Route path="products" element={<ManageProductsPage />} />
           <Route path="products/new" element={<CreateProductPage />} />

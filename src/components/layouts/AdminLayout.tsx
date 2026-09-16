@@ -107,8 +107,8 @@ export default function AdminLayout() {
                   to={item.href!}
                   title={collapsed ? item.name : undefined}
                   className={`group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${isActive
-                      ? "bg-primary text-white"
-                      : "text-slate-300 hover:bg-slate-800 hover:text-white"
+                    ? "bg-primary text-white"
+                    : "text-slate-300 hover:bg-slate-800 hover:text-white"
                     } ${collapsed ? "justify-center" : ""}`}
                 >
                   {isActive && (

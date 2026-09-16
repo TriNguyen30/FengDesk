@@ -306,8 +306,16 @@ export default function OrderDetailPage() {
     }
     return d;
   });
+
+  const isDeliveryPast7Days = (d: any) => {
+    const dateString = d.deliveredAt || d.updatedAt || d.createdAt || order?.createdAt;
+    if (!dateString) return false;
+    return (new Date().getTime() - new Date(dateString).getTime()) / (1000 * 60 * 60 * 24) > 7;
+  };
+
   const returnableDeliveries = deliveries.filter((d) => {
     if (d.status !== "Delivered") return false;
+    if (isDeliveryPast7Days(d)) return false;
     const rr = d.returnRequest;
     return !rr || ["Rejected", "Cancelled", "Completed"].includes(rr.status);
   });
@@ -753,20 +761,31 @@ export default function OrderDetailPage() {
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
                       {isDelivered && multiDelivered && (
-                        <button
-                          onClick={() =>
-                            openReturnModal(delivery.id, getDeliveryItems(delivery.id))
-                          }
-                          disabled={hasActiveReturn}
-                          className={`flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-lg transition-colors ${
-                            !hasActiveReturn
-                              ? "text-orange-600 bg-orange-50 border border-orange-200 hover:bg-orange-100 cursor-pointer"
-                              : "text-gray-400 bg-gray-50 border border-gray-200 cursor-not-allowed"
-                          }`}
-                        >
-                          <RotateCcw className="h-3 w-3" />
-                          {hasActiveReturn ? t("order_detail.delivery.return_pending") : t("order_detail.delivery.return_btn")}
-                        </button>
+                        (() => {
+                          const isPast7Days = isDeliveryPast7Days(delivery);
+                          const isDisabled = hasActiveReturn || isPast7Days;
+
+                          return (
+                            <button
+                              onClick={() =>
+                                openReturnModal(delivery.id, getDeliveryItems(delivery.id))
+                              }
+                              disabled={isDisabled}
+                              className={`flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-lg transition-colors ${
+                                !isDisabled
+                                  ? "text-orange-600 bg-orange-50 border border-orange-200 hover:bg-orange-100 cursor-pointer"
+                                  : "text-gray-400 bg-gray-50 border border-gray-200 cursor-not-allowed"
+                              }`}
+                            >
+                              <RotateCcw className="h-3 w-3" />
+                              {hasActiveReturn
+                                ? t("order_detail.delivery.return_pending")
+                                : isPast7Days
+                                  ? (t("order_detail.delivery.return_expired") || "Hết hạn")
+                                  : t("order_detail.delivery.return_btn")}
+                            </button>
+                          );
+                        })()
                       )}
                       <span
                         className={`text-xs font-semibold px-2.5 py-1 rounded-full ${statusInfo.pillClass}`}

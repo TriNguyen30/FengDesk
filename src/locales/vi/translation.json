@@ -628,6 +628,7 @@
     },
     "title": "Đơn hàng của tôi",
     "subtitle": "Theo dõi và quản lý các đơn hàng bạn đã đặt.",
+    "search_placeholder": "Bạn có thể tìm kiếm theo tên Shop, Tên Sản Phẩm, Mã đơn hàng",
     "orders_count": "đơn hàng",
     "empty": {
       "message": "Bạn chưa có đơn hàng nào",
@@ -708,6 +709,7 @@
       "return_pending": "Đang chờ xử lý trả hàng",
       "return_processing": "Đang xử lý trả hàng",
       "return_btn": "Trả",
+      "return_expired": "Quá hạn",
       "delivered": "Đã giao hàng"
     },
     "delivery_status": {

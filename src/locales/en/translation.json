@@ -628,6 +628,7 @@
     },
     "title": "My Orders",
     "subtitle": "Track and manage your orders.",
+    "search_placeholder": "You can search by Shop Name, Product Name, Order Code",
     "orders_count": "orders",
     "empty": {
       "message": "You don't have any orders",
@@ -708,6 +709,7 @@
       "return_pending": "Return request pending",
       "return_processing": "Processing return",
       "return_btn": "Return",
+      "return_expired": "Expired",
       "delivered": "Delivered"
     },
     "delivery_status": {

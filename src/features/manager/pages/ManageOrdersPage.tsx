@@ -102,9 +102,9 @@ export default function ManageOrdersPage() {
       {/* Header section with active store selector */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-gray-900">Quản lý Đơn hàng Chi nhánh</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-gray-900">Quản lý Đơn hàng</h1>
           <p className="text-gray-500 mt-1 text-sm">
-            Xem và xử lý các đơn giao thuộc chi nhánh bạn quản lý.
+            Xem và xử lý các đơn giao thuộc cửa hàng bạn quản lý.
           </p>
         </div>
 
@@ -112,7 +112,7 @@ export default function ManageOrdersPage() {
         {userActiveStores.length > 0 && (
           <div className="flex items-center gap-2 bg-white px-3.5 py-2.5 rounded-2xl border border-gray-200 shadow-xs">
             <StoreIcon size={16} className="text-emerald-600 shrink-0" />
-            <span className="text-xs font-semibold text-gray-600">Chi nhánh:</span>
+            <span className="text-xs font-semibold text-gray-600">Cửa hàng của tôi:</span>
             {loadingStores ? (
               <div className="flex items-center gap-1.5 text-xs text-gray-400">
                 <Loader2 size={13} className="animate-spin text-emerald-600" />
@@ -132,7 +132,7 @@ export default function ManageOrdersPage() {
               >
                 {userActiveStores.map((store) => (
                   <option key={store.id} value={store.id}>
-                    {store.name} {store.isOwner ? "👑 Owner" : (store as any).isStaff ? "🛡️ Staff" : ""}
+                    {store.name} {store.isOwner ? "(Chủ cửa hàng)" : (store as any).isStaff ? "(Nhân viên)" : ""}
                   </option>
                 ))}
               </select>

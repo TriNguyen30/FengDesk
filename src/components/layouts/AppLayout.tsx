@@ -37,7 +37,7 @@ export default function AppLayout() {
     if (initRedirectDone) return;
     initRedirectDone = true;
     const roles = (user?.role ?? "").split(",").map((r) => r.trim());
-    const isStaffOrAbove = roles.some((r) => r === "Staff" || r === "Manager" || r === "Admin");
+    const isStaffOrAbove = roles.some((r) => r === "Manager" || r === "Admin");
     if (isStaffOrAbove && pathname === "/") navigate("/manager", { replace: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

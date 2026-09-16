@@ -132,7 +132,7 @@ export default function ManageOrderReturnPage() {
               >
                 {userActiveStores.map((store) => (
                   <option key={store.id} value={store.id}>
-                    {store.name} {store.isOwner ? "👑 Owner" : (store as any).isStaff ? "🛡️ Staff" : ""}
+                    {store.name} {store.isOwner ? "(Chủ cửa hàng)" : (store as any).isStaff ? "(Nhân viên)" : ""}
                   </option>
                 ))}
               </select>

@@ -95,13 +95,13 @@ export default function ChatRoomList({
                 )}
               </div>
               <div className="flex items-center justify-between gap-2 mt-0.5">
-                <p
-                  className={`truncate text-xs ${
-                    box.unreadCount > 0 ? "font-semibold text-gray-900" : "text-gray-500"
-                  }`}
-                >
-                  {getLastMessagePreview(box)}
-                </p>
+                  <p
+                    className={`truncate text-xs ${
+                      box.unreadCount > 0 ? "font-semibold text-gray-900" : "text-gray-500"
+                    }`}
+                  >
+                    {getLastMessagePreview(box, meId)}
+                  </p>
                 {box.unreadCount > 0 && (
                   <span className="flex h-4 min-w-4 shrink-0 items-center justify-center rounded-full bg-danger px-1 text-[10px] font-bold text-white tabular-nums">
                     {box.unreadCount > 9 ? "9+" : box.unreadCount}
