@@ -8,10 +8,7 @@ import {
   Tooltip,
 } from "recharts";
 import { Circle, Leaf, Droplets, Flame, Mountain } from "lucide-react";
-import type {
-  CurrentContribution,
-  ElementAnalysisRow,
-} from "@/features/users/types/workspace";
+import type { CurrentContribution, ElementAnalysisRow } from "@/features/users/types/workspace";
 import { TAG_GAP_THRESHOLD, elementColor, elementVi, gapStatus, type GapStatus } from "./constants";
 
 interface ElementRadarChartProps {
@@ -304,9 +301,7 @@ export default function ElementRadarChart({
     // Tổng % các nguồn = đúng con số "Hiện tại" ở trên (cả hai cùng chuẩn hóa theo tổng phiếu).
     const sources = sourcesFor(element);
     const shownSources = sources.slice(0, MAX_TOOLTIP_SOURCES);
-    const restPercent = sources
-      .slice(MAX_TOOLTIP_SOURCES)
-      .reduce((sum, s) => sum + s.percent, 0);
+    const restPercent = sources.slice(MAX_TOOLTIP_SOURCES).reduce((sum, s) => sum + s.percent, 0);
 
     return (
       <div
@@ -353,7 +348,8 @@ export default function ElementRadarChart({
           <div
             className="mt-2 rounded-lg px-2 py-1.5 text-[11px] leading-snug"
             style={{
-              background: gapMark(element) === "surplus" ? "rgba(217,173,65,0.16)" : "rgba(59,130,246,0.12)",
+              background:
+                gapMark(element) === "surplus" ? "rgba(217,173,65,0.16)" : "rgba(59,130,246,0.12)",
               color: markColor(gapMark(element)),
             }}
           >

@@ -148,7 +148,8 @@ function EditShopProfileModal({ shop, onClose, onSaved }: EditShopProfileModalPr
   // BE trả `address` dạng chuỗi (store chưa có địa chỉ chi tiết) hoặc object
   // StoreAddressResponse. Chỉ trường hợp object mới có wardId để dựng lại khu vực.
   const savedAddress = useMemo(
-    () => (typeof shop.address === "object" && shop.address ? (shop.address as StoreAddress) : null),
+    () =>
+      typeof shop.address === "object" && shop.address ? (shop.address as StoreAddress) : null,
     [shop.address],
   );
 

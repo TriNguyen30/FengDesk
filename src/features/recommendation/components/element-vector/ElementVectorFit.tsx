@@ -27,8 +27,15 @@ function toOrderedRows(elements: ElementAnalysisRow[]): ElementAnalysisRow[] {
   const byElement = new Map(elements.map((row) => [row.element, row]));
   return ELEMENT_ORDER.map(
     (element) =>
-      byElement.get(element) ??
-      { element, ideal: 0, adjustedIdeal: 0, current: 0, gap: 0, previewCurrent: 0, previewGap: 0 },
+      byElement.get(element) ?? {
+        element,
+        ideal: 0,
+        adjustedIdeal: 0,
+        current: 0,
+        gap: 0,
+        previewCurrent: 0,
+        previewGap: 0,
+      },
   );
 }
 
@@ -120,14 +127,15 @@ export default function ElementVectorFit({ analysis, variant = "full" }: Element
           <ElementTags rows={displayRows} />
           {(analysis.evidenceCount ?? 0) === 0 && (
             <p className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">
-              Đang <strong>ước tính theo loại phòng</strong> - Có vẻ như bạn chưa khai báo màu chủ đạo, chất liệu
-              hay vật trang trí nào. Thêm vài tag hiện trạng để phản ánh đúng thực trạng khu vực làm việc của bạn.
+              Đang <strong>ước tính theo loại phòng</strong> - Có vẻ như bạn chưa khai báo màu chủ
+              đạo, chất liệu hay vật trang trí nào. Thêm vài tag hiện trạng để phản ánh đúng thực
+              trạng khu vực làm việc của bạn.
             </p>
           )}
           {simulation && (
             <p className="rounded-lg bg-[#D9AD41]/10 px-3 py-2 text-xs text-[#8a6d1f]">
-              Đang <strong>xem thử</strong> ở mức {simulatedVotes} phiếu. Biểu đồ và chip ngũ hành đổi
-              theo mức này; ba nhận định bên dưới vẫn tính trên số phiếu thật.
+              Đang <strong>xem thử</strong> ở mức {simulatedVotes} phiếu. Biểu đồ và chip ngũ hành
+              đổi theo mức này; ba nhận định bên dưới vẫn tính trên số phiếu thật.
             </p>
           )}
           <SpaceInsightList insights={analysis.insights} />

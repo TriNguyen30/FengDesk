@@ -1,7 +1,17 @@
 import { useMemo, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-import { Users, ShoppingBag, DollarSign, Package, Store as StoreIcon, Truck, Building2, ArrowUpRight, ShieldCheck } from "lucide-react";
+import {
+  Users,
+  ShoppingBag,
+  DollarSign,
+  Package,
+  Store as StoreIcon,
+  Truck,
+  Building2,
+  ArrowUpRight,
+  ShieldCheck,
+} from "lucide-react";
 import { useAllOrdersList } from "@/features/orders";
 import { formatVnd, formatOrderDate, STATUS_MAP } from "@/features/orders/utils/orderUtils";
 import { getAllShopRequest, getStoreStatisticsRequest } from "@/features/shop/api/shop.api";
@@ -32,7 +42,7 @@ export default function AdminDashboardPage() {
                 shop,
                 stats: statRes.isSuccess && statRes.data ? statRes.data : null,
               }))
-              .catch(() => ({ shop, stats: null }))
+              .catch(() => ({ shop, stats: null })),
           );
           const results = await Promise.all(statsPromises);
           if (active) {
@@ -60,30 +70,34 @@ export default function AdminDashboardPage() {
     recentOrders,
     completedOrdersCount,
   } = useMemo(() => {
+    const uniqueUsers = new Set<string>();
+    orders.forEach((o) => {
+      uniqueUsers.add(o.customerId);
+    });
+
     let totalRev = 0;
     let newOrders = 0;
     let completedOrders = 0;
-    const uniqueUsers = new Set<string>();
     const monthlyRevenue = Array(12).fill(0);
 
     const now = new Date();
     const currentYear = now.getFullYear();
 
-    orders.forEach((o) => {
-      uniqueUsers.add(o.customerId);
+    shopStatsList.forEach(({ stats }) => {
+      if (stats) {
+        // Doanh thu tổng bao gồm doanh thu sản phẩm và phí vận chuyển
+        totalRev += (stats.totalRevenue || 0) + (stats.totalShippingFee || 0);
+        newOrders += stats.deliveriesByStatus["Pending"] || 0;
+        completedOrders +=
+          (stats.deliveriesByStatus["Delivered"] || 0) +
+          (stats.deliveriesByStatus["Completed"] || 0);
 
-      if (o.status === "Pending") {
-        newOrders++;
-      }
-
-      // Nhận diện cả Completed và Delivered để khớp tính toán doanh thu toàn hệ thống
-      if (["Completed", "Delivered"].includes(o.status)) {
-        completedOrders++;
-        totalRev += o.totalAmount || 0;
-
-        const orderDate = new Date(o.createdAt);
-        if (orderDate.getFullYear() === currentYear) {
-          monthlyRevenue[orderDate.getMonth()] += o.totalAmount || 0;
+        if (stats.revenueByMonth) {
+          stats.revenueByMonth.forEach((point) => {
+            if (point.year === currentYear && point.month >= 1 && point.month <= 12) {
+              monthlyRevenue[point.month - 1] += point.revenue;
+            }
+          });
         }
       }
     });
@@ -115,7 +129,7 @@ export default function AdminDashboardPage() {
       chartData: chart,
       recentOrders: orders.slice(0, 5),
     };
-  }, [orders]);
+  }, [orders, shopStatsList]);
 
   // Aggregate total product revenue and shipping fees from all shops
   const { totalShopsRevenue, totalShopsShippingFee, totalShopsDeliveries } = useMemo(() => {
@@ -181,7 +195,9 @@ export default function AdminDashboardPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-gray-900">Admin Dashboard</h1>
-        <p className="text-gray-500 mt-1">Tổng quan hiệu suất hoạt động kinh doanh toàn hệ thống và từng cửa hàng.</p>
+        <p className="text-gray-500 mt-1">
+          Tổng quan hiệu suất hoạt động kinh doanh toàn hệ thống và từng cửa hàng.
+        </p>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
@@ -219,12 +235,16 @@ export default function AdminDashboardPage() {
           </div>
           <div className="text-right">
             <span className="text-xs font-semibold text-gray-500">Tổng doanh thu đơn hàng: </span>
-            <span className="text-sm font-bold text-emerald-600">{formatVnd(totalOrderRevenue)}</span>
+            <span className="text-sm font-bold text-emerald-600">
+              {formatVnd(totalOrderRevenue)}
+            </span>
           </div>
         </div>
 
         {loadingShops ? (
-          <div className="py-8 text-center text-sm text-gray-400">Đang tải thống kê cửa hàng...</div>
+          <div className="py-8 text-center text-sm text-gray-400">
+            Đang tải thống kê cửa hàng...
+          </div>
         ) : shopStatsList.length === 0 ? (
           <div className="py-8 text-center text-sm text-gray-500">Chưa có dữ liệu cửa hàng.</div>
         ) : (
@@ -237,7 +257,7 @@ export default function AdminDashboardPage() {
                   <th className="pb-3 px-4 text-center">Đơn thành công</th>
                   <th className="pb-3 px-4 text-right">Phí vận chuyển</th>
                   <th className="pb-3 px-4 text-right">Doanh thu sản phẩm</th>
-                  <th className="pb-3 px-4 text-right">% Hệ thống</th>
+                  <th className="pb-3 px-4 text-right">% Doanh thu</th>
                   <th className="pb-3 pl-4 text-right">Thao tác</th>
                 </tr>
               </thead>
@@ -263,19 +283,21 @@ export default function AdminDashboardPage() {
                           </div>
                         </div>
                       </td>
-                      <td className="py-3 px-4 text-gray-600 font-mono text-xs">{shop.hotline || "N/A"}</td>
+                      <td className="py-3 px-4 text-gray-600 font-mono text-xs">
+                        {shop.hotline || "N/A"}
+                      </td>
                       <td className="py-3 px-4 text-center font-semibold text-gray-700">
                         {deliveredCount}
                       </td>
-                      <td className="py-3 px-4 text-right text-gray-600">
-                        {formatVnd(shopShip)}
-                      </td>
+                      <td className="py-3 px-4 text-right text-gray-600">{formatVnd(shopShip)}</td>
                       <td className="py-3 px-4 text-right font-bold text-emerald-600">
                         {formatVnd(shopRev)}
                       </td>
                       <td className="py-3 px-4 text-right">
                         <div className="flex items-center justify-end gap-2">
-                          <span className="text-xs font-semibold text-gray-600">{pct.toFixed(1)}%</span>
+                          <span className="text-xs font-semibold text-gray-600">
+                            {pct.toFixed(1)}%
+                          </span>
                           <div className="w-12 h-1.5 rounded-full bg-gray-100 overflow-hidden">
                             <div
                               className="h-full rounded-full bg-emerald-500"
@@ -307,7 +329,11 @@ export default function AdminDashboardPage() {
           <div className="h-[300px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-gray-200)" />
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  vertical={false}
+                  stroke="var(--color-gray-200)"
+                />
                 <XAxis
                   dataKey="name"
                   axisLine={false}
@@ -394,4 +420,3 @@ export default function AdminDashboardPage() {
     </div>
   );
 }
-

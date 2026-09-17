@@ -16,7 +16,11 @@ import {
 } from "lucide-react";
 import { useAppSelector } from "@/app/store";
 import { productApi } from "@/features/products/api/product.api";
-import { getAllShopRequest, getMyShopsRequest, getShopRequestById } from "@/features/shop/api/shop.api";
+import {
+  getAllShopRequest,
+  getMyShopsRequest,
+  getShopRequestById,
+} from "@/features/shop/api/shop.api";
 import { getCategoriesRequest } from "@/features/category/api/category.api";
 import { getVibes, getStyles } from "@/features/products/api/taxonomy.api";
 import type { Shop } from "@/features/shop/types/shop";
@@ -36,10 +40,13 @@ import { RichTextEditor } from "@/components/ui/RichTextEditor";
 export default function CreateProductPage() {
   const navigate = useNavigate();
   const currentUser = useAppSelector((s) => s.auth.user);
-  const userRoles = useMemo(() => (currentUser?.role ?? "").split(",").map((r) => r.trim()), [currentUser?.role]);
+  const userRoles = useMemo(
+    () => (currentUser?.role ?? "").split(",").map((r) => r.trim()),
+    [currentUser?.role],
+  );
   const isAdmin = useMemo(
     () => userRoles.some((r) => ["Admin", "SystemAdmin"].includes(r)),
-    [userRoles]
+    [userRoles],
   );
 
   // Mở từ trang shop (/seller/:storeId/products/new) → khóa luôn store, ẩn dropdown chọn shop
@@ -143,11 +150,18 @@ export default function CreateProductPage() {
 
           let enrichedStores = allStores.map((s) => ({
             ...s,
-            isOwner: s.isOwner || ownedIds.has(s.id) || (!!currentUser?.id && s.ownerUserId === currentUser.id),
+            isOwner:
+              s.isOwner ||
+              ownedIds.has(s.id) ||
+              (!!currentUser?.id && s.ownerUserId === currentUser.id),
             isStaff: staffIds.has(s.id),
           }));
 
-          if (enrichedStores.length === 0 && mineRes.status === "fulfilled" && mineRes.value?.data) {
+          if (
+            enrichedStores.length === 0 &&
+            mineRes.status === "fulfilled" &&
+            mineRes.value?.data
+          ) {
             enrichedStores = mineRes.value.data.map((s) => ({
               ...s,
               isOwner: s.isOwner !== false,
@@ -161,7 +175,7 @@ export default function CreateProductPage() {
                 (s) =>
                   s.isOwner ||
                   (s as any).isStaff ||
-                  (!!currentUser?.id && s.ownerUserId === currentUser.id)
+                  (!!currentUser?.id && s.ownerUserId === currentUser.id),
               );
 
           setShops(allowedStores);
@@ -169,13 +183,21 @@ export default function CreateProductPage() {
             setGardenStoreId(allowedStores[0].id);
           }
 
-          if (categoriesRes.status === "fulfilled" && categoriesRes.value?.isSuccess && categoriesRes.value.data) {
+          if (
+            categoriesRes.status === "fulfilled" &&
+            categoriesRes.value?.isSuccess &&
+            categoriesRes.value.data
+          ) {
             setCategories(categoriesRes.value.data.filter((c) => c.isActive));
           }
           if (vibesRes.status === "fulfilled" && vibesRes.value?.isSuccess && vibesRes.value.data) {
             setVibeOptions(vibesRes.value.data);
           }
-          if (stylesRes.status === "fulfilled" && stylesRes.value?.isSuccess && stylesRes.value.data) {
+          if (
+            stylesRes.status === "fulfilled" &&
+            stylesRes.value?.isSuccess &&
+            stylesRes.value.data
+          ) {
             setStyleOptions(stylesRes.value.data);
           }
         }
@@ -434,7 +456,9 @@ export default function CreateProductPage() {
               </div>
 
               <div className="space-y-1.5 sm:col-span-2">
-                <label className="text-sm font-semibold text-gray-700 dark:text-gray-200">Mô tả sản phẩm</label>
+                <label className="text-sm font-semibold text-gray-700 dark:text-gray-200">
+                  Mô tả sản phẩm
+                </label>
                 <RichTextEditor
                   value={description}
                   onChange={setDescription}
@@ -591,19 +615,19 @@ export default function CreateProductPage() {
             {/* Dropzone File Upload */}
             <div
               onClick={() => {
-                if (!images.some(img => img.uploading)) {
+                if (!images.some((img) => img.uploading)) {
                   document.getElementById("file-upload-input")?.click();
                 }
               }}
               onDragOver={(e) => e.preventDefault()}
               onDrop={async (e) => {
                 e.preventDefault();
-                if (!images.some(img => img.uploading) && e.dataTransfer.files) {
+                if (!images.some((img) => img.uploading) && e.dataTransfer.files) {
                   await uploadImages(Array.from(e.dataTransfer.files));
                 }
               }}
               className={`border-2 border-dashed border-gray-200 rounded-2xl p-6 text-center cursor-pointer transition-all duration-200 flex flex-col items-center justify-center gap-2 group ${
-                images.some(img => img.uploading)
+                images.some((img) => img.uploading)
                   ? "opacity-60 cursor-not-allowed bg-gray-50"
                   : "hover:border-primary hover:bg-primary/5"
               }`}
@@ -614,7 +638,7 @@ export default function CreateProductPage() {
                 multiple
                 accept="image/*"
                 onChange={handleFileChange}
-                disabled={images.some(img => img.uploading)}
+                disabled={images.some((img) => img.uploading)}
                 className="hidden"
               />
               <div className="h-10 w-10 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 group-hover:bg-primary/10 group-hover:text-primary transition-colors">

@@ -22,7 +22,12 @@ export interface PopUpLoginProps {
 const submitButtonClass =
   "mt-1 flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-primary py-2.5 text-sm font-semibold text-white transition hover:bg-primary-dark active:bg-green-800 disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer";
 
-export default function PopUpLogin({ open, onClose, onSwitchToSignUp, onSwitchToForgotPassword }: PopUpLoginProps) {
+export default function PopUpLogin({
+  open,
+  onClose,
+  onSwitchToSignUp,
+  onSwitchToForgotPassword,
+}: PopUpLoginProps) {
   const { t } = useTranslation();
   const { persistSession } = useAuthSession();
   const [showPassword, setShowPassword] = useState(false);
@@ -82,7 +87,11 @@ export default function PopUpLogin({ open, onClose, onSwitchToSignUp, onSwitchTo
           className="flex flex-col gap-3"
           noValidate
         >
-          <AuthField id="login-email" label={t("login.email_label")} error={emailErrors.email?.message}>
+          <AuthField
+            id="login-email"
+            label={t("login.email_label")}
+            error={emailErrors.email?.message}
+          >
             <input
               id="login-email"
               type="email"
@@ -95,7 +104,11 @@ export default function PopUpLogin({ open, onClose, onSwitchToSignUp, onSwitchTo
             />
           </AuthField>
 
-          <AuthField id="login-password" label={t("login.password_label")} error={emailErrors.password?.message}>
+          <AuthField
+            id="login-password"
+            label={t("login.password_label")}
+            error={emailErrors.password?.message}
+          >
             <div className="relative">
               <input
                 id="login-password"

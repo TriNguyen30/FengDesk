@@ -220,10 +220,11 @@ export default function CheckoutPage() {
                 {addresses.map((address) => (
                   <label
                     key={address.id}
-                    className={`flex cursor-pointer gap-3 rounded-xl border p-4 transition-colors ${selectedAddressId === address.id
-                      ? "border-primary bg-primary/5"
-                      : "border-gray-200 hover:border-primary/40"
-                      }`}
+                    className={`flex cursor-pointer gap-3 rounded-xl border p-4 transition-colors ${
+                      selectedAddressId === address.id
+                        ? "border-primary bg-primary/5"
+                        : "border-gray-200 hover:border-primary/40"
+                    }`}
                   >
                     <input
                       type="radio"
@@ -264,10 +265,11 @@ export default function CheckoutPage() {
               {PAYMENT_METHODS.map((method) => (
                 <label
                   key={method.value}
-                  className={`flex cursor-pointer items-center gap-3 rounded-xl border p-4 transition-colors ${paymentMethod === method.value
-                    ? "border-primary bg-primary/5"
-                    : "border-gray-200 hover:border-primary/40"
-                    }`}
+                  className={`flex cursor-pointer items-center gap-3 rounded-xl border p-4 transition-colors ${
+                    paymentMethod === method.value
+                      ? "border-primary bg-primary/5"
+                      : "border-gray-200 hover:border-primary/40"
+                  }`}
                 >
                   <input
                     type="radio"

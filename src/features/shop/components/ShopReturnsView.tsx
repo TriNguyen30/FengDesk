@@ -107,7 +107,6 @@ interface ConfirmReceivedModalState {
   returnId: string | null;
 }
 
-
 // ── Detail modal state ───────────────────────────────────────────────────────
 interface DetailModalState {
   open: boolean;
@@ -132,7 +131,10 @@ export default function ShopReturnsView({ storeId }: ShopReturnsViewProps) {
   const [accepting, setAccepting] = useState(false);
 
   // Request Evidence modal
-  const [requestEvidenceModal, setRequestEvidenceModal] = useState<RequestEvidenceModalState>({ open: false, returnId: null });
+  const [requestEvidenceModal, setRequestEvidenceModal] = useState<RequestEvidenceModalState>({
+    open: false,
+    returnId: null,
+  });
   const [evidenceNote, setEvidenceNote] = useState("");
   const [evidenceDeadlineHours, setEvidenceDeadlineHours] = useState<number | "">("");
   const [requestingEvidence, setRequestingEvidence] = useState(false);
@@ -148,7 +150,10 @@ export default function ShopReturnsView({ storeId }: ShopReturnsViewProps) {
   const [loadingDetail, setLoadingDetail] = useState(false);
 
   // Confirm Received modal
-  const [confirmReceivedModal, setConfirmReceivedModal] = useState<ConfirmReceivedModalState>({ open: false, returnId: null });
+  const [confirmReceivedModal, setConfirmReceivedModal] = useState<ConfirmReceivedModalState>({
+    open: false,
+    returnId: null,
+  });
   const [confirmingReceived, setConfirmingReceived] = useState(false);
 
   // Original order (delivery) detail modal — mở từ nút "Xem đơn gốc"
@@ -338,8 +343,6 @@ export default function ShopReturnsView({ storeId }: ShopReturnsViewProps) {
     }
   };
 
-
-
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
       <div className="border-b border-gray-100 p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gray-50/30">
@@ -350,10 +353,11 @@ export default function ShopReturnsView({ storeId }: ShopReturnsViewProps) {
               <button
                 key={tab.value}
                 onClick={() => setActiveTab(tab.value)}
-                className={`rounded-lg px-3.5 py-1.5 text-xs font-semibold transition-all cursor-pointer ${activeTab === tab.value
-                  ? "bg-primary text-white shadow-sm"
-                  : "text-gray-500 hover:bg-gray-100 hover:text-gray-900"
-                  }`}
+                className={`rounded-lg px-3.5 py-1.5 text-xs font-semibold transition-all cursor-pointer ${
+                  activeTab === tab.value
+                    ? "bg-primary text-white shadow-sm"
+                    : "text-gray-500 hover:bg-gray-100 hover:text-gray-900"
+                }`}
               >
                 {tab.label}
                 {activeTab !== tab.value && count > 0 && (
@@ -477,7 +481,9 @@ export default function ShopReturnsView({ storeId }: ShopReturnsViewProps) {
                           className="group flex items-center rounded-lg border border-indigo-200 bg-indigo-50 px-2 py-1.5 text-xs font-semibold text-indigo-600 hover:bg-indigo-100 transition-all duration-300 cursor-pointer"
                         >
                           <Check size={16} />
-                          <span className="max-w-0 overflow-hidden whitespace-nowrap opacity-0 transition-all duration-300 group-hover:max-w-[80px] group-hover:ml-1.5 group-hover:opacity-100">Đã nhận hàng</span>
+                          <span className="max-w-0 overflow-hidden whitespace-nowrap opacity-0 transition-all duration-300 group-hover:max-w-[80px] group-hover:ml-1.5 group-hover:opacity-100">
+                            Đã nhận hàng
+                          </span>
                         </button>
                       )}
                       <button
@@ -485,7 +491,9 @@ export default function ShopReturnsView({ storeId }: ShopReturnsViewProps) {
                         className="group flex items-center rounded-lg border border-gray-200 bg-gray-50 px-2 py-1.5 text-xs font-semibold text-gray-600 hover:bg-gray-100 transition-all duration-300 cursor-pointer"
                       >
                         <Eye size={16} />
-                        <span className="max-w-0 overflow-hidden whitespace-nowrap opacity-0 transition-all duration-300 group-hover:max-w-[80px] group-hover:ml-1.5 group-hover:opacity-100">Chi tiết</span>
+                        <span className="max-w-0 overflow-hidden whitespace-nowrap opacity-0 transition-all duration-300 group-hover:max-w-[80px] group-hover:ml-1.5 group-hover:opacity-100">
+                          Chi tiết
+                        </span>
                       </button>
                     </td>
                   </tr>
@@ -788,7 +796,6 @@ export default function ShopReturnsView({ storeId }: ShopReturnsViewProps) {
         </div>
       )}
 
-
       {/* ── Accept Confirm Modal ───────────────────────────────────────────── */}
       {acceptModal.open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
@@ -866,7 +873,9 @@ export default function ShopReturnsView({ storeId }: ShopReturnsViewProps) {
                   type="number"
                   min="1"
                   value={evidenceDeadlineHours}
-                  onChange={(e) => setEvidenceDeadlineHours(e.target.value ? Number(e.target.value) : "")}
+                  onChange={(e) =>
+                    setEvidenceDeadlineHours(e.target.value ? Number(e.target.value) : "")
+                  }
                   placeholder="Ví dụ: 48"
                   className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 placeholder-gray-400 focus:border-amber-400 focus:outline-none focus:ring-1 focus:ring-amber-200 transition-all"
                 />
@@ -991,7 +1000,6 @@ export default function ShopReturnsView({ storeId }: ShopReturnsViewProps) {
           </div>
         </div>
       )}
-
 
       <DeliveryDetailModal
         deliveryId={orderDetailDeliveryId}

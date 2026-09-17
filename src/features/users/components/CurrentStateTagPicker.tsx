@@ -53,9 +53,9 @@ export default function CurrentStateTagPicker({
 }: CurrentStateTagPickerProps) {
   const [expandedKind, setExpandedKind] = useState<InputKind | null>(null);
   // Tag user tự tạo trong phiên này — giữ cả nhãn để chip hiện đúng chữ user gõ.
-  const [extraOptions, setExtraOptions] = useState<Partial<Record<InputKind, ElementInputOption[]>>>(
-    {},
-  );
+  const [extraOptions, setExtraOptions] = useState<
+    Partial<Record<InputKind, ElementInputOption[]>>
+  >({});
   const [drafts, setDrafts] = useState<Partial<Record<InputKind, string>>>({});
   const [classifyingKind, setClassifyingKind] = useState<InputKind | null>(null);
 

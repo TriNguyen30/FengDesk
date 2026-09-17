@@ -154,9 +154,7 @@ export default function PopUpSignUp({ open, onClose, onSwitchToLogin }: PopUpSig
             className="flex flex-col gap-3"
             noValidate
           >
-            <p className="text-sm text-gray-600 mb-2">
-              {t("signup.step1.desc")}
-            </p>
+            <p className="text-sm text-gray-600 mb-2">{t("signup.step1.desc")}</p>
             <AuthField
               id="signup-initiate-email"
               label={t("signup.step1.email_label")}
@@ -181,7 +179,9 @@ export default function PopUpSignUp({ open, onClose, onSwitchToLogin }: PopUpSig
               disabled={initiateForm.formState.isSubmitting}
               className={submitButtonClass}
             >
-              {initiateForm.formState.isSubmitting ? t("signup.step1.submitting") : t("signup.step1.submit")}
+              {initiateForm.formState.isSubmitting
+                ? t("signup.step1.submitting")
+                : t("signup.step1.submit")}
               <ChevronRight size={16} />
             </button>
           </form>
@@ -367,7 +367,9 @@ export default function PopUpSignUp({ open, onClose, onSwitchToLogin }: PopUpSig
                   type="button"
                   onClick={() => setShowPassword((v) => !v)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer"
-                  aria-label={showPassword ? t("signup.step3.hide_password") : t("signup.step3.show_password")}
+                  aria-label={
+                    showPassword ? t("signup.step3.hide_password") : t("signup.step3.show_password")
+                  }
                 >
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
@@ -398,7 +400,11 @@ export default function PopUpSignUp({ open, onClose, onSwitchToLogin }: PopUpSig
                   type="button"
                   onClick={() => setShowConfirmPassword((v) => !v)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer"
-                  aria-label={showConfirmPassword ? t("signup.step3.hide_password") : t("signup.step3.show_password")}
+                  aria-label={
+                    showConfirmPassword
+                      ? t("signup.step3.hide_password")
+                      : t("signup.step3.show_password")
+                  }
                 >
                   {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
@@ -410,7 +416,9 @@ export default function PopUpSignUp({ open, onClose, onSwitchToLogin }: PopUpSig
               disabled={finalizeForm.formState.isSubmitting}
               className={submitButtonClass}
             >
-              {finalizeForm.formState.isSubmitting ? t("signup.step3.submitting") : t("signup.step3.submit")}
+              {finalizeForm.formState.isSubmitting
+                ? t("signup.step3.submitting")
+                : t("signup.step3.submit")}
               <ChevronRight size={16} />
             </button>
           </form>

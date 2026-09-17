@@ -1,5 +1,15 @@
 import React from "react";
-import { MapPin, Plus, Info, Users, Shield, UserMinus, UserPlus, Loader2, Crown } from "lucide-react";
+import {
+  MapPin,
+  Plus,
+  Info,
+  Users,
+  Shield,
+  UserMinus,
+  UserPlus,
+  Loader2,
+  Crown,
+} from "lucide-react";
 import type { Shop, StoreAddress, StoreStaff, UserSearchItem } from "@/features/shop/types/shop";
 import UserSearchCombobox from "@/features/shop/components/UserSearchCombobox";
 
@@ -120,7 +130,8 @@ export function StoreDetailCard({
     );
   };
 
-  const isOwner = selectedStore.isOwner || (!!currentUserId && selectedStore.ownerUserId === currentUserId);
+  const isOwner =
+    selectedStore.isOwner || (!!currentUserId && selectedStore.ownerUserId === currentUserId);
 
   return (
     <div className="rounded-2xl bg-white shadow-sm ring-1 ring-gray-100 overflow-hidden">

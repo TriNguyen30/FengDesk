@@ -62,9 +62,9 @@ export default function RoomPersonalWeightControls({
 
       {showReason && (
         <p className="mt-2 text-[11px] leading-snug text-gray-600">
-          Bản mệnh của bạn cũng là một nguồn ngũ hành trong phòng, tính bằng phiếu như nền phòng
-          (3 phiếu) và mỗi tag bạn khai (1 phiếu). Khai càng nhiều tag thật thì phần của bản mệnh
-          càng loãng đi — suy đoán nhường chỗ cho quan sát.
+          Bản mệnh của bạn cũng là một nguồn ngũ hành trong phòng, tính bằng phiếu như nền phòng (3
+          phiếu) và mỗi tag bạn khai (1 phiếu). Khai càng nhiều tag thật thì phần của bản mệnh càng
+          loãng đi — suy đoán nhường chỗ cho quan sát.
         </p>
       )}
 

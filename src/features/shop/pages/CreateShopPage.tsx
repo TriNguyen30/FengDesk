@@ -114,7 +114,9 @@ export default function CreateShopPage() {
   // wardId gửi lên BE luôn bám theo dropdown đang hiển thị — nếu giữ lại phường
   // cũ trong khi khu vực đã đổi thì đơn GHN sẽ về sai quận/phường.
   useEffect(() => {
-    setAddressForm((prev) => (prev.wardId === selectedWardId ? prev : { ...prev, wardId: selectedWardId }));
+    setAddressForm((prev) =>
+      prev.wardId === selectedWardId ? prev : { ...prev, wardId: selectedWardId },
+    );
   }, [selectedWardId]);
 
   const handleDropdownGeocode = useCallback(

@@ -9,8 +9,18 @@ import {
 } from "../types/adminUser";
 
 export const adminUsersApi = {
-  getUsers: (params: { page?: number; pageSize?: number; search?: string; role?: string; name?: string; email?: string; }) => {
-    return fetchHttpClient.get<ApiResponse<AdminPaginatedResponse<AdminUser>>>("/admin/users", params);
+  getUsers: (params: {
+    page?: number;
+    pageSize?: number;
+    search?: string;
+    role?: string;
+    name?: string;
+    email?: string;
+  }) => {
+    return fetchHttpClient.get<ApiResponse<AdminPaginatedResponse<AdminUser>>>(
+      "/admin/users",
+      params,
+    );
   },
 
   getUserById: (id: string) => {
@@ -30,6 +40,8 @@ export const adminUsersApi = {
   },
 
   getUserAuditLogs: (id: string) => {
-    return fetchHttpClient.get<ApiResponse<AdminPaginatedResponse<AdminUserAuditLog>>>(`/admin/users/${id}/audit-logs`);
+    return fetchHttpClient.get<ApiResponse<AdminPaginatedResponse<AdminUserAuditLog>>>(
+      `/admin/users/${id}/audit-logs`,
+    );
   },
 };

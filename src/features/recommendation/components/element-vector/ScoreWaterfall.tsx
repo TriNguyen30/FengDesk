@@ -50,9 +50,7 @@ export default function ScoreWaterfall({ breakdown }: ScoreWaterfallProps) {
                   <span className="shrink-0 tabular-nums text-gray-600">
                     {c.value.toFixed(3)}
                     <span className="text-gray-400"> × {c.weight.toFixed(2)} = </span>
-                    <span className="font-semibold text-gray-900">
-                      {signed(c.contribution)}
-                    </span>
+                    <span className="font-semibold text-gray-900">{signed(c.contribution)}</span>
                   </span>
                 </div>
                 <p className="mt-0.5 pl-[18px] text-[11px] leading-snug text-gray-500">
@@ -113,8 +111,8 @@ export default function ScoreWaterfall({ breakdown }: ScoreWaterfallProps) {
           )}
 
           <p className="mt-3 text-[10px] text-gray-400">
-            Công thức phiên bản {breakdown.formulaVersion}. Điểm của hai phiên bản công thức không so
-            sánh trực tiếp được với nhau.
+            Công thức phiên bản {breakdown.formulaVersion}. Điểm của hai phiên bản công thức không
+            so sánh trực tiếp được với nhau.
           </p>
         </div>
       )}

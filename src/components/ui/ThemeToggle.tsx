@@ -35,11 +35,7 @@ function subscribe(listener: () => void) {
   };
 }
 
-export default function ThemeToggle({
-  variant = "default",
-}: {
-  variant?: "default" | "sidebar";
-}) {
+export default function ThemeToggle({ variant = "default" }: { variant?: "default" | "sidebar" }) {
   const theme = useSyncExternalStore(subscribe, getTheme);
 
   const isDark = theme === "dark";
@@ -57,9 +53,7 @@ export default function ThemeToggle({
       >
         {isDark ? <Moon size={18} /> : <Sun size={18} />}
 
-        <span className="flex-1 text-left">
-          {isDark ? "Chế độ tối" : "Chế độ sáng"}
-        </span>
+        <span className="flex-1 text-left">{isDark ? "Chế độ tối" : "Chế độ sáng"}</span>
 
         {/* Rãnh gạt phải khác màu nền hover của cả hàng (hover:bg-neutral-dark),
             không thì lúc rê chuột rãnh tan vào nền và chỉ còn trơ cái nút tròn. */}
@@ -86,11 +80,7 @@ export default function ThemeToggle({
       aria-label={isDark ? "Đổi về chế độ sáng" : "Đổi sang chế độ tối"}
       title={isDark ? "Chế độ: Tối" : "Chế độ: default"}
     >
-      {isDark ? (
-        <Moon size={22} strokeWidth={1.8} />
-      ) : (
-        <Sun size={22} strokeWidth={1.8} />
-      )}
+      {isDark ? <Moon size={22} strokeWidth={1.8} /> : <Sun size={22} strokeWidth={1.8} />}
 
       <span className="hidden text-[10px] font-medium sm:block sm:text-xs">
         {isDark ? "Tối" : "default"}

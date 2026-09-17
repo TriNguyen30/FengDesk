@@ -22,11 +22,16 @@ export default function AdminUsersPage() {
     return () => clearTimeout(timer);
   }, [searchInput]);
 
-  const { data: responseData, isLoading: loading, isError, error } = useAdminUsers({
+  const {
+    data: responseData,
+    isLoading: loading,
+    isError,
+    error,
+  } = useAdminUsers({
     page,
     pageSize: 15,
     ...(searchTerm.trim() ? { [searchField]: searchTerm.trim() } : {}),
-    ...(filterRole ? { role: filterRole } : {})
+    ...(filterRole ? { role: filterRole } : {}),
   });
 
   if (isError) {
@@ -128,8 +133,12 @@ export default function AdminUsersPage() {
                           {user.fullName ? user.fullName.charAt(0).toUpperCase() : "U"}
                         </div>
                         <div>
-                          <div className="font-medium text-slate-900">{user.fullName || "Người dùng ẩn danh"}</div>
-                          <div className="text-xs text-slate-500 font-mono">{user.id.substring(0, 8)}...</div>
+                          <div className="font-medium text-slate-900">
+                            {user.fullName || "Người dùng ẩn danh"}
+                          </div>
+                          <div className="text-xs text-slate-500 font-mono">
+                            {user.id.substring(0, 8)}...
+                          </div>
                         </div>
                       </div>
                     </td>
@@ -146,12 +155,13 @@ export default function AdminUsersPage() {
                         {user.roles.map((r) => (
                           <span
                             key={r}
-                            className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${r === "Admin"
+                            className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
+                              r === "Admin"
                                 ? "bg-red-100 text-red-700"
                                 : r === "Manager" || r === "Staff"
                                   ? "bg-blue-100 text-blue-700"
                                   : "bg-slate-100 text-slate-700"
-                              }`}
+                            }`}
                           >
                             {r}
                           </span>
@@ -160,14 +170,14 @@ export default function AdminUsersPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span
-                        className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${user.isActive
-                            ? "bg-green-50 text-green-700"
-                            : "bg-red-50 text-red-700"
-                          }`}
+                        className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${
+                          user.isActive ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"
+                        }`}
                       >
                         <span
-                          className={`h-1.5 w-1.5 rounded-full ${user.isActive ? "bg-green-600" : "bg-red-600"
-                            }`}
+                          className={`h-1.5 w-1.5 rounded-full ${
+                            user.isActive ? "bg-green-600" : "bg-red-600"
+                          }`}
                         />
                         {user.isActive ? "Hoạt động" : "Khóa"}
                       </span>
@@ -180,7 +190,10 @@ export default function AdminUsersPage() {
                         to={`/admin/users/${user.id}`}
                         className="inline-flex items-center justify-center gap-1.5 rounded-md bg-white px-3 py-1.5 text-sm font-medium text-slate-700 shadow-sm ring-1 ring-inset ring-slate-300 hover:bg-slate-50 transition-all hover:text-primary group-hover:ring-primary/30"
                       >
-                        <Eye size={16} className="text-slate-400 group-hover:text-primary transition-colors" />
+                        <Eye
+                          size={16}
+                          className="text-slate-400 group-hover:text-primary transition-colors"
+                        />
                         Chi tiết
                       </Link>
                     </td>

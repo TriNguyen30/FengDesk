@@ -66,7 +66,10 @@ export default function ChatInput({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="relative border-t border-gray-100 bg-white px-2 py-2 rounded-b-2xl">
+    <form
+      onSubmit={handleSubmit}
+      className="relative border-t border-gray-100 bg-white px-2 py-2 rounded-b-2xl"
+    >
       <AttachmentPreviewRow items={att.items} onRemove={att.remove} />
 
       {/* Không bọc hộp viền quanh ô nhập nữa — viền sáng được chuyển lên KHUNG CHAT (panel) qua onAiActiveChange. */}

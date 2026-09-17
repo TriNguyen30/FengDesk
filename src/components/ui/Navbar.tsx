@@ -158,7 +158,10 @@ export default function Navbar() {
               {t("navbar.disclaimer_short", "Dự án thử nghiệm — Không phải web bán hàng thật")}
             </span>
             <span className="hidden sm:inline">
-              {t("navbar.disclaimer_long", "Lưu ý: Đây là website dự án thử nghiệm, không phải sàn thương mại điện tử thực tế. Mọi dữ liệu và thanh toán chỉ mang tính chất minh họa.")}
+              {t(
+                "navbar.disclaimer_long",
+                "Lưu ý: Đây là website dự án thử nghiệm, không phải sàn thương mại điện tử thực tế. Mọi dữ liệu và thanh toán chỉ mang tính chất minh họa.",
+              )}
             </span>
           </span>
         </div>
@@ -229,9 +232,7 @@ export default function Navbar() {
 
             {/* Icon group — always visible */}
             <div className="flex shrink-0 items-center gap-0.5 sm:gap-3">
-              <div className="hidden sm:block">
-                {user && <WorkspaceSwitcher />}
-              </div>
+              <div className="hidden sm:block">{user && <WorkspaceSwitcher />}</div>
 
               <button
                 type="button"

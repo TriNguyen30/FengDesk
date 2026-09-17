@@ -20,9 +20,7 @@ export default function Footer() {
                 Feng<span className="text-primary">Desk</span>
               </span>
             </a>
-            <p className="text-sm leading-relaxed text-gray-600">
-              {t("footer.brand_desc")}
-            </p>
+            <p className="text-sm leading-relaxed text-gray-600">{t("footer.brand_desc")}</p>
             <ul className="mt-2 flex flex-col gap-3 text-sm text-gray-600">
               <li className="flex items-start gap-2">
                 <MapPin size={18} className="shrink-0 text-primary mt-0.5" />
@@ -111,9 +109,7 @@ export default function Footer() {
             <h3 className="text-sm font-semibold uppercase tracking-wider text-gray-900">
               {t("footer.newsletter.title")}
             </h3>
-            <p className="text-sm text-gray-600">
-              {t("footer.newsletter.desc")}
-            </p>
+            <p className="text-sm text-gray-600">{t("footer.newsletter.desc")}</p>
             <form className="mt-1 flex w-full max-w-md flex-col gap-2 sm:max-w-none sm:flex-row">
               <input
                 type="email"

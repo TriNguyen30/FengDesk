@@ -34,7 +34,11 @@ interface Model3DQueueItemModalProps {
   onChanged: () => void;
 }
 
-export default function Model3DQueueItemModal({ item, onClose, onChanged }: Model3DQueueItemModalProps) {
+export default function Model3DQueueItemModal({
+  item,
+  onClose,
+  onChanged,
+}: Model3DQueueItemModalProps) {
   const [productImages, setProductImages] = useState<ProductImage[]>([]);
   const [loadingImages, setLoadingImages] = useState(false);
   const [showPicker, setShowPicker] = useState(false);
@@ -56,8 +60,11 @@ export default function Model3DQueueItemModal({ item, onClose, onChanged }: Mode
     setShowPicker(item?.status === "AwaitingStaff" || item?.status === "Failed");
     const initialIds = item?.sourceImageIds?.length
       ? [...item.sourceImageIds]
-      : item?.productImageId ? [item.productImageId] : [];
-    if (item?.productImageId && !initialIds.includes(item.productImageId)) initialIds.unshift(item.productImageId);
+      : item?.productImageId
+        ? [item.productImageId]
+        : [];
+    if (item?.productImageId && !initialIds.includes(item.productImageId))
+      initialIds.unshift(item.productImageId);
     setSelectedImageIds([...initialIds]);
     setNewFiles([]);
     setPreview(null);
@@ -153,7 +160,13 @@ export default function Model3DQueueItemModal({ item, onClose, onChanged }: Mode
   };
 
   useEffect(() => {
-    if (!item || item.status !== "InProgress" || showPicker || (preview && preview.state !== "Running")) return;
+    if (
+      !item ||
+      item.status !== "InProgress" ||
+      showPicker ||
+      (preview && preview.state !== "Running")
+    )
+      return;
     handlePreview();
     const interval = window.setInterval(handlePreview, 5_000);
     return () => window.clearInterval(interval);
@@ -232,19 +245,25 @@ export default function Model3DQueueItemModal({ item, onClose, onChanged }: Mode
             />
             <div>
               <p className="text-xs font-semibold text-gray-700">Model sẽ được lưu cho ảnh này</p>
-              <p className="mt-0.5 text-xs text-gray-400">Có thể chọn thêm ảnh cùng kiểu dáng ở góc khác.</p>
+              <p className="mt-0.5 text-xs text-gray-400">
+                Có thể chọn thêm ảnh cùng kiểu dáng ở góc khác.
+              </p>
             </div>
           </div>
         )}
-        {item.internalFailureReason && item.status !== "Succeeded" && item.status !== "Rejected" && (
-          <div className="flex items-start gap-3 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">
-            <AlertTriangle size={16} className="mt-0.5 shrink-0" />
-            <div>
-              <p className="font-semibold">Lần xử lý trước chưa thành công</p>
-              <p className="mt-0.5 text-xs">{FAILURE_REASON_LABEL[item.internalFailureReason] || item.internalFailureReason}</p>
+        {item.internalFailureReason &&
+          item.status !== "Succeeded" &&
+          item.status !== "Rejected" && (
+            <div className="flex items-start gap-3 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">
+              <AlertTriangle size={16} className="mt-0.5 shrink-0" />
+              <div>
+                <p className="font-semibold">Lần xử lý trước chưa thành công</p>
+                <p className="mt-0.5 text-xs">
+                  {FAILURE_REASON_LABEL[item.internalFailureReason] || item.internalFailureReason}
+                </p>
+              </div>
             </div>
-          </div>
-        )}
+          )}
         {item.status === "Succeeded" ? (
           <div className="flex items-center gap-2 rounded-xl bg-green-50 px-4 py-3 text-sm text-green-700">
             <Check size={16} /> Đã áp dụng model 3D cho sản phẩm.
@@ -252,7 +271,9 @@ export default function Model3DQueueItemModal({ item, onClose, onChanged }: Mode
         ) : item.status === "Rejected" ? (
           <div className="rounded-xl bg-gray-50 px-4 py-3 text-sm text-gray-600">
             <p className="font-medium">Đã từ chối yêu cầu này.</p>
-            {item.rejectedReason && <p className="mt-1 text-gray-500">Lý do: {item.rejectedReason}</p>}
+            {item.rejectedReason && (
+              <p className="mt-1 text-gray-500">Lý do: {item.rejectedReason}</p>
+            )}
           </div>
         ) : (
           <>
@@ -297,8 +318,15 @@ export default function Model3DQueueItemModal({ item, onClose, onChanged }: Mode
                   {newFiles.length > 0 && (
                     <div className="grid grid-cols-4 gap-2.5">
                       {newFiles.map((file, idx) => (
-                        <div key={idx} className="relative aspect-square rounded-lg overflow-hidden ring-2 ring-primary/50">
-                          <img src={URL.createObjectURL(file)} alt="" className="h-full w-full object-cover" />
+                        <div
+                          key={idx}
+                          className="relative aspect-square rounded-lg overflow-hidden ring-2 ring-primary/50"
+                        >
+                          <img
+                            src={URL.createObjectURL(file)}
+                            alt=""
+                            className="h-full w-full object-cover"
+                          />
                           <button
                             type="button"
                             onClick={() => removeNewFile(idx)}
@@ -340,7 +368,11 @@ export default function Model3DQueueItemModal({ item, onClose, onChanged }: Mode
                       disabled={submitting || totalSelected === 0}
                       className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-primary-dark transition-all cursor-pointer disabled:opacity-60"
                     >
-                      {submitting ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}
+                      {submitting ? (
+                        <Loader2 size={16} className="animate-spin" />
+                      ) : (
+                        <Sparkles size={16} />
+                      )}
                       {isRetryFlow ? "Gửi lại Meshy" : "Bắt đầu tạo"} ({totalSelected}/{MAX_IMAGES})
                     </button>
                     {isRetryFlow && (
@@ -395,7 +427,11 @@ export default function Model3DQueueItemModal({ item, onClose, onChanged }: Mode
                     disabled={previewLoading}
                     className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-primary-dark transition-all cursor-pointer disabled:opacity-60"
                   >
-                    {previewLoading ? <Loader2 size={16} className="animate-spin" /> : <Eye size={16} />}
+                    {previewLoading ? (
+                      <Loader2 size={16} className="animate-spin" />
+                    ) : (
+                      <Eye size={16} />
+                    )}
                     Xem trước kết quả
                   </button>
                 ) : preview.state === "Running" ? (
@@ -410,7 +446,10 @@ export default function Model3DQueueItemModal({ item, onClose, onChanged }: Mode
                       disabled={previewLoading}
                       className="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-xs font-semibold text-gray-600 hover:bg-gray-50 cursor-pointer disabled:opacity-60"
                     >
-                      <RefreshCw size={13} className={previewLoading ? "animate-spin" : undefined} />
+                      <RefreshCw
+                        size={13}
+                        className={previewLoading ? "animate-spin" : undefined}
+                      />
                       Kiểm tra lại
                     </button>
                   </div>
@@ -429,7 +468,11 @@ export default function Model3DQueueItemModal({ item, onClose, onChanged }: Mode
                         disabled={submitting}
                         className="inline-flex items-center gap-2 rounded-xl bg-green-600 px-4 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-green-700 transition-all cursor-pointer disabled:opacity-60"
                       >
-                        {submitting ? <Loader2 size={16} className="animate-spin" /> : <ThumbsUp size={16} />}
+                        {submitting ? (
+                          <Loader2 size={16} className="animate-spin" />
+                        ) : (
+                          <ThumbsUp size={16} />
+                        )}
                         Chấp nhận
                       </button>
                       <button
