@@ -62,8 +62,10 @@ export default function PopUpLogin({ open, onClose, onSwitchToSignUp, onSwitchTo
       const roles = (response.data.user.role ?? "").split(",").map((r) => r.trim());
       if (roles.includes("Admin")) {
         window.location.assign("/admin");
-      } else if (roles.some((r) => r === "Staff" || r === "Manager")) {
+      } else if (roles.some((r) => r === "Manager")) {
         window.location.assign("/manager");
+      } else if (roles.some((r) => r === "GardenOwner")) {
+        window.location.assign("/seller");
       }
     } catch (error) {
       toast.error(getAuthErrorMessage(error, t("login.toast.login_failed_retry")));

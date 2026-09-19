@@ -37,7 +37,7 @@ export function ShopHeader({
         <div className="flex shrink-0 items-start gap-4 lg:w-[360px] lg:border-r lg:border-gray-200 lg:pr-8">
           {/* Avatar */}
           <div className="relative">
-            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-emerald-100 ring-4 ring-emerald-50 mt-4">
+            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-emerald-100 ring-4 ring-emerald-50 mt-8">
               <Store className="h-9 w-9 text-emerald-700" />
             </div>
 

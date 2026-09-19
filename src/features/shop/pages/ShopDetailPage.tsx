@@ -88,6 +88,22 @@ export default function ShopDetailPage() {
     setActiveTab("products");
   }, [id]);
 
+  // Cập nhật tiêu đề thẻ trình duyệt khi chuyển tab hoặc tải shop thành công
+  useEffect(() => {
+    if (shop) {
+      const tabLabels: Record<ShopTab, string> = {
+        products: "Sản phẩm",
+        stats: "Thống kê",
+        deliveries: "Đơn giao",
+        returns: "Trả hàng",
+        chat: "Tin nhắn",
+        staff: "Nhân viên",
+      };
+      const label = tabLabels[activeTab] || "";
+      document.title = `${shop.name}${label ? ` - ${label}` : ""} - Feng Shui Garden`;
+    }
+  }, [shop, activeTab]);
+
   const getJoinedTimeAgo = (createdAtString?: string) => {
     if (!createdAtString) return "Vừa mới";
     try {

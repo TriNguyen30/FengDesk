@@ -75,7 +75,7 @@ export default function ChatMessageList({
   return (
     <div
       ref={scrollRef}
-      className={`flex flex-1 flex-col gap-3 bg-[#f9fafb] px-3 py-4 ${showScrollbar ? "overflow-y-scroll" : "overflow-y-auto scrollbar-none"
+      className={`flex flex-1 flex-col bg-white px-3 py-4 ${showScrollbar ? "overflow-y-scroll" : "overflow-y-auto scrollbar-none"
         }`}
     >
       {uniqueMessages.map((message) => (

@@ -12,6 +12,7 @@ const STATUS_LABELS: Record<string, string> = {
   Preparing: "Đang chuẩn bị",
   Shipped: "Đang giao",
   Delivered: "Đã giao",
+  Completed: "Đã hoàn thành",
   DeliveryFailed: "Giao thất bại",
   Cancelled: "Đã hủy",
   Returned: "Hoàn hàng",
@@ -88,7 +89,8 @@ export function ShopStatsSection({ storeId }: { storeId: string }) {
   }
 
   const series = buildMonthlySeries(stats);
-  const deliveredCount = stats.deliveriesByStatus["Delivered"] ?? 0;
+  const deliveredCount =
+    (stats.deliveriesByStatus["Delivered"] ?? 0) + (stats.deliveriesByStatus["Completed"] ?? 0);
 
   const cards = [
     {

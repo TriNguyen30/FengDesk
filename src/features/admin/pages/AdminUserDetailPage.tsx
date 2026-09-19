@@ -40,6 +40,7 @@ export default function AdminUserDetailPage() {
     if (user) {
       setSelectedRoles(user.roles || []);
       setIsActive(user.isActive);
+      document.title = `Chi tiết người dùng: ${user.fullName} - Feng Shui Garden`;
     }
   }, [user]);
 

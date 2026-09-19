@@ -39,12 +39,26 @@ export function getChatboxKindTag(
 }
 
 /** Tóm tắt tin gần nhất cho danh sách phòng. */
-export function getLastMessagePreview(box: Chatbox): string {
+export function getLastMessagePreview(box: Chatbox, meId?: string): string {
   const last = box.lastMessage;
   if (!last) return "Chưa có tin nhắn";
-  if (last.content?.trim()) return last.content.trim();
-  if (last.images?.length) return "📷 Hình ảnh";
-  return "...";
+
+  let prefix = "";
+  if (last.senderType === "System") {
+    prefix = "";
+  } else if (last.senderType === "AiBot") {
+    prefix = "AI: ";
+  } else if (meId && last.senderId === meId) {
+    prefix = "Bạn: ";
+  } else if (last.senderName) {
+    prefix = `${last.senderName}: `;
+  }
+
+  let content = "...";
+  if (last.content?.trim()) content = last.content.trim();
+  else if (last.images?.length) content = "📷 Hình ảnh";
+
+  return `${prefix}${content}`;
 }
 
 /** Hiển thị thông báo trình duyệt (Chrome Notification) nếu tab không focus. */

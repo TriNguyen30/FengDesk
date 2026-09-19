@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Headphones, Inbox, MessageCircle, RefreshCw, Wifi, WifiOff } from "lucide-react";
+import { Headphones, Inbox, MessageCircle, RefreshCw, User, Wifi, WifiOff } from "lucide-react";
 import { useShopChatSupport } from "../hooks/useShopChatSupport";
 import ChatMessageList from "@/features/chatbox/components/ChatMessageList";
 import ChatInput from "@/features/chatbox/components/ChatInput";
@@ -7,6 +7,7 @@ import { formatMessageTime, getLastMessagePreview } from "@/features/chatbox/uti
 import type { Chatbox } from "@/features/chatbox/types/chatbox";
 
 function customerName(box: Chatbox): string {
+  if (box.title?.trim()) return box.title.trim();
   const last = box.lastMessage;
   if (last?.senderName && last.senderType === "User") return last.senderName;
   return "Khách hàng";
@@ -91,16 +92,21 @@ export function ShopChatInbox({ storeId }: ShopChatInboxProps) {
                   className="mb-1 rounded-lg border border-amber-100 bg-amber-50/50 p-2.5"
                 >
                   <div className="flex items-center justify-between gap-2">
-                    <span className="truncate text-sm font-medium text-gray-800">
-                      {customerName(box)}
-                    </span>
+                    <div className="flex items-center gap-2 overflow-hidden">
+                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-amber-200 text-amber-700">
+                        <User size={14} />
+                      </span>
+                      <span className="truncate text-sm font-medium text-gray-800">
+                        {customerName(box)}
+                      </span>
+                    </div>
                     <span className="flex items-center gap-1 text-[10px] font-medium text-amber-600">
                       <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
                       Đang chờ
                     </span>
                   </div>
                   <p className="mt-0.5 truncate text-xs text-gray-500">
-                    {getLastMessagePreview(box)}
+                    {getLastMessagePreview(box, meId)}
                   </p>
                   <button
                     type="button"
@@ -136,18 +142,34 @@ export function ShopChatInbox({ storeId }: ShopChatInboxProps) {
                     }`}
                   >
                     <div className="flex items-center justify-between gap-2">
-                      <span className="truncate text-sm font-medium text-gray-800">
-                        {customerName(box)}
-                      </span>
+                      <div className="flex items-center gap-2 overflow-hidden">
+                        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                          <User size={14} />
+                        </span>
+                        <span className="truncate text-sm font-medium text-gray-800">
+                          {customerName(box)}
+                        </span>
+                      </div>
                       {box.lastMessage && (
                         <span className="shrink-0 text-[10px] text-gray-400 tabular-nums">
                           {formatMessageTime(box.lastMessage.createdAt)}
                         </span>
                       )}
                     </div>
-                    <p className="mt-0.5 truncate text-xs text-gray-500">
-                      {getLastMessagePreview(box)}
-                    </p>
+                    <div className="flex items-center justify-between gap-2 mt-0.5">
+                      <p
+                        className={`truncate text-xs ${
+                          box.unreadCount > 0 ? "font-semibold text-gray-900" : "text-gray-500"
+                        }`}
+                      >
+                        {getLastMessagePreview(box, meId)}
+                      </p>
+                      {box.unreadCount > 0 && (
+                        <span className="flex h-4 min-w-[16px] shrink-0 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white tabular-nums">
+                          {box.unreadCount > 9 ? "9+" : box.unreadCount}
+                        </span>
+                      )}
+                    </div>
                   </button>
                 );
               })
