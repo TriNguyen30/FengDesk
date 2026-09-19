@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueries, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   getWorkspaces,
   getWorkspaceById,
@@ -126,4 +126,24 @@ export function useWorkspaceElementAnalysis(id?: string) {
     enabled: !!id,
   });
   return { analysis: query.data ?? null, status: query.status, query };
+}
+
+/**
+ * % tương thích của NHIỀU phòng cùng lúc (sidebar chọn phòng). Cùng key với
+ * `useWorkspaceElementAnalysis` nên phòng đang mở không tốn thêm request; các phòng khác tải nền.
+ * `undefined` = đang tải, `null` = lỗi.
+ */
+export function useWorkspaceCompatibilities(ids: string[]) {
+  const results = useQueries({
+    queries: ids.map((id) => ({
+      queryKey: ["workspace", id, "element-analysis"],
+      queryFn: () => getWorkspaceElementAnalysis(id),
+    })),
+  });
+  return new Map<string, number | null | undefined>(
+    ids.map((id, i) => {
+      const r = results[i];
+      return [id, r.status === "error" ? null : r.data?.compatibilityPercent];
+    }),
+  );
 }

@@ -11,7 +11,8 @@ interface Tier {
   color: string;
 }
 
-function tierFor(score: number): Tier {
+/** Cùng ngưỡng với `ScoreBreakdownMapping.TierVi` của BE — đổi ở đây phải đổi cả bên kia. */
+export function tierFor(score: number): Tier {
   if (score >= 0.6) return { label: "Rất hợp", color: "#7d8f69" };
   if (score >= 0.2) return { label: "Phù hợp", color: "#3b82f6" };
   if (score >= -0.2) return { label: "Trung tính", color: "#c4a86a" };

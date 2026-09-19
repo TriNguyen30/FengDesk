@@ -32,17 +32,43 @@ export function toRows(map: ElementMap): ProductElementRow[] {
   return ELEMENT_ORDER.map((element) => ({ element, value: map[element] }));
 }
 
+/** Trục nghề (N3) cho {@link combinedDirection}: `ô` đã chặn + `Wo`. */
+export interface OccupationAxisInput {
+  direction: ElementMap;
+  weight: number;
+}
+
 /**
- * `d = (1−wp)·ĝ + wp·r` — vector hướng tổng hợp, chính là thứ engine nhân với vector sản phẩm.
+ * `d = (1−wp−wo)·ĝ + wp·r + wo·ô` — vector hướng tổng hợp, chính là thứ engine nhân với vector sản phẩm.
  *
- * Đây là lý do BE trả cả `ĝ` lẫn `r` thay vì chỉ trả `d`: **kéo slider `Wp` là dựng lại được `d`
- * ngay tại client, không cần gọi lại API** (§10.3). Không có `r` (trục cá nhân tắt) thì `d ≡ ĝ`.
+ * Đây là lý do BE trả cả `ĝ`, `r` lẫn `ô` thay vì chỉ trả `d`: **kéo slider `Wp` là dựng lại được `d`
+ * ngay tại client, không cần gọi lại API** (§10.3). Không có `r` (trục cá nhân tắt) thì hệ số của
+ * `ĝ` là `1−wo`; không có `ô` (trục nghề tắt) thì công thức rơi về v3.3. `wo` được kẹp `≤ 1 − wp`
+ * y như BE (ADR §3.4) để hệ số của `ĝ` không âm khi kéo slider lên cao.
  */
-export function combinedDirection(gHat: ElementMap, r: ElementMap | null, wp: number): ElementMap {
-  if (!r) return { ...gHat };
+export function combinedDirection(
+  gHat: ElementMap,
+  r: ElementMap | null,
+  wp: number,
+  occupation: OccupationAxisInput | null = null,
+): ElementMap {
+  const wpEff = r ? wp : 0;
+  const wo = occupation ? Math.max(0, Math.min(occupation.weight, 1 - wpEff)) : 0;
   const out = { ...ZERO };
-  for (const e of ELEMENT_ORDER) out[e] = (1 - wp) * gHat[e] + wp * r[e];
+  for (const e of ELEMENT_ORDER) {
+    out[e] = (1 - wpEff - wo) * gHat[e]
+      + (r ? wpEff * r[e] : 0)
+      + (occupation ? wo * occupation.direction[e] : 0);
+  }
   return out;
+}
+
+/** Trục nghề từ breakdown, hoặc `null` khi trục tắt — tiện truyền thẳng vào {@link combinedDirection}. */
+export function occupationAxisOf(breakdown: ScoreBreakdown): OccupationAxisInput | null {
+  const dir = breakdown.vectors.occupationDirection;
+  const weight = breakdown.occupation?.weight ?? 0;
+  if (!dir || weight <= 0) return null;
+  return { direction: toMap(dir), weight };
 }
 
 /**
@@ -214,7 +240,7 @@ export function simulateScore(breakdown: ScoreBreakdown, wp: number): number {
   const gHat = toMap(breakdown.vectors.normalizedGap);
   const r = breakdown.vectors.ruleScore ? toMap(breakdown.vectors.ruleScore) : null;
   const product = toMap(breakdown.vectors.product);
-  const d = combinedDirection(gHat, r, wp);
+  const d = combinedDirection(gHat, r, wp, occupationAxisOf(breakdown));
 
   let score = ELEMENT_ORDER.reduce((sum, e) => sum + product[e] * d[e], 0);
 

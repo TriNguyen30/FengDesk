@@ -7,23 +7,34 @@
   ResponsiveContainer,
   Tooltip,
 } from "recharts";
-import { Circle, Leaf, Droplets, Flame, Mountain } from "lucide-react";
+import { ElementIcon, RadarTooltipFrame } from "./RadarTooltipFrame";
 import type {
   CurrentContribution,
   ElementAnalysisRow,
 } from "@/features/users/types/workspace";
-import { TAG_GAP_THRESHOLD, elementColor, elementVi, gapStatus, type GapStatus } from "./constants";
+import { TAG_GAP_THRESHOLD, elementColor, elementVi, fitToneByDistance, gapStatus, type GapStatus } from "./constants";
 
 interface ElementRadarChartProps {
   rows: ElementAnalysisRow[];
   /** true → vẽ thêm lớp "xem trước" (sản phẩm đã mua đang giao tới) bằng nét đứt màu primary. */
   showPreview?: boolean;
   /**
+   * Nhãn của lớp xem trước trong legend/tooltip. Mặc định nói về hàng đang giao; khi user hover một
+   * sản phẩm trong panel bên dưới thì đổi thành tên sản phẩm đó để lớp nét đứt không bị hiểu nhầm.
+   */
+  previewLabel?: string;
+  /**
    * Nguồn tạo nên vector hiện tại (nền phòng / tag user khai / sản phẩm đã đặt).
    * Tổng % của mọi nguồn trên 1 hành = đúng con số "Hiện tại" của hành đó — nên tooltip
    * chỉ ra được "hành này cao là do tag nào", không phải nói suông.
    */
   contributions?: CurrentContribution[];
+  /**
+   * v3.5 — hệ số cap phiếu tag BE đã áp (`TAG_VOTES_CAP`). `< 1` ⇒ tooltip ghi chú "N tag đang tính bằng
+   * 5 phiếu" dưới danh sách nguồn, để user không thắc mắc vì sao 8 tag mà mỗi tag chỉ vài %.
+   * Số % trong tooltip đã đúng sẵn (BE trả phiếu sau khi nhân) — đây chỉ là câu giải thích.
+   */
+  tagVotesScale?: number;
   /**
    * Lớp "Phần của bạn" — phần đóng góp của CHỦ NHÂN phòng vào chính vector `Hiện tại`.
    *
@@ -90,7 +101,9 @@ const SOURCE_DOT: Record<CurrentContribution["source"], string> = {
 export default function ElementRadarChart({
   rows,
   showPreview = false,
+  previewLabel = "Xem trước (hàng đang giao)",
   contributions = [],
+  tagVotesScale = 1,
   personalTarget,
   personalTargetLabel,
   deprioritizedElements = [],
@@ -99,6 +112,11 @@ export default function ElementRadarChart({
   const targetByElement = new Map((personalTarget ?? []).map((p) => [p.element, p.value]));
   const showTarget = (personalTarget?.length ?? 0) > 0;
   const isDeprioritized = (element: string) => deprioritizedElements.includes(element);
+
+  // v3.5 — câu ghi chú cap phiếu tag. `votes` BE trả về đã nhân hệ số, nên Σ phiếu tag = đúng trần.
+  const tagRows = contributions.filter((c) => c.source === "Tag");
+  const tagCount = tagRows.length;
+  const cappedTagVotes = Math.round(tagRows.reduce((sum, c) => sum + (c.votes ?? 0), 0));
 
   /**
    * Trục thừa/thiếu đọc thẳng từ `gap` — đây là radar CỦA PHÒNG nên thứ đáng đánh dấu là phòng đang
@@ -142,26 +160,7 @@ export default function ElementRadarChart({
     const color = elementColor(element);
     const size = 16;
 
-    const icon = (element: string) => {
-      switch (element) {
-        case "Kim":
-          return <Circle size={size} strokeWidth={1.5} fill="none" stroke={color} />;
-        case "Mộc":
-        case "Moc":
-          return <Leaf size={size} strokeWidth={1.5} fill="none" stroke={color} />;
-        case "Thủy":
-        case "Thuy":
-          return <Droplets size={size} strokeWidth={1.5} fill="none" stroke={color} />;
-        case "Hỏa":
-        case "Hoa":
-          return <Flame size={size} strokeWidth={1.5} fill="none" stroke={color} />;
-        case "Thổ":
-        case "Tho":
-          return <Mountain size={size} strokeWidth={1.5} fill="none" stroke={color} />;
-        default:
-          return <Circle size={size} strokeWidth={1.5} fill="none" stroke={color} />;
-      }
-    };
+    const icon = (element: string) => <ElementIcon element={element} color={color} size={size} />;
 
     const tickOffset = (element: string) => {
       switch (element) {
@@ -224,68 +223,8 @@ export default function ElementRadarChart({
     y: -Math.round(chartHeight * chartOuterRadius * 0.4),
   };
 
-  const hoverStyle = (distance: number) => {
-    if (distance <= 0.05) {
-      return {
-        background: "rgba(99, 197, 75, 0.18)",
-        border: "#78c539",
-        label: "Tối ưu",
-        tone: "text-emerald-800",
-      };
-    }
-    if (distance <= 0.1) {
-      return {
-        background: "rgba(152, 204, 56, 0.14)",
-        border: "#9acd3b",
-        label: "Đạt chuẩn",
-        tone: "text-lime-800",
-      };
-    }
-    if (distance <= 0.15) {
-      return {
-        background: "rgba(251, 191, 36, 0.18)",
-        border: "#fbbf24",
-        label: "Ổn định",
-        tone: "text-amber-800",
-      };
-    }
-    if (distance <= 0.2) {
-      return {
-        background: "rgba(249, 115, 22, 0.18)",
-        border: "#f97316",
-        label: "Cần xem xét",
-        tone: "text-orange-800",
-      };
-    }
-    return {
-      background: "rgba(239, 68, 68, 0.18)",
-      border: "#ef4444",
-      label: "Cần điều chỉnh",
-      tone: "text-red-700",
-    };
-  };
-
-  const iconForTooltip = (element: string, color: string) => {
-    const size = 18;
-    switch (element) {
-      case "Kim":
-        return <Circle size={size} strokeWidth={1.5} fill="none" stroke={color} />;
-      case "Mộc":
-      case "Moc":
-        return <Leaf size={size} strokeWidth={1.5} fill="none" stroke={color} />;
-      case "Thủy":
-      case "Thuy":
-        return <Droplets size={size} strokeWidth={1.5} fill="none" stroke={color} />;
-      case "Hỏa":
-      case "Hoa":
-        return <Flame size={size} strokeWidth={1.5} fill="none" stroke={color} />;
-      case "Thổ":
-      case "Tho":
-        return <Mountain size={size} strokeWidth={1.5} fill="none" stroke={color} />;
-      default:
-        return <Circle size={size} strokeWidth={1.5} fill="none" stroke={color} />;
-    }
-  };
+  // Thang 5 tông dùng chung với chip "Hợp với nghề" — sửa màu ở constants.FIT_TONES.
+  const hoverStyle = (distance: number) => fitToneByDistance(distance);
 
   const RadarTooltip = (props: any) => {
     const { active, payload } = props;
@@ -299,9 +238,8 @@ export default function ElementRadarChart({
     const current = payloadItem.current;
     const distance = Math.abs(current - ideal);
     const style = hoverStyle(distance);
-    const color = elementColor(element);
 
-    // Tổng % các nguồn = đúng con số "Hiện tại" ở trên (cả hai cùng chuẩn hóa theo tổng phiếu).
+      // Tổng % các nguồn = đúng con số "Hiện tại" ở trên (cả hai cùng chuẩn hóa theo tổng phiếu).
     const sources = sourcesFor(element);
     const shownSources = sources.slice(0, MAX_TOOLTIP_SOURCES);
     const restPercent = sources
@@ -309,20 +247,7 @@ export default function ElementRadarChart({
       .reduce((sum, s) => sum + s.percent, 0);
 
     return (
-      <div
-        className="w-[180px] rounded-xl border p-3 text-xs shadow-lg backdrop-blur-[3px]"
-        style={{ background: style.background, borderColor: style.border }}
-      >
-        <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-900">
-          <span className="inline-flex items-center justify-center rounded-full bg-white p-1 shadow-sm">
-            {iconForTooltip(element, color)}
-          </span>
-          <span>{elementVi(element)}</span>
-        </div>
-        <div className="rounded-full bg-black/5 px-3 py-2 text-[11px] font-medium text-slate-700">
-          <span className={style.tone}>{style.label}</span>
-        </div>
-        <div className="mt-3 space-y-2 text-slate-700">
+      <RadarTooltipFrame element={element} tone={style}>
           <div className="flex items-center justify-between text-[11px]">
             <span>Hiện tại</span>
             <span>{(current * 100).toFixed(0)}%</span>
@@ -347,7 +272,6 @@ export default function ElementRadarChart({
               <span>{((payloadItem.target ?? 0) * 100).toFixed(0)}%</span>
             </div>
           )}
-        </div>
 
         {gapMark(element) !== "balanced" && (
           <div
@@ -399,9 +323,15 @@ export default function ElementRadarChart({
                 </div>
               )}
             </div>
+            {tagVotesScale < 1 && tagCount > 0 && (
+              <p className="mt-1.5 text-[10px] leading-snug text-slate-500">
+                {tagCount} tag đang tính bằng {cappedTagVotes} phiếu (trần phiếu tag), để nền phòng, bạn và
+                sản phẩm không bị đè.
+              </p>
+            )}
           </div>
         )}
-      </div>
+      </RadarTooltipFrame>
     );
   };
 
@@ -470,12 +400,15 @@ export default function ElementRadarChart({
           />
           {showTarget && (
             <Radar
-              name="Mục tiêu của bạn"
+              // Khớp legend + tooltip bên dưới. Lớp này KHÔNG còn là `T` (mục tiêu trộn bản mệnh) —
+              // nó là phần đóng góp của chủ nhân NẰM TRONG `Hiện tại`, nên gọi "Mục tiêu của bạn" là
+              // tên cũ đã sai nghĩa.
+              name="Phần của bạn"
               dataKey="target"
               stroke="#D9AD41"
               strokeWidth={2}
-              // CÓ fill, khác với lớp "nên bù thêm" trước đây: `T` đúng là một mục tiêu dạng phòng
-              // (Σ=1, đủ 5 trục), nên "phòng nên trông thế này" ở đây là cách đọc ĐÚNG.
+              // CÓ fill: đây là một số hạng không âm của `Hiện tại` trên từng trục, nên tô đặc đọc
+              // đúng là "phần này của bạn" chứ không phải một đường mục tiêu riêng.
               fill="#D9AD41"
               fillOpacity={0.22}
               dot={false}
@@ -486,7 +419,7 @@ export default function ElementRadarChart({
           )}
           {showPreview && (
             <Radar
-              name="Xem trước (hàng đang giao)"
+              name={previewLabel}
               dataKey="preview"
               stroke="var(--color-primary-dark)"
               strokeDasharray="6 4"
@@ -520,13 +453,16 @@ export default function ElementRadarChart({
         {showPreview && (
           <span className="flex items-center gap-1.5">
             <span className="inline-block h-0 w-4 border-t-2 border-dashed border-primary" />
-            Xem trước
+            {previewLabel}
           </span>
         )}
         {showTarget && (
-          <span className="flex items-center gap-1.5">
+          <span
+            className="flex items-center gap-1.5"
+            title={personalTargetLabel ? `Bản mệnh của bạn nặng ${personalTargetLabel} trong hiện trạng phòng` : undefined}
+          >
             <span className="inline-block h-2.5 w-2.5 rounded-full bg-[#D9AD41]/80" />
-            Phần của bạn{personalTargetLabel ? ` (${personalTargetLabel})` : ""}
+            Bản mệnh của bạn
           </span>
         )}
         {contributions.length > 0 && (

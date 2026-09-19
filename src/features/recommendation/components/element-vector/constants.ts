@@ -53,6 +53,14 @@ export function elementColor(element: string): string {
   return ELEMENT_COLOR[element] ?? "#9ca3af";
 }
 
+/** Vòng tương khắc — X khắc CONTROLS[X]. Bản sao của `FengShuiCalculator.Controls`, chỉ để tô nhãn, không chấm điểm. */
+export const CONTROLS: Record<string, string> = { Moc: "Tho", Tho: "Thuy", Thuy: "Hoa", Hoa: "Kim", Kim: "Moc" };
+
+/** `element` có khắc bản mệnh `destiny` không (quan hệ BiKhac xét từ mệnh). */
+export function clashesDestiny(element: string, destiny: string | null | undefined): boolean {
+  return !!destiny && CONTROLS[element] === destiny;
+}
+
 export function elementVi(element: string): string {
   return ELEMENT_VI[element] ?? element;
 }
@@ -60,4 +68,52 @@ export function elementVi(element: string): string {
 /** Quy đổi điểm engine v3 [-1,1] → [0,100]% để hiển thị (0 = xung khắc hoàn toàn, 100 = phù hợp tối đa). */
 export function scorePercent(score: number): number {
   return Math.round(((Math.max(-1, Math.min(1, score)) + 1) / 2) * 100);
+}
+
+/**
+ * Thang 5 tông xanh lá → vàng → đỏ của radar "Ngũ hành không gian của bạn" (hoverStyle) — tách ra để
+ * chip "Hợp với nghề" ở trang sản phẩm dùng đúng thang đó thay vì chế một bảng màu thứ hai.
+ * `border` là màu đậm (viền/chữ), `background` là màu nền mờ (fill).
+ */
+export interface FitTone {
+  background: string;
+  border: string;
+  label: string;
+  /** Tailwind text class cho nhãn tooltip. */
+  tone: string;
+  /**
+   * Viền/chữ cho CHIP (trang sản phẩm): cùng sắc với `border` nhưng trầm xuống ngang tông
+   * `border-primary` của chip Phân loại — màu radar tươi để nổi trên nền đồ thị, đem thẳng sang
+   * chip cạnh dãy Phân loại thì lạc tông.
+   */
+  chipBorder: string;
+}
+
+export const FIT_TONES: readonly FitTone[] = [
+  { background: "rgba(99, 197, 75, 0.18)", border: "#78c539", label: "Tối ưu", tone: "text-emerald-800", chipBorder: "#6C914A" },
+  { background: "rgba(152, 204, 56, 0.14)", border: "#9acd3b", label: "Đạt chuẩn", tone: "text-lime-800", chipBorder: "#8a9f4b" },
+  { background: "rgba(251, 191, 36, 0.18)", border: "#fbbf24", label: "Ổn định", tone: "text-amber-800", chipBorder: "#b8922e" },
+  { background: "rgba(249, 115, 22, 0.18)", border: "#f97316", label: "Cần xem xét", tone: "text-orange-800", chipBorder: "#bf6b2e" },
+  { background: "rgba(239, 68, 68, 0.18)", border: "#ef4444", label: "Cần điều chỉnh", tone: "text-red-700", chipBorder: "#b94a47" },
+] as const;
+
+/** Radar: theo khoảng cách |current − adjustedIdeal| của một trục. */
+export function fitToneByDistance(distance: number): FitTone {
+  if (distance <= 0.05) return FIT_TONES[0];
+  if (distance <= 0.1) return FIT_TONES[1];
+  if (distance <= 0.15) return FIT_TONES[2];
+  if (distance <= 0.2) return FIT_TONES[3];
+  return FIT_TONES[4];
+}
+
+/**
+ * Chip % (hợp nghề): theo `displayPercent` ∈ [0,100], 50% = trung tính. Ngưỡng bám tier của
+ * `ScoreBadge` (≥80 Rất hợp · ≥60 Phù hợp · ≥40 Trung tính) và chia đôi vùng "Cân nhắc" cho đủ 5 tông.
+ */
+export function fitToneByPercent(percent: number): FitTone {
+  if (percent >= 80) return FIT_TONES[0];
+  if (percent >= 60) return FIT_TONES[1];
+  if (percent >= 40) return FIT_TONES[2];
+  if (percent >= 25) return FIT_TONES[3];
+  return FIT_TONES[4];
 }

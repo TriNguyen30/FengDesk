@@ -173,6 +173,11 @@ export interface WorkspaceElementAnalysis {
   confidence: number;
   /** Tổng phiếu của mọi nguồn — mẫu số của mọi `sharePercent`. */
   totalVotes: number;
+  /**
+   * v3.5 — hệ số BE đã nhân vào phiếu của mọi tag do `TAG_VOTES_CAP` (1 = không cap, < 1 = "N tag đang
+   * tính bằng 5 phiếu"). `contributions[].votes` và `totalVotes` đã mang phiếu sau khi nhân — chỉ để ghi chú.
+   */
+  tagVotesScale?: number;
 
   /**
    * Số mũ nén tương phản BE đã áp khi dựng `current` (`EVIDENCE_SATURATION_ALPHA`); `1` = tuyến tính.
