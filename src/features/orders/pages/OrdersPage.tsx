@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ChevronRight, Loader2, Package, MessageCircle, Store, Truck, Star } from "lucide-react";
+import { ChevronRight, Loader2, Package, MessageCircle, Store, Truck, Star, Search } from "lucide-react";
 import { motion } from "framer-motion";
 import { useOrdersList } from "../hooks/useOrders";
 import { formatOrderDate, formatVnd, getOrderStatusMeta } from "../utils/orderUtils";
@@ -30,6 +30,7 @@ export default function OrdersPage() {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const [activeTab, setActiveTab] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
   const [reviewModal, setReviewModal] = useState<{
     open: boolean;
     orderId: string | null;
@@ -48,7 +49,22 @@ export default function OrdersPage() {
     status: activeTab || undefined,
   });
 
-  const filteredOrders = activeTab ? orders.filter((order) => order.status === activeTab) : orders;
+  const filteredOrders = orders.filter((order) => {
+    if (activeTab && order.status !== activeTab) return false;
+
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      const matchId = order.id.toLowerCase().includes(q);
+      const matchItems = (order as any).items?.some((item: any) =>
+        item.productName.toLowerCase().includes(q)
+      );
+      const matchStore = (order as any).stores?.some((item: any) =>
+        item.storeName.toLowerCase().includes(q)
+      );
+      return matchId || matchItems || matchStore;
+    }
+    return true;
+  });
 
   return (
     <div>
@@ -106,6 +122,20 @@ export default function OrdersPage() {
             );
           })}
         </div>
+      </div>
+
+      {/* Search Input */}
+      <div className="mb-6 relative">
+        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+          <Search className="h-5 w-5 text-gray-400" />
+        </div>
+        <input
+          type="text"
+          className="block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-xl focus:ring-primary focus:border-primary sm:text-sm bg-white shadow-sm transition-colors"
+          placeholder={t("orders_page.search_placeholder", "Tìm kiếm theo mã đơn hoặc tên sản phẩm...")}
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
       </div>
 
       {listStatus === "loading" ? (

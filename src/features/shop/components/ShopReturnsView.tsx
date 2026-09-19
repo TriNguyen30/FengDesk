@@ -351,8 +351,8 @@ export default function ShopReturnsView({ storeId }: ShopReturnsViewProps) {
                 key={tab.value}
                 onClick={() => setActiveTab(tab.value)}
                 className={`rounded-lg px-3.5 py-1.5 text-xs font-semibold transition-all cursor-pointer ${activeTab === tab.value
-                    ? "bg-primary text-white shadow-sm"
-                    : "text-gray-500 hover:bg-gray-100 hover:text-gray-900"
+                  ? "bg-primary text-white shadow-sm"
+                  : "text-gray-500 hover:bg-gray-100 hover:text-gray-900"
                   }`}
               >
                 {tab.label}
@@ -768,7 +768,7 @@ export default function ShopReturnsView({ storeId }: ShopReturnsViewProps) {
                 </button>
               </div>
             )}
-            
+
             {/* Footer: quick actions when ReturnInTransit */}
             {returnDetail && returnDetail.status === "ReturnInTransit" && (
               <div className="flex gap-2 border-t border-gray-100 px-6 py-4 bg-gray-50/50">

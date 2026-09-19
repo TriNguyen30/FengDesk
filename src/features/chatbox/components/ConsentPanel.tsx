@@ -74,16 +74,16 @@ export default function ConsentPanel({ chatboxId, pulse, onInteract }: ConsentPa
         type="button"
         onClick={headerClick}
         aria-expanded={open}
-        className="relative flex w-full items-center justify-between rounded-lg border border-gray-200 bg-gray-50 px-2.5 py-2 text-left transition-colors hover:bg-gray-100 cursor-pointer"
+        className={`relative flex w-full items-center justify-between rounded-[18px] border bg-gray-50 px-3 py-1.5 text-left transition-all cursor-pointer ${
+          pulse
+            ? "border-primary/60 bg-primary/5 shadow-[0_0_0_2px_rgba(var(--color-primary),0.2)] hover:border-primary hover:bg-primary/10"
+            : "border-gray-200 hover:bg-gray-100"
+        }`}
       >
-        {/* Hiệu ứng nháy khi có nhân viên vừa vào — dừng (giãn tối đa, đứng yên) khi hover, mất khi bấm. */}
         {pulse && (
-          <>
-            <span className="pointer-events-none absolute inset-0 rounded-lg ring-2 ring-primary/60 group-hover:ring-primary" />
-            <span className="pointer-events-none absolute inset-0 rounded-lg ring-2 ring-primary/50 animate-ping group-hover:hidden" />
-          </>
+          <span className="pointer-events-none absolute inset-0 rounded-[18px] shadow-[0_0_8px_rgba(34,197,94,0.4)] animate-pulse group-hover:hidden" />
         )}
-        <span className="flex items-center gap-2 text-xs font-medium text-gray-700">
+        <span className="flex items-center gap-2 text-[11px] font-medium text-gray-700">
           <ShieldCheck size={14} className="text-primary" />
           Chia sẻ với nhân viên hỗ trợ{enabled > 0 ? ` · ${enabled}` : ""}
         </span>

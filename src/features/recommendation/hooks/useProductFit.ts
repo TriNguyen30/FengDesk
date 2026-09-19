@@ -1,5 +1,10 @@
 import { useQuery, useQueries } from "@tanstack/react-query";
-import { getPersonalFit, getProductFit } from "../api/recommendation.api";
+import {
+  getPersonalFit,
+  getProductFit,
+  getProductOccupationFit,
+  getWorkspaceRecommendationPreview,
+} from "../api/recommendation.api";
 
 export function useProductFit(productId?: string, workspaceProfileId?: string) {
   const query = useQuery({
@@ -54,3 +59,39 @@ export function usePersonalFit(productId?: string) {
 
   return { fit: query.data ?? null, status: query.status, error: query.error };
 }
+
+/** "Sản phẩm này hợp nghề nào" — public, cache theo sản phẩm; hồ sơ nghề đổi rất hiếm nên staleTime dài. */
+export function useProductOccupationFit(productId?: string) {
+  const query = useQuery({
+    queryKey: ["product-occupation-fit", productId],
+    queryFn: () => {
+      if (!productId) throw new Error("Missing productId");
+      return getProductOccupationFit(productId);
+    },
+    enabled: !!productId,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  return { data: query.data ?? null, status: query.status };
+}
+
+/**
+ * Sản phẩm đề xuất cho một workspace (engine-only). Key nằm dưới `["workspace", id]` để mọi chỗ đang
+ * `invalidateQueries(["workspace"])` (đặt/gỡ sản phẩm, sửa phòng) kéo danh sách này tính lại theo.
+ *
+ * Không retry: 422 "chưa có sản phẩm nào gắn thuộc tính" là trạng thái dữ liệu, thử lại không đổi gì.
+ */
+export function useWorkspaceRecommendationPreview(workspaceId?: string, topN = 8) {
+  const query = useQuery({
+    queryKey: ["workspace", workspaceId, "recommendation-preview", topN],
+    queryFn: () => {
+      if (!workspaceId) throw new Error("Missing workspaceId");
+      return getWorkspaceRecommendationPreview(workspaceId, topN);
+    },
+    enabled: !!workspaceId,
+    retry: false,
+    staleTime: 60 * 1000,
+  });
+  return { preview: query.data ?? null, status: query.status, error: query.error };
+}
+

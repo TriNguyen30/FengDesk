@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import {
   Check,
   Loader2,
@@ -265,7 +265,7 @@ export default function Model3DQueueItemModal({ item, onClose, onChanged }: Mode
               ) : (
                 <div className="space-y-3">
                   <p className="text-xs text-gray-400">
-                    Chọn 1–{MAX_IMAGES} ảnh để gửi Meshy tạo model 3D.
+                    Chọn 1-{MAX_IMAGES} ảnh để gửi Meshy tạo model 3D.
                   </p>
 
                   {sortedImages.length > 0 && (

@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { Info, RotateCcw, UserRound } from "lucide-react";
 import type { ScoreBreakdown } from "../../types/recommendation";
 import {
@@ -94,7 +94,7 @@ export default function PersonalWeightControls({
           className="mt-1 w-full accent-[#D9AD41]"
         />
         <p className="mt-1 text-[10px] leading-snug text-gray-400">
-          Chỉ để xem thử — không đổi cấu hình hệ thống, và điểm thật vẫn là {breakdown.displayPercent}%.
+          Chỉ để xem thử - không đổi cấu hình hệ thống, và điểm thật vẫn là {breakdown.displayPercent}%.
         </p>
       </div>
     </div>
@@ -130,7 +130,7 @@ function PersonalAxisOffNotice({ reason }: { reason: ReturnType<typeof personalA
   if (reason === "disabled") {
     return (
       <p className="rounded-xl bg-gray-50 px-3 py-2 text-[11px] leading-snug text-gray-600">
-        Trục cá nhân đang tắt trong cấu hình — điểm chỉ dựa trên nhu cầu của phòng.
+        Trục cá nhân đang tắt trong cấu hình - điểm chỉ dựa trên nhu cầu của phòng.
       </p>
     );
   }

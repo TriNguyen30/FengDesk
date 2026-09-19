@@ -1,6 +1,11 @@
 import fetchHttpClient from "@/lib/httpClient";
 import type { ApiResponse } from "@/types/api";
-import type { PersonalFitResponse, ProductFitResponse } from "../types/recommendation";
+import type {
+  PersonalFitResponse,
+  ProductFitResponse,
+  ProductOccupationFitResponse,
+  WorkspaceRecommendationPreview,
+} from "../types/recommendation";
 
 export const getProductFit = async (
   productId: string,
@@ -29,3 +34,35 @@ export const getPersonalFit = async (productId: string): Promise<PersonalFitResp
   );
   return response.data.data;
 };
+
+/**
+ * Mặt A của trục nghề (N3): "sản phẩm này hợp NGHỀ NÀO, bao nhiêu %" — public, không cần đăng nhập,
+ * phòng hay ngày sinh. `occupationCode` để lấy đúng một nghề; bỏ trống = mọi nghề đang bật có hồ sơ.
+ */
+export const getProductOccupationFit = async (
+  productId: string,
+  occupationCode?: string,
+): Promise<ProductOccupationFitResponse> => {
+  const response = await fetchHttpClient.get<ApiResponse<ProductOccupationFitResponse>>(
+    `/products/${productId}/occupation-fit`,
+    occupationCode ? { occupationCode } : undefined,
+  );
+  return response.data.data;
+};
+
+/**
+ * Danh sách sản phẩm đề xuất cho một workspace — chỉ engine chấm điểm, không AI diễn giải, không lưu
+ * phiên, nên gọi mỗi lần mở trang hồ sơ workspace là ổn. Muốn phiên có lời giải thích thì dùng
+ * `POST /recommendations` (chatbot đang dùng), không phải hàm này.
+ */
+export const getWorkspaceRecommendationPreview = async (
+  workspaceProfileId: string,
+  topN = 8,
+): Promise<WorkspaceRecommendationPreview> => {
+  const response = await fetchHttpClient.get<ApiResponse<WorkspaceRecommendationPreview>>(
+    "/recommendations/preview",
+    { workspaceProfileId, topN },
+  );
+  return response.data.data;
+};
+

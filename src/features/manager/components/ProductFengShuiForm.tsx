@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import { Sparkles, Save, RefreshCw } from "lucide-react";
 import type { LookupItem } from "@/features/products/types/taxonomy";
 
@@ -132,9 +132,9 @@ export function ProductVibeStyleFields({
 
       {/* Vibe */}
       <div className="space-y-2">
-        <label className="text-sm font-semibold text-gray-700">Cảm hứng không gian (vibe)</label>
+        <label className="text-sm font-semibold text-gray-700">Cảm hứng không gian</label>
         {vibeOptions.length === 0 ? (
-          <p className="text-xs text-gray-400 italic">Đang tải vibe...</p>
+          <p className="text-xs text-gray-400 italic">Đang tải cảm hứng không gian...</p>
         ) : (
           <div className="flex flex-wrap gap-2">
             {vibeOptions.map((v) => {

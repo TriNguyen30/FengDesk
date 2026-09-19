@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+﻿import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { ChevronLeft, ChevronRight, Eye, Loader2, Package, Search, Truck, X } from "lucide-react";
 import {
@@ -192,7 +192,7 @@ export function ShopDeliveriesView({ storeId }: ShopDeliveriesViewProps) {
                       {formatVnd(d.shippingFee)}
                     </td>
                     <td className="p-4 font-mono text-xs text-gray-700">
-                      {d.trackingCode ? d.trackingCode : <span className="text-gray-300">—</span>}
+                      {d.trackingCode ? d.trackingCode : <span className="text-gray-300">-</span>}
                     </td>
                     <td className="p-4">
                       <span

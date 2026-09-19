@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+﻿import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Box, ChevronLeft, ChevronRight, Loader2, PackageSearch, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { model3DQueueApi } from "@/features/products/api/model3dQueue.api";
@@ -196,7 +196,7 @@ export default function Model3DQueuePage() {
 
       {!loading && total > 0 && (
         <div className="flex items-center justify-between text-xs text-gray-400">
-          <span>Hiển thị {page * PAGE_SIZE + 1}–{Math.min((page + 1) * PAGE_SIZE, total)} / {total} yêu cầu</span>
+          <span>Hiển thị {page * PAGE_SIZE + 1}-{Math.min((page + 1) * PAGE_SIZE, total)} / {total} yêu cầu</span>
           {totalPages > 1 && (
             <div className="flex items-center gap-2">
               <button type="button" onClick={() => setPage((value) => Math.max(0, value - 1))} disabled={page === 0}

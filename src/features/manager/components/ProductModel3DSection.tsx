@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+﻿import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Box,
   Check,
@@ -166,7 +166,7 @@ export function ProductModel3DSection({ productId, images, onRefreshProduct }: P
         newImageFiles: newFiles,
       });
       if (res.data.isSuccess) {
-        toast.success(res.data.message || "Đã gửi yêu cầu — đội ngũ sàn sẽ xử lý");
+        toast.success(res.data.message || "Đã gửi yêu cầu - đội ngũ sàn sẽ xử lý");
         resetPicker();
         load();
         onRefreshProduct();
@@ -185,7 +185,7 @@ export function ProductModel3DSection({ productId, images, onRefreshProduct }: P
     try {
       const res = await model3DApi.requestModel3D(productId, { productImageId: targetImageId });
       if (res.data.isSuccess) {
-        toast.success(res.data.message || "Đã gửi yêu cầu tạo lại — đội ngũ sàn sẽ xử lý thủ công");
+        toast.success(res.data.message || "Đã gửi yêu cầu tạo lại - đội ngũ sàn sẽ xử lý thủ công");
         load();
         onRefreshProduct();
       } else {
@@ -336,7 +336,7 @@ export function ProductModel3DSection({ productId, images, onRefreshProduct }: P
                     ) : (
                       <EyeOff size={14} />
                     )}
-                    {model.isEnabled ? "Đang hiển thị trên trang sản phẩm" : "Đang ẩn — bấm để hiển thị lại"}
+                    {model.isEnabled ? "Đang hiển thị trên trang sản phẩm" : "Đang ẩn - bấm để hiển thị lại"}
                   </button>
                 )}
                 {["Succeeded", "Failed"].includes(model.status) && (
@@ -373,7 +373,7 @@ export function ProductModel3DSection({ productId, images, onRefreshProduct }: P
           <div className="flex items-center gap-3 rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-700">
             <Clock size={16} className="shrink-0" />
             <span>
-              Đang có 1 yêu cầu chưa hoàn tất —{" "}
+              Đang có 1 yêu cầu chưa hoàn tất -{" "}
               <span className="font-semibold">{REQUEST_STATUS_LABEL[openRequest.status]}</span>.
             </span>
           </div>
@@ -381,7 +381,7 @@ export function ProductModel3DSection({ productId, images, onRefreshProduct }: P
           <div className="space-y-3">
             <p className="text-sm text-gray-500">
               Ảnh/kiểu dáng này đã có mô hình 3D. Muốn tạo lại? Yêu cầu sẽ được
-              đội ngũ sàn xử lý thủ công — họ sẽ tự chọn ảnh phù hợp.
+              đội ngũ sàn xử lý thủ công - họ sẽ tự chọn ảnh phù hợp.
             </p>
             <button
               type="button"
@@ -537,7 +537,7 @@ function ImagePicker({
   return (
     <div className="space-y-4">
       <p className="text-xs text-gray-400">
-        Chọn 1–{MAX_IMAGES} ảnh. Mẹo: chụp ảnh sản phẩm ở nhiều góc độ khác nhau sẽ cho ra mô hình 3D
+        Chọn 1-{MAX_IMAGES} ảnh. Mẹo: chụp ảnh sản phẩm ở nhiều góc độ khác nhau sẽ cho ra mô hình 3D
         chính xác hơn.
       </p>
 

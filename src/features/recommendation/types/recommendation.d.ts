@@ -39,6 +39,11 @@ export interface ScorePenaltyRow {
   value: number;
   applied: boolean;
   reasonVi: string;
+  /** Mức phạt gốc trong `scoring_params` (vd 0.60). */
+  paramValue: number;
+  /** Hệ số nhân vào mức gốc (`Wp` hoặc tỉ trọng hành khắc mệnh); `null` = trừ nguyên mức. */
+  factor: number | null;
+  factorLabelVi: string | null;
 }
 
 export interface PersonalWeightInfo {
@@ -58,9 +63,22 @@ export interface ScoreVectors {
   product: ProductElementRow[];
   /** ĝ = gap / (|gap|₁/2), mỗi trục ∈ [−1,+1]. Nhánh Carry: vector dụng thần đã chuẩn hoá. */
   normalizedGap: ProductElementRow[];
-  /** r = ruleScore(bản mệnh, ·), CÓ DẤU. null khi trục cá nhân tắt. */
+  /** r = điểm quan hệ với bản mệnh, CÓ DẤU. null khi trục cá nhân tắt. */
   ruleScore: ProductElementRow[] | null;
-  /** d = (1−Wp)·ĝ + Wp·r — thứ thật sự nhân với product. */
+  /**
+   * `ô` — hướng nghề nghiệp (N3), ĐÃ chặn hành khắc mệnh về ≤ 0. Mỗi trục ∈ [−1,+1], cùng thang với
+   * `normalizedGap`. null khi trục nghề tắt.
+   *
+   * ⚠️ Thang CÓ DẤU, **không cùng thang** với `current`/`adjustedIdeal` (Σ=1, không âm) — vẽ bằng
+   * thanh có dấu ({@link OccupationDirectionPanel}), đừng chồng lên radar chính.
+   */
+  occupationDirection: ProductElementRow[] | null;
+  /**
+   * `ô` TRƯỚC khi chặn. Khác `occupationDirection` đúng ở hành nghề muốn nâng nhưng khắc mệnh —
+   * user phải thấy phần nghề *không* kéo được. null khi trục nghề tắt.
+   */
+  occupationRawDirection: ProductElementRow[] | null;
+  /** d = (1−Wp−Wo)·ĝ + Wp·r + Wo·ô (phòng) · (1−Wo)·n̂ + Wo·ô (Carry) — thứ thật sự nhân với product. */
   combinedDirection: ProductElementRow[];
   /** normalize(max(d, 0)), Σ=1 — lớp vàng "Ưu tiên của bạn" trên radar. */
   priorityVector: ProductElementRow[];
@@ -99,8 +117,55 @@ export interface ScoreBreakdown {
   personalWeight: PersonalWeightInfo | null;
   vectors: ScoreVectors;
   destinyElement: ElementCode | null;
+  /** v3.6 — kỵ thần đã áp ở nhánh Carry (mã hành); `null`/vắng ở luồng phòng. */
+  personalAvoidElements?: ElementCode[] | null;
   destinyLabelVi: string | null;
   conflictResolution: ConflictResolution | null;
+  /**
+   * Trục nghề đã tác động vào điểm này (N3). `null` khi user chưa khai nghề, nghề chưa có hồ sơ
+   * (hoặc là OTHER), hoặc `OCCUPATION_WEIGHT` đang tắt — cả ba đều nghĩa là nghề không đổi gì.
+   */
+  occupation: OccupationInfluence | null;
+}
+
+/** Trục nghề đã áp thế nào — N3, ADR occupation-product-fit-v1.md §3. */
+export interface OccupationInfluence {
+  code: string;
+  nameVi: string;
+  /** `Wo` đang áp (đã kẹp ≤ 1 − Wp ở luồng phòng). */
+  weight: number;
+  /** Luôn `OCCUPATION_WEIGHT`. */
+  weightCode: string;
+  /** Nói cả phần nghề KHÔNG kéo được (hành khắc mệnh bị chặn). */
+  reasonVi: string;
+}
+
+/**
+ * Mặt A — "sản phẩm này hợp NGHỀ NÀO, bao nhiêu %": `ô · p` cho từng nghề, không cần đăng nhập.
+ * Cùng con số với dòng `OCCUPATION_SCORE` trong breakdown gợi ý.
+ */
+export interface ProductOccupationFitResponse {
+  productId: string;
+  formulaVersion: string;
+  placement: string;
+  productVector: ProductElementRow[];
+  /** Sắp giảm dần theo `score`. Rỗng khi hàng tiêu hao hoặc chưa nghề nào có hồ sơ. */
+  fits: OccupationFitRow[];
+  noteVi: string | null;
+}
+
+export interface OccupationFitRow {
+  code: string;
+  nameVi: string;
+  /** `ô · p` ∈ [−1, 1]. */
+  score: number;
+  /** `(score + 1) / 2 × 100` — 50% = trung tính. */
+  displayPercent: number;
+  /** Rất hợp / Phù hợp / Trung tính / Cân nhắc — cùng ngưỡng `ScoreBadge`. */
+  tierVi: string;
+  /** `ô` thô (mặt A không có mệnh nên không chặn). */
+  direction: ProductElementRow[];
+  reasonVi: string;
 }
 
 /** Độ phù hợp của 1 sản phẩm × 1 workspace — không loại sản phẩm, luôn có kết quả. */
@@ -123,6 +188,8 @@ export interface ProductFitResponse {
   evidenceCount: number;
   /** 0..1 — tỉ lệ `current` đến từ dữ liệu user khai thay vì nền phòng. */
   confidence: number;
+  /** v3.5 — hệ số cap phiếu tag đã áp (1 = không cap). Cùng nghĩa với `WorkspaceElementAnalysis.tagVotesScale`. */
+  tagVotesScale?: number;
 }
 
 /**
@@ -138,7 +205,44 @@ export interface PersonalFitResponse {
   breakdown: ScoreBreakdown | null;
   /** Vector "người đang cần hành gì" (dụng thần Tứ Trụ, fallback Nạp Âm) — Σ=1. */
   personalNeedVector: ProductElementRow[];
+  /** `TuTru` (có giờ sinh) | `NapAm` (chỉ năm sinh). */
+  personalNeedSource: "TuTru" | "NapAm" | string;
+  /** Câu của BE: thân vượng/nhược, nhật chủ… hoặc lời mời bổ sung giờ sinh. */
+  personalNeedNoteVi: string;
+  /** v3.6 — kỵ thần (mã hành). Phần sản phẩm rơi vào đây là dòng `PERSONAL_AVOID_SCORE`. */
+  personalAvoidElements: ElementCode[];
   productVector: ProductElementRow[];
   destinyElement: ElementCode;
   destinyLabelVi: string;
 }
+
+// ─────────────────────────── gợi ý theo workspace (preview, không AI) ───────────────────────────
+
+/** Một sản phẩm trong danh sách gợi ý cho workspace — cùng shape với `RecommendationItemResponse` ở BE. */
+export interface RecommendationItem {
+  productId: string;
+  productName: string;
+  price: number | null;
+  imageUrl: string | null;
+  /** Điểm engine ∈ [-1, 1] — quy % bằng `scorePercent`. */
+  score: number;
+  rank: number;
+  matchFacts: string[];
+  cautionFacts: string[];
+  placementHint: string | null;
+  /** Luôn null ở luồng preview (không gọi AI diễn giải). */
+  explanation: string | null;
+}
+
+/**
+ * `GET /recommendations/preview` — engine chấm topN cho một workspace, KHÔNG gọi AI, KHÔNG lưu phiên.
+ * `id = 00000000-…` vì không có phiên nào được lưu; `note` là ghi chú engine (vd đã bỏ lọc mục tiêu).
+ */
+export interface WorkspaceRecommendationPreview {
+  id: string;
+  kind: "Workspace" | "PersonalCarry";
+  status: string;
+  note: string | null;
+  items: RecommendationItem[];
+}
+

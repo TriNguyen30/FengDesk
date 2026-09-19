@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+﻿import { useEffect, useRef, useState } from "react";
 import { Brain, ImagePlus, Info, Loader2, Mic, MicOff, Sparkles } from "lucide-react";
 import AttachmentPreviewRow from "@/features/chatbox/components/AttachmentPreviewRow";
 import { useImageAttachments } from "@/features/chatbox/hooks/useImageAttachments";
@@ -171,7 +171,7 @@ export default function WorkspaceDescribeStep({
                 isTranscribing
                   ? "Đang chuyển giọng nói thành chữ..."
                   : isListening
-                    ? "Đang nghe — bấm để dừng"
+                    ? "Đang nghe - bấm để dừng"
                     : "Nói để mô tả"
               }
               className={`flex h-8 w-8 items-center justify-center rounded-full transition-colors cursor-pointer disabled:cursor-wait ${

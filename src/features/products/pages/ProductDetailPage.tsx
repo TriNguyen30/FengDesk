@@ -47,6 +47,7 @@ import { setAuthModal } from "@/features/auth/store/authSlice";
 import { cleanRichTextHtml } from "@/utils";
 import ProductFitPanel from "@/features/recommendation/components/element-vector/ProductFitPanel";
 import PersonalFitPanel from "@/features/recommendation/components/element-vector/PersonalFitPanel";
+import OccupationFitChips from "@/features/recommendation/components/element-vector/OccupationFitChips";
 import { useAiAssistant } from "@/features/chatbox/hooks/useAiAssistant";
 import FeatureBar from "@/components/ui/FeatureBar";
 import CommitmentPage from "@/components/ui/CommitmentPage";
@@ -126,6 +127,7 @@ export default function ProductDetailPage() {
   useEffect(() => {
     if (!product) return;
 
+    document.title = `${product.name} - Feng Shui Garden`;
     setSelectedItem(product.items[0] ?? null);
     setActiveImage(sortedImages[0]?.url ?? "");
     setQuantity(1);
@@ -719,48 +721,66 @@ export default function ProductDetailPage() {
               </div>
             )}
 
-            {/* Feng Shui attributes */}
+            {/* Ba hàng thuộc tính: nhãn cột trái cố định + dãy chip — gọn hơn nhãn đứng riêng một dòng,
+                giữ cột thông tin không cao hơn cột ảnh. */}
+            <div className="flex flex-col gap-3">
             {product.primaryElement && (
-              <div className="flex flex-wrap gap-1.5">
-                <span className="rounded-md bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">
-                  {t("product_detail.labels.element")} {ELEMENT_LABELS[product.primaryElement] ?? product.primaryElement}
+              <div className="flex items-start gap-3">
+                <span className="w-24 shrink-0 pt-1 text-sm font-medium text-gray-700">
+                  {t("product_detail.labels.variant_attrs")}
                 </span>
-                {(product.secondaryElements ?? []).map((el) => (
-                  <span
-                    key={el}
-                    className="rounded-md bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-500"
-                  >
-                    {ELEMENT_LABELS[el] ?? el}
+                <div className="flex min-w-0 flex-wrap gap-1.5">
+                  <span className="rounded-md bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">
+                    {t("product_detail.labels.element")} {ELEMENT_LABELS[product.primaryElement] ?? product.primaryElement}
                   </span>
-                ))}
-                {(product.vibes ?? []).concat(product.styles ?? []).map((code) => (
-                  <span
-                    key={code}
-                    className="rounded-md bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-500"
-                  >
-                    {vibeStyleMap[code] || code}
-                  </span>
-                ))}
+                  {(product.secondaryElements ?? []).map((el) => (
+                    <span
+                      key={el}
+                      className="rounded-md bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-500"
+                    >
+                      {ELEMENT_LABELS[el] ?? el}
+                    </span>
+                  ))}
+                  {(product.vibes ?? []).concat(product.styles ?? []).map((code) => (
+                    <span
+                      key={code}
+                      className="rounded-md bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-500"
+                    >
+                      {vibeStyleMap[code] || code}
+                    </span>
+                  ))}
+                </div>
               </div>
             )}
 
             {/* Physical attributes */}
             {selectedItem && (selectedItem.weightGram > 0 || selectedItem.lengthCm > 0) && (
-              <div className="flex flex-wrap gap-1.5">
-                {selectedItem.weightGram > 0 && (
-                  <span className="rounded-md  border border-gray-200 px-2.5 py-1 text-xs font-medium text-gray-500">
-                    {t("product_detail.labels.weight", { weight: selectedItem.weightGram })}
-                  </span>
-                )}
-                {(selectedItem.lengthCm > 0 ||
-                  selectedItem.widthCm > 0 ||
-                  selectedItem.heightCm > 0) && (
-                    <span className="rounded-md  border border-gray-200 px-2.5 py-1 text-xs font-medium text-gray-500">
-                      {t("product_detail.labels.size", { l: selectedItem.lengthCm, w: selectedItem.widthCm, h: selectedItem.heightCm })}
+              <div className="flex items-start gap-3">
+                <span className="w-24 shrink-0 pt-1 text-sm font-medium text-gray-700">
+                  {t("product_detail.labels.specs")}
+                </span>
+                <div className="flex min-w-0 flex-wrap gap-1.5">
+                  {selectedItem.weightGram > 0 && (
+                    <span className="rounded-md border border-gray-200 px-2.5 py-1 text-xs font-medium text-gray-500">
+                      {t("product_detail.labels.weight", { weight: selectedItem.weightGram })}
                     </span>
                   )}
+                  {(selectedItem.lengthCm > 0 ||
+                    selectedItem.widthCm > 0 ||
+                    selectedItem.heightCm > 0) && (
+                      <span className="rounded-md border border-gray-200 px-2.5 py-1 text-xs font-medium text-gray-500">
+                        {t("product_detail.labels.size", { l: selectedItem.lengthCm, w: selectedItem.widthCm, h: selectedItem.heightCm })}
+                      </span>
+                    )}
+                </div>
               </div>
             )}
+
+            {/* Hợp với nghề — top 3, chip kiểu Phân loại, fill theo % (mặt A của trục nghề, public) */}
+            {product.placement !== "Consumable" && (
+              <OccupationFitChips productId={product.id} limit={3} />
+            )}
+            </div>
 
             {/* Add to cart */}
             <div className="mt-auto pt-2 flex flex-col gap-3">

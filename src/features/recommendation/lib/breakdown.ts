@@ -32,17 +32,43 @@ export function toRows(map: ElementMap): ProductElementRow[] {
   return ELEMENT_ORDER.map((element) => ({ element, value: map[element] }));
 }
 
+/** Trục nghề (N3) cho {@link combinedDirection}: `ô` đã chặn + `Wo`. */
+export interface OccupationAxisInput {
+  direction: ElementMap;
+  weight: number;
+}
+
 /**
- * `d = (1−wp)·ĝ + wp·r` — vector hướng tổng hợp, chính là thứ engine nhân với vector sản phẩm.
+ * `d = (1−wp−wo)·ĝ + wp·r + wo·ô` — vector hướng tổng hợp, chính là thứ engine nhân với vector sản phẩm.
  *
- * Đây là lý do BE trả cả `ĝ` lẫn `r` thay vì chỉ trả `d`: **kéo slider `Wp` là dựng lại được `d`
- * ngay tại client, không cần gọi lại API** (§10.3). Không có `r` (trục cá nhân tắt) thì `d ≡ ĝ`.
+ * Đây là lý do BE trả cả `ĝ`, `r` lẫn `ô` thay vì chỉ trả `d`: **kéo slider `Wp` là dựng lại được `d`
+ * ngay tại client, không cần gọi lại API** (§10.3). Không có `r` (trục cá nhân tắt) thì hệ số của
+ * `ĝ` là `1−wo`; không có `ô` (trục nghề tắt) thì công thức rơi về v3.3. `wo` được kẹp `≤ 1 − wp`
+ * y như BE (ADR §3.4) để hệ số của `ĝ` không âm khi kéo slider lên cao.
  */
-export function combinedDirection(gHat: ElementMap, r: ElementMap | null, wp: number): ElementMap {
-  if (!r) return { ...gHat };
+export function combinedDirection(
+  gHat: ElementMap,
+  r: ElementMap | null,
+  wp: number,
+  occupation: OccupationAxisInput | null = null,
+): ElementMap {
+  const wpEff = r ? wp : 0;
+  const wo = occupation ? Math.max(0, Math.min(occupation.weight, 1 - wpEff)) : 0;
   const out = { ...ZERO };
-  for (const e of ELEMENT_ORDER) out[e] = (1 - wp) * gHat[e] + wp * r[e];
+  for (const e of ELEMENT_ORDER) {
+    out[e] = (1 - wpEff - wo) * gHat[e]
+      + (r ? wpEff * r[e] : 0)
+      + (occupation ? wo * occupation.direction[e] : 0);
+  }
   return out;
+}
+
+/** Trục nghề từ breakdown, hoặc `null` khi trục tắt — tiện truyền thẳng vào {@link combinedDirection}. */
+export function occupationAxisOf(breakdown: ScoreBreakdown): OccupationAxisInput | null {
+  const dir = breakdown.vectors.occupationDirection;
+  const weight = breakdown.occupation?.weight ?? 0;
+  if (!dir || weight <= 0) return null;
+  return { direction: toMap(dir), weight };
 }
 
 /**
@@ -126,21 +152,60 @@ export function simulateVotes(
   personVotes: number,
   totalVotes: number,
   simulatedVotes: number,
+  saturationAlpha = 1,
 ): VoteSimulation | null {
   const otherVotes = totalVotes - personVotes;
   const newTotal = otherVotes + simulatedVotes;
   if (!(totalVotes > 0) || !(otherVotes > 0) || !(newTotal > 0) || simulatedVotes < 0) return null;
 
-  const current2 = { ...ZERO };
+  const alpha = saturationAlpha > 0 ? saturationAlpha : 1;
+  const raw = rawMassOf(current, totalVotes, alpha);
+
+  const mass = { ...ZERO };
   const person2 = { ...ZERO };
   for (const e of ELEMENT_ORDER) {
     // clamp chỉ để nuốt sai số dấu phẩy động quanh 0, không để sửa dữ liệu lệch.
-    const others = Math.max(0, current[e] * totalVotes - personVotes * personalVector[e]);
-    const mine = simulatedVotes * personalVector[e];
-    person2[e] = mine / newTotal;
-    current2[e] = (others + mine) / newTotal;
+    const others = Math.max(0, raw[e] - personVotes * personalVector[e]);
+    mass[e] = others + simulatedVotes * personalVector[e];
   }
+
+  // Nén lại rồi mới chuẩn hoá — đúng thứ tự BE làm, nếu ngược lại thì Σ=1 khiến α gần như vô hiệu.
+  const current2 = { ...ZERO };
+  let sum = 0;
+  for (const e of ELEMENT_ORDER) {
+    current2[e] = mass[e] > 0 ? Math.pow(mass[e], alpha) : 0;
+    sum += current2[e];
+  }
+  if (!(sum > 0)) return null;
+  for (const e of ELEMENT_ORDER) {
+    current2[e] /= sum;
+    // Phần của chủ nhân trong hành e = current[e] × (phiếu của họ / tổng khối lượng hành đó),
+    // đúng công thức `CurrentBreakdown.ShareOf` của BE.
+    person2[e] = mass[e] > 0 ? current2[e] * ((simulatedVotes * personalVector[e]) / mass[e]) : 0;
+  }
+
   return { current: current2, person: person2, totalVotes: newTotal };
+}
+
+/**
+ * Nghịch đảo phép nén tương phản: từ `current` (Σ=1, đã nén) suy ngược ra khối lượng THÔ theo phiếu.
+ *
+ * `current = normalize(m^α)` ⇒ `m[e] ∝ current[e]^(1/α)`, và hằng số tỉ lệ khoá lại được vì tổng khối
+ * lượng thô đúng bằng `totalVotes`. Không có bước này thì mô phỏng đổi phiếu đang trừ một đại lượng
+ * ĐÃ NÉN cho một đại lượng theo PHIẾU — hai hệ đơn vị khác nhau, ra một căn phòng không tồn tại.
+ *
+ * `α = 1` là phép đồng nhất, nên đường đi cũ vẫn cho đúng con số cũ.
+ */
+function rawMassOf(current: ElementMap, totalVotes: number, alpha: number): ElementMap {
+  const out = { ...ZERO };
+  let sum = 0;
+  for (const e of ELEMENT_ORDER) {
+    out[e] = current[e] > 0 ? Math.pow(current[e], 1 / alpha) : 0;
+    sum += out[e];
+  }
+  if (!(sum > 0)) return out;
+  for (const e of ELEMENT_ORDER) out[e] = (out[e] / sum) * totalVotes;
+  return out;
 }
 
 /**
@@ -175,7 +240,7 @@ export function simulateScore(breakdown: ScoreBreakdown, wp: number): number {
   const gHat = toMap(breakdown.vectors.normalizedGap);
   const r = breakdown.vectors.ruleScore ? toMap(breakdown.vectors.ruleScore) : null;
   const product = toMap(breakdown.vectors.product);
-  const d = combinedDirection(gHat, r, wp);
+  const d = combinedDirection(gHat, r, wp, occupationAxisOf(breakdown));
 
   let score = ELEMENT_ORDER.reduce((sum, e) => sum + product[e] * d[e], 0);
 

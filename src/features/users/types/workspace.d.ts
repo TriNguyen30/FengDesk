@@ -174,6 +174,18 @@ export interface WorkspaceElementAnalysis {
   /** Tổng phiếu của mọi nguồn — mẫu số của mọi `sharePercent`. */
   totalVotes: number;
   /**
+   * v3.5 — hệ số BE đã nhân vào phiếu của mọi tag do `TAG_VOTES_CAP` (1 = không cap, < 1 = "N tag đang
+   * tính bằng 5 phiếu"). `contributions[].votes` và `totalVotes` đã mang phiếu sau khi nhân — chỉ để ghi chú.
+   */
+  tagVotesScale?: number;
+
+  /**
+   * Số mũ nén tương phản BE đã áp khi dựng `current` (`EVIDENCE_SATURATION_ALPHA`); `1` = tuyến tính.
+   * Cần cho mô phỏng đổi phiếu: `current` là ảnh phi tuyến của khối lượng thô nên phải nghịch đảo
+   * trước khi đổi phiếu — xem `simulateVotes`.
+   */
+  saturationAlpha: number;
+  /**
    * v3.2 — trục cá nhân của CĂN PHÒNG này. `null` khi phòng Public, khi user chưa có ngày sinh,
    * hoặc khi tham số trục cá nhân đang tắt (khi đó `d ≡ ĝ`, lớp vàng trùng "Mức lý tưởng").
    */

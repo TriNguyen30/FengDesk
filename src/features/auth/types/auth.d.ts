@@ -9,6 +9,8 @@ export interface AuthUser {
   roles?: string[];
   dateOfBirth?: string;
   gender?: string;
+  occupationCode?: string | null;
+  occupationNameVi?: string | null;
   fengShui?: FengShui;
 }
 
@@ -40,6 +42,10 @@ export interface MyProfile {
   /** Giờ sinh "HH:mm:ss" — cần cho Tứ Trụ/Bát Tự đầy đủ. Null/undefined nếu chưa khai. */
   birthTime?: string | null;
   gender?: string;
+  /** Mã nghề đang chọn, vd "IT". Null = chưa khai (tuỳ chọn, không chặn gì). */
+  occupationCode?: string | null;
+  /** Tên nghề tiếng Việt — BE trả sẵn để FE khỏi tra lại bảng nghề chỉ để hiện một dòng. */
+  occupationNameVi?: string | null;
   fengShui?: FengShui;
 }
 
@@ -82,6 +88,15 @@ export interface UpdateProfilePayload {
   gender: "Unspecified" | "Male" | "Female" | "Other";
   /** ISO date ("YYYY-MM-DD"). Null = xóa ngày sinh. Đổi giá trị này làm tính lại mệnh/ngũ hành. */
   dateOfBirth: string | null;
+  /**
+   * Mã nghề, vd "IT". Tuỳ chọn.
+   *
+   * Ba trạng thái KHÁC NHAU, đừng gộp: `undefined` = giữ nguyên nghề đang có, `""` = xóa nghề,
+   * có mã = đổi sang nghề đó. BE phân biệt như vậy vì `PUT` này ghi đè cả hồ sơ - nếu `undefined`
+   * cũng xóa thì mọi màn hình cũ chưa biết field này sẽ âm thầm xóa nghề của user mỗi lần họ sửa
+   * số điện thoại.
+   */
+  occupationCode?: string | null;
 }
 
 /** Kết quả bước xác thực OTP email hiện tại — token ràng 3 bước sau vào cùng một phiên. */

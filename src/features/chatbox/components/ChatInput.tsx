@@ -66,14 +66,14 @@ export default function ChatInput({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="relative border-t border-gray-100 bg-white px-3 py-3">
+    <form onSubmit={handleSubmit} className="relative border-t border-gray-100 bg-white px-2 py-2 rounded-b-2xl">
       <AttachmentPreviewRow items={att.items} onRemove={att.remove} />
 
       {/* Không bọc hộp viền quanh ô nhập nữa — viền sáng được chuyển lên KHUNG CHAT (panel) qua onAiActiveChange. */}
       <div className="relative flex items-end gap-2">
         {aiActive && (
           // Badge nằm NGANG mép trên ô nhập (đầu ô chat), căn giữa.
-          <div className="ai-badge-up pointer-events-none absolute -top-2.5 left-1/2 z-10 flex -translate-x-1/2 items-center gap-1 rounded-full border border-primary/40 bg-primary/15 px-2 py-0.5 text-[10px] font-semibold text-primary shadow-sm backdrop-blur">
+          <div className="ai-badge-up pointer-events-none absolute -top-6 left-1/2 z-10 flex -translate-x-1/2 items-center gap-1 rounded-full border border-primary/40 bg-primary/15 px-2 py-0.5 text-[10px] font-semibold text-primary shadow-sm backdrop-blur">
             <Sparkles size={11} />
             Đang gọi trợ lý AI
           </div>
@@ -95,10 +95,10 @@ export default function ChatInput({
               type="button"
               onClick={() => fileRef.current?.click()}
               disabled={disabled || isSending}
-              className="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-gray-50 text-gray-500 transition-colors hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-primary transition-colors hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
               aria-label="Gửi ảnh"
             >
-              <ImagePlus size={18} />
+              <ImagePlus size={20} />
             </button>
           </>
         )}
@@ -109,26 +109,22 @@ export default function ChatInput({
           rows={1}
           disabled={disabled || isSending}
           placeholder={placeholder}
-          className="max-h-24 min-h-[42px] flex-1 resize-none rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-sm text-gray-800 outline-none transition-colors placeholder:text-gray-400 focus:border-primary focus:bg-white focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-60"
+          className="max-h-24 min-h-[36px] flex-1 resize-none rounded-[18px] bg-[#f0f2f5] px-4 py-1.5 text-sm text-gray-900 outline-none transition-colors placeholder:text-gray-500 disabled:cursor-not-allowed disabled:opacity-60"
         />
         <button
           type="submit"
           disabled={!canSend}
           title={att.uploading ? "Đang tải ảnh, vui lòng đợi..." : undefined}
-          className="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-4xl text-primary transition-colors hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-primary transition-colors hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
           aria-label="Gửi tin nhắn"
         >
           {isSending || att.uploading ? (
-            <Loader2 size={18} className="animate-spin" />
+            <Loader2 size={20} className="animate-spin" />
           ) : (
-            <Send size={18} className="rotate-45 translate-x-[-2px]" />
+            <Send size={20} className="rotate-45 translate-x-[-2px]" />
           )}
         </button>
       </div>
-      <p className="mt-1.5 text-[10px] text-gray-400">
-        Enter để gửi · Shift+Enter xuống dòng · gõ <span className="text-primary">@AI</span> để hỏi
-        trợ lý
-      </p>
     </form>
   );
 }

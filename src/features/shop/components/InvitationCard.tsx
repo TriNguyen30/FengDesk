@@ -1,4 +1,4 @@
-import { toast } from "sonner";
+﻿import { toast } from "sonner";
 import { Check, Loader2, Store as StoreIcon, UserCircle2, X } from "lucide-react";
 import {
   useAcceptStoreInvitation,
@@ -76,7 +76,7 @@ export default function InvitationCard({ invitation }: Props) {
             <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-gray-500">
               <span className="inline-flex items-center gap-1">
                 <UserCircle2 size={12} className="shrink-0" />
-                {t("my_invitations.card.inviter")} {invitation.invitedByName || "—"}
+                {t("my_invitations.card.inviter")} {invitation.invitedByName || "-"}
               </span>
               <span aria-hidden>·</span>
               <span>{formatDate(invitation.invitedAt)}</span>

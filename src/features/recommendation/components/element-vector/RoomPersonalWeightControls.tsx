@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { Info, RotateCcw, UserRound } from "lucide-react";
 import type { PersonalDirection } from "@/features/users/types/workspace";
 
@@ -18,8 +18,9 @@ const MAX_SIMULATED_VOTES = 8;
  * Chip bản mệnh + slider mô phỏng **số phiếu** của chủ nhân phòng.
  *
  * Đơn vị là PHIẾU chứ không phải %, vì phiếu mới là đại lượng gốc của mô hình: nền phòng 3 phiếu,
- * mỗi tag 1 phiếu, chủ nhân N phiếu. Phần trăm chỉ là hệ quả (`votes / totalVotes`) và nó đổi mỗi
- * lần user khai thêm tag — nói "3 phiếu" thì ổn định, nói "23%" thì mai khai thêm tag là sai.
+ * mỗi tag ≈ 1 phiếu (tổng tag có trần `TAG_VOTES_CAP = 5`, v3.5), chủ nhân N phiếu. Phần trăm chỉ là
+ * hệ quả (`votes / totalVotes`) và nó đổi mỗi lần user khai thêm tag — nói "3 phiếu" thì ổn định, nói
+ * "23%" thì mai khai thêm tag là sai.
  */
 export default function RoomPersonalWeightControls({
   direction,
@@ -64,7 +65,7 @@ export default function RoomPersonalWeightControls({
         <p className="mt-2 text-[11px] leading-snug text-gray-600">
           Bản mệnh của bạn cũng là một nguồn ngũ hành trong phòng, tính bằng phiếu như nền phòng
           (3 phiếu) và mỗi tag bạn khai (1 phiếu). Khai càng nhiều tag thật thì phần của bản mệnh
-          càng loãng đi — suy đoán nhường chỗ cho quan sát.
+          càng loãng đi - suy đoán nhường chỗ cho quan sát.
         </p>
       )}
 
@@ -84,7 +85,7 @@ export default function RoomPersonalWeightControls({
           className="mt-1 w-full accent-[#D9AD41]"
         />
         <p className="mt-1 text-[10px] leading-snug text-gray-400">
-          Chỉ để xem thử — không đổi cấu hình hệ thống.
+          Chỉ để xem thử - không đổi cấu hình hệ thống.
         </p>
       </div>
     </div>

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+﻿import { useCallback, useEffect, useRef, useState } from "react";
 import { ArrowLeft, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
@@ -247,7 +247,7 @@ export default function WorkspaceModal({
           </div>
           <button
             onClick={handleDismiss}
-            title="Đóng — nội dung đang nhập vẫn được giữ lại"
+            title="Đóng - nội dung đang nhập vẫn được giữ lại"
             className="rounded-full p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors cursor-pointer"
           >
             <X size={20} />

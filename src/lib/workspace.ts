@@ -34,7 +34,6 @@ export const WORKSPACES: WorkspaceDef[] = [
     label: "Quản lý",
     route: "/manager",
     allow: (r) =>
-      r.includes("Staff") ||
       r.includes("Manager") ||
       r.includes("Admin"),
   },
