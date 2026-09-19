@@ -1030,8 +1030,12 @@ body {
    lượt gaussian blur trên gần trọn màn hình. Đẹp nhất, nhưng là thứ đầu tiên
    nên hạ khi máy yếu. */
 .fd-rail-blur {
+  /* KHÔNG tự viết thêm `-webkit-backdrop-filter` ở đây. Lightning CSS (chạy trong
+     `vite build` qua @tailwindcss/vite) gộp hai khai báo lại và chỉ giữ bản có
+     prefix → bản deploy mất hẳn `backdrop-filter` không prefix, Chrome/Firefox
+     không blur trong khi dev server (không minify) vẫn chạy. Nó tự thêm prefix
+     cho Safari theo targets của Tailwind, nên chỉ cần khai báo chuẩn. */
   backdrop-filter: blur(12px) saturate(1.1);
-  -webkit-backdrop-filter: blur(12px) saturate(1.1);
 
   /* Lớp màu mỏng phủ LÊN kết quả đã làm mờ (background luôn vẽ sau backdrop-filter
      trên cùng một phần tử). Cố ý dùng lại y hệt công thức sắc của .fd-rail-tint —
