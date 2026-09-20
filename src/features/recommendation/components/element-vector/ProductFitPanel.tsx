@@ -1,4 +1,5 @@
 ﻿import { useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useWorkspaces } from "@/features/users/hooks/useWorkspace";
 import { useProductFitAcrossWorkspaces } from "../../hooks/useProductFit";
@@ -10,9 +11,13 @@ import SpaceTabs from "./SpaceTabs";
 import EmptyState from "./EmptyState";
 import ScoreWaterfall from "./ScoreWaterfall";
 import RoomNeedCard from "./RoomNeedCard";
+import InfoCardTrio from "./InfoCardTrio";
+import FitLoadingBanner, { Reveal } from "./FitLoadingBanner";
+import { revealContainer } from "./revealVariants";
+import { lightingVi, workPurposeVi } from "./workspaceLabels";
 import { ClashBadge, ConflictResolutionBanner } from "./ClashNotices";
 import OccupationDirectionPanel from "./OccupationDirectionPanel";
-import { ELEMENT_ORDER, elementVi, scorePercent } from "./constants";
+import { CAUTION_CLASS, ELEMENT_ORDER, cautionTone, elementVi, scorePercent } from "./constants";
 import type { ElementCode } from "../../types/recommendation";
 import {
   combinedDirection,
@@ -50,7 +55,12 @@ export default function ProductFitPanel({ productId }: ProductFitPanelProps) {
       : fallbackId;
 
   if (wsStatus === "pending") {
-    return <div className="h-56 animate-pulse rounded-2xl bg-gray-50" />;
+    return (
+      <FitLoadingBanner
+        label="Đang tải các không gian của bạn…"
+        hint="Lấy danh sách phòng để chấm độ phù hợp của sản phẩm với từng phòng."
+      />
+    );
   }
 
   if (workspaces.length === 0) {
@@ -82,84 +92,149 @@ export default function ProductFitPanel({ productId }: ProductFitPanelProps) {
       />
 
       <div className="rounded-b-2xl rounded-tr-2xl border border-[#e5e7eb] bg-white p-5 shadow-sm">
-        {fitStatus === "pending" && <div className="h-48 animate-pulse rounded-xl bg-gray-50" />}
+        {/* Chờ → banner "đang tính" (cùng kiểu với AI điền giúp); có dữ liệu → các khối mở lần lượt.
+            `mode="wait"`: banner mờ đi xong mới mở bảng, không chồng hai trạng thái lên nhau. */}
+        <AnimatePresence mode="wait" initial={false}>
+          {fitStatus === "pending" && (
+            <FitLoadingBanner
+              key="loading"
+              label="Đang tính độ phù hợp với không gian của bạn…"
+              hint="Hệ thống đang đọc hiện trạng phòng, bản mệnh và ngũ hành của sản phẩm."
+            />
+          )}
 
-        {fitStatus === "error" && (
-          <p className="text-sm text-gray-400">Không thể tải độ phù hợp cho không gian này.</p>
-        )}
+          {fitStatus === "error" && (
+            <p key="error" className="text-sm text-gray-400">
+              Không thể tải độ phù hợp cho không gian này.
+            </p>
+          )}
 
-        {fit && (
-          <div className="flex flex-col gap-5">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div className="flex flex-wrap items-center gap-2.5">
-                <ScoreBadge score={fit.score} />
-                {/* Badge phạm trù, tách khỏi %: 61% "Phù hợp" vẫn có thể là hàng khắc mệnh. */}
-                <ClashBadge breakdown={fit.breakdown} />
-              </div>
-              <div className="text-right">
-                <div className="text-xs text-gray-400">Không gian</div>
-                <div className="text-sm font-semibold text-gray-700">{selectedWorkspace.name}</div>
-              </div>
-            </div>
+          {fit && (
+            <motion.div
+              key={selectedId ?? "fit"}
+              variants={revealContainer}
+              initial="hidden"
+              animate="show"
+              exit={{ opacity: 0, transition: { duration: 0.12 } }}
+              className="flex flex-col gap-5"
+            >
+              <Reveal className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex flex-wrap items-center gap-2.5">
+                  <ScoreBadge score={fit.score} />
+                  {/* Badge phạm trù, tách khỏi %: 61% "Phù hợp" vẫn có thể là hàng khắc mệnh. */}
+                  <ClashBadge breakdown={fit.breakdown} />
+                </div>
+                <div className="text-right">
+                  <div className="text-xs text-gray-400">Không gian</div>
+                  <div className="text-sm font-semibold text-gray-700">
+                    {selectedWorkspace.name}
+                  </div>
+                </div>
+              </Reveal>
 
-            <ConflictResolutionBanner conflict={fit.breakdown?.conflictResolution ?? null} />
-
-            {/* Trái: radar cho thấy phòng SẼ ra sao khi thêm sản phẩm này (nét đứt = xem trước) + trục nghề.
-                Phải: phòng đang cần gì, rồi điểm đến từ đâu — cùng bố cục với PersonalFitPanel. */}
-            <div className="grid gap-4 md:grid-cols-2 md:items-start">
-              <div className="min-w-0">
-                <ElementRadarChart
-                  rows={toRadarRows(fit)}
-                  showPreview
-                  contributions={fit.contributions ?? []}
-                  tagVotesScale={fit.tagVotesScale ?? 1}
-                  {...radarPersonalLayer(fit)}
-                />
-                <p className="mt-1 text-center text-[11px] text-gray-400">
-                  Nét đứt = ngũ hành phòng sau khi thêm sản phẩm này
-                </p>
-                {fit.evidenceCount === 0 && (
-                  <p className="mt-2 rounded-lg bg-gray-50 px-3 py-2 text-[11px] leading-snug text-gray-500">
-                    Hiện trạng phòng đang được suy ra từ loại phòng vì bạn chưa khai màu sắc/vật liệu nào.
-                    Khai thêm để điểm bám sát không gian thật của bạn.
-                  </p>
-                )}
-                {fit.breakdown && <div className="mt-3"><OccupationDirectionPanel breakdown={fit.breakdown} /></div>}
-              </div>
-
-              <div className="flex min-w-0 flex-col gap-3">
-                <RoomNeedCard
-                  workspaceName={selectedWorkspace.name}
-                  gap={fit.gap}
-                  breakdown={fit.breakdown}
-                  placementHint={fit.placementHint}
-                  evidenceCount={fit.evidenceCount}
-                />
+              {/* Một hộp chung: trái = radar (nét đứt = phòng sau khi thêm sản phẩm) + trục nghề, phải = điểm
+                đến từ đâu — cùng bố cục với PersonalFitPanel. */}
+              <Reveal>
                 {fit.breakdown ? (
-                  <ScoreWaterfall breakdown={fit.breakdown} matchFacts={fit.matchFacts} cautionFacts={fit.cautionFacts} />
+                  <ScoreWaterfall
+                    breakdown={fit.breakdown}
+                    matchFacts={fit.matchFacts}
+                    cautionFacts={fit.cautionFacts}
+                    aside={<RoomRadarAside fit={fit} />}
+                    lead={
+                      <RoomNeedCard
+                        workspaceName={selectedWorkspace.name}
+                        gap={fit.gap}
+                        breakdown={fit.breakdown}
+                        evidenceCount={fit.evidenceCount}
+                      />
+                    }
+                  />
                 ) : (
-                  <>
-                    {fit.matchFacts.length > 0 && (
-                      <ul className="space-y-1 text-xs leading-relaxed text-gray-600">
-                        {fit.matchFacts.map((f, i) => (
-                          <li key={i}>• {f}</li>
-                        ))}
-                      </ul>
-                    )}
-                    {fit.cautionFacts.length > 0 && (
-                      <div className="rounded-lg bg-[#fdecea] px-3 py-2 text-xs leading-relaxed text-[#b3261e]">
-                        {fit.cautionFacts.map((c, i) => (
-                          <p key={i}>{c}</p>
-                        ))}
-                      </div>
-                    )}
-                  </>
+                  <div className="grid gap-4 md:grid-cols-2 md:items-start">
+                    <RoomRadarAside fit={fit} />
+                    <div className="flex flex-col gap-2">
+                      <RoomNeedCard
+                        workspaceName={selectedWorkspace.name}
+                        gap={fit.gap}
+                        breakdown={fit.breakdown}
+                        evidenceCount={fit.evidenceCount}
+                      />
+                      {fit.matchFacts.length > 0 && (
+                        <ul className="space-y-1 text-xs leading-relaxed text-gray-600">
+                          {fit.matchFacts.map((f, i) => (
+                            <li key={i}>• {f}</li>
+                          ))}
+                        </ul>
+                      )}
+                      {fit.cautionFacts.map((c, i) => (
+                        <p
+                          key={i}
+                          className={`rounded-lg px-3 py-2 text-xs leading-relaxed ${CAUTION_CLASS[cautionTone(c)]}`}
+                        >
+                          {c}
+                        </p>
+                      ))}
+                    </div>
+                  </div>
                 )}
-              </div>
-            </div>
-          </div>
-        )}
+              </Reveal>
+
+              {/* Hàng thông tin DƯỚI hộp điểm: 3 dòng phòng/mệnh/hướng đặt bên trái; bên phải là banner "ưu
+                tiên hành X để cân bằng" — chỉ khi có xung mệnh ↔ phòng, và co theo nội dung (`items-start`)
+                chứ không kéo dài theo ô. Không có banner thì 3 dòng trải hết chiều ngang. */}
+              <Reveal
+                className={`grid gap-4 ${fit.breakdown?.conflictResolution ? "md:grid-cols-2 md:items-start" : ""}`}
+              >
+                <InfoCardTrio
+                  spaceTitle={selectedWorkspace.name}
+                  spaceLine={`Mục đích: ${workPurposeVi(selectedWorkspace.workPurpose)} · Ánh sáng: ${lightingVi(selectedWorkspace.lighting)}`}
+                  menhLine={findMenhLine(fit)}
+                  placementLine={fit.placementHint}
+                />
+                <ConflictResolutionBanner conflict={fit.breakdown?.conflictResolution ?? null} />
+              </Reveal>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
+    </div>
+  );
+}
+
+/** Dòng "Hợp với bản mệnh" của InfoCardTrio: câu nào BE nói về mệnh, không có thì nhắc khai ngày sinh. */
+function findMenhLine(fit: ProductFitResponse): string {
+  const all = [...fit.matchFacts, ...fit.cautionFacts];
+  return (
+    all.find((f) => f.includes("mệnh")) ?? "Chưa xác định - thiếu ngày sinh trong hồ sơ cá nhân."
+  );
+}
+
+/** Cột trái của hộp điểm: radar phòng (+ xem trước) và trục nghề. */
+function RoomRadarAside({ fit }: { fit: ProductFitResponse }) {
+  return (
+    <div className="min-w-0">
+      <ElementRadarChart
+        rows={toRadarRows(fit)}
+        showPreview
+        contributions={fit.contributions ?? []}
+        tagVotesScale={fit.tagVotesScale ?? 1}
+        {...radarPersonalLayer(fit)}
+      />
+      <p className="mt-1 text-center text-[11px] text-gray-400">
+        Nét đứt = ngũ hành phòng sau khi thêm sản phẩm này
+      </p>
+      {fit.evidenceCount === 0 && (
+        <p className="mt-2 rounded-lg bg-white px-3 py-2 text-[11px] leading-snug text-gray-500">
+          Hiện trạng phòng đang được suy ra từ loại phòng vì bạn chưa khai màu sắc/vật liệu nào.
+          Khai thêm để điểm bám sát không gian thật của bạn.
+        </p>
+      )}
+      {fit.breakdown && (
+        <div className="mt-3">
+          <OccupationDirectionPanel breakdown={fit.breakdown} />
+        </div>
+      )}
     </div>
   );
 }

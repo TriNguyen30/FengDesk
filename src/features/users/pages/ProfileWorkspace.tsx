@@ -5,6 +5,7 @@ import { deleteWorkspace, setDefaultWorkspace } from "../api/workspace.api";
 import { Workspace } from "../types/workspace";
 import { toast } from "sonner";
 import WorkspaceModal from "../components/WorkspaceModal";
+import { useWorkspaceIntakeRunning } from "../hooks/useWorkspaceIntakeDraft";
 import { useWorkspaceElementAnalysis, useWorkspaces } from "../hooks/useWorkspace";
 import { fromCm2 } from "../utils/deskArea";
 import { resolveSelectedWorkspace, workspacePath } from "../utils/selectWorkspace";
@@ -268,6 +269,8 @@ export default function ProfileWorkspace() {
   const queryClient = useQueryClient();
   const { workspaces, status } = useWorkspaces();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  // Có lượt "AI điền giúp" đang chạy nền (user đã đóng modal) → chip nhỏ cạnh nút Tạo mới.
+  const intakeRunning = useWorkspaceIntakeRunning();
   const [editingWorkspace, setEditingWorkspace] = useState<Workspace | null>(null);
   const [deletingWorkspace, setDeletingWorkspace] = useState<Workspace | null>(null);
 
@@ -354,12 +357,30 @@ export default function ProfileWorkspace() {
             Quản lý các không gian làm việc của bạn.
           </p>
         </div>
-        <button
-          onClick={handleOpenCreate}
-          className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90 transition-colors cursor-pointer"
-        >
-          + Tạo mới
-        </button>
+        <div className="flex items-center gap-3">
+          {/* Dấu hiệu nhỏ: AI vẫn đang phân tích mô tả user gửi lúc nãy — mở "Tạo mới" là thấy tiến trình,
+              xong thì form đã được điền sẵn. Không có nút hủy: job nền cứ chạy, không cần cancel. */}
+          {intakeRunning && !isModalOpen && (
+            <button
+              type="button"
+              onClick={handleOpenCreate}
+              className="inline-flex items-center gap-2 rounded-full border border-primary/25 bg-primary/5 px-3 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/10 cursor-pointer"
+              title="AI đang phân tích mô tả không gian bạn đã gửi - bấm để xem tiến trình"
+            >
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary/60" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
+              </span>
+              AI đang phân tích không gian…
+            </button>
+          )}
+          <button
+            onClick={handleOpenCreate}
+            className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90 transition-colors cursor-pointer"
+          >
+            + Tạo mới
+          </button>
+        </div>
       </div>
 
       {loading ? (

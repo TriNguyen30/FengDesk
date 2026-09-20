@@ -527,7 +527,7 @@ export function Model3DViewSwitcher({
     <div
       role="group"
       aria-label={t("product_detail.model_3d.view_mode")}
-      className="grid min-w-[210px] grid-cols-2 gap-1 rounded-full border border-gray-200 bg-gray-50 p-1 shadow-inner"
+      className="grid min-w-[200px] grid-cols-2 gap-1 rounded-full border border-white/60 bg-white/85 p-1 shadow-md backdrop-blur-sm"
     >
       <button
         type="button"

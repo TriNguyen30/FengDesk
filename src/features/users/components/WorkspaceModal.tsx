@@ -47,6 +47,8 @@ export default function WorkspaceModal({
   const draftRef = useRef({
     describe: saved?.describe ?? { description: "", imageUrls: [] as string[], deepThink: false },
     review: saved?.review,
+    // Lượt AI đang chạy từ lần mở trước (nháp đã tự loại bản quá hạn) — sẽ được nối lại khi mở modal.
+    intake: saved?.intake,
   });
 
   const [workspaceTypes, setWorkspaceTypes] = useState<WorkspaceType[]>([]);
@@ -63,11 +65,19 @@ export default function WorkspaceModal({
   if (currentKey !== sessionKey) {
     setSessionKey(currentKey);
     if (currentKey !== null) {
-      // Create mode: quay lại ĐÚNG bước user đang dở (nháp), thay vì luôn về bước mô tả.
-      setStep(isEditMode ? "review" : (draftRef.current.review ? "review" : "describe"));
-      // intake là trạng thái của LƯỢT CHẠY AI (operationId, tiến trình) — không sống qua lần mở mới,
-      // nên vẫn reset. Nội dung user gõ thì do nháp lo, không liên quan.
-      intake.reset();
+      const pendingOp = !isEditMode ? draftRef.current.intake : undefined;
+      // Create mode: quay lại ĐÚNG bước user đang dở (nháp), thay vì luôn về bước mô tả. Đang có lượt AI
+      // chạy nền thì vào thẳng bước điền — đó là nơi tiến trình/kết quả hiện ra.
+      setStep(isEditMode ? "review" : (draftRef.current.review || pendingOp ? "review" : "describe"));
+      if (pendingOp) {
+        // Nối lại job của lần mở trước (đóng modal / đổi trang / F5). Cùng operationId đang nghe thì
+        // giữ nguyên — hook vẫn đang chờ hoặc đã có draft trong tay.
+        if (intake.operationId !== pendingOp.operationId) intake.resume(pendingOp.operationId);
+      } else if (intake.status !== "done") {
+        // Không có gì để nối → về trạng thái sạch. Riêng "done" mà chưa đổ vào form (kết quả về đúng
+        // lúc modal đang đóng) thì giữ, effect bên dưới sẽ đổ rồi reset.
+        intake.reset();
+      }
     }
   }
 
@@ -132,20 +142,11 @@ export default function WorkspaceModal({
     },
   };
 
-  const handleAnalyze = async (description: string, imageUrls?: string[], think?: boolean) => {
-    try {
-      await intake.start(description, imageUrls, think);
-      // Không chờ LLM — vào thẳng trang điền, banner tiến trình + draft sẽ tự về qua realtime.
-      setStep("review");
-    } catch {
-      // Lỗi ngay ở bước gửi yêu cầu (chưa vào được hàng đợi) → ở lại bước mô tả để user thử lại.
-      toast.error(intake.error || "Không bắt đầu được phân tích. Bạn có thể điền form thủ công.");
-    }
-  };
-
   const handleSkip = () => {
     intake.reset();
+    draftRef.current.intake = undefined;
     setStep("review");
+    persist("review");
   };
 
   // ── Ghi nháp ────────────────────────────────────────────────────────────
@@ -157,9 +158,48 @@ export default function WorkspaceModal({
         step: nextStep,
         describe: draftRef.current.describe,
         review: draftRef.current.review,
+        intake: draftRef.current.intake,
       });
     },
     [draftStore],
+  );
+
+  // Lượt AI kết thúc → gỡ operationId khỏi nháp (không còn gì để nối lại).
+  //  - done: chỉ gỡ + reset SAU KHI form đã đổ draft. Form đổ trong effect của nó (chạy trước effect của
+  //    cha), và chỉ khi nó đang mount: modal mở, ở bước review, options đã tải. Reset xong thì draft = null
+  //    → mở lại lần sau form không đổ đè lên những gì user đã sửa (dirtyFields rỗng sau remount).
+  //  - failed: gỡ ngay (toast/banner đã báo).
+  useEffect(() => {
+    if (isEditMode) return;
+    if (intake.status === "failed") {
+      if (!draftRef.current.intake) return;
+      draftRef.current.intake = undefined;
+      persist(step);
+      return;
+    }
+    if (intake.status === "done" && isOpen && step === "review" && !loadingOptions) {
+      draftRef.current.intake = undefined;
+      persist(step);
+      intake.reset();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [intake.status, isOpen, step, loadingOptions, isEditMode]);
+
+  const handleAnalyze = useCallback(
+    async (description: string, imageUrls?: string[], think?: boolean) => {
+      try {
+        const opId = await intake.start(description, imageUrls, think);
+        // Ghi operationId vào nháp: đóng modal / rời trang rồi quay lại vẫn nối được đúng job này.
+        draftRef.current.intake = { operationId: opId, startedAt: Date.now() };
+        // Không chờ LLM — vào thẳng trang điền, banner tiến trình + draft sẽ tự về qua realtime.
+        setStep("review");
+        persist("review");
+      } catch {
+        // Lỗi ngay ở bước gửi yêu cầu (chưa vào được hàng đợi) → ở lại bước mô tả để user thử lại.
+        toast.error(intake.error || "Không bắt đầu được phân tích. Bạn có thể điền form thủ công.");
+      }
+    },
+    [intake, persist],
   );
 
   const handleDescribeChange = useCallback(
@@ -199,7 +239,13 @@ export default function WorkspaceModal({
   /** Bấm "Hủy" là ý định RÕ RÀNG muốn bỏ → xóa nháp. */
   const handleCancel = () => {
     draftStore.clear();
-    draftRef.current = { describe: { description: "", imageUrls: [], deepThink: false }, review: undefined };
+    draftRef.current = {
+      describe: { description: "", imageUrls: [], deepThink: false },
+      review: undefined,
+      intake: undefined,
+    };
+    // Hủy là bỏ hẳn: không nối lại lượt AI này nữa (BE cứ chạy xong rồi tự hết hạn, không cần cancel).
+    intake.reset();
     onClose();
   };
 

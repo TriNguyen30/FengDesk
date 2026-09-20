@@ -8,11 +8,15 @@
   Tooltip,
 } from "recharts";
 import { ElementIcon, RadarTooltipFrame } from "./RadarTooltipFrame";
-import type {
-  CurrentContribution,
-  ElementAnalysisRow,
-} from "@/features/users/types/workspace";
-import { TAG_GAP_THRESHOLD, elementColor, elementVi, fitToneByDistance, gapStatus, type GapStatus } from "./constants";
+import type { CurrentContribution, ElementAnalysisRow } from "@/features/users/types/workspace";
+import {
+  TAG_GAP_THRESHOLD,
+  elementColor,
+  elementVi,
+  fitToneByDistance,
+  gapStatus,
+  type GapStatus,
+} from "./constants";
 
 interface ElementRadarChartProps {
   rows: ElementAnalysisRow[];
@@ -239,45 +243,44 @@ export default function ElementRadarChart({
     const distance = Math.abs(current - ideal);
     const style = hoverStyle(distance);
 
-      // Tổng % các nguồn = đúng con số "Hiện tại" ở trên (cả hai cùng chuẩn hóa theo tổng phiếu).
+    // Tổng % các nguồn = đúng con số "Hiện tại" ở trên (cả hai cùng chuẩn hóa theo tổng phiếu).
     const sources = sourcesFor(element);
     const shownSources = sources.slice(0, MAX_TOOLTIP_SOURCES);
-    const restPercent = sources
-      .slice(MAX_TOOLTIP_SOURCES)
-      .reduce((sum, s) => sum + s.percent, 0);
+    const restPercent = sources.slice(MAX_TOOLTIP_SOURCES).reduce((sum, s) => sum + s.percent, 0);
 
     return (
       <RadarTooltipFrame element={element} tone={style}>
-          <div className="flex items-center justify-between text-[11px]">
-            <span>Hiện tại</span>
-            <span>{(current * 100).toFixed(0)}%</span>
-          </div>
-          <div className="flex items-center justify-between text-[11px]">
-            <span>Lý tưởng</span>
-            <span>{(ideal * 100).toFixed(0)}%</span>
-          </div>
-          {/* Nhãn mức độ ở trên đo lệch TUYỆT ĐỐI (|hiện tại − lý tưởng|), nên nó cố ý bỏ qua chuyện
+        <div className="flex items-center justify-between text-[11px]">
+          <span>Hiện tại</span>
+          <span>{(current * 100).toFixed(0)}%</span>
+        </div>
+        <div className="flex items-center justify-between text-[11px]">
+          <span>Lý tưởng</span>
+          <span>{(ideal * 100).toFixed(0)}%</span>
+        </div>
+        {/* Nhãn mức độ ở trên đo lệch TUYỆT ĐỐI (|hiện tại − lý tưởng|), nên nó cố ý bỏ qua chuyện
               trục đó có mục tiêu to hay nhỏ. Dòng này trả lại bối cảnh: lệch 19 điểm % trên một trục
               lý tưởng 13% là gấp 2.5 lần, khác hẳn lệch 19 điểm % trên trục lý tưởng 39%. */}
-          <div className="flex items-center justify-between text-[11px] text-slate-500">
-            <span>So với lý tưởng</span>
-            <span>{ratioLabel(current, ideal)}</span>
+        <div className="flex items-center justify-between text-[11px] text-slate-500">
+          <span>So với lý tưởng</span>
+          <span>{ratioLabel(current, ideal)}</span>
+        </div>
+        {showTarget && (
+          <div className="flex items-center justify-between text-[11px] font-medium">
+            <span className="flex items-center gap-1.5">
+              <span className="inline-block h-2 w-2 rounded-full bg-[#D9AD41]" />
+              Hành của bạn
+            </span>
+            <span>{((payloadItem.target ?? 0) * 100).toFixed(0)}%</span>
           </div>
-          {showTarget && (
-            <div className="flex items-center justify-between text-[11px] font-medium">
-              <span className="flex items-center gap-1.5">
-                <span className="inline-block h-2 w-2 rounded-full bg-[#D9AD41]" />
-                Phần của bạn
-              </span>
-              <span>{((payloadItem.target ?? 0) * 100).toFixed(0)}%</span>
-            </div>
-          )}
+        )}
 
         {gapMark(element) !== "balanced" && (
           <div
             className="mt-2 rounded-lg px-2 py-1.5 text-[11px] leading-snug"
             style={{
-              background: gapMark(element) === "surplus" ? "rgba(217,173,65,0.16)" : "rgba(59,130,246,0.12)",
+              background:
+                gapMark(element) === "surplus" ? "rgba(217,173,65,0.16)" : "rgba(59,130,246,0.12)",
               color: markColor(gapMark(element)),
             }}
           >
@@ -325,8 +328,8 @@ export default function ElementRadarChart({
             </div>
             {tagVotesScale < 1 && tagCount > 0 && (
               <p className="mt-1.5 text-[10px] leading-snug text-slate-500">
-                {tagCount} tag đang tính bằng {cappedTagVotes} phiếu (trần phiếu tag), để nền phòng, bạn và
-                sản phẩm không bị đè.
+                {tagCount} tag đang tính bằng {cappedTagVotes} phiếu (trần phiếu tag), để nền phòng,
+                bạn và sản phẩm không bị đè.
               </p>
             )}
           </div>
@@ -348,12 +351,15 @@ export default function ElementRadarChart({
             tick={false}
             axisLine={false}
           />
+          {/* Lý tưởng = CHẤM mảnh xám (mốc tham chiếu, đứng yên); Xem trước = GẠCH dài đậm màu primary có chấm
+              đỉnh (thứ sẽ thay đổi). Trước đây cả hai đều gạch nét ~4px, khác mỗi màu ⇒ nhìn lướt là lẫn. */}
           <Radar
             name="Mức lý tưởng"
             dataKey="ideal"
             stroke="#a8a29e"
-            strokeDasharray="4 3"
-            strokeWidth={1.5}
+            strokeDasharray="1.5 3.5"
+            strokeLinecap="round"
+            strokeWidth={1.75}
             fill="none"
             dot={false}
             isAnimationActive={false}
@@ -403,7 +409,7 @@ export default function ElementRadarChart({
               // Khớp legend + tooltip bên dưới. Lớp này KHÔNG còn là `T` (mục tiêu trộn bản mệnh) —
               // nó là phần đóng góp của chủ nhân NẰM TRONG `Hiện tại`, nên gọi "Mục tiêu của bạn" là
               // tên cũ đã sai nghĩa.
-              name="Phần của bạn"
+              name="Hành của bạn"
               dataKey="target"
               stroke="#D9AD41"
               strokeWidth={2}
@@ -422,11 +428,11 @@ export default function ElementRadarChart({
               name={previewLabel}
               dataKey="preview"
               stroke="var(--color-primary-dark)"
-              strokeDasharray="6 4"
-              strokeWidth={2}
+              strokeDasharray="9 5"
+              strokeWidth={2.5}
               fill="var(--color-primary)"
               fillOpacity={0.08}
-              dot={false}
+              dot={{ r: 2.5, fill: "var(--color-primary-dark)", stroke: "#fff", strokeWidth: 1 }}
               isAnimationActive
               animationDuration={600}
               animationEasing="ease-out"
@@ -443,7 +449,7 @@ export default function ElementRadarChart({
       </ResponsiveContainer>
       <div className="mt-1 flex flex-wrap items-center justify-center gap-x-5 gap-y-1 text-xs text-gray-500">
         <span className="flex items-center gap-1.5">
-          <span className="inline-block h-0 w-4 border-t-2 border-dashed border-[#a8a29e]" />
+          <span className="inline-block h-0 w-5 border-t-2 border-dotted border-[#a8a29e]" />
           Mức lý tưởng
         </span>
         <span className="flex items-center gap-1.5">
@@ -452,22 +458,21 @@ export default function ElementRadarChart({
         </span>
         {showPreview && (
           <span className="flex items-center gap-1.5">
-            <span className="inline-block h-0 w-4 border-t-2 border-dashed border-primary" />
+            <span className="inline-block h-0 w-5 border-t-[3px] border-dashed border-primary-dark" />
             {previewLabel}
           </span>
         )}
         {showTarget && (
           <span
             className="flex items-center gap-1.5"
-            title={personalTargetLabel ? `Bản mệnh của bạn nặng ${personalTargetLabel} trong hiện trạng phòng` : undefined}
+            title={
+              personalTargetLabel
+                ? `Bản mệnh của bạn nặng ${personalTargetLabel} trong hiện trạng phòng`
+                : undefined
+            }
           >
             <span className="inline-block h-2.5 w-2.5 rounded-full bg-[#D9AD41]/80" />
             Bản mệnh của bạn
-          </span>
-        )}
-        {contributions.length > 0 && (
-          <span className="w-full text-center text-[11px] text-gray-400">
-            Di chuột vào đồ thị để xem chi tiết
           </span>
         )}
       </div>
