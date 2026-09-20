@@ -64,7 +64,7 @@ export function StoreDetailCard({
           <div className="flex items-center justify-between">
             <h4 className="text-sm font-bold text-gray-900 flex items-center gap-1.5">
               <MapPin size={16} className="text-primary" />
-              Địa chỉ chi tiết (Cơ sở dữ liệu)
+              Địa chỉ chi tiết
             </h4>
             <div className="flex gap-2">
               <button
@@ -156,11 +156,10 @@ export function StoreDetailCard({
             <button
               type="button"
               onClick={() => onActiveTabChange("info")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                activeTab === "info"
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${activeTab === "info"
                   ? "bg-white text-gray-900 shadow-sm"
                   : "text-gray-500 hover:text-gray-800"
-              }`}
+                }`}
             >
               <Info size={14} />
               Thông tin & Địa chỉ
@@ -168,11 +167,10 @@ export function StoreDetailCard({
             <button
               type="button"
               onClick={() => onActiveTabChange("staff")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                activeTab === "staff"
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${activeTab === "staff"
                   ? "bg-white text-gray-900 shadow-sm"
                   : "text-gray-500 hover:text-gray-800"
-              }`}
+                }`}
             >
               <Users size={14} />
               Nhân viên ({staff.length})
@@ -211,12 +209,12 @@ export function StoreDetailCard({
                   </p>
                 </div>
 
-                <div>
+                {/* <div>
                   <h4 className="text-xs text-gray-400 font-medium">Địa chỉ hiển thị</h4>
                   <p className="text-sm text-gray-800 mt-1">
                     {selectedStore.address || "Chưa cấu hình"}
                   </p>
-                </div>
+                </div> */}
               </div>
             </div>
 

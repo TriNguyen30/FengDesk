@@ -181,12 +181,12 @@ export function StoreList({
                       </p>
                     )}
 
-                    <p className="flex items-center gap-2 text-gray-500">
+                    {/* <p className="flex items-center gap-2 text-gray-500">
                       <MapPin size={13} className="text-gray-400 shrink-0" />
                       <span className="line-clamp-1 italic">
                         {store.address || "Chưa cập nhật địa chỉ"}
                       </span>
-                    </p>
+                    </p> */}
                   </div>
 
                   {/* Action Buttons Toolbar */}

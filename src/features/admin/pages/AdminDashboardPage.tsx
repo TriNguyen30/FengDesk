@@ -200,25 +200,27 @@ export default function AdminDashboardPage() {
         </p>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        {stats.map((stat, index) => (
-          <div key={index} className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-500">{stat.title}</p>
-                <h3 className="text-2xl font-bold text-gray-900 mt-1">{stat.value}</h3>
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        {stats.map((stat, index) => {
+          const Icon = stat.icon;
+          return (
+            <div
+              key={index}
+              className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition-all hover:shadow-md"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-gray-500">
+                  <Icon size={18} className="text-primary" />
+                  <span className="text-xs font-semibold uppercase tracking-wide">
+                    {stat.title}
+                  </span>
+                </div>
               </div>
-              <div
-                className={`w-12 h-12 rounded-full flex items-center justify-center ${stat.color}`}
-              >
-                <stat.icon size={24} />
-              </div>
+              <p className="mt-3 text-2xl font-bold text-gray-900 tracking-tight">{stat.value}</p>
+              <p className="mt-1 text-xs text-gray-400 font-medium">{stat.trend}</p>
             </div>
-            <div className="mt-4 flex items-center gap-2">
-              <span className="text-sm text-gray-500">{stat.trend}</span>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Doanh thu theo Cửa hàng */}
