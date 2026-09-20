@@ -2,20 +2,17 @@
 import { useNavigate } from "react-router-dom";
 import { useWorkspaces } from "@/features/users/hooks/useWorkspace";
 import { useProductFitAcrossWorkspaces } from "../../hooks/useProductFit";
-import type { ElementAnalysisRow, ProductFitResponse } from "../../types/recommendation";
+import type { ProductFitResponse } from "../../types/recommendation";
 import type { ElementAnalysisRow as RadarRow } from "@/features/users/types/workspace";
 import ScoreBadge from "./ScoreBadge";
-import ElementBars, { type ElementBarRow } from "./ElementBars";
 import ElementRadarChart from "./ElementRadarChart";
-import InfoCardTrio from "./InfoCardTrio";
 import SpaceTabs from "./SpaceTabs";
 import EmptyState from "./EmptyState";
-import SummaryLine from "./SummaryLine";
 import ScoreWaterfall from "./ScoreWaterfall";
-import PersonalWeightControls from "./PersonalWeightControls";
+import RoomNeedCard from "./RoomNeedCard";
 import { ClashBadge, ConflictResolutionBanner } from "./ClashNotices";
 import OccupationDirectionPanel from "./OccupationDirectionPanel";
-import { ELEMENT_ORDER, GAP_THRESHOLD, elementVi, scorePercent } from "./constants";
+import { ELEMENT_ORDER, elementVi, scorePercent } from "./constants";
 import type { ElementCode } from "../../types/recommendation";
 import {
   combinedDirection,
@@ -31,7 +28,13 @@ interface ProductFitPanelProps {
   productId: string;
 }
 
-/** Vị trí #3 (Chi tiết sản phẩm) — cụm đầy đủ: ScoreBadge + ElementBars(fit) + InfoCardTrio + SpaceTabs + SummaryLine. */
+/**
+ * Vị trí #3 (Chi tiết sản phẩm) — luồng **phòng**: SpaceTabs + ScoreBadge, rồi hai cột cùng bố cục với
+ * `PersonalFitPanel`: trái = radar (+ trục nghề), phải = thẻ "Phòng đang cần" + waterfall.
+ *
+ * Đã bỏ thanh ngũ hành và slider trọng số bản mệnh (2026-09-20): 5 thanh chỉ lặp lại radar, còn slider
+ * là công cụ mô phỏng — ở trang sản phẩm nó khiến user tưởng trọng số là thứ mình chỉnh được.
+ */
 export default function ProductFitPanel({ productId }: ProductFitPanelProps) {
   const navigate = useNavigate();
   const { workspaces, status: wsStatus } = useWorkspaces();
@@ -40,8 +43,6 @@ export default function ProductFitPanel({ productId }: ProductFitPanelProps) {
 
   // null = chưa chọn tay → dùng phòng mặc định (hoặc phòng đầu tiên) làm fallback.
   const [manualSelectedId, setManualSelectedId] = useState<string | null>(null);
-  // null = dùng đúng Wp của BE; số = user đang kéo slider mô phỏng (§10.3, không gọi lại API).
-  const [simulatedWp, setSimulatedWp] = useState<number | null>(null);
   const fallbackId = workspaces.find((w) => w.isDefault)?.id ?? workspaces[0]?.id ?? null;
   const selectedId =
     manualSelectedId && workspaces.some((w) => w.id === manualSelectedId)
@@ -103,9 +104,9 @@ export default function ProductFitPanel({ productId }: ProductFitPanelProps) {
 
             <ConflictResolutionBanner conflict={fit.breakdown?.conflictResolution ?? null} />
 
-            {/* Radar (trái) cho thấy phòng SẼ ra sao khi thêm sản phẩm này (nét đứt = xem trước);
-                thanh ngũ hành (phải) giữ chi tiết bù/thừa từng hành — tận dụng chiều ngang. */}
-            <div className="grid gap-4 md:grid-cols-2 md:items-center">
+            {/* Trái: radar cho thấy phòng SẼ ra sao khi thêm sản phẩm này (nét đứt = xem trước) + trục nghề.
+                Phải: phòng đang cần gì, rồi điểm đến từ đâu — cùng bố cục với PersonalFitPanel. */}
+            <div className="grid gap-4 md:grid-cols-2 md:items-start">
               <div className="min-w-0">
                 <ElementRadarChart
                   rows={toRadarRows(fit)}
@@ -117,49 +118,45 @@ export default function ProductFitPanel({ productId }: ProductFitPanelProps) {
                 <p className="mt-1 text-center text-[11px] text-gray-400">
                   Nét đứt = ngũ hành phòng sau khi thêm sản phẩm này
                 </p>
-              </div>
-              <div className="flex min-w-0 flex-col gap-3">
-                <ElementBars rows={toFitBarRows(fit)} />
-                {fit.breakdown && (
-                  <PersonalWeightControls
-                    breakdown={fit.breakdown}
-                    simulatedWp={simulatedWp}
-                    onSimulate={setSimulatedWp}
-                  />
+                {fit.evidenceCount === 0 && (
+                  <p className="mt-2 rounded-lg bg-gray-50 px-3 py-2 text-[11px] leading-snug text-gray-500">
+                    Hiện trạng phòng đang được suy ra từ loại phòng vì bạn chưa khai màu sắc/vật liệu nào.
+                    Khai thêm để điểm bám sát không gian thật của bạn.
+                  </p>
                 )}
-                {fit.breakdown && <OccupationDirectionPanel breakdown={fit.breakdown} />}
+                {fit.breakdown && <div className="mt-3"><OccupationDirectionPanel breakdown={fit.breakdown} /></div>}
+              </div>
+
+              <div className="flex min-w-0 flex-col gap-3">
+                <RoomNeedCard
+                  workspaceName={selectedWorkspace.name}
+                  gap={fit.gap}
+                  breakdown={fit.breakdown}
+                  placementHint={fit.placementHint}
+                  evidenceCount={fit.evidenceCount}
+                />
+                {fit.breakdown ? (
+                  <ScoreWaterfall breakdown={fit.breakdown} matchFacts={fit.matchFacts} cautionFacts={fit.cautionFacts} />
+                ) : (
+                  <>
+                    {fit.matchFacts.length > 0 && (
+                      <ul className="space-y-1 text-xs leading-relaxed text-gray-600">
+                        {fit.matchFacts.map((f, i) => (
+                          <li key={i}>• {f}</li>
+                        ))}
+                      </ul>
+                    )}
+                    {fit.cautionFacts.length > 0 && (
+                      <div className="rounded-lg bg-[#fdecea] px-3 py-2 text-xs leading-relaxed text-[#b3261e]">
+                        {fit.cautionFacts.map((c, i) => (
+                          <p key={i}>{c}</p>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
             </div>
-
-            {fit.breakdown && <ScoreWaterfall breakdown={fit.breakdown} cautionFacts={fit.cautionFacts} />}
-
-            {fit.evidenceCount === 0 && (
-              <p className="rounded-lg bg-gray-50 px-3 py-2 text-[11px] leading-snug text-gray-500">
-                Hiện trạng phòng đang được suy ra từ loại phòng vì bạn chưa khai màu sắc/vật liệu nào.
-                Khai thêm để điểm bám sát không gian thật của bạn.
-              </p>
-            )}
-
-            {!fit.breakdown && fit.cautionFacts.length > 0 && (
-              <div className="rounded-lg bg-[#fdecea] px-3 py-2 text-xs text-[#b3261e]">
-                {fit.cautionFacts.map((c, i) => (
-                  <p key={i}>{c}</p>
-                ))}
-              </div>
-            )}
-
-            <InfoCardTrio
-              spaceTitle={selectedWorkspace.name}
-              spaceLine={`Mục đích: ${selectedWorkspace.workPurpose} · Ánh sáng: ${selectedWorkspace.lighting}`}
-              menhLine={findMenhLine(fit)}
-              placementLine={fit.placementHint}
-            />
-
-            <SummaryLine
-              productDominant={dominantElement(fit.productVector.map((p) => [p.element, p.value]))}
-              roomNeed={dominantNeed(fit.gap)}
-              matches={productMatchesNeed(fit)}
-            />
           </div>
         )}
       </div>
@@ -186,50 +183,6 @@ function toRadarRows(fit: ProductFitResponse): RadarRow[] {
       previewGap: g?.previewGap ?? 0,
     };
   });
-}
-
-/** Bars fit — cùng thứ tự ELEMENT_ORDER với radar. */
-function toFitBarRows(fit: ProductFitResponse): ElementBarRow[] {
-  const gapByElement = new Map(fit.gap.map((r) => [r.element, r]));
-  const productByElement = new Map(fit.productVector.map((p) => [p.element, p.value]));
-  return ELEMENT_ORDER.map((el) => {
-    const gap = gapByElement.get(el)?.gap ?? 0;
-    const productValue = productByElement.get(el) ?? 0;
-    const needed = Math.max(gap, 0);
-    let badge: ElementBarRow["badge"];
-    if (gap > GAP_THRESHOLD && productValue > 0) {
-      badge = { label: "Bù tốt", tone: "positive" };
-    } else if (gap < -GAP_THRESHOLD && productValue > 0) {
-      badge = { label: "Thêm thừa", tone: "negative" };
-    }
-    return {
-      element: el,
-      background: needed,
-      foreground: productValue,
-      tooltip: `Phòng cần: ${needed.toFixed(2)} · Sản phẩm cấp: ${productValue.toFixed(2)}`,
-      badge,
-    };
-  });
-}
-
-function dominantElement(values: [string, number][]): string {
-  return values.reduce((best, cur) => (cur[1] > best[1] ? cur : best), values[0] ?? ["Tho", 0])[0];
-}
-
-function dominantNeed(gap: ElementAnalysisRow[]): string {
-  return dominantElement(gap.map((r) => [r.element, r.gap]));
-}
-
-function productMatchesNeed(fit: ProductFitResponse): boolean {
-  const need = dominantNeed(fit.gap);
-  const productValue = fit.productVector.find((p) => p.element === need)?.value ?? 0;
-  return productValue > 0;
-}
-
-function findMenhLine(fit: ProductFitResponse): string {
-  const all = [...fit.matchFacts, ...fit.cautionFacts];
-  const menhFact = all.find((f) => f.includes("mệnh"));
-  return menhFact ?? "Chưa xác định - thiếu ngày sinh trong hồ sơ cá nhân.";
 }
 
 /**
