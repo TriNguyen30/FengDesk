@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useWorkspaces } from "@/features/users/hooks/useWorkspace";
 import { useProductFitAcrossWorkspaces } from "../../hooks/useProductFit";
@@ -14,12 +14,14 @@ import SummaryLine from "./SummaryLine";
 import ScoreWaterfall from "./ScoreWaterfall";
 import PersonalWeightControls from "./PersonalWeightControls";
 import { ClashBadge, ConflictResolutionBanner } from "./ClashNotices";
+import OccupationDirectionPanel from "./OccupationDirectionPanel";
 import { ELEMENT_ORDER, GAP_THRESHOLD, elementVi, scorePercent } from "./constants";
 import type { ElementCode } from "../../types/recommendation";
 import {
   combinedDirection,
   negativeAxes,
   negativeAxisReason,
+  occupationAxisOf,
   personContribution,
   toMap,
   toRows,
@@ -109,6 +111,7 @@ export default function ProductFitPanel({ productId }: ProductFitPanelProps) {
                   rows={toRadarRows(fit)}
                   showPreview
                   contributions={fit.contributions ?? []}
+                  tagVotesScale={fit.tagVotesScale ?? 1}
                   {...radarPersonalLayer(fit)}
                 />
                 <p className="mt-1 text-center text-[11px] text-gray-400">
@@ -124,10 +127,11 @@ export default function ProductFitPanel({ productId }: ProductFitPanelProps) {
                     onSimulate={setSimulatedWp}
                   />
                 )}
+                {fit.breakdown && <OccupationDirectionPanel breakdown={fit.breakdown} />}
               </div>
             </div>
 
-            {fit.breakdown && <ScoreWaterfall breakdown={fit.breakdown} />}
+            {fit.breakdown && <ScoreWaterfall breakdown={fit.breakdown} cautionFacts={fit.cautionFacts} />}
 
             {fit.evidenceCount === 0 && (
               <p className="rounded-lg bg-gray-50 px-3 py-2 text-[11px] leading-snug text-gray-500">
@@ -136,7 +140,7 @@ export default function ProductFitPanel({ productId }: ProductFitPanelProps) {
               </p>
             )}
 
-            {fit.cautionFacts.length > 0 && (
+            {!fit.breakdown && fit.cautionFacts.length > 0 && (
               <div className="rounded-lg bg-[#fdecea] px-3 py-2 text-xs text-[#b3261e]">
                 {fit.cautionFacts.map((c, i) => (
                   <p key={i}>{c}</p>
@@ -225,7 +229,7 @@ function productMatchesNeed(fit: ProductFitResponse): boolean {
 function findMenhLine(fit: ProductFitResponse): string {
   const all = [...fit.matchFacts, ...fit.cautionFacts];
   const menhFact = all.find((f) => f.includes("mệnh"));
-  return menhFact ?? "Chưa xác định — thiếu ngày sinh trong hồ sơ cá nhân.";
+  return menhFact ?? "Chưa xác định - thiếu ngày sinh trong hồ sơ cá nhân.";
 }
 
 /**
@@ -246,7 +250,7 @@ function radarPersonalLayer(fit: ProductFitResponse) {
   const gHat = toMap(breakdown.vectors.normalizedGap);
   const r = breakdown.vectors.ruleScore ? toMap(breakdown.vectors.ruleScore) : null;
   const wp = breakdown.personalWeight?.value ?? 0;
-  const deprioritized = negativeAxes(combinedDirection(gHat, r, wp));
+  const deprioritized = negativeAxes(combinedDirection(gHat, r, wp, occupationAxisOf(breakdown)));
   const destinyLabel = breakdown.destinyElement ? elementVi(breakdown.destinyElement) : null;
 
   return {

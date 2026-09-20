@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+﻿import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Box, ChevronLeft, ChevronRight, Loader2, PackageSearch, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { model3DQueueApi } from "@/features/products/api/model3dQueue.api";
@@ -62,10 +62,10 @@ export default function Model3DQueuePage() {
           activeTab === "All"
             ? { skip: page * PAGE_SIZE, take: PAGE_SIZE }
             : {
-                status: activeTab as Model3DRequestStatus,
-                skip: page * PAGE_SIZE,
-                take: PAGE_SIZE,
-              };
+              status: activeTab as Model3DRequestStatus,
+              skip: page * PAGE_SIZE,
+              take: PAGE_SIZE,
+            };
         const res = await model3DQueueApi.getQueue(params);
         if (!res.data.isSuccess) throw new Error(res.data.message || "Không tải được hàng chờ");
         setItems(res.data.data.items);
@@ -154,19 +154,17 @@ export default function Model3DQueuePage() {
               key={tab.value}
               type="button"
               onClick={() => changeTab(tab.value)}
-              className={`flex items-center gap-2 border-b-2 px-3.5 py-2.5 text-sm font-semibold cursor-pointer ${
-                activeTab === tab.value
+              className={`flex items-center gap-2 border-b-2 px-3.5 py-2.5 text-sm font-semibold cursor-pointer ${activeTab === tab.value
                   ? "border-primary text-primary"
                   : "border-transparent text-gray-500 hover:text-gray-800"
-              }`}
+                }`}
             >
               {tab.label}
               <span
-                className={`rounded-full px-1.5 py-0.5 text-[10px] ${
-                  activeTab === tab.value
+                className={`rounded-full px-1.5 py-0.5 text-[10px] ${activeTab === tab.value
                     ? "bg-primary/10 text-primary"
                     : "bg-gray-100 text-gray-500"
-                }`}
+                  }`}
               >
                 {count}
               </span>
@@ -234,10 +232,7 @@ export default function Model3DQueuePage() {
 
       {!loading && total > 0 && (
         <div className="flex items-center justify-between text-xs text-gray-400">
-          <span>
-            Hiển thị {page * PAGE_SIZE + 1}–{Math.min((page + 1) * PAGE_SIZE, total)} / {total} yêu
-            cầu
-          </span>
+          <span>Hiển thị {page * PAGE_SIZE + 1}-{Math.min((page + 1) * PAGE_SIZE, total)} / {total} yêu cầu</span>
           {totalPages > 1 && (
             <div className="flex items-center gap-2">
               <button

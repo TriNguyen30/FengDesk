@@ -17,6 +17,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import Modal from "@/components/ui/Modal";
 import ChangeEmailFlow from "../components/ChangeEmailFlow";
+import { getOccupationsRequest } from "../api/occupation.api";
 
 type GenderValue = UpdateProfilePayload["gender"];
 
@@ -24,11 +25,19 @@ interface ProfileForm {
   fullName: string;
   phone: string;
   gender: GenderValue;
+  /** "" = chưa khai / xóa nghề. */
+  occupationCode: string;
   /** "YYYY-MM-DD" cho <input type="date">; rỗng = chưa khai. */
   dateOfBirth: string;
 }
 
-const EMPTY_FORM: ProfileForm = { fullName: "", phone: "", gender: "Unspecified", dateOfBirth: "" };
+const EMPTY_FORM: ProfileForm = {
+  fullName: "",
+  phone: "",
+  gender: "Unspecified",
+  dateOfBirth: "",
+  occupationCode: "",
+};
 
 export default function ProfileInfoPage() {
   const { t } = useTranslation();
@@ -44,6 +53,15 @@ export default function ProfileInfoPage() {
 
   const profile = profileResponse?.data || user;
   const queryClient = useQueryClient();
+
+  // Bảng tra cứu nghề: đổi rất hiếm, và mất nó chỉ làm ô chọn rỗng chứ không chặn lưu hồ sơ —
+  // nên cache dài và không cần trạng thái lỗi riêng.
+  const { data: occupationsResponse, isLoading: occupationsLoading } = useQuery({
+    queryKey: ["occupations"],
+    queryFn: getOccupationsRequest,
+    staleTime: 30 * 60 * 1000,
+  });
+  const occupations = occupationsResponse?.data ?? [];
 
   // Giờ sinh — lưu riêng qua endpoint có sẵn (PUT /Auth/me/birth-time), không đi cùng form chính.
   const [birthTime, setBirthTime] = useState("");
@@ -76,6 +94,7 @@ export default function ProfileInfoPage() {
     phone: profile?.phone ?? "",
     gender: (profile?.gender as GenderValue) || "Unspecified",
     dateOfBirth: profile?.dateOfBirth ? profile.dateOfBirth.slice(0, 10) : "",
+    occupationCode: profile?.occupationCode ?? "",
   };
 
   useEffect(() => {
@@ -89,8 +108,15 @@ export default function ProfileInfoPage() {
       phone: profile?.phone ?? "",
       gender: (profile?.gender as GenderValue) || "Unspecified",
       dateOfBirth: profile?.dateOfBirth ? profile.dateOfBirth.slice(0, 10) : "",
+      occupationCode: profile?.occupationCode ?? "",
     });
-  }, [profile?.fullName, profile?.phone, profile?.gender, profile?.dateOfBirth]);
+  }, [
+    profile?.fullName,
+    profile?.phone,
+    profile?.gender,
+    profile?.dateOfBirth,
+    profile?.occupationCode,
+  ]);
 
   const isDirty = (Object.keys(savedForm) as (keyof ProfileForm)[]).some(
     (key) => form[key] !== savedForm[key],
@@ -122,6 +148,8 @@ export default function ProfileInfoPage() {
         phone: form.phone.trim() || null,
         gender: form.gender,
         dateOfBirth: form.dateOfBirth || null,
+        // "" là XÓA nghề chứ không phải "bỏ qua" - xem chú thích trên UpdateProfilePayload.
+        occupationCode: form.occupationCode,
       });
       if (res.isSuccess) {
         toast.success(res.message || t("profile_info.toast.update_success"));
@@ -279,6 +307,27 @@ export default function ProfileInfoPage() {
                 <option value="Other">{t("profile_info.values.other")}</option>
               </select>
             </div>
+          </div>
+
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-gray-700">Nghề nghiệp</label>
+            <select
+              value={form.occupationCode}
+              onChange={(e) => setForm((f) => ({ ...f, occupationCode: e.target.value }))}
+              disabled={occupationsLoading}
+              className={`${inputClass} cursor-pointer`}
+            >
+              <option value="">Chưa khai báo</option>
+              {occupations.map((o) => (
+                <option key={o.code} value={o.code}>
+                  {o.nameVi}
+                </option>
+              ))}
+            </select>
+            <p className="mt-1.5 text-xs text-gray-500">
+              Tuỳ chọn. Nghề nghiệp chỉ đổi mức <strong>ưa thích</strong> giữa các hành, không đổi bản
+              mệnh của bạn: hành đang khắc mệnh thì vẫn khắc.
+            </p>
           </div>
 
           <div className="grid grid-cols-2 gap-4">

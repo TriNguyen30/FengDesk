@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { Plus, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { classifyElementInput } from "../api/workspace.api";
@@ -24,7 +24,7 @@ const GROUPS: {
   options: (v: ElementInputVocabulary) => ElementInputOption[];
 }[] = [
   { kind: "Color", label: "Màu chủ đạo", options: (v) => v.colors },
-  { kind: "Material", label: "Nội thất — chất liệu nội thất", options: (v) => v.materials },
+  { kind: "Material", label: "Nội thất - chất liệu nội thất", options: (v) => v.materials },
   { kind: "DecorItem", label: "Vật trang trí", options: (v) => v.decorItems },
   { kind: "Shape", label: "Hình khối chủ đạo", options: (v) => v.shapes ?? [] },
 ];
@@ -92,7 +92,7 @@ export default function CurrentStateTagPicker({
       ]);
       setDrafts((prev) => ({ ...prev, [kind]: "" }));
     } catch {
-      toast.error("Không phân loại được tag này — thử mô tả cụ thể hơn (vd chất liệu chính).");
+      toast.error("Không phân loại được tag này - thử mô tả cụ thể hơn (vd chất liệu chính).");
     } finally {
       setClassifyingKind(null);
     }
@@ -107,7 +107,7 @@ export default function CurrentStateTagPicker({
       <p className="mb-1.5 flex items-center gap-1 text-sm font-medium text-gray-700">
         Hiện trạng không gian hiện tại
         {aiFilled && (
-          <span title="AI nhận diện từ mô tả — hãy kiểm tra" className="text-primary">
+          <span title="AI nhận diện từ mô tả - hãy kiểm tra" className="text-primary">
             <Sparkles size={12} />
           </span>
         )}

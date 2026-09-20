@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import type {
   ElementAnalysisRow,
   WorkspaceElementAnalysis,
@@ -62,13 +62,38 @@ function toBarRow(row: ElementAnalysisRow): ElementBarRow {
   };
 }
 
+/** Lớp xem trước khi user hover một sản phẩm: `rows` là `gap` của `GET /recommendations/fit` (có previewCurrent). */
+export interface ProductPreviewLayer {
+  /** Tên sản phẩm — hiện trong legend "Xem trước: …". */
+  label: string;
+  rows: ElementAnalysisRow[];
+}
+
 interface ElementVectorFitProps {
   analysis: WorkspaceElementAnalysis;
   /** full: trang Workspace · compact: mini trên card / dropdown switcher */
   variant?: "full" | "compact";
+  /**
+   * Đang hover một sản phẩm (đã mua chưa đặt / đề xuất): radar vẽ lớp nét đứt "phòng sẽ ra sao nếu đặt
+   * món này", chip hiện ±điểm. Ưu tiên hơn lớp "hàng đang giao" mặc định trong lúc hover.
+   */
+  productPreview?: ProductPreviewLayer | null;
+  /**
+   * Slider "Bạn góp N phiếu" — công cụ của dev để dò mô hình, không dành cho khách. Mặc định ẩn; trang
+   * dev nào cần thì bật.
+   */
+  showVoteSimulator?: boolean;
+  /** Nội dung đặt dưới radar ở cột phải (vd panel sản phẩm đã mua / đề xuất). */
+  children?: ReactNode;
 }
 
-export default function ElementVectorFit({ analysis, variant = "full" }: ElementVectorFitProps) {
+export default function ElementVectorFit({
+  analysis,
+  variant = "full",
+  productPreview = null,
+  showVoteSimulator = false,
+  children,
+}: ElementVectorFitProps) {
   // null = dùng đúng số phiếu BE trả; số = user đang kéo slider mô phỏng (không gọi lại API).
   const [simulatedVotes, setSimulatedVotes] = useState<number | null>(null);
 
@@ -104,12 +129,13 @@ export default function ElementVectorFit({ analysis, variant = "full" }: Element
           personVotes,
           analysis.totalVotes,
           simulatedVotes,
+          analysis.saturationAlpha ?? 1,
         )
       : null;
 
   // Mọi thứ đọc `gap` (dấu trục, chip Thừa/Thiếu) phải đọc cùng một `current` với đa giác xanh, không
   // thì chip nói về căn phòng thật còn hình nói về căn phòng giả định.
-  const displayRows = simulation
+  const baseRows = simulation
     ? orderedRows.map((row) => {
         const current = simulation.current[row.element as ElementCode];
         const gap = row.adjustedIdeal - current;
@@ -117,14 +143,20 @@ export default function ElementVectorFit({ analysis, variant = "full" }: Element
       })
     : orderedRows;
 
+  // Hover sản phẩm: chỉ ghi đè previewCurrent/previewGap, giữ nguyên current/gap của phòng để chip
+  // Thừa/Thiếu và dấu trục vẫn nói về căn phòng thật — lớp nét đứt mới là "nếu đặt món này".
+  const displayRows = productPreview ? overlayPreview(baseRows, productPreview.rows) : baseRows;
+  const showPreview = productPreview ? true : analysis.hasPreview && !simulation;
+  const previewLabel = productPreview ? `Xem trước: ${productPreview.label}` : undefined;
+
   const personalLayer = buildPersonalLayer(analysis, simulation?.person ?? null, simulatedVotes);
 
   return (
     <div className="rounded-2xl border border-[#e5e7eb] bg-[#fafbf9] p-5">
       <h3 className="mb-4 text-sm font-bold text-[#111827]">Ngũ hành không gian của bạn</h3>
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:items-center">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:items-start">
         <div className="flex flex-col gap-4">
-          <ElementTags rows={displayRows} />
+          <ElementTags rows={displayRows} showPreviewDelta={!!productPreview} />
           {(analysis.evidenceCount ?? 0) === 0 && (
             <p className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">
               Đang <strong>ước tính theo loại phòng</strong> - Có vẻ như bạn chưa khai báo màu chủ
@@ -143,11 +175,13 @@ export default function ElementVectorFit({ analysis, variant = "full" }: Element
         <div className="flex min-w-0 flex-col gap-3">
           <ElementRadarChart
             rows={displayRows}
-            showPreview={analysis.hasPreview && !simulation}
+            showPreview={showPreview}
+            previewLabel={previewLabel}
             contributions={analysis.contributions}
+            tagVotesScale={analysis.tagVotesScale ?? 1}
             {...personalLayer}
           />
-          {analysis.personalDirection && (
+          {showVoteSimulator && analysis.personalDirection && (
             <RoomPersonalWeightControls
               direction={analysis.personalDirection}
               personVotes={personVotes}
@@ -158,10 +192,24 @@ export default function ElementVectorFit({ analysis, variant = "full" }: Element
           <ConflictResolutionBanner
             conflict={analysis.personalDirection?.conflictResolution ?? null}
           />
+          {children}
         </div>
       </div>
     </div>
   );
+}
+
+/** Ghép previewCurrent/previewGap từ `gap` của fit vào rows phòng, khớp theo hành. */
+function overlayPreview(
+  rows: ElementAnalysisRow[],
+  previewRows: ElementAnalysisRow[],
+): ElementAnalysisRow[] {
+  const byElement = new Map(previewRows.map((r) => [r.element, r]));
+  return rows.map((row) => {
+    const p = byElement.get(row.element);
+    if (!p) return row;
+    return { ...row, previewCurrent: p.previewCurrent, previewGap: p.previewGap };
+  });
 }
 
 /** `current` của phòng dưới dạng map — đầu vào cho {@link simulateVotes}. */

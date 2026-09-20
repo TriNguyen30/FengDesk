@@ -1,6 +1,6 @@
-{
+﻿{
   "navbar": {
-    "disclaimer_short": "Dự án thử nghiệm — Không phải web bán hàng thật",
+    "disclaimer_short": "Dự án thử nghiệm - Không phải web bán hàng thật",
     "disclaimer_long": "Lưu ý: Đây là website dự án thử nghiệm, không phải sàn thương mại điện tử thực tế. Mọi dữ liệu và thanh toán chỉ mang tính chất minh họa.",
     "promo_freeship_short": "Freeship từ 500k",
     "promo_freeship_long": "Miễn phí vận chuyển từ 500.000đ",
@@ -272,6 +272,11 @@
       "element": "Hành:",
       "weight": "Nặng: {{weight}}g",
       "size": "Kích thước: {{l}}x{{w}}x{{h}} cm",
+      "variant_attrs": "Phong thủy",
+      "occupation_fit": "Hợp với nghề",
+      "occupation_fit_hint": "Theo ngũ hành nghề cần so với ngũ hành sản phẩm. 50% = trung tính, không thay cho phần hợp bản mệnh.",
+      "occupation_mine": "nghề của bạn",
+      "specs": "Thông số",
       "free_ship": "Free Ship TP.Hồ Chí Minh cho hoá đơn từ 500.000đ",
       "hotline": "Hotline",
       "opening_hours": "Giờ mở cửa",
@@ -869,7 +874,7 @@
   },
   "my_invitations": {
     "title": "Lời mời làm nhân viên",
-    "desc": "Các cửa hàng đã mời bạn tham gia — chấp nhận để có quyền nhận đơn và giao hàng.",
+    "desc": "Các cửa hàng đã mời bạn tham gia - chấp nhận để có quyền nhận đơn và giao hàng.",
     "refresh": "Làm mới",
     "empty": {
       "title": "Không có lời mời nào",

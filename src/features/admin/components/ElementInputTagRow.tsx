@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import { Check, Pencil, Trash2, TriangleAlert, X, Plus } from "lucide-react";
 import {
   ALL_ELEMENTS,
@@ -269,7 +269,7 @@ export default function ElementInputTagRow({
                   onClick={() => onSave({ visibility: "Personal" })}
                   disabled={saving}
                   className="cursor-pointer rounded-md border border-sky-300 px-2 py-1 text-xs text-sky-700 hover:bg-sky-50 disabled:opacity-40"
-                  title="Đã xem, giữ riêng cho người tạo — tag vẫn dùng được và rời khỏi hàng đợi"
+                  title="Đã xem, giữ riêng cho người tạo - tag vẫn dùng được và rời khỏi hàng đợi"
                 >
                   Giữ riêng tư
                 </button>

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+﻿import { useState, useEffect, useCallback, useRef } from "react";
 import { Link } from "react-router-dom";
 import {
   Loader2,
@@ -849,7 +849,7 @@ export default function ProfileReturnOrder() {
                   Kéo thả ảnh vào đây hoặc{" "}
                   <span className="text-orange-500 underline">chọn file</span>
                 </p>
-                <p className="text-xs text-gray-400">JPG, PNG, WebP, GIF — tối đa 5 MB</p>
+                <p className="text-xs text-gray-400">JPG, PNG, WebP, GIF - tối đa 5 MB</p>
                 <input
                   ref={fileInputRef}
                   type="file"

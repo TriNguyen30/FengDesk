@@ -1,4 +1,4 @@
-import { Truck, Package, User, LogOut, Sparkles, Store, Bot, AlertTriangle } from "lucide-react";
+﻿import { Truck, Package, User, LogOut, Sparkles, Store, Bot, AlertTriangle } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
@@ -155,7 +155,7 @@ export default function Navbar() {
           <AlertTriangle size={13} className="shrink-0 text-gray-500" />
           <span className="truncate text-center">
             <span className="sm:hidden">
-              {t("navbar.disclaimer_short", "Dự án thử nghiệm — Không phải web bán hàng thật")}
+              {t("navbar.disclaimer_short", "Dự án thử nghiệm - Không phải web bán hàng thật")}
             </span>
             <span className="hidden sm:inline">
               {t(

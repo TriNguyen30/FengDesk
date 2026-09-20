@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
 import { ArrowLeft, Loader2, Users } from "lucide-react";
 import { ShopStaffSection } from "@/features/shop/components/ShopStaffSection";
@@ -59,7 +59,7 @@ export default function ShopStaffPage() {
         </span>
         <div>
           <h1 className="text-xl font-bold tracking-tight text-gray-900">
-            Nhân viên {shop ? `— ${shop.name}` : ""}
+            Nhân viên {shop ? `- ${shop.name}` : ""}
           </h1>
           <p className="text-sm text-gray-500">Mời người dùng và quản lý phân công cho cửa hàng.</p>
         </div>

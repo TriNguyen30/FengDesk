@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Sparkles } from "lucide-react";
@@ -235,7 +235,7 @@ export default function WorkspaceReviewForm({
     <label className="mb-1.5 flex items-center gap-1 text-sm font-medium text-gray-700">
       {text}
       {aiFilled.has(key) && (
-        <span title="AI điền từ mô tả — hãy kiểm tra" className="text-primary">
+        <span title="AI điền từ mô tả - hãy kiểm tra" className="text-primary">
           <Sparkles size={12} />
         </span>
       )}
@@ -255,7 +255,7 @@ export default function WorkspaceReviewForm({
       */}
       {draft && draft.unrecognized.length > 0 && (
         <div className="mb-4 rounded-lg bg-amber-50 px-3 py-2.5 text-xs text-amber-700">
-          <p className="font-medium">Chưa hiểu — bạn chọn giúp nhé:</p>
+          <p className="font-medium">Chưa hiểu - bạn chọn giúp nhé:</p>
           <ul className="mt-1 list-disc space-y-0.5 pl-4">
             {draft.unrecognized.map((item) => (
               <li key={item}>{item}</li>
@@ -350,7 +350,7 @@ export default function WorkspaceReviewForm({
           >
             Không gian này không có bàn làm việc
             {draft?.hasDesk === false && (
-              <span title="AI nhận diện từ mô tả — hãy kiểm tra" className="text-primary">
+              <span title="AI nhận diện từ mô tả - hãy kiểm tra" className="text-primary">
                 <Sparkles size={12} />
               </span>
             )}

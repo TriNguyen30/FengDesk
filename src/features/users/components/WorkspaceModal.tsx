@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+﻿import { useCallback, useEffect, useRef, useState } from "react";
 import { ArrowLeft, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
@@ -227,33 +227,33 @@ export default function WorkspaceModal({
               <div className="flex min-w-0 items-center gap-2">
                 {/* Quay lại bước mô tả — chỉ có ở create mode. Nội dung đã gõ được nháp giữ nguyên,
                 nên đi tới đi lui giữa 2 bước không mất gì. */}
-                {!isEditMode && step === "review" && (
-                  <button
-                    type="button"
-                    onClick={handleBackToDescribe}
-                    title="Quay lại phần mô tả"
-                    aria-label="Quay lại phần mô tả"
-                    className="-ml-1.5 rounded-full p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 cursor-pointer"
-                  >
-                    <ArrowLeft size={20} />
-                  </button>
-                )}
-                <h2 className="truncate text-lg font-bold text-gray-900">
-                  {isEditMode
-                    ? "Chỉnh sửa không gian làm việc"
-                    : step === "describe"
-                      ? "Mô tả không gian làm việc"
-                      : "Kiểm tra & lưu"}
-                </h2>
-              </div>
+            {!isEditMode && step === "review" && (
               <button
-                onClick={handleDismiss}
-                title="Đóng — nội dung đang nhập vẫn được giữ lại"
-                className="rounded-full p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors cursor-pointer"
+                type="button"
+                onClick={handleBackToDescribe}
+                title="Quay lại phần mô tả"
+                aria-label="Quay lại phần mô tả"
+                className="-ml-1.5 rounded-full p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 cursor-pointer"
               >
-                <X size={20} />
+                <ArrowLeft size={20} />
               </button>
-            </div>
+            )}
+            <h2 className="truncate text-lg font-bold text-gray-900">
+              {isEditMode
+                ? "Chỉnh sửa không gian làm việc"
+                : step === "describe"
+                  ? "Mô tả không gian làm việc"
+                  : "Kiểm tra & lưu"}
+            </h2>
+          </div>
+          <button
+            onClick={handleDismiss}
+            title="Đóng - nội dung đang nhập vẫn được giữ lại"
+            className="rounded-full p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors cursor-pointer"
+          >
+            <X size={20} />
+          </button>
+        </div>
 
             {step === "describe" ? (
               <WorkspaceDescribeStep

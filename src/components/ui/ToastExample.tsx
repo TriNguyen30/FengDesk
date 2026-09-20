@@ -1,4 +1,4 @@
-import { toast } from "sonner";
+﻿import { toast } from "sonner";
 
 function fakeRequest(ok: boolean) {
   return new Promise<{ name: string }>((resolve, reject) => {
@@ -19,7 +19,7 @@ export default function ToastExample() {
         id="toast-example-heading"
         className="mb-3 text-sm font-semibold tracking-tight text-neutral-900"
       >
-        Sonner — ví dụ toast
+        Sonner - ví dụ toast
       </h2>
       <p className="mb-4 text-xs text-neutral-600">
         Gọi{" "}

@@ -47,6 +47,7 @@ import { setAuthModal } from "@/features/auth/store/authSlice";
 import { cleanRichTextHtml } from "@/utils";
 import ProductFitPanel from "@/features/recommendation/components/element-vector/ProductFitPanel";
 import PersonalFitPanel from "@/features/recommendation/components/element-vector/PersonalFitPanel";
+import OccupationFitChips from "@/features/recommendation/components/element-vector/OccupationFitChips";
 import { useAiAssistant } from "@/features/chatbox/hooks/useAiAssistant";
 import FeatureBar from "@/components/ui/FeatureBar";
 import CommitmentPage from "@/components/ui/CommitmentPage";
@@ -216,7 +217,7 @@ export default function ProductDetailPage() {
       dispatch(setActiveChatbox(box.id));
       dispatch(setView("conversation"));
       dispatch(openChatbox());
-      void chatHub.joinChatbox(box.id).catch(() => {});
+      void chatHub.joinChatbox(box.id).catch(() => { });
       const msgRes = await chatApi.getMessages(box.id);
       if (msgRes.data.isSuccess) {
         dispatch(setMessages({ roomId: box.id, messages: [...msgRes.data.data.items].reverse() }));
@@ -492,9 +493,8 @@ export default function ProductDetailPage() {
             {/* Main image / 3D viewer */}
             <div
               id="product-media-viewer"
-              className={`relative aspect-square w-full overflow-hidden rounded-2xl shadow-inner ring-1 ring-black/5 group select-none ${
-                viewMode === "3d" ? "" : "cursor-pointer"
-              }`}
+              className={`relative aspect-square w-full overflow-hidden rounded-2xl shadow-inner ring-1 ring-black/5 group select-none ${viewMode === "3d" ? "" : "cursor-pointer"
+                }`}
               onClick={viewMode === "3d" ? undefined : openLightbox}
             >
               {elementLabel && (
@@ -582,11 +582,10 @@ export default function ProductDetailPage() {
                         setActiveImage(img.url);
                         setViewMode("image");
                       }}
-                      className={`group aspect-square w-[calc(20%-0.4rem)] sm:w-[calc(20%-0.6rem)] shrink-0 snap-start overflow-hidden rounded-lg border-2 bg-gray-50 transition-all cursor-pointer ${
-                        activeImage === img.url
+                      className={`group aspect-square w-[calc(20%-0.4rem)] sm:w-[calc(20%-0.6rem)] shrink-0 snap-start overflow-hidden rounded-lg border-2 bg-gray-50 transition-all cursor-pointer ${activeImage === img.url
                           ? "border-primary"
                           : "border-transparent hover:border-gray-300"
-                      }`}
+                        }`}
                     >
                       <img
                         src={img.url}
@@ -703,11 +702,10 @@ export default function ProductDetailPage() {
                         key={item.id}
                         whileTap={{ scale: 0.95 }}
                         onClick={() => setSelectedItem(item)}
-                        className={`relative flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-colors focus:outline-none cursor-not-allowed ${
-                          isSelected
+                        className={`relative flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-colors focus:outline-none cursor-not-allowed ${isSelected
                             ? "border-primary text-primary"
                             : "border-gray-200 text-gray-600 hover:border-primary/40 hover:bg-gray-50 cursor-pointer"
-                        }`}
+                          }`}
                       >
                         {isSelected && (
                           <motion.div
@@ -741,53 +739,66 @@ export default function ProductDetailPage() {
               </div>
             )}
 
-            {/* Feng Shui attributes */}
-            {product.primaryElement && (
-              <div className="flex flex-wrap gap-1.5">
-                <span className="rounded-md bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">
-                  {t("product_detail.labels.element")}{" "}
-                  {ELEMENT_LABELS[product.primaryElement] ?? product.primaryElement}
-                </span>
-                {(product.secondaryElements ?? []).map((el) => (
-                  <span
-                    key={el}
-                    className="rounded-md bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-500"
-                  >
-                    {ELEMENT_LABELS[el] ?? el}
+            {/* Ba hàng thuộc tính: nhãn cột trái cố định + dãy chip — gọn hơn nhãn đứng riêng một dòng,
+                giữ cột thông tin không cao hơn cột ảnh. */}
+            <div className="flex flex-col gap-3">
+              {product.primaryElement && (
+                <div className="flex items-start gap-3">
+                  <span className="w-24 shrink-0 pt-1 text-sm font-medium text-gray-700">
+                    {t("product_detail.labels.variant_attrs")}
                   </span>
-                ))}
-                {(product.vibes ?? []).concat(product.styles ?? []).map((code) => (
-                  <span
-                    key={code}
-                    className="rounded-md bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-500"
-                  >
-                    {vibeStyleMap[code] || code}
-                  </span>
-                ))}
-              </div>
-            )}
+                  <div className="flex min-w-0 flex-wrap gap-1.5">
+                    <span className="rounded-md bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">
+                      {t("product_detail.labels.element")} {ELEMENT_LABELS[product.primaryElement] ?? product.primaryElement}
+                    </span>
+                    {(product.secondaryElements ?? []).map((el) => (
+                      <span
+                        key={el}
+                        className="rounded-md bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-500"
+                      >
+                        {ELEMENT_LABELS[el] ?? el}
+                      </span>
+                    ))}
+                    {(product.vibes ?? []).concat(product.styles ?? []).map((code) => (
+                      <span
+                        key={code}
+                        className="rounded-md bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-500"
+                      >
+                        {vibeStyleMap[code] || code}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
 
-            {/* Physical attributes */}
-            {selectedItem && (selectedItem.weightGram > 0 || selectedItem.lengthCm > 0) && (
-              <div className="flex flex-wrap gap-1.5">
-                {selectedItem.weightGram > 0 && (
-                  <span className="rounded-md  border border-gray-200 px-2.5 py-1 text-xs font-medium text-gray-500">
-                    {t("product_detail.labels.weight", { weight: selectedItem.weightGram })}
+              {/* Physical attributes */}
+              {selectedItem && (selectedItem.weightGram > 0 || selectedItem.lengthCm > 0) && (
+                <div className="flex items-start gap-3">
+                  <span className="w-24 shrink-0 pt-1 text-sm font-medium text-gray-700">
+                    {t("product_detail.labels.specs")}
                   </span>
-                )}
-                {(selectedItem.lengthCm > 0 ||
-                  selectedItem.widthCm > 0 ||
-                  selectedItem.heightCm > 0) && (
-                  <span className="rounded-md  border border-gray-200 px-2.5 py-1 text-xs font-medium text-gray-500">
-                    {t("product_detail.labels.size", {
-                      l: selectedItem.lengthCm,
-                      w: selectedItem.widthCm,
-                      h: selectedItem.heightCm,
-                    })}
-                  </span>
-                )}
-              </div>
-            )}
+                  <div className="flex min-w-0 flex-wrap gap-1.5">
+                    {selectedItem.weightGram > 0 && (
+                      <span className="rounded-md border border-gray-200 px-2.5 py-1 text-xs font-medium text-gray-500">
+                        {t("product_detail.labels.weight", { weight: selectedItem.weightGram })}
+                      </span>
+                    )}
+                    {(selectedItem.lengthCm > 0 ||
+                      selectedItem.widthCm > 0 ||
+                      selectedItem.heightCm > 0) && (
+                        <span className="rounded-md border border-gray-200 px-2.5 py-1 text-xs font-medium text-gray-500">
+                          {t("product_detail.labels.size", { l: selectedItem.lengthCm, w: selectedItem.widthCm, h: selectedItem.heightCm })}
+                        </span>
+                      )}
+                  </div>
+                </div>
+              )}
+
+              {/* Hợp với nghề — top 3, chip kiểu Phân loại, fill theo % (mặt A của trục nghề, public) */}
+              {product.placement !== "Consumable" && (
+                <OccupationFitChips productId={product.id} limit={3} />
+              )}
+            </div>
 
             {/* Add to cart */}
             <div className="mt-auto pt-2 flex flex-col gap-3">
@@ -1090,11 +1101,10 @@ export default function ProductDetailPage() {
                       setScale(1);
                       setPanOffset({ x: 0, y: 0 });
                     }}
-                    className={`h-12 w-12 sm:h-16 sm:w-16 shrink-0 overflow-hidden rounded-lg border-2 bg-gray-900 transition-all ${
-                      lightboxIndex === idx
+                    className={`h-12 w-12 sm:h-16 sm:w-16 shrink-0 overflow-hidden rounded-lg border-2 bg-gray-900 transition-all ${lightboxIndex === idx
                         ? "border-primary"
                         : "border-transparent opacity-50 hover:opacity-100"
-                    }`}
+                      }`}
                   >
                     <img
                       src={img.url}

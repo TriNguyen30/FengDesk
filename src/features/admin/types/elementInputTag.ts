@@ -1,4 +1,4 @@
-/** 5 hành — enum khớp `FengShuiElement` phía BE. */
+﻿/** 5 hành — enum khớp `FengShuiElement` phía BE. */
 export type FengShuiElement = "Kim" | "Moc" | "Thuy" | "Hoa" | "Tho";
 
 /** Nhóm tag — khớp `ElementInputKind` phía BE. */
@@ -61,7 +61,7 @@ export const VISIBILITY_LABEL: Record<ElementInputVisibility, string> = {
 
 export const VISIBILITY_HINT: Record<ElementInputVisibility, string> = {
   Pending: "User vừa tạo, bạn chưa xem. Chỉ người tạo thấy tag này.",
-  Personal: "Bạn đã xem và giữ riêng cho người tạo — tag vẫn dùng được, không nằm trong hàng đợi.",
+  Personal: "Bạn đã xem và giữ riêng cho người tạo - tag vẫn dùng được, không nằm trong hàng đợi.",
   Public: "Tag chính thức: mọi user thấy trong picker và AI intake được phép dùng.",
 };
 

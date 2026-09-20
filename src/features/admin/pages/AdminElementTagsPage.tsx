@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+﻿import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Search, TriangleAlert } from "lucide-react";
 import {
@@ -133,7 +133,7 @@ export default function AdminElementTagsPage() {
         Từ vựng quyết định vector <strong>hiện trạng phòng</strong> và cũng là danh sách mã mà AI
         intake được phép dùng. <strong>Nhãn tiếng Việt</strong> là chữ user nhìn thấy ở picker,
         tooltip biểu đồ radar và 3 dòng nhận định. <strong>Weight</strong> là số "phiếu" tag bỏ vào
-        đồ thị — tổng chuẩn là <code className="rounded bg-gray-100 px-1">1.0</code>.
+        đồ thị - tổng chuẩn là <code className="rounded bg-gray-100 px-1">1.0</code>.
       </p>
 
       {/* Bộ lọc */}

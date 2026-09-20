@@ -150,6 +150,7 @@ export default function AppRoutes() {
             <Route path="info" element={<ProfileInfoPage />} />
             <Route path="addresses" element={<AddressBookPage />} />
             <Route path="workspace" element={<ProfileWorkspace />} />
+            <Route path="workspace/:workspaceId" element={<ProfileWorkspace />} />
             <Route path="orders" element={<OrdersPage />} />
             <Route path="orders/:id" element={<OrderDetailPage />} />
             <Route path="returns" element={<ProfileReturnOrder />} />

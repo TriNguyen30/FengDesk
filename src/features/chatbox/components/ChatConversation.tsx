@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { Bot, Lock } from "lucide-react";
 import type { ChatMessage } from "@/features/chatbox/types/chatbox";
 import type { AiActivity } from "@/features/shared/ai-activity";
@@ -50,7 +50,7 @@ export default function ChatConversation({
       {isClosed ? (
         <div className="flex items-center justify-center gap-2 border-t border-gray-100 bg-gray-50 px-3 py-3 text-xs text-gray-400">
           <Lock size={13} />
-          Cuộc trò chuyện đã đóng — không thể gửi tin mới.
+          Cuộc trò chuyện đã đóng - không thể gửi tin mới.
         </div>
       ) : (
         <>

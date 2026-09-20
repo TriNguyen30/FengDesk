@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { Link } from "react-router-dom";
 import {
   Plus,
@@ -229,7 +229,7 @@ export default function ManageCategoriesPage() {
                     </td>
                     <td className="px-6 py-4">
                       <div className="max-w-xs truncate text-gray-500">
-                        {category.description || "—"}
+                        {category.description || "-"}
                       </div>
                     </td>
                     <td className="whitespace-nowrap px-6 py-4">
