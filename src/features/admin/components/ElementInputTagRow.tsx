@@ -59,9 +59,7 @@ export default function ElementInputTagRow({
 
   const unusedElements = ALL_ELEMENTS.filter((e) => !drafts.some((d) => d.element === e));
   const invalid =
-    !label.trim() ||
-    drafts.length === 0 ||
-    drafts.some((d) => !(Number(d.weight) > 0));
+    !label.trim() || drafts.length === 0 || drafts.some((d) => !(Number(d.weight) > 0));
 
   const startEdit = () => {
     setLabel(tag.labelVi);
@@ -171,7 +169,10 @@ export default function ElementInputTagRow({
               <span
                 key={c.id}
                 className="rounded-full px-2 py-0.5 text-[11px] font-medium"
-                style={{ background: `${ELEMENT_COLOR[c.element]}20`, color: ELEMENT_COLOR[c.element] }}
+                style={{
+                  background: `${ELEMENT_COLOR[c.element]}20`,
+                  color: ELEMENT_COLOR[c.element],
+                }}
               >
                 {ELEMENT_LABEL[c.element]} {c.weight}
               </span>

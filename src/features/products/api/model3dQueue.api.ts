@@ -33,7 +33,10 @@ export interface GetModel3DQueueParams {
  */
 export const model3DQueueApi = {
   getQueue: (params?: GetModel3DQueueParams) => {
-    return fetchHttpClient.get<ApiResponse<Model3DRequestQueueResponse>>("/model3d-requests", params);
+    return fetchHttpClient.get<ApiResponse<Model3DRequestQueueResponse>>(
+      "/model3d-requests",
+      params,
+    );
   },
 
   /** Chọn ảnh (tick có sẵn + upload mới, 1–4 ảnh) rồi gửi task Meshy lần đầu cho request Regenerate. */
@@ -56,7 +59,9 @@ export const model3DQueueApi = {
 
   /** Xem trước kết quả Meshy hiện tại (live poll, URL tạm — không lưu) để quyết định accept/retry. */
   preview: (requestId: string) => {
-    return fetchHttpClient.get<ApiResponse<Model3DPreview>>(`/model3d-requests/${requestId}/preview`);
+    return fetchHttpClient.get<ApiResponse<Model3DPreview>>(
+      `/model3d-requests/${requestId}/preview`,
+    );
   },
 
   /** Download through the authenticated API: Meshy's asset CDN does not allow browser CORS. */
@@ -74,6 +79,8 @@ export const model3DQueueApi = {
   },
 
   reject: (requestId: string, reason: string) => {
-    return fetchHttpClient.post<ApiResponse<null>>(`/model3d-requests/${requestId}/reject`, { reason });
+    return fetchHttpClient.post<ApiResponse<null>>(`/model3d-requests/${requestId}/reject`, {
+      reason,
+    });
   },
 };

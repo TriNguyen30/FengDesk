@@ -135,8 +135,8 @@ export default function ProductFitPanel({ productId }: ProductFitPanelProps) {
 
             {fit.evidenceCount === 0 && (
               <p className="rounded-lg bg-gray-50 px-3 py-2 text-[11px] leading-snug text-gray-500">
-                Hiện trạng phòng đang được suy ra từ loại phòng vì bạn chưa khai màu sắc/vật liệu nào.
-                Khai thêm để điểm bám sát không gian thật của bạn.
+                Hiện trạng phòng đang được suy ra từ loại phòng vì bạn chưa khai màu sắc/vật liệu
+                nào. Khai thêm để điểm bám sát không gian thật của bạn.
               </p>
             )}
 

@@ -100,16 +100,15 @@ export default function ChatPanel({
       aria-label="Tin nhắn FengDesk"
       onClick={() => setIsFocused(true)}
       onFocusCapture={() => setIsFocused(true)}
-      className={`flex h-[min(460px,calc(100dvh-6rem))] w-[min(calc(100vw-1.5rem),338px)] flex-col rounded-2xl border bg-white transition-all duration-200 sm:h-[460px] sm:w-[338px] ${composerAiActive
-        ? "border-primary ring-2 ring-primary/40 shadow-2xl"
-        : isFocused
-          ? "border-gray-300 shadow-2xl"
-          : "border-gray-200 shadow-lg"
-        }`}
+      className={`flex h-[min(460px,calc(100dvh-6rem))] w-[min(calc(100vw-1.5rem),338px)] flex-col rounded-2xl border bg-white transition-all duration-200 sm:h-[460px] sm:w-[338px] ${
+        composerAiActive
+          ? "border-primary ring-2 ring-primary/40 shadow-2xl"
+          : isFocused
+            ? "border-gray-300 shadow-2xl"
+            : "border-gray-200 shadow-lg"
+      }`}
     >
-      <header
-        className="flex items-center justify-between gap-2 border-b border-gray-100 px-3 py-2 bg-white text-gray-900 transition-colors duration-200 shadow-sm rounded-t-2xl"
-      >
+      <header className="flex items-center justify-between gap-2 border-b border-gray-100 px-3 py-2 bg-white text-gray-900 transition-colors duration-200 shadow-sm rounded-t-2xl">
         <div className="flex min-w-0 items-center gap-2">
           {isConversation && (
             <button
@@ -131,7 +130,10 @@ export default function ChatPanel({
               )}
             </div>
             <div className="mt-0.5 flex items-center gap-1.5 text-[12px] text-gray-500">
-              <StatusIcon size={12} className={connectionStatus === "connected" ? "text-green-500" : ""} />
+              <StatusIcon
+                size={12}
+                className={connectionStatus === "connected" ? "text-green-500" : ""}
+              />
               <span>{statusLabel}</span>
             </div>
           </div>

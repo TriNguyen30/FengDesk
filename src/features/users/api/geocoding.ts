@@ -184,7 +184,8 @@ const VietMapProvider: GeocodingProvider = {
     const url = `${VIETMAP_BASE}/reverse/v3?apikey=${VIETMAP_API_KEY}&lat=${lat}&lng=${lng}`;
     const res = await fetch(url);
     if (!res.ok) {
-      if (res.status === 429) console.warn("[VietMap] Hết quota ngày (429) — reverse geocode tạm không khả dụng.");
+      if (res.status === 429)
+        console.warn("[VietMap] Hết quota ngày (429) — reverse geocode tạm không khả dụng.");
       return null;
     }
 
@@ -269,7 +270,8 @@ async function vietmapPlace(refId: string): Promise<VietMapPlaceResult | null> {
   const url = `${VIETMAP_BASE}/place/v3?apikey=${VIETMAP_API_KEY}&refid=${encodeURIComponent(refId)}`;
   const res = await fetch(url);
   if (!res.ok) {
-    if (res.status === 429) console.warn("[VietMap] Hết quota ngày (429) — place lookup tạm không khả dụng.");
+    if (res.status === 429)
+      console.warn("[VietMap] Hết quota ngày (429) — place lookup tạm không khả dụng.");
     return null;
   }
   const data: VietMapPlaceResult = await res.json();

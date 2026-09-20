@@ -37,14 +37,19 @@ export const model3DApi = {
 
   /** Lịch sử request tạo model 3D của sản phẩm — mới nhất trước. */
   listModel3DRequests: (productId: string) => {
-    return fetchHttpClient.get<ApiResponse<Model3DRequest[]>>(`/products/${productId}/model-3d/requests`);
+    return fetchHttpClient.get<ApiResponse<Model3DRequest[]>>(
+      `/products/${productId}/model-3d/requests`,
+    );
   },
 
   /** Bật/tắt hiển thị model 3D trên trang sản phẩm công khai — không xóa dữ liệu model đã sinh. */
   toggleModel3D: (productId: string, modelId: string, isEnabled: boolean) => {
-    return fetchHttpClient.patch<ApiResponse<null>>(`/products/${productId}/model-3d/${modelId}/toggle`, {
-      isEnabled,
-    });
+    return fetchHttpClient.patch<ApiResponse<null>>(
+      `/products/${productId}/model-3d/${modelId}/toggle`,
+      {
+        isEnabled,
+      },
+    );
   },
 
   deleteModel3D: (productId: string, modelId: string) => {

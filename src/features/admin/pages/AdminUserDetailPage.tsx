@@ -7,7 +7,7 @@ import {
   useAdminUserAuditLogs,
   useUpdateAdminUserStatus,
   useUpdateAdminUserRoles,
-  useRevokeAdminUserSessions
+  useRevokeAdminUserSessions,
 } from "@/features/admin/hooks/useAdminUsers";
 import Modal from "@/components/ui/Modal";
 
@@ -32,7 +32,7 @@ export default function AdminUserDetailPage() {
 
   // Reason modal state
   const [reasonModalOpen, setReasonModalOpen] = useState(false);
-  const [reasonType, setReasonType] = useState<'status' | 'roles' | null>(null);
+  const [reasonType, setReasonType] = useState<"status" | "roles" | null>(null);
   const [reasonText, setReasonText] = useState("");
 
   // Sync state when data is loaded
@@ -49,7 +49,7 @@ export default function AdminUserDetailPage() {
     navigate("/admin/users");
   }
 
-  const promptForReason = (type: 'status' | 'roles') => {
+  const promptForReason = (type: "status" | "roles") => {
     setReasonType(type);
     setReasonText("");
     setReasonModalOpen(true);
@@ -62,7 +62,7 @@ export default function AdminUserDetailPage() {
     }
     if (!id || !reasonType) return;
 
-    if (reasonType === 'roles') {
+    if (reasonType === "roles") {
       updateRoles.mutate(
         { id, payload: { roles: selectedRoles, reason: reasonText.trim() } },
         {
@@ -75,16 +75,16 @@ export default function AdminUserDetailPage() {
             }
           },
           onError: () => toast.error("Lỗi khi cập nhật vai trò."),
-        }
+        },
       );
-    } else if (reasonType === 'status') {
+    } else if (reasonType === "status") {
       const newStatus = !isActive;
       updateStatus.mutate(
         { id, payload: { isActive: newStatus, reason: reasonText.trim() } },
         {
           onSuccess: (res) => {
             if (res.data.isSuccess) {
-              toast.success(`Đã ${newStatus ? 'mở khóa' : 'khóa'} tài khoản thành công.`);
+              toast.success(`Đã ${newStatus ? "mở khóa" : "khóa"} tài khoản thành công.`);
               setIsActive(newStatus);
               setReasonModalOpen(false);
             } else {
@@ -92,24 +92,29 @@ export default function AdminUserDetailPage() {
             }
           },
           onError: () => toast.error("Lỗi khi cập nhật trạng thái."),
-        }
+        },
       );
     }
   };
 
   const handleUpdateRoles = () => {
     if (!id) return;
-    promptForReason('roles');
+    promptForReason("roles");
   };
 
   const handleToggleStatus = () => {
     if (!id) return;
-    promptForReason('status');
+    promptForReason("status");
   };
 
   const handleRevokeSessions = () => {
     if (!id) return;
-    if (!window.confirm("Bạn có chắc chắn muốn buộc người dùng này đăng xuất khỏi tất cả các thiết bị?")) return;
+    if (
+      !window.confirm(
+        "Bạn có chắc chắn muốn buộc người dùng này đăng xuất khỏi tất cả các thiết bị?",
+      )
+    )
+      return;
 
     revokeSessions.mutate(id, {
       onSuccess: (res) => {
@@ -186,10 +191,11 @@ export default function AdminUserDetailPage() {
                 <button
                   onClick={handleToggleStatus}
                   disabled={updateStatus.isPending}
-                  className={`w-full inline-flex items-center justify-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium shadow-sm transition-colors cursor-pointer ${isActive
-                    ? "border-red-200 bg-white text-red-600 hover:bg-red-50"
-                    : "border-green-200 bg-white text-green-600 hover:bg-green-50"
-                    }`}
+                  className={`w-full inline-flex items-center justify-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium shadow-sm transition-colors cursor-pointer ${
+                    isActive
+                      ? "border-red-200 bg-white text-red-600 hover:bg-red-50"
+                      : "border-green-200 bg-white text-green-600 hover:bg-green-50"
+                  }`}
                 >
                   {updateStatus.isPending ? (
                     <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
@@ -253,7 +259,11 @@ export default function AdminUserDetailPage() {
             <div className="flex justify-end">
               <button
                 onClick={handleUpdateRoles}
-                disabled={updateRoles.isPending || JSON.stringify([...selectedRoles].sort()) === JSON.stringify([...(user.roles || [])].sort())}
+                disabled={
+                  updateRoles.isPending ||
+                  JSON.stringify([...selectedRoles].sort()) ===
+                    JSON.stringify([...(user.roles || [])].sort())
+                }
                 className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:bg-primary-dark disabled:opacity-50 disabled:pointer-events-none cursor-pointer"
               >
                 {updateRoles.isPending && (
@@ -266,7 +276,9 @@ export default function AdminUserDetailPage() {
 
           <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
             <div className="border-b border-slate-200 px-5 py-4">
-              <h3 className="text-base font-semibold text-slate-900">Lịch sử hoạt động (Audit Logs)</h3>
+              <h3 className="text-base font-semibold text-slate-900">
+                Lịch sử hoạt động (Audit Logs)
+              </h3>
             </div>
             <div className="max-h-96 overflow-y-auto">
               <table className="w-full text-left text-sm text-slate-600">
@@ -293,10 +305,11 @@ export default function AdminUserDetailPage() {
                   ) : (
                     auditLogs.map((log) => (
                       <tr key={log.id} className="hover:bg-slate-50">
-                        <td className="px-5 py-3 font-medium text-slate-900">
-                          {log.action}
-                        </td>
-                        <td className="px-5 py-3 text-slate-500 max-w-xs truncate" title={log.reason || "Không có thông tin"}>
+                        <td className="px-5 py-3 font-medium text-slate-900">{log.action}</td>
+                        <td
+                          className="px-5 py-3 text-slate-500 max-w-xs truncate"
+                          title={log.reason || "Không có thông tin"}
+                        >
                           {log.reason ? (
                             <span>{log.reason}</span>
                           ) : (
@@ -318,12 +331,21 @@ export default function AdminUserDetailPage() {
 
       <Modal
         open={reasonModalOpen}
-        onClose={() => !updateRoles.isPending && !updateStatus.isPending && setReasonModalOpen(false)}
-        title={reasonType === 'roles' ? "Cập nhật vai trò" : isActive ? "Khóa tài khoản" : "Mở khóa tài khoản"}
+        onClose={() =>
+          !updateRoles.isPending && !updateStatus.isPending && setReasonModalOpen(false)
+        }
+        title={
+          reasonType === "roles"
+            ? "Cập nhật vai trò"
+            : isActive
+              ? "Khóa tài khoản"
+              : "Mở khóa tài khoản"
+        }
       >
         <div className="space-y-4">
           <p className="text-sm text-slate-600">
-            Vui lòng nhập lý do thực hiện hành động này. Lý do sẽ được lưu vào lịch sử hoạt động để tiện theo dõi sau này.
+            Vui lòng nhập lý do thực hiện hành động này. Lý do sẽ được lưu vào lịch sử hoạt động để
+            tiện theo dõi sau này.
           </p>
           <textarea
             value={reasonText}

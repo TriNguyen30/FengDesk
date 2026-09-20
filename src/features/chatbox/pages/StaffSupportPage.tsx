@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   Headphones,
   Inbox,
@@ -9,15 +9,19 @@ import {
   Wifi,
   WifiOff,
   X,
+  EllipsisVertical,
+  Trash2,
 } from "lucide-react";
 import { useStaffSupport } from "@/features/chatbox/hooks/useStaffSupport";
 import ChatMessageList from "@/features/chatbox/components/ChatMessageList";
 import ChatInput from "@/features/chatbox/components/ChatInput";
 import { formatMessageTime, getLastMessagePreview } from "@/features/chatbox/utils/chatUtils";
+import { chatApi } from "@/features/chatbox/api/chat.api";
 import type { Chatbox } from "@/features/chatbox/types/chatbox";
 // Dùng lại combobox search user của flow mời nhân viên store (GET /users/search).
 import UserSearchCombobox from "@/features/shop/components/UserSearchCombobox";
 import type { UserSearchItem } from "@/features/shop/types/shop";
+import Modal from "@/components/ui/Modal";
 
 function customerName(box: Chatbox): string {
   const last = box.lastMessage;
@@ -41,11 +45,26 @@ export default function StaffSupportPage() {
     claim,
     send,
     startDirect,
+    deleteRoom,
   } = useStaffSupport();
   const [draft, setDraft] = useState("");
   // Panel "Tạo cuộc trò chuyện" — search khách hàng rồi mở phòng 1-1.
   const [composeOpen, setComposeOpen] = useState(false);
   const [composeUser, setComposeUser] = useState<UserSearchItem | null>(null);
+
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const handleStartDirect = async () => {
     if (!composeUser) return;
@@ -56,10 +75,9 @@ export default function StaffSupportPage() {
 
   const active = [...myRooms, ...queue].find((r) => r.id === activeId) ?? null;
 
-  const submit = () => {
-    const t = draft.trim();
-    if (!t) return;
-    send(t);
+  const submit = (content: string, imageUrls: string[]) => {
+    if (!content.trim() && imageUrls.length === 0) return;
+    send(content, imageUrls);
     setDraft("");
   };
 
@@ -72,193 +90,263 @@ export default function StaffSupportPage() {
         : "Mất kết nối realtime";
 
   return (
-    <div className="flex h-[calc(100vh-8rem)] gap-4">
-      {/* Cột trái: hàng đợi + đang hỗ trợ */}
-      <div className="flex w-80 shrink-0 flex-col overflow-hidden rounded-xl border border-gray-200 bg-white">
-        <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
-          <div>
-            <h2 className="text-sm font-semibold text-gray-900">Hỗ trợ khách hàng</h2>
-            <div className="mt-0.5 flex items-center gap-1.5 text-[11px] text-gray-400">
-              <StatusIcon size={12} />
-              <span>{statusText}</span>
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={() => void refresh()}
-            className="rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 cursor-pointer"
-            aria-label="Làm mới"
-          >
-            <RefreshCw size={16} />
-          </button>
-        </div>
-
-        {/* Tạo cuộc trò chuyện với khách hàng cụ thể */}
-        <div className="border-b border-gray-100 px-3 py-2.5">
-          {composeOpen ? (
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">
-                  Tạo cuộc trò chuyện
-                </p>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setComposeOpen(false);
-                    setComposeUser(null);
-                  }}
-                  className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600 cursor-pointer"
-                  aria-label="Đóng"
-                >
-                  <X size={14} />
-                </button>
+    <>
+      <div className="flex h-[calc(100vh-8rem)] gap-4">
+        {/* Cột trái: hàng đợi + đang hỗ trợ */}
+        <div className="flex w-80 shrink-0 flex-col overflow-hidden rounded-xl border border-gray-200 bg-white">
+          <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
+            <div>
+              <h2 className="text-sm font-semibold text-gray-900">Hỗ trợ khách hàng</h2>
+              <div className="mt-0.5 flex items-center gap-1.5 text-[11px] text-gray-400">
+                <StatusIcon size={12} />
+                <span>{statusText}</span>
               </div>
-              <UserSearchCombobox
-                value={composeUser}
-                onChange={setComposeUser}
-                disabledUserIds={meId ? { [meId]: "Bạn" } : {}}
-                disabled={startingDirect}
-                autoFocus
-              />
-              <button
-                type="button"
-                disabled={!composeUser || startingDirect}
-                onClick={() => void handleStartDirect()}
-                className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-primary-dark disabled:opacity-50 cursor-pointer"
-              >
-                {startingDirect ? (
-                  <Loader2 size={13} className="animate-spin" />
-                ) : (
-                  <MessageSquarePlus size={13} />
-                )}
-                Bắt đầu trò chuyện
-              </button>
             </div>
-          ) : (
             <button
               type="button"
-              onClick={() => setComposeOpen(true)}
-              className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-primary/40 px-3 py-2 text-xs font-semibold text-primary transition-colors hover:bg-primary/5 cursor-pointer"
+              onClick={() => void refresh()}
+              className="rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 cursor-pointer"
+              aria-label="Làm mới"
             >
-              <MessageSquarePlus size={14} />
-              Tạo cuộc trò chuyện với khách hàng
+              <RefreshCw size={16} />
             </button>
-          )}
-        </div>
+          </div>
 
-        <div className="flex-1 overflow-y-auto">
-          {/* Hàng đợi */}
-          <div className="px-3 pt-3">
-            <p className="flex items-center gap-1.5 px-1 pb-1.5 text-[11px] font-semibold uppercase tracking-wide text-amber-600">
-              <Inbox size={12} /> Hàng đợi ({queue.length})
-            </p>
-            {queue.length === 0 ? (
-              <p className="px-1 pb-2 text-xs text-gray-400">Không có khách đang chờ.</p>
-            ) : (
-              queue.map((box) => (
-                <div
-                  key={box.id}
-                  className="mb-1 rounded-lg border border-amber-100 bg-amber-50/50 p-2.5"
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="truncate text-sm font-medium text-gray-800">
-                      {customerName(box)}
-                    </span>
-                    <span className="flex items-center gap-1 text-[10px] font-medium text-amber-600">
-                      <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
-                      Đang chờ
-                    </span>
-                  </div>
-                  <p className="mt-0.5 truncate text-xs text-gray-500">
-                    {getLastMessagePreview(box)}
+          {/* Tạo cuộc trò chuyện với khách hàng cụ thể */}
+          <div className="border-b border-gray-100 px-3 py-2.5">
+            {composeOpen ? (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">
+                    Tạo cuộc trò chuyện
                   </p>
                   <button
                     type="button"
-                    disabled={claiming}
-                    onClick={() => void claim(box.id)}
-                    className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-primary-dark disabled:opacity-50 cursor-pointer"
+                    onClick={() => {
+                      setComposeOpen(false);
+                      setComposeUser(null);
+                    }}
+                    className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600 cursor-pointer"
+                    aria-label="Đóng"
                   >
-                    <Headphones size={13} />
-                    Nhận hỗ trợ
+                    <X size={14} />
                   </button>
                 </div>
-              ))
+                <UserSearchCombobox
+                  value={composeUser}
+                  onChange={setComposeUser}
+                  disabledUserIds={meId ? { [meId]: "Bạn" } : {}}
+                  disabled={startingDirect}
+                  autoFocus
+                />
+                <button
+                  type="button"
+                  disabled={!composeUser || startingDirect}
+                  onClick={() => void handleStartDirect()}
+                  className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-primary-dark disabled:opacity-50 cursor-pointer"
+                >
+                  {startingDirect ? (
+                    <Loader2 size={13} className="animate-spin" />
+                  ) : (
+                    <MessageSquarePlus size={13} />
+                  )}
+                  Bắt đầu trò chuyện
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setComposeOpen(true)}
+                className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-primary/40 px-3 py-2 text-xs font-semibold text-primary transition-colors hover:bg-primary/5 cursor-pointer"
+              >
+                <MessageSquarePlus size={14} />
+                Tạo cuộc trò chuyện với khách hàng
+              </button>
             )}
           </div>
 
-          {/* Đang hỗ trợ */}
-          <div className="px-3 pt-3 pb-2">
-            <p className="flex items-center gap-1.5 px-1 pb-1.5 text-[11px] font-semibold uppercase tracking-wide text-primary">
-              <MessageCircle size={12} /> Đang hỗ trợ ({myRooms.length})
-            </p>
-            {myRooms.length === 0 ? (
-              <p className="px-1 text-xs text-gray-400">Chưa nhận phòng nào.</p>
-            ) : (
-              myRooms.map((box) => {
-                const isActive = box.id === activeId;
-                return (
-                  <button
+          <div className="flex-1 overflow-y-auto">
+            {/* Hàng đợi */}
+            <div className="px-3 pt-3">
+              <p className="flex items-center gap-1.5 px-1 pb-1.5 text-[11px] font-semibold uppercase tracking-wide text-amber-600">
+                <Inbox size={12} /> Hàng đợi ({queue.length})
+              </p>
+              {queue.length === 0 ? (
+                <p className="px-1 pb-2 text-xs text-gray-400">Không có khách đang chờ.</p>
+              ) : (
+                queue.map((box) => (
+                  <div
                     key={box.id}
-                    type="button"
-                    onClick={() => void openRoom(box.id)}
-                    className={`mb-1 flex w-full flex-col rounded-lg p-2.5 text-left transition-colors cursor-pointer ${
-                      isActive ? "bg-primary/10" : "hover:bg-gray-50"
-                    }`}
+                    className="mb-1 rounded-lg border border-amber-100 bg-amber-50/50 p-2.5"
                   >
                     <div className="flex items-center justify-between gap-2">
                       <span className="truncate text-sm font-medium text-gray-800">
                         {customerName(box)}
                       </span>
-                      {box.lastMessage && (
-                        <span className="shrink-0 text-[10px] text-gray-400 tabular-nums">
-                          {formatMessageTime(box.lastMessage.createdAt)}
-                        </span>
-                      )}
+                      <span className="flex items-center gap-1 text-[10px] font-medium text-amber-600">
+                        <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+                        Đang chờ
+                      </span>
                     </div>
                     <p className="mt-0.5 truncate text-xs text-gray-500">
                       {getLastMessagePreview(box)}
                     </p>
-                  </button>
-                );
-              })
-            )}
+                    <button
+                      type="button"
+                      disabled={claiming}
+                      onClick={() => void claim(box.id)}
+                      className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-primary-dark disabled:opacity-50 cursor-pointer"
+                    >
+                      <Headphones size={13} />
+                      Nhận hỗ trợ
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+
+            {/* Đang hỗ trợ */}
+            <div className="px-3 pt-3 pb-2">
+              <p className="flex items-center gap-1.5 px-1 pb-1.5 text-[11px] font-semibold uppercase tracking-wide text-primary">
+                <MessageCircle size={12} /> Đang hỗ trợ ({myRooms.length})
+              </p>
+              {myRooms.length === 0 ? (
+                <p className="px-1 text-xs text-gray-400">Chưa nhận phòng nào.</p>
+              ) : (
+                myRooms.map((box) => {
+                  const isActive = box.id === activeId;
+                  return (
+                    <button
+                      key={box.id}
+                      type="button"
+                      onClick={() => void openRoom(box.id)}
+                      className={`mb-1 flex w-full flex-col rounded-lg p-2.5 text-left transition-colors cursor-pointer ${
+                        isActive ? "bg-primary/10" : "hover:bg-gray-50"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="truncate text-sm font-medium text-gray-800">
+                          {customerName(box)}
+                        </span>
+                        {box.lastMessage && (
+                          <span className="shrink-0 text-[10px] text-gray-400 tabular-nums">
+                            {formatMessageTime(box.lastMessage.createdAt)}
+                          </span>
+                        )}
+                      </div>
+                      <p className="mt-0.5 truncate text-xs text-gray-500">
+                        {getLastMessagePreview(box)}
+                      </p>
+                    </button>
+                  );
+                })
+              )}
+            </div>
           </div>
+        </div>
+
+        {/* Cột phải: hội thoại — viền sáng xanh khi đang soạn @AI (đồng bộ với widget). */}
+        <div
+          className={`flex flex-1 flex-col overflow-hidden rounded-xl border bg-white transition-all ${
+            /(^|\s)@ai\b/i.test(draft) ? "border-primary ring-2 ring-primary/40" : "border-gray-200"
+          }`}
+        >
+          {active ? (
+            <>
+              <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-900">{customerName(active)}</h3>
+                  <p className="text-[11px] text-gray-400">
+                    Phòng hỗ trợ · {active.id.slice(0, 8)}
+                  </p>
+                </div>
+                <div className="relative" ref={dropdownRef}>
+                  <button
+                    type="button"
+                    onClick={() => setDropdownOpen((p) => !p)}
+                    className="rounded-lg p-1.5 text-gray-500 hover:bg-gray-100 cursor-pointer transition-colors"
+                    aria-label="Tùy chọn"
+                  >
+                    <EllipsisVertical size={18} />
+                  </button>
+                  {dropdownOpen && (
+                    <div className="absolute right-0 top-full mt-1 w-44 overflow-hidden rounded-xl border border-gray-100 bg-white shadow-lg z-10">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setDropdownOpen(false);
+                          setDeleteModalOpen(true);
+                        }}
+                        className="flex w-full items-center gap-2 px-3 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors text-left cursor-pointer"
+                      >
+                        <Trash2 size={16} />
+                        Xóa đoạn chat
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+              <ChatMessageList messages={messages} meId={meId} />
+              <ChatInput
+                value={draft}
+                onChange={setDraft}
+                onSubmit={submit}
+                isSending={sending}
+                placeholder="Trả lời khách hàng... (@AI để nhờ trợ lý)"
+                onUpload={
+                  active
+                    ? async (file) => {
+                        const res = await chatApi.uploadImage(active.id, file);
+                        if (res.data.isSuccess) return res.data.data;
+                        throw new Error(res.data.message || "Lỗi tải ảnh");
+                      }
+                    : undefined
+                }
+              />
+            </>
+          ) : (
+            <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6 text-center">
+              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-primary">
+                <Headphones size={28} strokeWidth={1.5} />
+              </div>
+              <p className="text-sm font-semibold text-gray-800">Chọn một cuộc trò chuyện</p>
+              <p className="max-w-xs text-xs leading-relaxed text-gray-500">
+                Nhận một khách đang chờ ở hàng đợi, hoặc mở một phòng bạn đang hỗ trợ để trả lời.
+              </p>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Cột phải: hội thoại — viền sáng xanh khi đang soạn @AI (đồng bộ với widget). */}
-      <div
-        className={`flex flex-1 flex-col overflow-hidden rounded-xl border bg-white transition-all ${
-          /(^|\s)@ai\b/i.test(draft) ? "border-primary ring-2 ring-primary/40" : "border-gray-200"
-        }`}
+      {/* Delete Confirm Modal */}
+      <Modal
+        open={deleteModalOpen}
+        onClose={() => setDeleteModalOpen(false)}
+        title="Xóa cuộc trò chuyện"
       >
-        {active ? (
-          <>
-            <div className="border-b border-gray-100 px-4 py-3">
-              <h3 className="text-sm font-semibold text-gray-900">{customerName(active)}</h3>
-              <p className="text-[11px] text-gray-400">Phòng hỗ trợ · {active.id.slice(0, 8)}</p>
-            </div>
-            <ChatMessageList messages={messages} meId={meId} />
-            <ChatInput
-              value={draft}
-              onChange={setDraft}
-              onSubmit={submit}
-              isSending={sending}
-              placeholder="Trả lời khách hàng... (@AI để nhờ trợ lý)"
-            />
-          </>
-        ) : (
-          <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6 text-center">
-            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-primary">
-              <Headphones size={28} strokeWidth={1.5} />
-            </div>
-            <p className="text-sm font-semibold text-gray-800">Chọn một cuộc trò chuyện</p>
-            <p className="max-w-xs text-xs leading-relaxed text-gray-500">
-              Nhận một khách đang chờ ở hàng đợi, hoặc mở một phòng bạn đang hỗ trợ để trả lời.
-            </p>
-          </div>
-        )}
-      </div>
-    </div>
+        <p className="text-sm text-gray-600">
+          Bạn có chắc chắn muốn xóa cuộc trò chuyện này? Hành động này không thể hoàn tác.
+        </p>
+        <div className="mt-6 flex justify-end gap-3">
+          <button
+            type="button"
+            onClick={() => setDeleteModalOpen(false)}
+            className="rounded-lg px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-100 transition-colors cursor-pointer"
+          >
+            Hủy
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              if (active) void deleteRoom(active.id);
+              setDeleteModalOpen(false);
+            }}
+            className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 transition-colors cursor-pointer"
+          >
+            Xóa
+          </button>
+        </div>
+      </Modal>
+    </>
   );
 }

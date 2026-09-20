@@ -1,8 +1,4 @@
-import type {
-  ElementCode,
-  ProductElementRow,
-  ScoreBreakdown,
-} from "../types/recommendation";
+import type { ElementCode, ProductElementRow, ScoreBreakdown } from "../types/recommendation";
 import { ELEMENT_ORDER } from "../components/element-vector/constants";
 
 /** Vector 5 hành dạng map — kiểu làm việc nội bộ, gọn hơn mảng row khi phải cộng/nhân. */
@@ -264,9 +260,7 @@ export function scoreToPercent(score: number): number {
 
 /** Sản phẩm khắc bản mệnh — phạm trù kiêng kỵ, KHÔNG phải "điểm thấp". Xem {@link ClashBadge}. */
 export function hasDestinyClash(breakdown: ScoreBreakdown | null): boolean {
-  return (
-    breakdown?.penalties.some((p) => p.code === "USER_CONFLICT_PENALTY" && p.applied) ?? false
-  );
+  return breakdown?.penalties.some((p) => p.code === "USER_CONFLICT_PENALTY" && p.applied) ?? false;
 }
 
 /**

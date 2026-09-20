@@ -249,7 +249,6 @@ export default function EditProductModal({
   } else {
     content = (
       <div className="space-y-6 max-w-7xl mx-auto pb-6">
-
         {/* Tabs list */}
         <div className="border-b border-gray-200 bg-white">
           <nav className="flex flex-wrap gap-4 -mb-px">
@@ -261,7 +260,11 @@ export default function EditProductModal({
                   label: `Biến thể (${product.items?.length || 0})`,
                   icon: DollarSign,
                 },
-                { id: "images", label: `Hình ảnh (${product.images?.length || 0})`, icon: ImageIcon },
+                {
+                  id: "images",
+                  label: `Hình ảnh (${product.images?.length || 0})`,
+                  icon: ImageIcon,
+                },
                 { id: "categories", label: "Danh mục", icon: Layers },
                 { id: "feng-shui", label: "Phong thủy", icon: Sparkles },
                 { id: "model-3d", label: "Mô hình 3D", icon: Box },
@@ -272,10 +275,11 @@ export default function EditProductModal({
                 <button
                   key={t.id}
                   onClick={() => setActiveTab(t.id)}
-                  className={`flex items-center gap-2 border-b-2 py-3 px-1 text-sm font-semibold cursor-pointer transition-all ${isSelected
+                  className={`flex items-center gap-2 border-b-2 py-3 px-1 text-sm font-semibold cursor-pointer transition-all ${
+                    isSelected
                       ? "border-primary text-primary"
                       : "border-transparent text-gray-550 hover:border-gray-300 hover:text-gray-700"
-                    }`}
+                  }`}
                 >
                   <t.icon size={16} />
                   {t.label}

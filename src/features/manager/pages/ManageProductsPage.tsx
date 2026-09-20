@@ -35,10 +35,13 @@ function formatVnd(n: number): string {
 
 export default function ManageProductsPage() {
   const currentUser = useAppSelector((s) => s.auth.user);
-  const userRoles = useMemo(() => (currentUser?.role ?? "").split(",").map((r) => r.trim()), [currentUser?.role]);
+  const userRoles = useMemo(
+    () => (currentUser?.role ?? "").split(",").map((r) => r.trim()),
+    [currentUser?.role],
+  );
   const isAdmin = useMemo(
     () => userRoles.some((r) => ["Admin", "SystemAdmin"].includes(r)),
-    [userRoles]
+    [userRoles],
   );
 
   const [page, setPage] = useState(1);
@@ -93,7 +96,10 @@ export default function ManageProductsPage() {
 
         let enrichedStores = allStores.map((s) => ({
           ...s,
-          isOwner: s.isOwner || ownedIds.has(s.id) || (!!currentUser?.id && s.ownerUserId === currentUser.id),
+          isOwner:
+            s.isOwner ||
+            ownedIds.has(s.id) ||
+            (!!currentUser?.id && s.ownerUserId === currentUser.id),
           isStaff: staffIds.has(s.id),
         }));
 
@@ -107,7 +113,11 @@ export default function ManageProductsPage() {
 
         setShops(enrichedStores);
 
-        if (categoriesRes.status === "fulfilled" && categoriesRes.value?.isSuccess && categoriesRes.value.data) {
+        if (
+          categoriesRes.status === "fulfilled" &&
+          categoriesRes.value?.isSuccess &&
+          categoriesRes.value.data
+        ) {
           setCategories(categoriesRes.value.data);
         }
         if (tagsRes.status === "fulfilled" && tagsRes.value?.isSuccess && tagsRes.value.data) {
@@ -124,16 +134,11 @@ export default function ManageProductsPage() {
     if (isAdmin) return shops;
     return shops.filter(
       (s) =>
-        s.isOwner ||
-        (s as any).isStaff ||
-        (!!currentUser?.id && s.ownerUserId === currentUser.id)
+        s.isOwner || (s as any).isStaff || (!!currentUser?.id && s.ownerUserId === currentUser.id),
     );
   }, [shops, isAdmin, currentUser?.id]);
 
-  const allowedStoreIds = useMemo(
-    () => new Set(allowedStores.map((s) => s.id)),
-    [allowedStores]
-  );
+  const allowedStoreIds = useMemo(() => new Set(allowedStores.map((s) => s.id)), [allowedStores]);
 
   useEffect(() => {
     if (!isAdmin && allowedStores.length > 0) {

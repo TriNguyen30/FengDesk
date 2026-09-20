@@ -51,7 +51,10 @@ const getReasonOptions = (t: any) => [
 ];
 
 const getDeliveryStatusLabel = (t: any) => ({
-  Pending: { label: t("order_detail.delivery_status.pending"), pillClass: "bg-amber-50 text-amber-700 border border-amber-200" },
+  Pending: {
+    label: t("order_detail.delivery_status.pending"),
+    pillClass: "bg-amber-50 text-amber-700 border border-amber-200",
+  },
   Confirmed: {
     label: t("order_detail.delivery_status.confirmed"),
     pillClass: "bg-indigo-50 text-indigo-700 border border-indigo-200",
@@ -68,11 +71,15 @@ const getDeliveryStatusLabel = (t: any) => ({
     label: t("order_detail.delivery_status.delivered"),
     pillClass: "bg-emerald-50 text-emerald-700 border border-emerald-200",
   },
-  Cancelled: { label: t("order_detail.delivery_status.cancelled"), pillClass: "bg-red-50 text-red-600 border border-red-200" },
-  Returned: { label: t("order_detail.delivery_status.returned"), pillClass: "bg-red-50 text-red-600 border border-red-200" },
+  Cancelled: {
+    label: t("order_detail.delivery_status.cancelled"),
+    pillClass: "bg-red-50 text-red-600 border border-red-200",
+  },
+  Returned: {
+    label: t("order_detail.delivery_status.returned"),
+    pillClass: "bg-red-50 text-red-600 border border-red-200",
+  },
 });
-
-
 
 interface SelectedItem {
   orderItemId: string;
@@ -97,7 +104,9 @@ export default function OrderDetailPage() {
     queryFn: () => returnApi.getMyReturns({ PageSize: 50 }).then((res) => res.data),
     enabled: !!id,
   });
-  const orderReturns = returnsData?.isSuccess ? returnsData.data.items.filter((r: any) => r.orderId === id) : [];
+  const orderReturns = returnsData?.isSuccess
+    ? returnsData.data.items.filter((r: any) => r.orderId === id)
+    : [];
   const { address: shippingAddress } = useAddressDetail(currentOrder?.shippingAddressId);
   const cancelOrderMutation = useCancelOrder();
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
@@ -198,7 +207,7 @@ export default function OrderDetailPage() {
         }
       }
       if (newUrls.length > 0) {
-        setImageUrls(prev => [...prev, ...newUrls].slice(0, 3));
+        setImageUrls((prev) => [...prev, ...newUrls].slice(0, 3));
       }
     } catch (err) {
       toast.error(t("order_detail.toast.upload_error"));
@@ -208,7 +217,7 @@ export default function OrderDetailPage() {
   };
 
   const removeImage = (index: number) => {
-    setImageUrls(prev => prev.filter((_, i) => i !== index));
+    setImageUrls((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmitReturn = async () => {
@@ -300,7 +309,12 @@ export default function OrderDetailPage() {
   const statusMeta = getOrderStatusMeta(order.status, order.paymentMethod);
   const canCancel = !["Cancelled", "Completed", "Expired"].includes(order.status);
   const deliveries: any[] = ((order as any).deliveries ?? []).map((d: any) => {
-    const rr = d.returnRequest || orderReturns.find((r: any) => r.deliveryId === d.id && !["Rejected", "Cancelled", "Completed"].includes(r.status));
+    const rr =
+      d.returnRequest ||
+      orderReturns.find(
+        (r: any) =>
+          r.deliveryId === d.id && !["Rejected", "Cancelled", "Completed"].includes(r.status),
+      );
     if (rr && !d.returnRequest) {
       return { ...d, returnRequest: { id: rr.id, status: rr.status } };
     }
@@ -382,14 +396,34 @@ export default function OrderDetailPage() {
     }
 
     const steps: { id: string; label: string; icon: React.ReactNode }[] = [
-      { id: "Pending", label: t("order_detail.steps.placed"), icon: <ClipboardList className="h-4 w-4" /> },
+      {
+        id: "Pending",
+        label: t("order_detail.steps.placed"),
+        icon: <ClipboardList className="h-4 w-4" />,
+      },
     ];
     if (order.paymentMethod === "PayOS") {
-      steps.push({ id: "Paid", label: t("order_detail.steps.paid"), icon: <CreditCard className="h-4 w-4" /> });
+      steps.push({
+        id: "Paid",
+        label: t("order_detail.steps.paid"),
+        icon: <CreditCard className="h-4 w-4" />,
+      });
     }
-    steps.push({ id: "Processing", label: t("order_detail.steps.processing"), icon: <Package className="h-4 w-4" /> });
-    steps.push({ id: "Shipping", label: t("order_detail.steps.shipping"), icon: <Truck className="h-4 w-4" /> });
-    steps.push({ id: "Completed", label: t("order_detail.steps.completed"), icon: <CheckCircle className="h-4 w-4" /> });
+    steps.push({
+      id: "Processing",
+      label: t("order_detail.steps.processing"),
+      icon: <Package className="h-4 w-4" />,
+    });
+    steps.push({
+      id: "Shipping",
+      label: t("order_detail.steps.shipping"),
+      icon: <Truck className="h-4 w-4" />,
+    });
+    steps.push({
+      id: "Completed",
+      label: t("order_detail.steps.completed"),
+      icon: <CheckCircle className="h-4 w-4" />,
+    });
 
     let currentIdx = steps.findIndex((s) => s.id === order.status);
     if (order.status === "Completed") currentIdx = steps.length - 1;
@@ -440,12 +474,13 @@ export default function OrderDetailPage() {
         <div className="rounded-xl bg-white border border-gray-100 overflow-hidden">
           {/* Banner */}
           <div
-            className={`flex items-center justify-between px-5 py-4 border-b-2 ${order.status === "Cancelled" || order.status === "Expired"
+            className={`flex items-center justify-between px-5 py-4 border-b-2 ${
+              order.status === "Cancelled" || order.status === "Expired"
                 ? "bg-red-50 border-red-400"
                 : order.status === "Completed"
                   ? "bg-emerald-50 border-emerald-500"
                   : "bg-violet-50 border-primary"
-              }`}
+            }`}
           >
             <div className="flex items-center gap-3">
               {order.status === "Cancelled" || order.status === "Expired" ? (
@@ -457,12 +492,13 @@ export default function OrderDetailPage() {
               )}
               <div>
                 <p
-                  className={`font-semibold text-base leading-tight ${order.status === "Cancelled" || order.status === "Expired"
+                  className={`font-semibold text-base leading-tight ${
+                    order.status === "Cancelled" || order.status === "Expired"
                       ? "text-red-700"
                       : order.status === "Completed"
                         ? "text-emerald-700"
                         : "text-violet-800"
-                    }`}
+                  }`}
                 >
                   {statusMeta.label}
                 </p>
@@ -487,7 +523,10 @@ export default function OrderDetailPage() {
                 const rightReached = idx < reachedIdx;
 
                 return (
-                  <div key={idx} className="group relative flex-1 flex flex-col items-center gap-2 cursor-pointer select-none">
+                  <div
+                    key={idx}
+                    className="group relative flex-1 flex flex-col items-center gap-2 cursor-pointer select-none"
+                  >
                     {/* Hover Floating Tooltip */}
                     <div className="absolute -top-11 left-1/2 -translate-x-1/2 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:-top-13 transition-all duration-300 ease-out z-30 flex flex-col items-center">
                       <div className="bg-gray-900/95 backdrop-blur-md text-white text-[11px] font-medium py-1.5 px-3 rounded-xl shadow-xl whitespace-nowrap flex flex-col items-center gap-0.5 border border-white/10">
@@ -533,14 +572,15 @@ export default function OrderDetailPage() {
                     <div className="w-full flex items-center">
                       {/* left line */}
                       <div
-                        className={`flex-1 h-0.5 transition-all duration-500 ${idx === 0
+                        className={`flex-1 h-0.5 transition-all duration-500 ${
+                          idx === 0
                             ? "invisible"
                             : step.isError
                               ? "bg-red-400"
                               : leftReached
                                 ? "bg-primary group-hover:brightness-110"
                                 : "bg-gray-100 group-hover:bg-gray-200"
-                          }`}
+                        }`}
                       />
 
                       {/* Dot icon with pulse effect & hover animation */}
@@ -575,25 +615,27 @@ export default function OrderDetailPage() {
 
                       {/* right line */}
                       <div
-                        className={`flex-1 h-0.5 transition-all duration-500 ${isLast
+                        className={`flex-1 h-0.5 transition-all duration-500 ${
+                          isLast
                             ? "invisible"
                             : step.isError
                               ? "bg-red-400"
                               : rightReached
                                 ? "bg-primary group-hover:brightness-110"
                                 : "bg-gray-100 group-hover:bg-gray-200"
-                          }`}
+                        }`}
                       />
                     </div>
 
                     <div className="text-center px-1 transition-transform duration-200 group-hover:-translate-y-0.5">
                       <p
-                        className={`text-xs font-semibold leading-tight transition-colors duration-200 ${step.isError
+                        className={`text-xs font-semibold leading-tight transition-colors duration-200 ${
+                          step.isError
                             ? "text-red-600 group-hover:text-red-700"
                             : step.completed || isActive
                               ? "text-gray-900 group-hover:text-primary"
                               : "text-gray-400 group-hover:text-gray-600"
-                          }`}
+                        }`}
                       >
                         {step.label}
                       </p>
@@ -625,7 +667,10 @@ export default function OrderDetailPage() {
             {(order.items ?? []).map((item) => {
               const productUrl = `/products/${(item as any).productId || item.productItemId}`;
               return (
-                <li key={item.id} className="flex gap-3 px-4 py-3.5 items-start hover:bg-gray-50/50 transition-colors">
+                <li
+                  key={item.id}
+                  className="flex gap-3 px-4 py-3.5 items-start hover:bg-gray-50/50 transition-colors"
+                >
                   <Link to={productUrl} className="shrink-0 group/img">
                     <OrderItemImage
                       imageUrl={item.imageUrl}
@@ -648,7 +693,9 @@ export default function OrderDetailPage() {
                     <p className="mt-1 text-xs text-gray-400">x{item.quantity}</p>
                   </div>
                   <div className="text-right shrink-0">
-                    <p className="text-sm font-semibold text-gray-900">{formatVnd(item.lineTotal)}</p>
+                    <p className="text-sm font-semibold text-gray-900">
+                      {formatVnd(item.lineTotal)}
+                    </p>
                     <p className="text-xs text-gray-400 mt-0.5">
                       {formatVnd(item.unitPrice)} {t("order_detail.product.per_item")}
                     </p>
@@ -668,12 +715,16 @@ export default function OrderDetailPage() {
             <div className="flex justify-between text-sm text-gray-500">
               <span>{t("order_detail.product.shipping_fee")}</span>
               <span>
-                {order.totalShippingFee != null ? formatVnd(order.totalShippingFee) : t("order_detail.product.uncalculated")}
+                {order.totalShippingFee != null
+                  ? formatVnd(order.totalShippingFee)
+                  : t("order_detail.product.uncalculated")}
               </span>
             </div>
           </div>
           <div className="flex justify-between items-center px-4 py-3 border-t border-dashed border-gray-200 mt-1">
-            <span className="text-sm font-semibold text-gray-800">{t("order_detail.product.total")}</span>
+            <span className="text-sm font-semibold text-gray-800">
+              {t("order_detail.product.total")}
+            </span>
             <span className="text-lg font-bold text-primary">{formatVnd(order.totalAmount)}</span>
           </div>
 
@@ -709,14 +760,18 @@ export default function OrderDetailPage() {
                   }`}
                 >
                   <RotateCcw className="h-3.5 w-3.5" />
-                  {!hasReturnableDelivery ? t("order_detail.delivery.return_pending") : t("order_detail.delivery.request_return")}
+                  {!hasReturnableDelivery
+                    ? t("order_detail.delivery.return_pending")
+                    : t("order_detail.delivery.request_return")}
                 </button>
               )}
             </div>
 
             <div className="divide-y divide-gray-100">
               {deliveries.map((delivery) => {
-                const statusInfo = getDeliveryStatusLabel(t)[delivery.status as keyof ReturnType<typeof getDeliveryStatusLabel>] ?? {
+                const statusInfo = getDeliveryStatusLabel(t)[
+                  delivery.status as keyof ReturnType<typeof getDeliveryStatusLabel>
+                ] ?? {
                   label: delivery.status,
                   pillClass: "bg-gray-100 text-gray-600",
                 };
@@ -724,7 +779,8 @@ export default function OrderDetailPage() {
                 const returnRequest: { id: string; status: string } | null =
                   delivery.returnRequest ?? null;
                 const hasActiveReturn =
-                  returnRequest && !["Rejected", "Cancelled", "Completed"].includes(returnRequest.status);
+                  returnRequest &&
+                  !["Rejected", "Cancelled", "Completed"].includes(returnRequest.status);
                 const multiDelivered =
                   deliveries.filter((d) => d.status === "Delivered").length > 1;
 
@@ -744,7 +800,7 @@ export default function OrderDetailPage() {
                       )}
                       {delivery.shippingProvider && (
                         <p className="text-xs text-gray-500 mt-0.5">
-                          {t("order_detail.delivery.shipping_provider")} {" "}
+                          {t("order_detail.delivery.shipping_provider")}{" "}
                           <span className="font-medium text-gray-700">
                             {delivery.shippingProvider}
                           </span>
@@ -760,7 +816,8 @@ export default function OrderDetailPage() {
                       )}
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
-                      {isDelivered && multiDelivered && (
+                      {isDelivered &&
+                        multiDelivered &&
                         (() => {
                           const isPast7Days = isDeliveryPast7Days(delivery);
                           const isDisabled = hasActiveReturn || isPast7Days;
@@ -781,12 +838,11 @@ export default function OrderDetailPage() {
                               {hasActiveReturn
                                 ? t("order_detail.delivery.return_pending")
                                 : isPast7Days
-                                  ? (t("order_detail.delivery.return_expired") || "Hết hạn")
+                                  ? t("order_detail.delivery.return_expired") || "Hết hạn"
                                   : t("order_detail.delivery.return_btn")}
                             </button>
                           );
-                        })()
-                      )}
+                        })()}
                       <span
                         className={`text-xs font-semibold px-2.5 py-1 rounded-full ${statusInfo.pillClass}`}
                       >
@@ -856,20 +912,23 @@ export default function OrderDetailPage() {
 
             {/* Return — shown when there's a delivered delivery and payment is done */}
             {/* Return — shown when there's a delivered delivery and payment is done */}
-            {(hasReturnableDelivery || hasActiveReturnForAnyDelivery) && order.status !== "Pending" && (
-              <button
-                onClick={() => setDeliveryPickerOpen(true)}
-                disabled={!hasReturnableDelivery}
-                className={`flex-1 flex items-center justify-center gap-2 rounded-lg border text-sm font-semibold py-2.5 transition-colors ${
-                  hasReturnableDelivery
-                    ? "border-orange-300 text-orange-600 bg-orange-50 hover:bg-orange-100 cursor-pointer"
-                    : "border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed"
-                }`}
-              >
-                <RotateCcw className="h-4 w-4" />
-                {!hasReturnableDelivery ? t("order_detail.delivery.return_pending") : t("order_detail.actions.return")}
-              </button>
-            )}
+            {(hasReturnableDelivery || hasActiveReturnForAnyDelivery) &&
+              order.status !== "Pending" && (
+                <button
+                  onClick={() => setDeliveryPickerOpen(true)}
+                  disabled={!hasReturnableDelivery}
+                  className={`flex-1 flex items-center justify-center gap-2 rounded-lg border text-sm font-semibold py-2.5 transition-colors ${
+                    hasReturnableDelivery
+                      ? "border-orange-300 text-orange-600 bg-orange-50 hover:bg-orange-100 cursor-pointer"
+                      : "border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed"
+                  }`}
+                >
+                  <RotateCcw className="h-4 w-4" />
+                  {!hasReturnableDelivery
+                    ? t("order_detail.delivery.return_pending")
+                    : t("order_detail.actions.return")}
+                </button>
+              )}
 
             {/* Buy again */}
             {["Completed", "Cancelled", "Expired"].includes(order.status) && (
@@ -877,7 +936,9 @@ export default function OrderDetailPage() {
                 onClick={() => {
                   if (order.items && order.items.length > 0) {
                     const firstItem = order.items[0];
-                    navigate(`/products/${(firstItem as any).productId || firstItem.productItemId}`);
+                    navigate(
+                      `/products/${(firstItem as any).productId || firstItem.productItemId}`,
+                    );
                   }
                 }}
                 className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-primary text-white text-sm font-semibold py-2.5 hover:bg-primary/90 cursor-pointer transition-colors"
@@ -927,7 +988,9 @@ export default function OrderDetailPage() {
               disabled={cancelling}
               className="flex-1 rounded-lg bg-red-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-60 cursor-pointer"
             >
-              {cancelling ? t("order_detail.cancel_modal.cancelling") : t("order_detail.cancel_modal.confirm")}
+              {cancelling
+                ? t("order_detail.cancel_modal.cancelling")
+                : t("order_detail.cancel_modal.confirm")}
             </button>
           </div>
         </div>
@@ -938,7 +1001,9 @@ export default function OrderDetailPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
           <div className="relative w-full max-w-sm bg-white rounded-2xl shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
             <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4 bg-orange-50/60">
-              <h3 className="text-base font-bold text-gray-900">{t("order_detail.delivery_picker.title")}</h3>
+              <h3 className="text-base font-bold text-gray-900">
+                {t("order_detail.delivery_picker.title")}
+              </h3>
               <button
                 onClick={() => setDeliveryPickerOpen(false)}
                 className="rounded-full p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors cursor-pointer"
@@ -997,7 +1062,9 @@ export default function OrderDetailPage() {
                 <span className="text-xs font-bold text-orange-500 uppercase tracking-wide">
                   {t("order_detail.return_modal.tag")}
                 </span>
-                <h3 className="text-base font-bold text-gray-900 mt-0.5">{t("order_detail.return_modal.title")}</h3>
+                <h3 className="text-base font-bold text-gray-900 mt-0.5">
+                  {t("order_detail.return_modal.title")}
+                </h3>
               </div>
               <button
                 onClick={closeReturnModal}
@@ -1012,7 +1079,8 @@ export default function OrderDetailPage() {
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <label className="text-xs font-semibold text-gray-600">
-                    {t("order_detail.return_modal.select_product")} <span className="text-red-500">*</span>
+                    {t("order_detail.return_modal.select_product")}{" "}
+                    <span className="text-red-500">*</span>
                   </label>
                   {returnModal.items.length > 0 && (
                     <button
@@ -1021,7 +1089,9 @@ export default function OrderDetailPage() {
                       className="flex items-center gap-1 text-xs font-semibold text-orange-500 hover:text-orange-600 cursor-pointer"
                     >
                       <CheckSquare className="h-3.5 w-3.5" />
-                      {allSelected ? t("order_detail.return_modal.deselect_all") : t("order_detail.return_modal.select_all")}
+                      {allSelected
+                        ? t("order_detail.return_modal.deselect_all")
+                        : t("order_detail.return_modal.select_all")}
                     </button>
                   )}
                 </div>
@@ -1118,10 +1188,11 @@ export default function OrderDetailPage() {
                       key={opt.value}
                       type="button"
                       onClick={() => setReturnType(opt.value)}
-                      className={`rounded-lg border px-3 py-2 text-sm font-semibold transition-all cursor-pointer ${returnType === opt.value
+                      className={`rounded-lg border px-3 py-2 text-sm font-semibold transition-all cursor-pointer ${
+                        returnType === opt.value
                           ? "border-orange-400 bg-orange-50 text-orange-600"
                           : "border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50"
-                        }`}
+                      }`}
                     >
                       {opt.label}
                     </button>
@@ -1168,8 +1239,15 @@ export default function OrderDetailPage() {
                 </label>
                 <div className="flex flex-wrap gap-3">
                   {imageUrls.map((url, idx) => (
-                    <div key={idx} className="relative h-20 w-20 rounded-lg border border-gray-200 overflow-hidden group">
-                      <img src={url} alt={t("order_detail.return_modal.image_alt")} className="h-full w-full object-cover" />
+                    <div
+                      key={idx}
+                      className="relative h-20 w-20 rounded-lg border border-gray-200 overflow-hidden group"
+                    >
+                      <img
+                        src={url}
+                        alt={t("order_detail.return_modal.image_alt")}
+                        className="h-full w-full object-cover"
+                      />
                       <button
                         type="button"
                         onClick={() => removeImage(idx)}
@@ -1186,7 +1264,9 @@ export default function OrderDetailPage() {
                       ) : (
                         <>
                           <Upload className="h-5 w-5" />
-                          <span className="text-[10px] font-medium">{t("order_detail.return_modal.add_image")}</span>
+                          <span className="text-[10px] font-medium">
+                            {t("order_detail.return_modal.add_image")}
+                          </span>
                         </>
                       )}
                       <input
@@ -1209,7 +1289,9 @@ export default function OrderDetailPage() {
                     {t("order_detail.return_modal.bank_info")}
                   </p>
                   <div>
-                    <label className="block text-xs text-gray-600 mb-1">{t("order_detail.return_modal.account_name")}</label>
+                    <label className="block text-xs text-gray-600 mb-1">
+                      {t("order_detail.return_modal.account_name")}
+                    </label>
                     <input
                       type="text"
                       value={bankAccountName}
@@ -1219,7 +1301,9 @@ export default function OrderDetailPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs text-gray-600 mb-1">{t("order_detail.return_modal.account_number")}</label>
+                    <label className="block text-xs text-gray-600 mb-1">
+                      {t("order_detail.return_modal.account_number")}
+                    </label>
                     <input
                       type="text"
                       value={bankAccountNumber}
@@ -1229,7 +1313,9 @@ export default function OrderDetailPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs text-gray-600 mb-1">{t("order_detail.return_modal.bank_name")}</label>
+                    <label className="block text-xs text-gray-600 mb-1">
+                      {t("order_detail.return_modal.bank_name")}
+                    </label>
                     <input
                       type="text"
                       value={bankName}

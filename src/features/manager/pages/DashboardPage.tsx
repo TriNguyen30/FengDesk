@@ -13,7 +13,11 @@ import {
 } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { useAppSelector } from "@/app/store";
-import { getAllShopRequest, getMyShopsRequest, getStoreStatisticsRequest } from "@/features/shop/api/shop.api";
+import {
+  getAllShopRequest,
+  getMyShopsRequest,
+  getStoreStatisticsRequest,
+} from "@/features/shop/api/shop.api";
 import type { Shop, StoreStatistics } from "@/features/shop/types/shop";
 import { useStoreDeliveries, useAllOrdersList } from "@/features/orders";
 import { formatOrderDate } from "@/features/orders/utils/orderUtils";
@@ -37,7 +41,10 @@ const DELIVERY_STATUS_MAP: Record<string, { label: string; className: string }> 
   Preparing: { label: "Đang chuẩn bị", className: "bg-blue-50 text-blue-700 border-blue-200" },
   Shipped: { label: "Đang giao", className: "bg-cyan-50 text-cyan-700 border-cyan-200" },
   Delivered: { label: "Đã giao", className: "bg-emerald-50 text-emerald-700 border-emerald-200" },
-  Completed: { label: "Đã hoàn thành", className: "bg-emerald-50 text-emerald-700 border-emerald-200" },
+  Completed: {
+    label: "Đã hoàn thành",
+    className: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  },
   DeliveryFailed: { label: "Giao thất bại", className: "bg-rose-50 text-rose-700 border-rose-200" },
   Returned: { label: "Đã hoàn trả", className: "bg-gray-100 text-gray-600 border-gray-200" },
   Cancelled: { label: "Đã hủy", className: "bg-red-50 text-red-700 border-red-200" },
@@ -75,7 +82,10 @@ function aggregateStoreStats(statsList: StoreStatistics[]): StoreStatistics {
   let productCount = 0;
   let staffCount = 0;
   const deliveriesByStatus: Record<string, number> = {};
-  const monthMap = new Map<string, { year: number; month: number; revenue: number; deliveredCount: number }>();
+  const monthMap = new Map<
+    string,
+    { year: number; month: number; revenue: number; deliveredCount: number }
+  >();
 
   statsList.forEach((s) => {
     totalRevenue += s.totalRevenue || 0;
@@ -90,7 +100,12 @@ function aggregateStoreStats(statsList: StoreStatistics[]): StoreStatistics {
 
     (s.revenueByMonth || []).forEach((p) => {
       const key = `${p.year}-${p.month}`;
-      const existing = monthMap.get(key) || { year: p.year, month: p.month, revenue: 0, deliveredCount: 0 };
+      const existing = monthMap.get(key) || {
+        year: p.year,
+        month: p.month,
+        revenue: 0,
+        deliveredCount: 0,
+      };
       existing.revenue += p.revenue || 0;
       existing.deliveredCount += p.deliveredCount || 0;
       monthMap.set(key, existing);
@@ -110,10 +125,13 @@ function aggregateStoreStats(statsList: StoreStatistics[]): StoreStatistics {
 
 export default function DashboardPage() {
   const currentUser = useAppSelector((s) => s.auth.user);
-  const userRoles = useMemo(() => (currentUser?.role ?? "").split(",").map((r) => r.trim()), [currentUser?.role]);
+  const userRoles = useMemo(
+    () => (currentUser?.role ?? "").split(",").map((r) => r.trim()),
+    [currentUser?.role],
+  );
   const isAdmin = useMemo(
     () => userRoles.some((r) => ["Admin", "SystemAdmin"].includes(r)),
-    [userRoles]
+    [userRoles],
   );
 
   const [shops, setShops] = useState<Shop[]>([]);
@@ -152,7 +170,10 @@ export default function DashboardPage() {
 
         let enrichedStores = allStores.map((s) => ({
           ...s,
-          isOwner: s.isOwner || ownedIds.has(s.id) || (!!currentUser?.id && s.ownerUserId === currentUser.id),
+          isOwner:
+            s.isOwner ||
+            ownedIds.has(s.id) ||
+            (!!currentUser?.id && s.ownerUserId === currentUser.id),
           isStaff: staffIds.has(s.id),
         }));
 
@@ -170,7 +191,7 @@ export default function DashboardPage() {
               (s) =>
                 s.isOwner ||
                 (s as any).isStaff ||
-                (!!currentUser?.id && s.ownerUserId === currentUser.id)
+                (!!currentUser?.id && s.ownerUserId === currentUser.id),
             );
 
         if (active) {
@@ -204,7 +225,7 @@ export default function DashboardPage() {
           const promises = shops.map((s) =>
             getStoreStatisticsRequest(s.id)
               .then((res) => (res.isSuccess && res.data ? res.data : null))
-              .catch(() => null)
+              .catch(() => null),
           );
           const results = await Promise.all(promises);
           const validStats = results.filter((s): s is StoreStatistics => s !== null);
@@ -245,19 +266,21 @@ export default function DashboardPage() {
   // Fetch recent deliveries for selected store
   const { deliveries: recentDeliveries, listStatus: deliveriesStatus } = useStoreDeliveries(
     selectedStoreId || undefined,
-    { page: 1, pageSize: 5 }
+    { page: 1, pageSize: 5 },
   );
 
   // Fallback for all orders if all stores selected
   const { orders: allOrders } = useAllOrdersList(
-    selectedStoreId ? undefined : { page: 1, pageSize: 5 }
+    selectedStoreId ? undefined : { page: 1, pageSize: 5 },
   );
 
   const series = useMemo(() => (stats ? buildMonthlySeries(stats) : []), [stats]);
 
   const deliveredCount = useMemo(() => {
     if (!stats) return 0;
-    return (stats.deliveriesByStatus["Delivered"] ?? 0) + (stats.deliveriesByStatus["Completed"] ?? 0);
+    return (
+      (stats.deliveriesByStatus["Delivered"] ?? 0) + (stats.deliveriesByStatus["Completed"] ?? 0)
+    );
   }, [stats]);
 
   const cards = useMemo(() => {
@@ -330,7 +353,9 @@ export default function DashboardPage() {
         {/* Store selector */}
         {shops.length > 0 && (
           <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Cửa hàng:</span>
+            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+              Cửa hàng:
+            </span>
             <select
               value={selectedStoreId}
               onChange={(e) => setSelectedStoreId(e.target.value)}
@@ -371,7 +396,9 @@ export default function DashboardPage() {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2 text-gray-500">
                       <Icon size={18} className="text-primary" />
-                      <span className="text-xs font-semibold uppercase tracking-wide">{c.label}</span>
+                      <span className="text-xs font-semibold uppercase tracking-wide">
+                        {c.label}
+                      </span>
                     </div>
                   </div>
                   <p className="mt-3 text-2xl font-bold text-gray-900 tracking-tight">{c.value}</p>
@@ -388,19 +415,32 @@ export default function DashboardPage() {
               <div className="flex items-center justify-between mb-6">
                 <div>
                   <h3 className="text-base font-bold text-gray-900">Doanh thu 6 tháng gần nhất</h3>
-                  <p className="text-xs text-gray-400 mt-0.5">Thống kê doanh thu theo các đơn giao thành công.</p>
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    Thống kê doanh thu theo các đơn giao thành công.
+                  </p>
                 </div>
               </div>
               <div className="h-72 w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={series} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
-                    <XAxis dataKey="label" tick={{ fontSize: 12, fill: "#6b7280" }} axisLine={false} tickLine={false} />
+                    <XAxis
+                      dataKey="label"
+                      tick={{ fontSize: 12, fill: "#6b7280" }}
+                      axisLine={false}
+                      tickLine={false}
+                    />
                     <YAxis
                       tick={{ fontSize: 12, fill: "#6b7280" }}
                       axisLine={false}
                       tickLine={false}
-                      tickFormatter={(v: number) => (v >= 1_000_000 ? `${(v / 1_000_000).toFixed(1)}M` : v >= 1_000 ? `${(v / 1_000).toFixed(0)}K` : String(v))}
+                      tickFormatter={(v: number) =>
+                        v >= 1_000_000
+                          ? `${(v / 1_000_000).toFixed(1)}M`
+                          : v >= 1_000
+                            ? `${(v / 1_000).toFixed(0)}K`
+                            : String(v)
+                      }
                     />
                     <Tooltip
                       formatter={(value) => [formatVnd(Number(value)), "Doanh thu"]}
@@ -429,7 +469,11 @@ export default function DashboardPage() {
               <ul className="space-y-3 flex-1 overflow-y-auto pr-1">
                 {Object.entries(STATUS_LABELS).map(([key, label]) => {
                   const count = stats.deliveriesByStatus[key] ?? 0;
-                  if (count === 0 && !["Pending", "Shipped", "Delivered", "Completed"].includes(key)) return null;
+                  if (
+                    count === 0 &&
+                    !["Pending", "Shipped", "Delivered", "Completed"].includes(key)
+                  )
+                    return null;
                   const pct = stats.totalDeliveries > 0 ? (count / stats.totalDeliveries) * 100 : 0;
                   return (
                     <li key={key} className="text-xs">
@@ -455,7 +499,9 @@ export default function DashboardPage() {
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-base font-bold text-gray-900">Đơn hàng / Đơn giao gần đây</h3>
-                <p className="text-xs text-gray-500 mt-0.5">Danh sách các đơn vận chuyển mới nhất thuộc cửa hàng.</p>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  Danh sách các đơn vận chuyển mới nhất thuộc cửa hàng.
+                </p>
               </div>
               <Link
                 to="/manager/orders"
@@ -467,9 +513,13 @@ export default function DashboardPage() {
 
             {selectedStoreId ? (
               deliveriesStatus === "loading" ? (
-                <div className="py-8 text-center text-xs text-gray-400">Đang tải danh sách đơn giao...</div>
+                <div className="py-8 text-center text-xs text-gray-400">
+                  Đang tải danh sách đơn giao...
+                </div>
               ) : recentDeliveries.length === 0 ? (
-                <div className="py-8 text-center text-xs text-gray-500">Chưa có đơn vận chuyển nào.</div>
+                <div className="py-8 text-center text-xs text-gray-500">
+                  Chưa có đơn vận chuyển nào.
+                </div>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-sm">

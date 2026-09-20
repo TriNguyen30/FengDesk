@@ -11,10 +11,10 @@ export default function MyInvitationsPage() {
     <div className="space-y-4">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h1 className="text-xl font-bold tracking-tight text-gray-900">{t("my_invitations.title")}</h1>
-          <p className="mt-0.5 text-sm text-gray-500">
-            {t("my_invitations.desc")}
-          </p>
+          <h1 className="text-xl font-bold tracking-tight text-gray-900">
+            {t("my_invitations.title")}
+          </h1>
+          <p className="mt-0.5 text-sm text-gray-500">{t("my_invitations.desc")}</p>
         </div>
         <button
           type="button"
@@ -35,9 +35,7 @@ export default function MyInvitationsPage() {
         <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-gray-200 bg-white px-6 py-14 text-center">
           <Inbox size={36} className="mb-2 text-gray-300" />
           <p className="text-sm font-semibold text-gray-700">{t("my_invitations.empty.title")}</p>
-          <p className="mt-1 text-xs text-gray-500">
-            {t("my_invitations.empty.desc")}
-          </p>
+          <p className="mt-1 text-xs text-gray-500">{t("my_invitations.empty.desc")}</p>
         </div>
       ) : (
         <div className="space-y-3">

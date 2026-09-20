@@ -37,7 +37,7 @@ export default function FeatureBar() {
             className="absolute inset-0 bg-white shadow-[0_5px_20px_rgba(0,0,0,0.05)] border border-gray-100/50"
             style={{ transform: "skewX(-12deg)", borderRadius: "10px" }}
           />
-          
+
           <div className="relative z-10 flex w-full items-center justify-between px-6 py-8">
             {features.map((f, i) => (
               <div
@@ -73,4 +73,3 @@ export default function FeatureBar() {
     </>
   );
 }
-

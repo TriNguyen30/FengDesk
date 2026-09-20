@@ -127,13 +127,13 @@ export function useStaffSupport() {
   );
 
   const send = useCallback(
-    async (content: string) => {
+    async (content: string, imageUrls?: string[]) => {
       const trimmed = content.trim();
       const roomId = activeRef.current;
-      if (!trimmed || !roomId || sending) return;
+      if ((!trimmed && (!imageUrls || imageUrls.length === 0)) || !roomId || sending) return;
       setSending(true);
       try {
-        const res = await chatApi.sendMessage(roomId, { content: trimmed });
+        const res = await chatApi.sendMessage(roomId, { content: trimmed, imageUrls });
         if (res.data.isSuccess) setMessages((prev) => upsert(prev, res.data.data));
         else toast.error(res.data.message || "Không gửi được tin nhắn.");
       } catch {
@@ -173,6 +173,24 @@ export function useStaffSupport() {
     [startingDirect, refresh, openRoom],
   );
 
+  const deleteRoom = useCallback(async (chatboxId: string) => {
+    try {
+      const res = await chatApi.deleteChatbox(chatboxId);
+      if (res.data.isSuccess) {
+        toast.success("Đã xóa cuộc trò chuyện.");
+        setMyRooms((prev) => prev.filter((r) => r.id !== chatboxId));
+        if (activeRef.current === chatboxId) {
+          setActiveId(null);
+          setMessages([]);
+        }
+      } else {
+        toast.error(res.data.message || "Không thể xóa cuộc trò chuyện.");
+      }
+    } catch {
+      toast.error("Lỗi khi xóa cuộc trò chuyện.");
+    }
+  }, []);
+
   return {
     meId,
     queue,
@@ -189,5 +207,6 @@ export function useStaffSupport() {
     send,
     isMine,
     startDirect,
+    deleteRoom,
   };
 }

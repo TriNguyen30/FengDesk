@@ -36,6 +36,11 @@ export default function AppLayout() {
   useEffect(() => {
     if (initRedirectDone) return;
     initRedirectDone = true;
+
+    // Nếu người dùng đã chọn khu mua sắm (qua switcher) thì không tự động redirect
+    const lastWs = localStorage.getItem("lastWorkspace");
+    if (lastWs === "shop") return;
+
     const roles = (user?.role ?? "").split(",").map((r) => r.trim());
     const isStaffOrAbove = roles.some((r) => r === "Manager" || r === "Admin");
     if (isStaffOrAbove && pathname === "/") navigate("/manager", { replace: true });

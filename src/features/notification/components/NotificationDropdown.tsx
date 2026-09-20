@@ -193,7 +193,9 @@ export default function NotificationDropdown() {
               </span>
             )}
           </div>
-          <span className="hidden text-[10px] font-medium sm:block sm:text-xs">{t("notification.notification")}</span>
+          <span className="hidden text-[10px] font-medium sm:block sm:text-xs">
+            {t("notification.notification")}
+          </span>
         </button>
 
         {open && (
@@ -207,7 +209,9 @@ export default function NotificationDropdown() {
             >
               {/* Header */}
               <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3 bg-gray-50/50">
-                <h2 className="text-sm font-bold text-gray-950">{t("notification.notification")}</h2>
+                <h2 className="text-sm font-bold text-gray-950">
+                  {t("notification.notification")}
+                </h2>
                 {unreadCount > 0 && (
                   <button
                     type="button"
@@ -232,10 +236,10 @@ export default function NotificationDropdown() {
                     <div className="flex size-12 items-center justify-center rounded-full bg-gray-50 text-gray-400">
                       <Bell size={24} strokeWidth={1.5} />
                     </div>
-                    <p className="text-sm font-medium text-gray-700">{t("notification.empty.title")}</p>
-                    <p className="text-xs text-gray-400">
-                      {t("notification.empty.desc")}
+                    <p className="text-sm font-medium text-gray-700">
+                      {t("notification.empty.title")}
                     </p>
+                    <p className="text-xs text-gray-400">{t("notification.empty.desc")}</p>
                   </div>
                 ) : (
                   notifications.map((item) => (

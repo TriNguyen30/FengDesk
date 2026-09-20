@@ -94,20 +94,50 @@ export async function resolveLocationFromCoordinates(
   const provinceId = findBestMatch(provinces, raw.province);
   if (!provinceId) {
     console.warn("[Geocode] Không khớp được tỉnh/thành:", raw.province);
-    return { provinces, districts: [], wards: [], provinceId: "", districtId: "", wardId: "", street: raw.street ?? "", raw };
+    return {
+      provinces,
+      districts: [],
+      wards: [],
+      provinceId: "",
+      districtId: "",
+      wardId: "",
+      street: raw.street ?? "",
+      raw,
+    };
   }
 
   const districts = (await getDistrictsByProvinceId(provinceId)) ?? [];
   const districtId = findBestMatch(districts, raw.district);
   if (!districtId) {
-    console.warn("[Geocode] Không khớp được quận/huyện:", raw.district, "— DB có", districts.length, "quận/huyện");
-    return { provinces, districts, wards: [], provinceId, districtId: "", wardId: "", street: raw.street ?? "", raw };
+    console.warn(
+      "[Geocode] Không khớp được quận/huyện:",
+      raw.district,
+      "— DB có",
+      districts.length,
+      "quận/huyện",
+    );
+    return {
+      provinces,
+      districts,
+      wards: [],
+      provinceId,
+      districtId: "",
+      wardId: "",
+      street: raw.street ?? "",
+      raw,
+    };
   }
 
   const wards = (await getWardsByDistrictId(districtId)) ?? [];
   const wardId = findBestMatch(wards, raw.ward);
   if (!wardId) {
-    console.warn("[Geocode] Không khớp được phường/xã:", raw.ward, "— DB có", wards.length, "phường/xã");
+    console.warn(
+      "[Geocode] Không khớp được phường/xã:",
+      raw.ward,
+      "— DB có",
+      wards.length,
+      "phường/xã",
+    );
   }
 
   return {

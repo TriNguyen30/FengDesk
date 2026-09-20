@@ -100,7 +100,9 @@ export default function NotificationPage() {
         <div>
           <h1 className="text-xl font-bold text-gray-900">{t("notification.title")}</h1>
           <p className="mt-1 text-sm text-gray-500">
-            {t("notification.unread_count_1")}<span className="font-semibold text-primary">{unreadCount}</span>{t("notification.unread_count_2")}
+            {t("notification.unread_count_1")}
+            <span className="font-semibold text-primary">{unreadCount}</span>
+            {t("notification.unread_count_2")}
           </p>
         </div>
         {unreadCount > 0 && (
@@ -139,17 +141,19 @@ export default function NotificationPage() {
                 key={item.id}
                 type="button"
                 onClick={() => handleNotificationClick(item)}
-                className={`flex w-full items-start gap-4 rounded-xl border p-4 text-left transition-all hover:shadow-md cursor-pointer outline-none focus:ring-2 focus:ring-primary/20 ${!item.isRead
+                className={`flex w-full items-start gap-4 rounded-xl border p-4 text-left transition-all hover:shadow-md cursor-pointer outline-none focus:ring-2 focus:ring-primary/20 ${
+                  !item.isRead
                     ? "border-primary/20 bg-primary/[0.02]"
                     : "border-gray-100 bg-white hover:border-gray-200"
-                  }`}
+                }`}
               >
                 {getNotificationIcon(item.type)}
                 <div className="min-w-0 flex-1">
                   <div className="flex items-start justify-between gap-2">
                     <p
-                      className={`text-base leading-snug text-gray-900 ${!item.isRead ? "font-bold" : "font-semibold"
-                        }`}
+                      className={`text-base leading-snug text-gray-900 ${
+                        !item.isRead ? "font-bold" : "font-semibold"
+                      }`}
                     >
                       {item.title}
                     </p>
@@ -187,8 +191,9 @@ export default function NotificationPage() {
               <button
                 key={pageNum}
                 onClick={() => setPage(pageNum)}
-                className={`flex h-9 min-w-[36px] items-center justify-center rounded-lg px-2 text-sm font-semibold transition-colors ${page === pageNum ? "bg-primary text-white" : "text-gray-600 hover:bg-gray-100"
-                  }`}
+                className={`flex h-9 min-w-[36px] items-center justify-center rounded-lg px-2 text-sm font-semibold transition-colors ${
+                  page === pageNum ? "bg-primary text-white" : "text-gray-600 hover:bg-gray-100"
+                }`}
               >
                 {pageNum}
               </button>
