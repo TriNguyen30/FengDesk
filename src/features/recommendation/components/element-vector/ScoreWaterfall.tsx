@@ -1,16 +1,40 @@
 ﻿import { useId, useState, type ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Check, ChevronDown, Minus, Plus, TriangleAlert } from "lucide-react";
-import type { ProductElementRow, ScoreBreakdown, ScoreComponentRow, ScorePenaltyRow } from "../../types/recommendation";
+import type {
+  ProductElementRow,
+  ScoreBreakdown,
+  ScoreComponentRow,
+  ScorePenaltyRow,
+} from "../../types/recommendation";
 import { toMap } from "../../lib/breakdown";
-import { CONTROLS, ELEMENT_ORDER, elementColor, elementVi } from "./constants";
+import {
+  CAUTION_CLASS,
+  CONTROLS,
+  ELEMENT_ORDER,
+  cautionTone,
+  elementColor,
+  elementVi,
+} from "./constants";
+import { useAnchoredPopover } from "./useAnchoredPopover";
 
 interface ScoreWaterfallProps {
   breakdown: ScoreBreakdown;
   /** "Sự thật" khớp (BE `matchFacts`) — hiện ngay dưới "Điểm cuối", đọc như phần kết luận của waterfall. */
   matchFacts?: string[];
-  /** Cảnh báo (BE `cautionFacts`) — cùng chỗ, tô đỏ. */
+  /** Lưu ý (BE `cautionFacts`) — cùng chỗ; đỏ khi chạm bản mệnh, vàng cho phần còn lại (`cautionTone`). */
   cautionFacts?: string[];
+  /**
+   * Cột trái đặt CHUNG trong hộp với waterfall (radar + trục nghề). Hai hộp rời — radar một bên, điểm một
+   * bên — cao thấp lệch nhau vì nội dung khác nhau; gom vào một hộp thì viền chung, mắt đọc thành một
+   * khối "đồ thị ↔ con số" thay vì hai thẻ chênh nhau.
+   */
+  aside?: ReactNode;
+  /**
+   * Khối đứng ĐẦU cột phải, trên các dòng điểm (thẻ "Phòng đang cần" / "Dụng thần của bạn"). Đặt ở đây
+   * thay vì một hàng riêng phía trên hộp để cột phải lấp được khoảng trống dưới waterfall.
+   */
+  lead?: ReactNode;
 }
 
 /**
@@ -26,12 +50,19 @@ interface ScoreWaterfallProps {
  * FE đang đọc sai vector, không phải BE sai.
  *
  * Bố cục: phần giải thích điểm **luôn mở**; hai câu kết luận đứng ngay dưới "Điểm cuối"; danh sách
- * "đã xét, không trừ" — lặp y hệt ở mọi sản phẩm cùng loại — gập lại, mặc định đóng. Vẫn liệt kê **mọi**
+ * "đã xét, không trừ" — lặp y hệt ở mọi sản phẩm cùng loại — gập lại, mặc định đóng; bung ra mà tràn
+ * chiều cao cột thì cột phải cuộn dọc (xem chú thích tại chỗ). Vẫn liệt kê **mọi**
  * penalty kể cả loại không bị áp: "đã xét và không trừ" khác hẳn "không tồn tại".
  */
-export default function ScoreWaterfall({ breakdown, matchFacts = [], cautionFacts = [] }: ScoreWaterfallProps) {
-  const [skippedOpen, setSkippedOpen] = useState(false);
-
+export default function ScoreWaterfall({
+  breakdown,
+  matchFacts = [],
+  cautionFacts = [],
+  aside,
+  lead,
+}: ScoreWaterfallProps) {
+  // Mặc định MỞ (yêu cầu 21/09): cột phải cao bằng cột trái, danh sách dài thì cột cuộn dọc.
+  const [skippedOpen, setSkippedOpen] = useState(true);
   const appliedPenalties = breakdown.penalties.filter((p) => p.applied);
   const skippedPenalties = breakdown.penalties.filter((p) => !p.applied);
   const product = toMap(breakdown.vectors.product);
@@ -39,8 +70,8 @@ export default function ScoreWaterfall({ breakdown, matchFacts = [], cautionFact
   return (
     <div className="rounded-xl border border-gray-200 bg-gray-50/60">
       <div className="flex items-center justify-between gap-2 px-3 py-2.5">
-        <span className="text-xs font-semibold text-gray-700">Điểm này đến từ đâu?</span>
-        <span className="flex items-center gap-2 text-[10px] text-gray-400">
+        <span className="text-[13px] font-semibold text-gray-700">Điểm này đến từ đâu?</span>
+        <span className="flex items-center gap-2 text-[11px] text-gray-400">
           {/* Đóng dấu phiên bản: phiên gợi ý cũ lưu điểm của công thức cũ, không so trực tiếp với điểm hôm nay. */}
           <span
             title={`Công thức phiên bản ${breakdown.formulaVersion}. Phiên gợi ý đã lưu ở phiên bản khác có điểm không so sánh trực tiếp với điểm này.`}
@@ -50,107 +81,159 @@ export default function ScoreWaterfall({ breakdown, matchFacts = [], cautionFact
         </span>
       </div>
 
-      <div className="border-t border-gray-200 px-3 py-3">
-        <ul className="space-y-2.5">
-          {breakdown.components.map((c) => (
-            <HoverCalc key={c.code} calc={<ComponentCalc component={c} breakdown={breakdown} product={product} />}>
-              <div className="flex items-baseline justify-between gap-3 text-xs">
-                <span className={`flex min-w-0 items-center gap-1.5 font-medium ${c.contribution < 0 ? "text-[#b3261e]" : "text-gray-800"}`}>
-                  {/* Dấu theo DẤU của số hạng: "hành nên tránh" là số hạng âm — vẽ dấu + cho nó là nói ngược. */}
-                  {c.contribution < 0
-                    ? <Minus size={12} className="shrink-0" />
-                    : <Plus size={12} className="shrink-0 text-emerald-600" />}
-                  <span className="truncate">{c.labelVi}</span>
-                </span>
-                <span className="shrink-0 tabular-nums text-gray-600">
-                  {Math.abs(c.value).toFixed(3)}
-                  <span className="text-gray-400"> × {c.weight.toFixed(2)} = </span>
-                  <span className={`font-semibold ${c.contribution < 0 ? "text-[#b3261e]" : "text-gray-900"}`}>{signed(c.contribution)}</span>
-                </span>
-              </div>
-              <p className="mt-0.5 pl-[18px] text-[11px] leading-snug text-gray-500">{c.reasonVi}</p>
-            </HoverCalc>
-          ))}
+      <div
+        className={`border-t border-gray-200 px-3 py-3 ${aside ? "grid gap-4 md:grid-cols-2" : ""}`}
+      >
+        {aside && <div className="min-w-0">{aside}</div>}
+        {/* Cột phải: chiều cao CỦA CỘT TRÁI quyết định chiều cao hàng (ô phải `absolute` nên không góp
+            chiều cao). Chỉ cuộn DỌC: `-inset-x-2 px-2` chừa chỗ cho `-mx-2` của các dòng hover, nếu không
+            phần lố 8px mỗi bên sẽ sinh ra thanh cuộn ngang; `overflow-x-hidden` chốt chặn thêm.
+            Nội dung dài hơn thì cuộn bên trong. Cuộn có snap "đỉnh/đáy": chỉ hai điểm dừng —
+            đầu (`snap-start` ở khối trên) và cuối (`snap-end` ở khối dưới) - nên kéo là về hẳn một trong hai
+            mặt, không dừng nửa chừng che mất một dòng. Dưới md (một cột) không giới hạn, trải bình thường. */}
+        <div className={aside ? "min-w-0 md:relative md:min-h-[200px]" : "min-w-0"}>
+          <div
+            className={
+              aside
+                ? "md:absolute md:inset-y-0 md:-inset-x-2 md:overflow-y-auto md:overflow-x-hidden md:px-2 md:snap-y md:snap-mandatory [scrollbar-width:thin]"
+                : ""
+            }
+          >
+            <div className="snap-start">
+              {lead && <div className="mb-3">{lead}</div>}
+              <ul className="space-y-2.5">
+                {breakdown.components.map((c) => (
+                  <HoverCalc
+                    key={c.code}
+                    calc={<ComponentCalc component={c} breakdown={breakdown} product={product} />}
+                  >
+                    <div className="flex items-baseline justify-between gap-3 text-[13px]">
+                      <span
+                        className={`flex min-w-0 items-center gap-1.5 font-medium ${c.contribution < 0 ? "text-[#b3261e]" : "text-gray-800"}`}
+                      >
+                        {/* Dấu theo DẤU của số hạng: "hành nên tránh" là số hạng âm — vẽ dấu + cho nó là nói ngược. */}
+                        {c.contribution < 0 ? (
+                          <Minus size={12} className="shrink-0" />
+                        ) : (
+                          <Plus size={12} className="shrink-0 text-emerald-600" />
+                        )}
+                        <span className="truncate">{c.labelVi}</span>
+                      </span>
+                      <span className="shrink-0 tabular-nums text-gray-600">
+                        {Math.abs(c.value).toFixed(3)}
+                        <span className="text-gray-400"> × {c.weight.toFixed(2)} = </span>
+                        <span
+                          className={`font-semibold ${c.contribution < 0 ? "text-[#b3261e]" : "text-gray-900"}`}
+                        >
+                          {signed(c.contribution)}
+                        </span>
+                      </span>
+                    </div>
+                    <p className="mt-0.5 pl-[18px] text-xs leading-snug text-gray-500">
+                      {c.reasonVi}
+                    </p>
+                  </HoverCalc>
+                ))}
 
-          {appliedPenalties.map((p) => (
-            <HoverCalc key={p.code} calc={<PenaltyCalc penalty={p} breakdown={breakdown} product={product} />}>
-              <div className="flex items-baseline justify-between gap-3 text-xs">
-                <span className="flex min-w-0 items-center gap-1.5 font-medium text-red-700">
-                  <Minus size={12} className="shrink-0" />
-                  <span className="truncate">{p.labelVi}</span>
-                </span>
-                <span className="shrink-0 font-semibold tabular-nums text-red-700">−{p.value.toFixed(3)}</span>
-              </div>
-              <p className="mt-0.5 pl-[18px] text-[11px] leading-snug text-gray-500">{p.reasonVi}</p>
-            </HoverCalc>
-          ))}
-        </ul>
-
-        <HoverCalc as="div" calc={<FinalCalc breakdown={breakdown} applied={appliedPenalties} />}>
-          <div className="mt-3 flex items-baseline justify-between border-t border-gray-200 pt-2.5 text-xs">
-            <span className="font-semibold text-gray-900">Mức độ phù hợp</span>
-            <span className="font-bold tabular-nums text-gray-900">
-              {breakdown.score.toFixed(3)}
-              <span className="ml-1.5 font-medium text-gray-500">= {breakdown.displayPercent}%</span>
-            </span>
-          </div>
-        </HoverCalc>
-
-        {breakdown.clamped && (
-          <p className="mt-1.5 text-[11px] leading-snug text-gray-500">
-            Điểm thô là {breakdown.rawScore.toFixed(3)}, đã cắt về biên của thang [−1, 1].
-          </p>
-        )}
-
-        {(matchFacts.length > 0 || cautionFacts.length > 0) && (
-          <ul className="mt-2.5 space-y-1.5">
-            {matchFacts.map((f, i) => (
-              <li key={`m${i}`} className="flex items-start gap-1.5 text-[11px] leading-snug text-gray-700">
-                <Check size={12} className="mt-0.5 shrink-0 text-emerald-600" />
-                <span>{f}</span>
-              </li>
-            ))}
-            {cautionFacts.map((c, i) => (
-              <li
-                key={`c${i}`}
-                className="flex items-start gap-1.5 rounded-lg bg-[#fdecea] px-2 py-1.5 text-[11px] leading-snug text-[#b3261e]"
-              >
-                <TriangleAlert size={12} className="mt-0.5 shrink-0" />
-                <span>{c}</span>
-              </li>
-            ))}
-          </ul>
-        )}
-
-        {skippedPenalties.length > 0 && (
-          <div className="mt-3 border-t border-dashed border-gray-200 pt-2">
-            <button
-              type="button"
-              onClick={() => setSkippedOpen((v) => !v)}
-              aria-expanded={skippedOpen}
-              className="flex w-full items-center justify-between gap-2 text-left"
-            >
-              <span className="text-[10px] font-medium uppercase tracking-wide text-gray-400">
-                Đã xem xét các yếu tố ({skippedPenalties.length})
-              </span>
-              <ChevronDown
-                size={14}
-                className={`shrink-0 text-gray-400 transition-transform ${skippedOpen ? "rotate-180" : ""}`}
-              />
-            </button>
-            {skippedOpen && (
-              <ul className="mt-1.5 space-y-1.5">
-                {skippedPenalties.map((p) => (
-                  <li key={p.code} className="text-[11px] leading-snug text-gray-500">
-                    <span className="font-medium text-gray-600">{p.labelVi}</span>
-                    {" - "}
-                    {p.reasonVi}
-                  </li>
+                {appliedPenalties.map((p) => (
+                  <HoverCalc
+                    key={p.code}
+                    calc={<PenaltyCalc penalty={p} breakdown={breakdown} product={product} />}
+                  >
+                    <div className="flex items-baseline justify-between gap-3 text-[13px]">
+                      <span className="flex min-w-0 items-center gap-1.5 font-medium text-red-700">
+                        <Minus size={12} className="shrink-0" />
+                        <span className="truncate">{p.labelVi}</span>
+                      </span>
+                      <span className="shrink-0 font-semibold tabular-nums text-red-700">
+                        −{p.value.toFixed(3)}
+                      </span>
+                    </div>
+                    <p className="mt-0.5 pl-[18px] text-xs leading-snug text-gray-500">
+                      {p.reasonVi}
+                    </p>
+                  </HoverCalc>
                 ))}
               </ul>
-            )}
+            </div>
+            <div className="snap-end">
+              <HoverCalc
+                as="div"
+                calc={<FinalCalc breakdown={breakdown} applied={appliedPenalties} />}
+              >
+                <div className="mt-3 flex items-baseline justify-between border-t border-gray-200 pt-2.5 text-[13px]">
+                  <span className="font-semibold text-gray-900">Mức độ phù hợp</span>
+                  <span className="font-bold tabular-nums text-gray-900">
+                    {breakdown.score.toFixed(3)}
+                    <span className="ml-1.5 font-medium text-gray-500">
+                      = {breakdown.displayPercent}%
+                    </span>
+                  </span>
+                </div>
+              </HoverCalc>
+
+              {breakdown.clamped && (
+                <p className="mt-1.5 text-xs leading-snug text-gray-500">
+                  Điểm thô là {breakdown.rawScore.toFixed(3)}, đã cắt về biên của thang [−1, 1].
+                </p>
+              )}
+
+              {(matchFacts.length > 0 || cautionFacts.length > 0) && (
+                <ul className="mt-2.5 space-y-1.5">
+                  {matchFacts.map((f, i) => (
+                    <li
+                      key={`m${i}`}
+                      className="flex items-start gap-1.5 text-xs leading-snug text-gray-700"
+                    >
+                      <Check size={12} className="mt-0.5 shrink-0 text-emerald-600" />
+                      <span>{f}</span>
+                    </li>
+                  ))}
+                  {cautionFacts.map((c, i) => (
+                    <li
+                      key={`c${i}`}
+                      className={`flex items-start gap-1.5 rounded-lg px-2 py-1.5 text-xs leading-snug ${CAUTION_CLASS[cautionTone(c)]}`}
+                    >
+                      <TriangleAlert size={12} className="mt-0.5 shrink-0" />
+                      <span>{c}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+
+              {skippedPenalties.length > 0 && (
+                <div className="mt-3 border-t border-dashed border-gray-200 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setSkippedOpen((v) => !v)}
+                    aria-expanded={skippedOpen}
+                    className="flex w-full items-center justify-between gap-2 text-left"
+                  >
+                    <span className="text-[11px] font-medium uppercase tracking-wide text-gray-400">
+                      Đã xem xét các yếu tố ({skippedPenalties.length})
+                    </span>
+                    <ChevronDown
+                      size={14}
+                      className={`shrink-0 text-gray-400 transition-transform ${skippedOpen ? "rotate-180" : ""}`}
+                    />
+                  </button>
+                  {/* Bung tại chỗ; cột phải cao bằng cột trái nên phần bung thêm nếu tràn thì cột cuộn dọc. */}
+                  {skippedOpen && (
+                    <ul className="mt-1.5 space-y-1.5">
+                      {skippedPenalties.map((p) => (
+                        <li key={p.code} className="text-xs leading-snug text-gray-500">
+                          <span className="font-medium text-gray-600">{p.labelVi}</span>
+                          {" - "}
+                          {p.reasonVi}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
-        )}
+        </div>
       </div>
     </div>
   );
@@ -162,12 +245,27 @@ export default function ScoreWaterfall({ breakdown, matchFacts = [], cautionFact
  * Bọc một dòng waterfall: hover/focus mở popover phép tính bên dưới dòng. Là `<li>` có `tabIndex` để
  * bàn phím cũng mở được. Popover bung xuống dưới, bám mép phải (cột số) — cùng cơ chế với chip nghề.
  */
-function HoverCalc({ children, calc, as: Tag = "li" }: { children: ReactNode; calc: ReactNode; as?: "li" | "div" }) {
+function HoverCalc({
+  children,
+  calc,
+  as: Tag = "li",
+}: {
+  children: ReactNode;
+  calc: ReactNode;
+  as?: "li" | "div";
+}) {
   const [open, setOpen] = useState(false);
   const id = useId();
+  // `fixed` theo neo (không `absolute`): dòng nằm trong cột cuộn, `absolute` sẽ bị overflow xén.
+  const { anchorRef, style } = useAnchoredPopover<HTMLElement>(open, {
+    width: 300,
+    align: "right",
+    onClose: () => setOpen(false),
+  });
   return (
     <Tag
-      className="relative -mx-2 rounded-lg px-2 py-1 outline-none transition-colors hover:bg-white focus-visible:bg-white focus-visible:ring-2 focus-visible:ring-primary/30"
+      ref={anchorRef as never}
+      className="-mx-2 rounded-lg px-2 py-1 outline-none transition-colors hover:bg-white focus-visible:bg-white focus-visible:ring-2 focus-visible:ring-primary/30"
       tabIndex={0}
       aria-describedby={open ? id : undefined}
       onMouseEnter={() => setOpen(true)}
@@ -185,8 +283,8 @@ function HoverCalc({ children, calc, as: Tag = "li" }: { children: ReactNode; ca
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 4 }}
             transition={{ duration: 0.15 }}
-            className="absolute right-0 top-full z-30 mt-1 w-[300px] max-w-[calc(100vw-2rem)] rounded-xl border border-gray-200 p-3 text-[11px] shadow-lg backdrop-blur-[3px]"
-            style={{ background: "rgba(255,255,255,0.97)" }}
+            className="overflow-y-auto rounded-xl border border-gray-200 p-3 text-xs shadow-lg backdrop-blur-[3px]"
+            style={{ ...style, background: "rgba(255,255,255,0.97)" }}
           >
             {calc}
           </motion.div>
@@ -241,12 +339,13 @@ function ComponentCalc({
 
   // v3.6 — nhánh Carry không còn là tích trong: "phủ" = min(cần, cấp) theo hành; "kỵ" = −p theo hành kỵ.
   const mode: "cover" | "avoid" | "dot" =
-    component.code === "PERSONAL_NEED_SCORE" ? "cover"
-    : component.code === "PERSONAL_AVOID_SCORE" ? "avoid"
-    : "dot";
+    component.code === "PERSONAL_NEED_SCORE"
+      ? "cover"
+      : component.code === "PERSONAL_AVOID_SCORE"
+        ? "avoid"
+        : "dot";
   const avoid = new Set(breakdown.personalAvoidElements ?? []);
-  const rows = ELEMENT_ORDER
-    .map((e) => ({ element: e, d: direction[e] ?? 0, p: product[e] ?? 0 }))
+  const rows = ELEMENT_ORDER.map((e) => ({ element: e, d: direction[e] ?? 0, p: product[e] ?? 0 }))
     .filter((r) =>
       mode === "avoid" ? avoid.has(r.element) : Math.abs(r.d) >= 0.005 || r.p >= 0.005,
     )
@@ -262,21 +361,25 @@ function ComponentCalc({
   const clamped = Math.max(-1, Math.min(1, sum));
   const mismatch = Math.abs(clamped - component.value) > 0.002;
   const title =
-    mode === "cover" ? `${component.labelVi} — phần nhu cầu được đáp ứng`
-    : mode === "avoid" ? `${component.labelVi} — phần vật mang hành nên tránh`
-    : `${component.labelVi} = ${meta.symbol}·p`;
+    mode === "cover"
+      ? `${component.labelVi} - phần nhu cầu được đáp ứng`
+      : mode === "avoid"
+        ? `${component.labelVi} - phần vật mang hành nên tránh`
+        : `${component.labelVi} = ${meta.symbol}·p`;
   const header =
-    mode === "cover" ? "đáp ứng = phần nhỏ hơn giữa bạn cần và vật mang"
-    : mode === "avoid" ? "vật mang bao nhiêu hành nên tránh"
-    : `${meta.direction} (${meta.symbol}) × vật mang (p)`;
+    mode === "cover"
+      ? "đáp ứng = phần nhỏ hơn giữa bạn cần và vật mang"
+      : mode === "avoid"
+        ? "vật mang bao nhiêu hành nên tránh"
+        : `${meta.direction} (${meta.symbol}) × vật mang (p)`;
 
   return (
     <div>
       <p className="mb-1.5 font-semibold text-slate-900">{title}</p>
       <div className="grid grid-cols-[auto_1fr_auto] items-center gap-x-2 gap-y-1 text-slate-700">
-        <span className="text-[10px] uppercase tracking-wide text-slate-400">Hành</span>
-        <span className="text-[10px] uppercase tracking-wide text-slate-400">{header}</span>
-        <span className="text-right text-[10px] uppercase tracking-wide text-slate-400">= </span>
+        <span className="text-[11px] uppercase tracking-wide text-slate-400">Hành</span>
+        <span className="text-[11px] uppercase tracking-wide text-slate-400">{header}</span>
+        <span className="text-right text-[11px] uppercase tracking-wide text-slate-400">= </span>
         {rows.map((r) => (
           <CalcRow
             key={r.element}
@@ -296,11 +399,14 @@ function ComponentCalc({
         <span>
           × trọng số {meta.weight} = {component.weight.toFixed(2)}
         </span>
-        <span className="font-semibold tabular-nums text-slate-900">{signed(component.contribution)}</span>
+        <span className="font-semibold tabular-nums text-slate-900">
+          {signed(component.contribution)}
+        </span>
       </div>
       {mismatch && (
-        <p className="mt-1 text-[10px] text-amber-700">
-          FE cộng ra {fmt(clamped, 3)} khác BE {fmt(component.value, 3)} — đang đọc sai vector, số BE là số đúng.
+        <p className="mt-1 text-[11px] text-amber-700">
+          FE cộng ra {fmt(clamped, 3)} khác BE {fmt(component.value, 3)} - đang đọc sai vector, số
+          BE là số đúng.
         </p>
       )}
     </div>
@@ -323,10 +429,12 @@ function PenaltyCalc({
   const destiny = breakdown.destinyElement;
   const clashRows =
     penalty.code === "MINOR_CLASH_PENALTY" && destiny
-      ? ELEMENT_ORDER.filter((e) => CONTROLS[e] === destiny && (product[e] ?? 0) >= 0.005).map((e) => ({
-          element: e,
-          p: product[e] ?? 0,
-        }))
+      ? ELEMENT_ORDER.filter((e) => CONTROLS[e] === destiny && (product[e] ?? 0) >= 0.005).map(
+          (e) => ({
+            element: e,
+            p: product[e] ?? 0,
+          }),
+        )
       : [];
 
   return (
@@ -334,18 +442,25 @@ function PenaltyCalc({
       <p className="mb-1.5 font-semibold text-slate-900">{penalty.labelVi}</p>
       {clashRows.length > 0 && (
         <div className="mb-1.5 grid grid-cols-[auto_1fr_auto] items-center gap-x-2 gap-y-1 text-slate-700">
-          <span className="col-span-3 text-[10px] uppercase tracking-wide text-slate-400">
+          <span className="col-span-3 text-[11px] uppercase tracking-wide text-slate-400">
             Hành khắc bản mệnh {destiny ? elementVi(destiny) : ""} trong sản phẩm
           </span>
           {clashRows.map((r) => (
-            <CalcRow key={r.element} element={r.element} left="" right={`${Math.round(r.p * 100)}%`} result={null} />
+            <CalcRow
+              key={r.element}
+              element={r.element}
+              left=""
+              right={`${Math.round(r.p * 100)}%`}
+              result={null}
+            />
           ))}
         </div>
       )}
       <div className="flex items-center justify-between text-slate-600">
         <span>
           Mức cân nhắc {penalty.paramValue.toFixed(2)}
-          {penalty.factor != null && ` × ${penalty.factorLabelVi ?? "hệ số"} ${penalty.factor.toFixed(2)}`}
+          {penalty.factor != null &&
+            ` × ${penalty.factorLabelVi ?? "hệ số"} ${penalty.factor.toFixed(2)}`}
         </span>
         <span className="font-semibold tabular-nums text-red-700">−{penalty.value.toFixed(3)}</span>
       </div>
@@ -354,7 +469,13 @@ function PenaltyCalc({
 }
 
 /** Điểm cuối = Σ cộng − Σ trừ, cắt về [−1, 1], rồi `%` = (điểm + 1) / 2 — 50 % là trung tính. */
-function FinalCalc({ breakdown, applied }: { breakdown: ScoreBreakdown; applied: ScorePenaltyRow[] }) {
+function FinalCalc({
+  breakdown,
+  applied,
+}: {
+  breakdown: ScoreBreakdown;
+  applied: ScorePenaltyRow[];
+}) {
   const plus = breakdown.components.map((c) => signed(c.contribution)).join(" ");
   const minus = applied.map((p) => `− ${p.value.toFixed(3)}`).join(" ");
   return (
@@ -377,7 +498,9 @@ function FinalCalc({ breakdown, applied }: { breakdown: ScoreBreakdown; applied:
         <span>({fmt(breakdown.score, 3)} + 1) ÷ 2 × 100</span>
         <span className="tabular-nums">= {breakdown.displayPercent}%</span>
       </div>
-      <p className="text-[10px] text-slate-500">50% = trung tính · ≥ 60% "Phù hợp" · ≥ 80% "Rất hợp" · &lt; 40% "Cân nhắc".</p>
+      <p className="text-[11px] text-slate-500">
+        50% = trung tính · ≥ 60% "Phù hợp" · ≥ 80% "Rất hợp" · &lt; 40% "Cân nhắc".
+      </p>
     </div>
   );
 }
@@ -398,13 +521,16 @@ function CalcRow({
   return (
     <>
       <span className="flex items-center gap-1.5">
-        <span className="inline-block h-2 w-2 rounded-full" style={{ backgroundColor: elementColor(element) }} />
+        <span
+          className="inline-block h-2 w-2 rounded-full"
+          style={{ backgroundColor: elementColor(element) }}
+        />
         {elementVi(element)}
       </span>
-      <span className="tabular-nums text-slate-600">
-        {left ? `${left} ${op} ${right}` : right}
-      </span>
-      <span className={`text-right tabular-nums ${result && Math.abs(result) >= 0.0005 ? "font-medium text-slate-800" : "text-slate-400"}`}>
+      <span className="tabular-nums text-slate-600">{left ? `${left} ${op} ${right}` : right}</span>
+      <span
+        className={`text-right tabular-nums ${result && Math.abs(result) >= 0.0005 ? "font-medium text-slate-800" : "text-slate-400"}`}
+      >
         {result == null ? "" : signed(result)}
       </span>
     </>

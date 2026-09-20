@@ -46,11 +46,11 @@ export default function OccupationDirectionPanel({ breakdown }: OccupationDirect
   return (
     <div className="rounded-xl border border-gray-200 bg-white p-3">
       <div className="flex flex-wrap items-center gap-2">
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-700">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-gray-100 px-2.5 py-1 text-[13px] font-medium text-gray-700">
           <Briefcase size={13} />
           Nghề {occupation.nameVi}
         </span>
-        <span className="text-[11px] text-gray-500">trọng số {occupation.weight.toFixed(2)}</span>
+        <span className="text-xs text-gray-500">trọng số {occupation.weight.toFixed(2)}</span>
       </div>
 
       <div className="mt-3 flex flex-col gap-1.5">
@@ -59,7 +59,7 @@ export default function OccupationDirectionPanel({ breakdown }: OccupationDirect
           const up = row.value > 0;
           return (
             <div key={row.element} className="flex items-center gap-2">
-              <span className="w-12 shrink-0 text-[11px] text-gray-600">{elementVi(row.element)}</span>
+              <span className="w-12 shrink-0 text-xs text-gray-600">{elementVi(row.element)}</span>
               {/* Hai nửa quanh trục giữa: sang phải là nghề cần hành đó, sang trái là nghề nên tránh. */}
               <div className="flex min-w-0 flex-1 items-center">
                 <div className="flex h-2 flex-1 justify-end">
@@ -81,7 +81,7 @@ export default function OccupationDirectionPanel({ breakdown }: OccupationDirect
                 </div>
               </div>
               <span
-                className={`w-20 shrink-0 text-right text-[11px] tabular-nums ${
+                className={`w-20 shrink-0 text-right text-xs tabular-nums ${
                   row.clamped ? "text-red-500" : up ? "text-emerald-600" : "text-gray-400"
                 }`}
               >
@@ -92,7 +92,7 @@ export default function OccupationDirectionPanel({ breakdown }: OccupationDirect
         })}
       </div>
 
-      <p className="mt-2 text-[11px] leading-snug text-gray-500">{occupation.reasonVi}</p>
+      <p className="mt-2 text-xs leading-snug text-gray-500">{occupation.reasonVi}</p>
     </div>
   );
 }

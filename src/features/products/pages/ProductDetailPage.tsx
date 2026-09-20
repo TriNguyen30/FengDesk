@@ -481,15 +481,6 @@ export default function ProductDetailPage() {
         <div className="flex flex-col sm:flex-row">
           {/* ── Left: Images ─────────────────────────────────────────────── */}
           <div className="relative w-full shrink-0 p-4 sm:w-[440px] sm:p-6 lg:w-[520px]">
-            {model3D && (
-              <div className="mb-3 flex flex-wrap items-center justify-between gap-3 px-0.5">
-                <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-gray-400">
-                  {t("product_detail.model_3d.view_mode")}
-                </span>
-                <Model3DViewSwitcher activeMode={viewMode} onChange={setViewMode} />
-              </div>
-            )}
-
             {/* Main image / 3D viewer */}
             <div
               id="product-media-viewer"
@@ -502,6 +493,15 @@ export default function ProductDetailPage() {
                   className={`absolute top-3 right-3 z-10 rounded-md px-2.5 py-1 text-xs font-bold uppercase tracking-wider text-white shadow-sm pointer-events-none ${elementColor}`}
                 >
                   {t("product_detail.labels.element")} {elementLabel}
+                </div>
+              )}
+
+              {/* Nút 2D/3D nằm ĐÈ lên khung ảnh thay vì chiếm một hàng riêng phía trên: nó chỉ xuất hiện ở ảnh
+                  có mô hình 3D, nên khi slider tự chuyển ảnh, hàng đó nhảy ra/vào và đẩy mọi thứ bên dưới
+                  (kể cả bảng độ phù hợp) lên xuống. Overlay thì khung ảnh giữ nguyên chiều cao. */}
+              {model3D && (
+                <div className="absolute bottom-3 left-3 z-20">
+                  <Model3DViewSwitcher activeMode={viewMode} onChange={setViewMode} />
                 </div>
               )}
 

@@ -1,5 +1,5 @@
 import type { ElementCode, ProductElementRow, ScoreBreakdown } from "../types/recommendation";
-import { ELEMENT_ORDER } from "../components/element-vector/constants";
+import { ELEMENT_ORDER, elementVi } from "../components/element-vector/constants";
 
 /** Vector 5 hành dạng map — kiểu làm việc nội bộ, gọn hơn mảng row khi phải cộng/nhân. */
 export type ElementMap = Record<ElementCode, number>;
@@ -52,9 +52,10 @@ export function combinedDirection(
   const wo = occupation ? Math.max(0, Math.min(occupation.weight, 1 - wpEff)) : 0;
   const out = { ...ZERO };
   for (const e of ELEMENT_ORDER) {
-    out[e] = (1 - wpEff - wo) * gHat[e]
-      + (r ? wpEff * r[e] : 0)
-      + (occupation ? wo * occupation.direction[e] : 0);
+    out[e] =
+      (1 - wpEff - wo) * gHat[e] +
+      (r ? wpEff * r[e] : 0) +
+      (occupation ? wo * occupation.direction[e] : 0);
   }
   return out;
 }
@@ -217,11 +218,13 @@ export function negativeAxisReason(
   const roomExcess = gHat[element] < 0;
   const clashes = r !== null && r[element] < 0;
   const destiny = destinyLabel ?? "bản mệnh của bạn";
+  // Câu này đi thẳng ra tooltip ⇒ tên có dấu, không để lộ mã "Tho"/"Thuy".
+  const name = elementVi(element);
 
   // "Phòng đang thừa X" đã được khối dấu thừa/thiếu trên tooltip nói rồi — lặp lại ở đây là hai dòng
   // cùng nội dung. Chỉ nói phần mà khối kia KHÔNG biết: quan hệ với bản mệnh.
-  if (roomExcess && clashes) return `${element} cũng không hợp ${destiny}.`;
-  if (clashes) return `Phòng có cần ${element}, nhưng ${element} không hợp ${destiny}.`;
+  if (roomExcess && clashes) return `${name} cũng không hợp ${destiny}.`;
+  if (clashes) return `Phòng có cần ${name}, nhưng ${name} không hợp ${destiny}.`;
   return null;
 }
 

@@ -39,6 +39,26 @@ export interface WorkspaceIntakeDraft {
     values: WorkspaceFormValues;
     inputs: WorkspaceProfileInputDto[];
   };
+  /**
+   * Lượt AI đang chạy nền (chưa lấy kết quả về form). Nhờ nó mà user bấm phân tích xong có thể đóng
+   * modal, đi chỗ khác, "một lúc sau" quay lại: FE nối lại đúng job này (SignalR + poll) và điền form —
+   * không phải bấm phân tích lại. Xoá khi draft đã đổ vào form, job lỗi, hết hạn, hoặc user bấm Hủy.
+   */
+  intake?: {
+    operationId: string;
+    startedAt: number;
+  };
+}
+
+/** Job trên BE chỉ sống 30' (`JobResultTtl`) — nhớ lâu hơn thì poll chỉ nhận 404. */
+export const INTAKE_MAX_AGE_MS = 30 * 60 * 1000;
+
+/** Sự kiện nội bộ: nháp vừa được ghi/xoá — để chip "AI đang phân tích" ngoài trang cập nhật tức thì. */
+const CHANGE_EVENT = "fengdesk:workspace-intake-draft";
+
+/** Lượt AI còn sống trong nháp (nếu có). Dùng ngoài modal — vd chip báo trên trang Không gian làm việc. */
+export function readRunningIntake(): WorkspaceIntakeDraft["intake"] | null {
+  return read()?.intake ?? null;
 }
 
 function read(): WorkspaceIntakeDraft | null {
@@ -48,6 +68,8 @@ function read(): WorkspaceIntakeDraft | null {
     const parsed = JSON.parse(raw) as WorkspaceIntakeDraft;
     if (parsed?.v !== VERSION) return null;
     if (!parsed.savedAt || Date.now() - parsed.savedAt > MAX_AGE_MS) return null;
+    // Lượt AI quá hạn TTL của BE thì bỏ ngay lúc đọc — nơi gọi không phải tự kiểm tra thời gian.
+    if (parsed.intake && Date.now() - parsed.intake.startedAt > INTAKE_MAX_AGE_MS) delete parsed.intake;
     return parsed;
   } catch {
     // Chế độ riêng tư / localStorage bị chặn / JSON hỏng → coi như không có nháp.
@@ -61,6 +83,7 @@ function write(draft: WorkspaceIntakeDraft) {
   } catch {
     /* hết quota hoặc bị chặn — nháp chỉ là tiện ích, không được làm hỏng luồng chính */
   }
+  window.dispatchEvent(new Event(CHANGE_EVENT));
 }
 
 function remove() {
@@ -69,6 +92,25 @@ function remove() {
   } catch {
     /* bỏ qua */
   }
+  window.dispatchEvent(new Event(CHANGE_EVENT));
+}
+
+/**
+ * Có lượt AI intake nào đang chạy nền không — đọc từ nháp, cập nhật khi nháp đổi (cùng tab qua
+ * CHANGE_EVENT, tab khác qua `storage`). Chỉ để HIỆN DẤU HIỆU; nối lại job là việc của modal.
+ */
+export function useWorkspaceIntakeRunning(): boolean {
+  const [running, setRunning] = useState(() => readRunningIntake() !== null);
+  useEffect(() => {
+    const sync = () => setRunning(readRunningIntake() !== null);
+    window.addEventListener(CHANGE_EVENT, sync);
+    window.addEventListener("storage", sync);
+    return () => {
+      window.removeEventListener(CHANGE_EVENT, sync);
+      window.removeEventListener("storage", sync);
+    };
+  }, []);
+  return running;
 }
 
 /**

@@ -32,7 +32,7 @@ export function ClashBadge({ breakdown }: { breakdown: ScoreBreakdown | null }) 
 }
 
 /**
- * Banner hoá giải — §13. Xuất hiện khi phòng đang thiếu **đúng** hành khắc bản mệnh user.
+ * Banner cân bằng (§13 gọi là "hoá giải" — chữ trên màn hình dùng "cân bằng" cho thuận tai). Xuất hiện khi phòng đang thiếu **đúng** hành khắc bản mệnh user.
  *
  * Đây không phải cảnh báo lỗi: engine **đã tự giải** bằng cách để hai lực triệt tiêu nhau ở hành xung
  * và đẩy hành trung gian lên. Việc của màn hình chỉ là NÓI RA, để user không tưởng hệ thống bỏ sót
@@ -47,7 +47,7 @@ export function ConflictResolutionBanner({ conflict }: { conflict: ConflictResol
     <div className="flex gap-2.5 rounded-xl border border-[#D9AD41]/40 bg-[#D9AD41]/10 px-3 py-2.5">
       <Sparkles size={15} className="mt-0.5 shrink-0 text-[#8a6d1f]" />
       <div className="min-w-0 text-xs leading-relaxed text-[#6b5416]">
-        <p className="font-semibold">Ưu tiên hành {elementVi(conflict.bridge)} để hoá giải</p>
+        <p className="font-semibold">Ưu tiên hành {elementVi(conflict.bridge)} để cân bằng</p>
         <p className="mt-0.5">{conflict.reasonVi}</p>
       </div>
     </div>

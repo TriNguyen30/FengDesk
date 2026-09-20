@@ -117,3 +117,17 @@ export function fitToneByPercent(percent: number): FitTone {
   if (percent >= 25) return FIT_TONES[3];
   return FIT_TONES[4];
 }
+
+/**
+ * Tông của một dòng `cautionFacts`: chỉ chuyện **bản mệnh** (khắc mệnh, hành nên tránh) mới đỏ; mọi
+ * lưu ý còn lại (lệch cảm hứng, hành phòng đã thừa, lệch nghề…) là vàng — nhắc nhở, không phải cảnh báo.
+ * BE trả câu chữ thuần nên phân loại theo từ khoá; đổi lời ở engine thì rà lại đây.
+ */
+export type CautionTone = "danger" | "notice";
+export function cautionTone(fact: string): CautionTone {
+  return /khắc|nên tránh/i.test(fact) ? "danger" : "notice";
+}
+export const CAUTION_CLASS: Record<CautionTone, string> = {
+  danger: "bg-[#fdecea] text-[#b3261e]",
+  notice: "bg-[#fdf6e3] text-[#8a6d1f]",
+};
