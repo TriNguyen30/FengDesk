@@ -203,5 +203,6 @@ export default function AppRoutes() {
         {/* 404 Fallback */}
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
-    </>);
+    </>
+  );
 }

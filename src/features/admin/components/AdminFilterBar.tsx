@@ -41,14 +41,17 @@ export default function AdminFilterBar({
           </select>
         )}
         <div className="relative">
-          <Search className={`absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 ${onSearchFieldChange ? 'hidden' : ''}`} />
+          <Search
+            className={`absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 ${onSearchFieldChange ? "hidden" : ""}`}
+          />
           <input
             type="text"
             placeholder={searchPlaceholder}
             value={searchValue}
             onChange={(e) => onSearchChange(e.target.value)}
-            className={`h-10 w-full border border-slate-300 bg-white pr-8 text-sm placeholder-slate-400 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary sm:w-64 transition-all ${onSearchFieldChange ? 'rounded-r-lg pl-3' : 'rounded-lg pl-9'
-              }`}
+            className={`h-10 w-full border border-slate-300 bg-white pr-8 text-sm placeholder-slate-400 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary sm:w-64 transition-all ${
+              onSearchFieldChange ? "rounded-r-lg pl-3" : "rounded-lg pl-9"
+            }`}
           />
           {searchValue && (
             <button

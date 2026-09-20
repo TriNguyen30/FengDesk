@@ -155,7 +155,9 @@ export default function ReviewSection({ productId }: ReviewSectionProps) {
       {/* Title */}
       <div className="flex items-center gap-2 border-b border-gray-100 pb-4 mb-6">
         <MessageSquare className="h-5 w-5 text-primary" />
-        <h2 className="text-lg font-bold text-gray-900">{t("review_section.title", { count: totalReviews })}</h2>
+        <h2 className="text-lg font-bold text-gray-900">
+          {t("review_section.title", { count: totalReviews })}
+        </h2>
       </div>
 
       {/* ── Grid: Summary & Stats ─────────────────────────────────────────── */}
@@ -167,7 +169,9 @@ export default function ReviewSection({ productId }: ReviewSectionProps) {
             <span className="text-lg text-gray-500 font-medium">/5</span>
           </div>
           <div className="mt-2">{renderStars(averageRating, "h-5 w-5")}</div>
-          <p className="mt-1 text-xs text-gray-400">{t("review_section.reviews_count", { count: totalReviews })}</p>
+          <p className="mt-1 text-xs text-gray-400">
+            {t("review_section.reviews_count", { count: totalReviews })}
+          </p>
         </div>
 
         {/* Rating Bars */}
@@ -199,11 +203,15 @@ export default function ReviewSection({ productId }: ReviewSectionProps) {
             onSubmit={handleCreateSubmit}
             className="bg-gray-50/30 border border-gray-100 rounded-xl p-4 sm:p-5"
           >
-            <h3 className="text-sm font-semibold text-gray-800 mb-3">{t("review_section.write_review.title")}</h3>
+            <h3 className="text-sm font-semibold text-gray-800 mb-3">
+              {t("review_section.write_review.title")}
+            </h3>
 
             {/* Stars selection */}
             <div className="flex flex-wrap items-center gap-3 mb-4">
-              <span className="text-xs text-gray-500 font-medium">{t("review_section.write_review.rating_label")}</span>
+              <span className="text-xs text-gray-500 font-medium">
+                {t("review_section.write_review.rating_label")}
+              </span>
               <div className="flex items-center gap-2">
                 {renderStars(newRating, "h-7 w-7", true, setNewRating, hoverRating, setHoverRating)}
                 {(hoverRating !== null || newRating > 0) && (
@@ -390,7 +398,9 @@ export default function ReviewSection({ productId }: ReviewSectionProps) {
 
                       {/* Edit Stars */}
                       <div className="flex items-center gap-3 mb-3">
-                        <span className="text-xs text-gray-500 font-medium">{t("review_section.edit_review.rating_label")}</span>
+                        <span className="text-xs text-gray-500 font-medium">
+                          {t("review_section.edit_review.rating_label")}
+                        </span>
                         <div className="flex items-center gap-2">
                           {renderStars(
                             editRating,

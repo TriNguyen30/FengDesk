@@ -37,7 +37,7 @@ export default function Tooltip({ children, content, position = "top", className
       top = rect.bottom + 8;
       left = rect.left + rect.width / 2;
     }
-    
+
     setCoords({ top, left });
   };
 
@@ -55,27 +55,39 @@ export default function Tooltip({ children, content, position = "top", className
 
   const getInitial = () => {
     switch (position) {
-      case "left": return { opacity: 0, x: "-100%", y: "-50%" };
-      case "right": return { opacity: 0, x: 0, y: "-50%" };
-      case "top": return { opacity: 0, x: "-50%", y: "-100%" };
-      case "top-left": return { opacity: 0, x: 0, y: "-100%" };
-      case "bottom": return { opacity: 0, x: "-50%", y: 0 };
-      default: return { opacity: 0 };
+      case "left":
+        return { opacity: 0, x: "-100%", y: "-50%" };
+      case "right":
+        return { opacity: 0, x: 0, y: "-50%" };
+      case "top":
+        return { opacity: 0, x: "-50%", y: "-100%" };
+      case "top-left":
+        return { opacity: 0, x: 0, y: "-100%" };
+      case "bottom":
+        return { opacity: 0, x: "-50%", y: 0 };
+      default:
+        return { opacity: 0 };
     }
   };
 
   const getAnimate = () => {
     switch (position) {
-      case "left": return { opacity: 1, x: "-100%", y: "-50%" };
-      case "right": return { opacity: 1, x: 0, y: "-50%" };
-      case "top": return { opacity: 1, x: "-50%", y: "-100%" };
-      case "top-left": return { opacity: 1, x: 0, y: "-100%" };
-      case "bottom": return { opacity: 1, x: "-50%", y: 0 };
-      default: return { opacity: 1 };
+      case "left":
+        return { opacity: 1, x: "-100%", y: "-50%" };
+      case "right":
+        return { opacity: 1, x: 0, y: "-50%" };
+      case "top":
+        return { opacity: 1, x: "-50%", y: "-100%" };
+      case "top-left":
+        return { opacity: 1, x: 0, y: "-100%" };
+      case "bottom":
+        return { opacity: 1, x: "-50%", y: 0 };
+      default:
+        return { opacity: 1 };
     }
   };
 
-  const portalRoot = typeof document !== 'undefined' ? document.body : null;
+  const portalRoot = typeof document !== "undefined" ? document.body : null;
 
   return (
     <>
@@ -87,26 +99,27 @@ export default function Tooltip({ children, content, position = "top", className
       >
         {children}
       </div>
-      {portalRoot && createPortal(
-        <AnimatePresence>
-          {isVisible && (
-            <motion.div
-              initial={getInitial()}
-              animate={getAnimate()}
-              exit={getInitial()}
-              transition={{ duration: 0.15 }}
-              style={{ top: coords.top, left: coords.left }}
-              className={twMerge(
-                "pointer-events-none fixed z-[9999] whitespace-nowrap rounded-[8px] bg-gray-900/85 px-2.5 py-1.5 text-[12px] font-medium text-white shadow-sm backdrop-blur-[2px]",
-                className
-              )}
-            >
-              {content}
-            </motion.div>
-          )}
-        </AnimatePresence>,
-        portalRoot
-      )}
+      {portalRoot &&
+        createPortal(
+          <AnimatePresence>
+            {isVisible && (
+              <motion.div
+                initial={getInitial()}
+                animate={getAnimate()}
+                exit={getInitial()}
+                transition={{ duration: 0.15 }}
+                style={{ top: coords.top, left: coords.left }}
+                className={twMerge(
+                  "pointer-events-none fixed z-[9999] whitespace-nowrap rounded-[8px] bg-gray-900/85 px-2.5 py-1.5 text-[12px] font-medium text-white shadow-sm backdrop-blur-[2px]",
+                  className,
+                )}
+              >
+                {content}
+              </motion.div>
+            )}
+          </AnimatePresence>,
+          portalRoot,
+        )}
     </>
   );
 }

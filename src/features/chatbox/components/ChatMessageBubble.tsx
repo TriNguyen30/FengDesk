@@ -31,19 +31,21 @@ export default function ChatMessageBubble({ message, isOwn }: ChatMessageBubbleP
 
   return (
     <div className={`flex flex-col w-full mb-2 ${isOwn ? "items-end" : "items-start"}`}>
-      <div className={`flex max-w-[75%] gap-2 ${isOwn ? "flex-row-reverse" : "flex-row"} items-end`}>
+      <div
+        className={`flex max-w-[75%] gap-2 ${isOwn ? "flex-row-reverse" : "flex-row"} items-end`}
+      >
         {!isOwn && (
-          <Tooltip content={isAi ? "Trợ lý AI" : (message.senderName ?? "Người dùng")} position="left">
+          <Tooltip
+            content={isAi ? "Trợ lý AI" : (message.senderName ?? "Người dùng")}
+            position="left"
+          >
             <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gray-200 text-gray-500 mb-0.5">
               {isAi ? <Bot size={16} /> : <User size={16} />}
             </span>
           </Tooltip>
         )}
 
-        <Tooltip
-          content={formatMessageTime(message.createdAt)}
-          position={isOwn ? "left" : "right"}
-        >
+        <Tooltip content={formatMessageTime(message.createdAt)} position={isOwn ? "left" : "right"}>
           <div className={`flex flex-col gap-1 ${isOwn ? "items-end" : "items-start"}`}>
             {message.images?.length > 0 && (
               <div className={`flex flex-wrap gap-1 ${isOwn ? "justify-end" : "justify-start"}`}>

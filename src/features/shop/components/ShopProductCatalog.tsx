@@ -89,9 +89,7 @@ export function ShopProductCatalog({
             <ProductCard
               key={p.id}
               product={p}
-              onEdit={
-                canAddProduct && shopId ? () => setEditingProductId(p.id) : undefined
-              }
+              onEdit={canAddProduct && shopId ? () => setEditingProductId(p.id) : undefined}
             />
           ))}
         </div>

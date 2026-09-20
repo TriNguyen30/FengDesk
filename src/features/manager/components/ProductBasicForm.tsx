@@ -32,12 +32,16 @@ export function ProductBasicForm({
     >
       <div className="flex items-center gap-2 border-b border-gray-100 dark:border-gray-800 pb-3">
         <Info size={18} className="text-primary" />
-        <h2 className="text-base font-bold text-gray-950 dark:text-gray-100">Chỉnh sửa thông tin cơ bản</h2>
+        <h2 className="text-base font-bold text-gray-950 dark:text-gray-100">
+          Chỉnh sửa thông tin cơ bản
+        </h2>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-1.5 sm:col-span-2">
-          <label className="text-sm font-semibold text-gray-700 dark:text-gray-200">Tên sản phẩm *</label>
+          <label className="text-sm font-semibold text-gray-700 dark:text-gray-200">
+            Tên sản phẩm *
+          </label>
           <input
             type="text"
             required
@@ -48,14 +52,18 @@ export function ProductBasicForm({
         </div>
 
         <div className="space-y-1.5">
-          <label className="text-sm font-semibold text-gray-700 dark:text-gray-200">Cửa hàng vườn</label>
+          <label className="text-sm font-semibold text-gray-700 dark:text-gray-200">
+            Cửa hàng vườn
+          </label>
           <div className="w-full rounded-xl border border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-[#23281d] px-3 py-2.5 text-sm text-gray-500 dark:text-gray-400 font-medium select-none">
             {storeName || "Chưa cập nhật"}
           </div>
         </div>
 
         <div className="space-y-1.5">
-          <label className="text-sm font-semibold text-gray-700 dark:text-gray-200">Trạng thái bán</label>
+          <label className="text-sm font-semibold text-gray-700 dark:text-gray-200">
+            Trạng thái bán
+          </label>
           <div className="flex h-[42px] items-center">
             <label className="relative inline-flex items-center cursor-pointer">
               <input
@@ -73,7 +81,9 @@ export function ProductBasicForm({
         </div>
 
         <div className="space-y-1.5 sm:col-span-2">
-          <label className="text-sm font-semibold text-gray-700 dark:text-gray-200">Mô tả sản phẩm</label>
+          <label className="text-sm font-semibold text-gray-700 dark:text-gray-200">
+            Mô tả sản phẩm
+          </label>
           <RichTextEditor
             value={description}
             onChange={setDescription}

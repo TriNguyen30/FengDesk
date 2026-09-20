@@ -198,7 +198,9 @@ export default function CartDropDown() {
               </span>
             )}
           </div>
-          <span className="hidden text-[10px] font-medium sm:block sm:text-xs">{t("cart.cart")}</span>
+          <span className="hidden text-[10px] font-medium sm:block sm:text-xs">
+            {t("cart.cart")}
+          </span>
         </a>
 
         {open && (

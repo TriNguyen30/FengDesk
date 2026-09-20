@@ -54,17 +54,23 @@ export const returnApi = {
   },
 
   approveRefund: async (returnId: string, payload: ApproveRefundRequest) => {
-    return fetchHttpClient.post<ApproveRefundResponse>(`/returns/${returnId}/approve-refund`, payload);
+    return fetchHttpClient.post<ApproveRefundResponse>(
+      `/returns/${returnId}/approve-refund`,
+      payload,
+    );
   },
 
   confirmReceived: async (returnId: string) => {
-    return fetchHttpClient.post<ConfirmReceivedResponse>(`/returns/${returnId}/confirm-received`, {});
+    return fetchHttpClient.post<ConfirmReceivedResponse>(
+      `/returns/${returnId}/confirm-received`,
+      {},
+    );
   },
 
   requestMoreEvidence: async (returnId: string, payload: RequestMoreEvidenceRequest) => {
     return fetchHttpClient.post<RequestMoreEvidenceResponse>(
       `/returns/${returnId}/request-more-evidence`,
-      payload
+      payload,
     );
   },
 
@@ -82,14 +88,14 @@ export const returnApi = {
         headers: {
           "Content-Type": "multipart/form-data",
         },
-      }
+      },
     );
   },
 
   managerConfirmRefund: async (refundId: string, payload: ManagerConfirmRefundRequest) => {
     return fetchHttpClient.post<ManagerConfirmRefundResponse>(
       `/refunds/${refundId}/manager-confirm`,
-      payload
+      payload,
     );
   },
 };

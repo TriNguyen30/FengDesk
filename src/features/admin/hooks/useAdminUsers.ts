@@ -11,7 +11,14 @@ export const adminQueryKeys = {
   auditLogs: (id: string) => [...adminQueryKeys.detail(id), "auditLogs"] as const,
 };
 
-export function useAdminUsers(params: { page?: number; pageSize?: number; search?: string; role?: string; name?: string; email?: string; }) {
+export function useAdminUsers(params: {
+  page?: number;
+  pageSize?: number;
+  search?: string;
+  role?: string;
+  name?: string;
+  email?: string;
+}) {
   return useQuery({
     queryKey: adminQueryKeys.list(params),
     queryFn: async () => {
@@ -45,9 +52,9 @@ export function useAdminUserAuditLogs(id: string | undefined) {
 
 export function useUpdateAdminUserStatus() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
-    mutationFn: ({ id, payload }: { id: string; payload: UpdateUserStatusPayload }) => 
+    mutationFn: ({ id, payload }: { id: string; payload: UpdateUserStatusPayload }) =>
       adminUsersApi.updateUserStatus(id, payload),
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: adminQueryKeys.detail(variables.id) });
@@ -58,9 +65,9 @@ export function useUpdateAdminUserStatus() {
 
 export function useUpdateAdminUserRoles() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
-    mutationFn: ({ id, payload }: { id: string; payload: UpdateUserRolesPayload }) => 
+    mutationFn: ({ id, payload }: { id: string; payload: UpdateUserRolesPayload }) =>
       adminUsersApi.updateUserRoles(id, payload),
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: adminQueryKeys.detail(variables.id) });
@@ -71,7 +78,7 @@ export function useUpdateAdminUserRoles() {
 
 export function useRevokeAdminUserSessions() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: (id: string) => adminUsersApi.revokeUserSessions(id),
     onSuccess: (data, variables) => {

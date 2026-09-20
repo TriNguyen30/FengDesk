@@ -880,7 +880,7 @@
       "title": "No invitations",
       "desc": "When someone invites you to be a staff member, the invitation will appear here."
     },
-      "card": {
+    "card": {
       "title": "Store staff invitation",
       "inviter": "Invited by:",
       "note": "If you accept, you will have permission to receive and deliver orders for this store.",

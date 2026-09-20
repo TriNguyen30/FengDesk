@@ -111,7 +111,9 @@ export default function ProductCard({ product, soldCount, onEdit }: ProductCardP
           <div className="mt-2 mb-3">
             <p className="text-base font-bold text-primary">{formatPrice(product.minPrice)}</p>
             {soldCount !== undefined && (
-              <p className="text-[11px] text-gray-400 mt-0.5">{t("product_card.labels.sold", { count: soldCount })}</p>
+              <p className="text-[11px] text-gray-400 mt-0.5">
+                {t("product_card.labels.sold", { count: soldCount })}
+              </p>
             )}
           </div>
 
@@ -254,8 +256,7 @@ export function BestSellersSection() {
               px-4 py-2 pr-12 text-sm font-bold uppercase tracking-wide text-white
               sm:px-4 sm:py-2 sm:pr-16 sm:text-xl"
             style={{
-              clipPath:
-                "polygon(0 0, calc(100% - 28px) 0, 100% 100%, 0 100%)",
+              clipPath: "polygon(0 0, calc(100% - 28px) 0, 100% 100%, 0 100%)",
             }}
           >
             {t("best_sellers.title")}
@@ -349,7 +350,9 @@ export function YouMightAlsoLikeSection() {
   return (
     <section className="mt-6 w-full overflow-hidden rounded-2xl bg-white p-4 shadow-sm ring-1 ring-gray-100 sm:p-6">
       <div className="mb-4 flex items-center justify-between gap-2 sm:mb-6">
-        <h2 className="text-lg font-bold text-gray-900">{t("product_detail.suggested.you_may_like")}</h2>
+        <h2 className="text-lg font-bold text-gray-900">
+          {t("product_detail.suggested.you_may_like")}
+        </h2>
         <Link
           to="/products"
           className="shrink-0 text-sm font-medium text-primary transition-colors hover:text-primary-dark cursor-pointer"

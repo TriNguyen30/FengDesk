@@ -1,11 +1,4 @@
-import {
-  Check,
-  AlertTriangle,
-  AlertCircle,
-  Compass,
-  Target,
-  type LucideIcon,
-} from "lucide-react";
+import { Check, AlertTriangle, AlertCircle, Compass, Target, type LucideIcon } from "lucide-react";
 import type { SpaceInsights } from "@/features/users/types/workspace";
 import InfoRow, { type InfoRowTone } from "./InfoRow";
 
