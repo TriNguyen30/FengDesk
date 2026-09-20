@@ -42,10 +42,13 @@ import {
 
 export default function ManageStoresPage() {
   const currentUser = useAppSelector((s) => s.auth.user);
-  const userRoles = useMemo(() => (currentUser?.role ?? "").split(",").map((r) => r.trim()), [currentUser?.role]);
+  const userRoles = useMemo(
+    () => (currentUser?.role ?? "").split(",").map((r) => r.trim()),
+    [currentUser?.role],
+  );
   const isAdmin = useMemo(
     () => userRoles.some((r) => ["Admin", "SystemAdmin"].includes(r)),
-    [userRoles]
+    [userRoles],
   );
 
   const isStorePermitted = useCallback(
@@ -57,7 +60,7 @@ export default function ManageStoresPage() {
         (!!currentUser?.id && store.ownerUserId === currentUser.id)
       );
     },
-    [isAdmin, currentUser]
+    [isAdmin, currentUser],
   );
 
   // Lists
@@ -167,7 +170,10 @@ export default function ManageStoresPage() {
       // Enrich stores list with ownership and staff flags
       let enrichedStores = allStores.map((s) => ({
         ...s,
-        isOwner: s.isOwner || ownedIds.has(s.id) || (!!currentUser?.id && s.ownerUserId === currentUser.id),
+        isOwner:
+          s.isOwner ||
+          ownedIds.has(s.id) ||
+          (!!currentUser?.id && s.ownerUserId === currentUser.id),
         isStaff: staffIds.has(s.id),
       }));
 
@@ -183,8 +189,11 @@ export default function ManageStoresPage() {
       const visibleStores = isAdmin
         ? enrichedStores
         : enrichedStores.filter(
-          (s) => s.isOwner || (s as any).isStaff || (!!currentUser?.id && s.ownerUserId === currentUser.id)
-        );
+            (s) =>
+              s.isOwner ||
+              (s as any).isStaff ||
+              (!!currentUser?.id && s.ownerUserId === currentUser.id),
+          );
 
       setStores(visibleStores);
 
@@ -317,7 +326,9 @@ export default function ManageStoresPage() {
   // wardId gửi lên BE luôn bám theo dropdown đang hiển thị — nếu giữ lại phường
   // cũ trong khi khu vực đã đổi thì đơn GHN sẽ về sai quận/phường.
   useEffect(() => {
-    setAddressForm((prev) => (prev.wardId === selectedWardId ? prev : { ...prev, wardId: selectedWardId }));
+    setAddressForm((prev) =>
+      prev.wardId === selectedWardId ? prev : { ...prev, wardId: selectedWardId },
+    );
   }, [selectedWardId]);
 
   // ── Dropdown → Map: geocode selected location and zoom map ────────────
@@ -894,7 +905,8 @@ export default function ManageStoresPage() {
             <div>
               <p className="text-sm font-bold text-amber-900">Xác nhận gỡ phân công nhân viên</p>
               <p className="text-xs text-amber-700 mt-1">
-                Nhân viên sẽ không còn quyền truy cập và quản lý các đơn hàng/sản phẩm thuộc cửa hàng này.
+                Nhân viên sẽ không còn quyền truy cập và quản lý các đơn hàng/sản phẩm thuộc cửa
+                hàng này.
               </p>
             </div>
           </div>
@@ -909,7 +921,9 @@ export default function ManageStoresPage() {
                   {removeStaffTarget.staffName || "Nhân viên chưa cập nhật tên"}
                 </p>
                 <p className="text-xs text-gray-500 font-mono mt-0.5 truncate">
-                  {removeStaffTarget.staffEmail || removeStaffTarget.staffPhone || removeStaffTarget.staffId}
+                  {removeStaffTarget.staffEmail ||
+                    removeStaffTarget.staffPhone ||
+                    removeStaffTarget.staffId}
                 </p>
               </div>
             </div>

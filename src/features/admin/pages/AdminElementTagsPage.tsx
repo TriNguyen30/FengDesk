@@ -70,8 +70,7 @@ export default function AdminElementTagsPage() {
     const needle = search.trim().toLowerCase();
     if (!needle) return tags ?? [];
     return (tags ?? []).filter(
-      (t) =>
-        t.labelVi.toLowerCase().includes(needle) || t.inputCode.toLowerCase().includes(needle),
+      (t) => t.labelVi.toLowerCase().includes(needle) || t.inputCode.toLowerCase().includes(needle),
     );
   }, [tags, search]);
 

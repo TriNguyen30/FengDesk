@@ -63,7 +63,7 @@ export function useShopChatSupport(storeId: string | undefined) {
 
     const onMessage = (m: ChatMessageBroadcast) => {
       if (activeRef.current === m.chatboxId) setMessages((prev) => upsert(prev, m));
-      
+
       setMyRooms((prev) => {
         const idx = prev.findIndex((r) => r.id === m.chatboxId);
         if (idx === -1) return prev;
@@ -73,7 +73,7 @@ export function useShopChatSupport(storeId: string | undefined) {
         const updatedRoom = {
           ...room,
           lastMessage: m,
-          unreadCount: (isFromMe || isFocused) ? 0 : room.unreadCount + 1,
+          unreadCount: isFromMe || isFocused ? 0 : room.unreadCount + 1,
         };
         const next = [...prev];
         next.splice(idx, 1);
@@ -153,13 +153,13 @@ export function useShopChatSupport(storeId: string | undefined) {
   );
 
   const send = useCallback(
-    async (content: string) => {
+    async (content: string, imageUrls?: string[]) => {
       const trimmed = content.trim();
       const roomId = activeRef.current;
-      if (!trimmed || !roomId || sending) return;
+      if ((!trimmed && (!imageUrls || imageUrls.length === 0)) || !roomId || sending) return;
       setSending(true);
       try {
-        const res = await chatApi.sendMessage(roomId, { content: trimmed });
+        const res = await chatApi.sendMessage(roomId, { content: trimmed, imageUrls });
         if (res.data.isSuccess) {
           setMessages((prev) => upsert(prev, res.data.data));
           setMyRooms((prev) => {
@@ -171,8 +171,7 @@ export function useShopChatSupport(storeId: string | undefined) {
             next.unshift(updatedRoom);
             return next;
           });
-        }
-        else toast.error(res.data.message || "Không gửi được tin nhắn.");
+        } else toast.error(res.data.message || "Không gửi được tin nhắn.");
       } catch {
         toast.error("Không gửi được tin nhắn.");
       } finally {
@@ -186,6 +185,24 @@ export function useShopChatSupport(storeId: string | undefined) {
     (chatboxId: string) => myRooms.some((r) => r.id === chatboxId),
     [myRooms],
   );
+
+  const deleteRoom = useCallback(async (chatboxId: string) => {
+    try {
+      const res = await chatApi.deleteChatbox(chatboxId);
+      if (res.data.isSuccess) {
+        toast.success("Đã xóa cuộc trò chuyện.");
+        setMyRooms((prev) => prev.filter((r) => r.id !== chatboxId));
+        if (activeRef.current === chatboxId) {
+          setActiveId(null);
+          setMessages([]);
+        }
+      } else {
+        toast.error(res.data.message || "Không thể xóa cuộc trò chuyện.");
+      }
+    } catch {
+      toast.error("Lỗi khi xóa cuộc trò chuyện.");
+    }
+  }, []);
 
   return {
     meId,
@@ -201,5 +218,6 @@ export function useShopChatSupport(storeId: string | undefined) {
     claim,
     send,
     isMine,
+    deleteRoom,
   };
 }

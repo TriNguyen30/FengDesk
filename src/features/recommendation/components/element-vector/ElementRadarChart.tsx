@@ -239,45 +239,44 @@ export default function ElementRadarChart({
     const distance = Math.abs(current - ideal);
     const style = hoverStyle(distance);
 
-      // Tổng % các nguồn = đúng con số "Hiện tại" ở trên (cả hai cùng chuẩn hóa theo tổng phiếu).
+    // Tổng % các nguồn = đúng con số "Hiện tại" ở trên (cả hai cùng chuẩn hóa theo tổng phiếu).
     const sources = sourcesFor(element);
     const shownSources = sources.slice(0, MAX_TOOLTIP_SOURCES);
-    const restPercent = sources
-      .slice(MAX_TOOLTIP_SOURCES)
-      .reduce((sum, s) => sum + s.percent, 0);
+    const restPercent = sources.slice(MAX_TOOLTIP_SOURCES).reduce((sum, s) => sum + s.percent, 0);
 
     return (
       <RadarTooltipFrame element={element} tone={style}>
-          <div className="flex items-center justify-between text-[11px]">
-            <span>Hiện tại</span>
-            <span>{(current * 100).toFixed(0)}%</span>
-          </div>
-          <div className="flex items-center justify-between text-[11px]">
-            <span>Lý tưởng</span>
-            <span>{(ideal * 100).toFixed(0)}%</span>
-          </div>
-          {/* Nhãn mức độ ở trên đo lệch TUYỆT ĐỐI (|hiện tại − lý tưởng|), nên nó cố ý bỏ qua chuyện
+        <div className="flex items-center justify-between text-[11px]">
+          <span>Hiện tại</span>
+          <span>{(current * 100).toFixed(0)}%</span>
+        </div>
+        <div className="flex items-center justify-between text-[11px]">
+          <span>Lý tưởng</span>
+          <span>{(ideal * 100).toFixed(0)}%</span>
+        </div>
+        {/* Nhãn mức độ ở trên đo lệch TUYỆT ĐỐI (|hiện tại − lý tưởng|), nên nó cố ý bỏ qua chuyện
               trục đó có mục tiêu to hay nhỏ. Dòng này trả lại bối cảnh: lệch 19 điểm % trên một trục
               lý tưởng 13% là gấp 2.5 lần, khác hẳn lệch 19 điểm % trên trục lý tưởng 39%. */}
-          <div className="flex items-center justify-between text-[11px] text-slate-500">
-            <span>So với lý tưởng</span>
-            <span>{ratioLabel(current, ideal)}</span>
+        <div className="flex items-center justify-between text-[11px] text-slate-500">
+          <span>So với lý tưởng</span>
+          <span>{ratioLabel(current, ideal)}</span>
+        </div>
+        {showTarget && (
+          <div className="flex items-center justify-between text-[11px] font-medium">
+            <span className="flex items-center gap-1.5">
+              <span className="inline-block h-2 w-2 rounded-full bg-[#D9AD41]" />
+              Phần của bạn
+            </span>
+            <span>{((payloadItem.target ?? 0) * 100).toFixed(0)}%</span>
           </div>
-          {showTarget && (
-            <div className="flex items-center justify-between text-[11px] font-medium">
-              <span className="flex items-center gap-1.5">
-                <span className="inline-block h-2 w-2 rounded-full bg-[#D9AD41]" />
-                Phần của bạn
-              </span>
-              <span>{((payloadItem.target ?? 0) * 100).toFixed(0)}%</span>
-            </div>
-          )}
+        )}
 
         {gapMark(element) !== "balanced" && (
           <div
             className="mt-2 rounded-lg px-2 py-1.5 text-[11px] leading-snug"
             style={{
-              background: gapMark(element) === "surplus" ? "rgba(217,173,65,0.16)" : "rgba(59,130,246,0.12)",
+              background:
+                gapMark(element) === "surplus" ? "rgba(217,173,65,0.16)" : "rgba(59,130,246,0.12)",
               color: markColor(gapMark(element)),
             }}
           >

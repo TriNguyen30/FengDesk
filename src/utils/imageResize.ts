@@ -24,13 +24,7 @@ const SKIP_BELOW_BYTES = 300 * 1024;
 const SKIP_TYPES = ["image/gif"];
 
 /** MIME backend chấp nhận — phải khớp ImageUpload.AllowedContentTypes bên BE. */
-const BACKEND_IMAGE_TYPES = [
-  "image/jpeg",
-  "image/png",
-  "image/bmp",
-  "image/x-ms-bmp",
-  "image/gif",
-];
+const BACKEND_IMAGE_TYPES = ["image/jpeg", "image/png", "image/bmp", "image/x-ms-bmp", "image/gif"];
 
 /**
  * Giá trị cho accept= của <input type="file"> ảnh.

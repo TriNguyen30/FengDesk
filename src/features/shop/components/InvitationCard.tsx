@@ -81,9 +81,7 @@ export default function InvitationCard({ invitation }: Props) {
               <span aria-hidden>·</span>
               <span>{formatDate(invitation.invitedAt)}</span>
             </p>
-            <p className="mt-2 text-xs text-gray-500">
-              {t("my_invitations.card.note")}
-            </p>
+            <p className="mt-2 text-xs text-gray-500">{t("my_invitations.card.note")}</p>
           </div>
         </div>
 

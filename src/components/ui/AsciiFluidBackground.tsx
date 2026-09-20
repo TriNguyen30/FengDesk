@@ -32,7 +32,6 @@ const POINTER_MAX_SPEED = 55; // ô/giây
 const POINTER_FORCE_GAIN = 1;
 const SPLAT_RADIUS = 1.3;
 
-
 /** Click → vòng lực toả tròn: số nhánh và tốc độ bắn ra (ô/giây). */
 const BURST_ARMS = 26;
 const BURST_SPEED = 56;

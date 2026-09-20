@@ -1,5 +1,15 @@
 import { useState } from "react";
-import { Store as StoreIcon, Loader2, Phone, Clock, Edit, Trash2, Crown, Shield, MapPin } from "lucide-react";
+import {
+  Store as StoreIcon,
+  Loader2,
+  Phone,
+  Clock,
+  Edit,
+  Trash2,
+  Crown,
+  Shield,
+  MapPin,
+} from "lucide-react";
 import type { Shop } from "@/features/shop/types/shop";
 
 interface StoreListProps {
@@ -25,8 +35,7 @@ export function StoreList({
   userRoles = [],
   isAdmin,
 }: StoreListProps) {
-  const isAdminUser =
-    isAdmin ?? userRoles.some((r) => ["Admin", "SystemAdmin"].includes(r));
+  const isAdminUser = isAdmin ?? userRoles.some((r) => ["Admin", "SystemAdmin"].includes(r));
   const [filterMode, setFilterMode] = useState<"all" | "mine">("all");
 
   const isStoreOwner = (store: Shop) => {
@@ -38,11 +47,7 @@ export function StoreList({
   };
 
   const myStores = stores.filter((s) => isStoreOwner(s) || (s as any).isStaff);
-  const displayedStores = !isAdminUser
-    ? stores
-    : filterMode === "mine"
-    ? myStores
-    : stores;
+  const displayedStores = !isAdminUser ? stores : filterMode === "mine" ? myStores : stores;
 
   return (
     <div className="lg:col-span-1 space-y-4">
@@ -105,19 +110,21 @@ export function StoreList({
                 <div
                   key={store.id}
                   onClick={() => onSelectStore(store)}
-                  className={`group relative flex flex-col p-4 rounded-2xl border transition-all duration-200 cursor-pointer ${isSelected
+                  className={`group relative flex flex-col p-4 rounded-2xl border transition-all duration-200 cursor-pointer ${
+                    isSelected
                       ? "border-emerald-500 bg-emerald-50/30 ring-2 ring-emerald-500/20 shadow-md"
                       : "border-gray-200/80 bg-white hover:border-emerald-500/40 hover:shadow-md"
-                    }`}
+                  }`}
                 >
                   {/* Top Header: Avatar + Title + Badges */}
                   <div className="flex items-start justify-between gap-2.5">
                     <div className="flex items-start gap-3 min-w-0 flex-1">
                       <div
-                        className={`p-2.5 rounded-xl shrink-0 transition-colors ${isSelected
+                        className={`p-2.5 rounded-xl shrink-0 transition-colors ${
+                          isSelected
                             ? "bg-emerald-600 text-white shadow-xs"
                             : "bg-emerald-50 text-emerald-700 group-hover:bg-emerald-600 group-hover:text-white"
-                          }`}
+                        }`}
                       >
                         <StoreIcon size={18} />
                       </div>
@@ -174,12 +181,12 @@ export function StoreList({
                       </p>
                     )}
 
-                    <p className="flex items-center gap-2 text-gray-500">
+                    {/* <p className="flex items-center gap-2 text-gray-500">
                       <MapPin size={13} className="text-gray-400 shrink-0" />
                       <span className="line-clamp-1 italic">
                         {store.address || "Chưa cập nhật địa chỉ"}
                       </span>
-                    </p>
+                    </p> */}
                   </div>
 
                   {/* Action Buttons Toolbar */}
@@ -232,4 +239,3 @@ export function StoreList({
     </div>
   );
 }
-

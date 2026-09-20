@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useLayoutEffect, useMemo, useRef } from "react";
 import { AnimatePresence } from "framer-motion";
 import { MessageCircle } from "lucide-react";
 import type { ChatMessage } from "@/features/chatbox/types/chatbox";
@@ -31,6 +31,8 @@ export default function ChatMessageList({
     return [...byId.values()];
   }, [messages]);
 
+  const isInitialLoad = useRef(true);
+
   /**
    * Neo đáy bằng cách ghi thẳng scrollTop của CHÍNH khung này.
    *
@@ -42,10 +44,18 @@ export default function ChatMessageList({
    *
    * Chỉ neo khi người dùng đang ở gần đáy; kéo lên đọc tin cũ thì để yên.
    */
-  useEffect(() => {
+  useLayoutEffect(() => {
     const el = scrollRef.current;
 
     if (!el) return;
+
+    if (isInitialLoad.current) {
+      el.scrollTop = el.scrollHeight;
+      if (uniqueMessages.length > 0 || aiActivity) {
+        isInitialLoad.current = false;
+      }
+      return;
+    }
 
     // Tin cuối là tin MÌNH vừa gửi thì luôn nhảy đáy — đó là hành động chủ động.
     const justSent = uniqueMessages[uniqueMessages.length - 1]?.senderId === meId;
@@ -75,8 +85,9 @@ export default function ChatMessageList({
   return (
     <div
       ref={scrollRef}
-      className={`flex flex-1 flex-col bg-white px-3 py-4 ${showScrollbar ? "overflow-y-scroll" : "overflow-y-auto scrollbar-none"
-        }`}
+      className={`flex flex-1 flex-col bg-white px-3 py-4 ${
+        showScrollbar ? "overflow-y-scroll" : "overflow-y-auto scrollbar-none"
+      }`}
     >
       {uniqueMessages.map((message) => (
         <ChatMessageBubble key={message.id} message={message} isOwn={message.senderId === meId} />

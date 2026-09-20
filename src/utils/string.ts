@@ -31,30 +31,27 @@ export function cleanRichTextHtml(html: string): string {
   cleaned = cleaned.replace(/background(-color)?\s*:\s*[^;"]+\s*;?/gi, "");
 
   // 2. Remove hardcoded dark / gray text colors from inline styles so dark mode can render white/light text
-  cleaned = cleaned.replace(
-    /color\s*:\s*([^;"]+)\s*;?/gi,
-    (match, colorVal) => {
-      const val = colorVal.trim().toLowerCase();
-      // Keep only bright deliberate highlight colors (e.g. red, yellow, green, orange, blue, purple)
-      const isBrightAccent =
-        val.includes("230, 0, 0") ||
-        val.includes("255, 153, 0") ||
-        val.includes("0, 138, 0") ||
-        val.includes("0, 102, 204") ||
-        val.includes("153, 51, 255") ||
-        val === "red" ||
-        val === "yellow" ||
-        val === "blue" ||
-        val === "orange" ||
-        val === "green" ||
-        val === "purple";
+  cleaned = cleaned.replace(/color\s*:\s*([^;"]+)\s*;?/gi, (match, colorVal) => {
+    const val = colorVal.trim().toLowerCase();
+    // Keep only bright deliberate highlight colors (e.g. red, yellow, green, orange, blue, purple)
+    const isBrightAccent =
+      val.includes("230, 0, 0") ||
+      val.includes("255, 153, 0") ||
+      val.includes("0, 138, 0") ||
+      val.includes("0, 102, 204") ||
+      val.includes("153, 51, 255") ||
+      val === "red" ||
+      val === "yellow" ||
+      val === "blue" ||
+      val === "orange" ||
+      val === "green" ||
+      val === "purple";
 
-      if (!isBrightAccent) {
-        return "";
-      }
-      return match;
+    if (!isBrightAccent) {
+      return "";
     }
-  );
+    return match;
+  });
 
   // 3. Remove font-family overrides that might interfere with app typography
   cleaned = cleaned.replace(/font-family\s*:\s*[^;"]+\s*;?/gi, "");
@@ -68,4 +65,3 @@ export function cleanRichTextHtml(html: string): string {
 
   return cleaned;
 }
-

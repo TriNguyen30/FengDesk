@@ -9,11 +9,11 @@ export default function ManageOrderReturnPage() {
   const currentUser = useAppSelector((s) => s.auth.user);
   const userRoles = useMemo(
     () => (currentUser?.role ?? "").split(",").map((r) => r.trim()),
-    [currentUser?.role]
+    [currentUser?.role],
   );
   const isAdmin = useMemo(
     () => userRoles.some((r) => ["Admin", "SystemAdmin"].includes(r)),
-    [userRoles]
+    [userRoles],
   );
 
   const [userActiveStores, setUserActiveStores] = useState<Shop[]>([]);
@@ -51,7 +51,10 @@ export default function ManageOrderReturnPage() {
 
         let enrichedStores = allStores.map((s) => ({
           ...s,
-          isOwner: s.isOwner || ownedIds.has(s.id) || (!!currentUser?.id && s.ownerUserId === currentUser.id),
+          isOwner:
+            s.isOwner ||
+            ownedIds.has(s.id) ||
+            (!!currentUser?.id && s.ownerUserId === currentUser.id),
           isStaff: staffIds.has(s.id),
         }));
 
@@ -69,14 +72,18 @@ export default function ManageOrderReturnPage() {
         // Filter for stores where user has a role (isOwner || isStaff), unless Admin
         const validStores = activeStores.filter((s) => {
           if (isAdmin) return true;
-          return s.isOwner || (s as any).isStaff || (!!currentUser?.id && s.ownerUserId === currentUser.id);
+          return (
+            s.isOwner ||
+            (s as any).isStaff ||
+            (!!currentUser?.id && s.ownerUserId === currentUser.id)
+          );
         });
 
         if (isMounted) {
           setUserActiveStores(validStores);
           if (validStores.length > 0) {
             setSelectedStoreId((prev) =>
-              validStores.some((s) => s.id === prev) ? prev : validStores[0].id
+              validStores.some((s) => s.id === prev) ? prev : validStores[0].id,
             );
           } else {
             setSelectedStoreId("");
@@ -102,7 +109,9 @@ export default function ManageOrderReturnPage() {
       {/* Header section with active store selector */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-gray-900">Quản lý Yêu cầu Trả hàng</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-gray-900">
+            Quản lý Yêu cầu Trả hàng
+          </h1>
           <p className="text-gray-500 mt-1 text-sm">
             Xem và xử lý các yêu cầu đổi trả / hoàn tiền thuộc chi nhánh bạn quản lý.
           </p>
@@ -132,7 +141,8 @@ export default function ManageOrderReturnPage() {
               >
                 {userActiveStores.map((store) => (
                   <option key={store.id} value={store.id}>
-                    {store.name} {store.isOwner ? "(Chủ cửa hàng)" : (store as any).isStaff ? "(Nhân viên)" : ""}
+                    {store.name}{" "}
+                    {store.isOwner ? "(Chủ cửa hàng)" : (store as any).isStaff ? "(Nhân viên)" : ""}
                   </option>
                 ))}
               </select>
@@ -154,7 +164,8 @@ export default function ManageOrderReturnPage() {
           </div>
           <h3 className="text-base font-bold text-gray-900">Không tìm thấy chi nhánh hoạt động</h3>
           <p className="text-sm text-gray-500 mt-1 max-w-md">
-            Bạn chưa thuộc chi nhánh nào đang hoạt động với vai trò Garden Owner hoặc Staff, hoặc cửa hàng hiện tại đang tạm ngưng.
+            Bạn chưa thuộc chi nhánh nào đang hoạt động với vai trò Garden Owner hoặc Staff, hoặc
+            cửa hàng hiện tại đang tạm ngưng.
           </p>
         </div>
       ) : selectedStoreId ? (

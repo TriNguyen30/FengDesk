@@ -38,8 +38,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
     const toastId = toast.loading(`Đang tải ảnh "${file.name}" lên...`);
     try {
       const res = await uploadFile(file);
-      const imageUrl =
-        (res.data as any)?.data || (res.data as any)?.url || res.data;
+      const imageUrl = (res.data as any)?.data || (res.data as any)?.url || res.data;
 
       if (imageUrl && typeof imageUrl === "string") {
         const editor = quillRef.current?.getEditor?.();
@@ -84,7 +83,10 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
         if (delta && delta.ops) {
           delta.ops.forEach((op: any) => {
             if (op.attributes) {
-              const bg = typeof op.attributes.background === "string" ? op.attributes.background.toLowerCase() : "";
+              const bg =
+                typeof op.attributes.background === "string"
+                  ? op.attributes.background.toLowerCase()
+                  : "";
               if (
                 bg &&
                 (bg === "#ffffff" ||
@@ -103,7 +105,8 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
               }
 
               // Also clean dark/black text colors from pasted websites so editor font color applies naturally
-              const color = typeof op.attributes.color === "string" ? op.attributes.color.toLowerCase() : "";
+              const color =
+                typeof op.attributes.color === "string" ? op.attributes.color.toLowerCase() : "";
               if (
                 color &&
                 (color === "#000000" ||
@@ -182,7 +185,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
       toolbar: {
         container: [
           [{ header: [1, 2, 3, false] }],
-          [{ size: ['small', false, 'large', 'huge'] }],
+          [{ size: ["small", false, "large", "huge"] }],
           ["bold", "italic", "underline", "strike"],
           [{ align: [] }],
           [{ list: "ordered" }, { list: "bullet" }],
@@ -195,7 +198,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
         },
       },
     }),
-    [handleImageUpload]
+    [handleImageUpload],
   );
 
   return (
@@ -299,4 +302,3 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
 };
 
 export default RichTextEditor;
-

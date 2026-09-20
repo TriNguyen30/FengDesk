@@ -41,7 +41,7 @@ export default function PopUpForgotPassword({
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
   const [resetToken, setResetToken] = useState("");
-  
+
   // UI states
   const [isSendingOtp, setIsSendingOtp] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
@@ -81,11 +81,11 @@ export default function PopUpForgotPassword({
     try {
       setIsSendingOtp(true);
       const response = await forgotPasswordRequest({ email: values.email });
-      
+
       if (!response.isSuccess) {
         throw new Error(response.message || "Failed to initiate password reset");
       }
-      
+
       setEmail(values.email);
       setStep("OTP");
       toast.success(t("forgot_password.toast.init_success"));
@@ -101,11 +101,11 @@ export default function PopUpForgotPassword({
     try {
       setIsVerifying(true);
       const response = await verifyForgotPasswordRequest({ email, otp: code });
-      
+
       if (!response.isSuccess || !response.data?.resetPasswordToken) {
         throw new Error(response.message || "Invalid OTP");
       }
-      
+
       const token = response.data.resetPasswordToken;
       setResetToken(token);
       setStep("RESET");
@@ -120,15 +120,15 @@ export default function PopUpForgotPassword({
 
   const onResetSubmit = async (values: ForgotPasswordResetFormValues) => {
     try {
-      const response = await resetForgotPasswordRequest({ 
-        resetPasswordToken: resetToken, 
-        newPassword: values.password 
+      const response = await resetForgotPasswordRequest({
+        resetPasswordToken: resetToken,
+        newPassword: values.password,
       });
-      
+
       if (!response.isSuccess) {
         throw new Error(response.message || "Failed to reset password");
       }
-      
+
       toast.success(t("forgot_password.toast.reset_success"));
       handleClose();
       onSwitchToLogin();
@@ -147,7 +147,11 @@ export default function PopUpForgotPassword({
             noValidate
           >
             <p className="text-sm text-gray-600 mb-2">{t("forgot_password.email_step.desc")}</p>
-            <AuthField id="forgot-email" label="Email" error={emailForm.formState.errors.email?.message}>
+            <AuthField
+              id="forgot-email"
+              label="Email"
+              error={emailForm.formState.errors.email?.message}
+            >
               <input
                 id="forgot-email"
                 type="email"
@@ -159,11 +163,7 @@ export default function PopUpForgotPassword({
               />
             </AuthField>
 
-            <button
-              type="submit"
-              disabled={isSendingOtp}
-              className={submitButtonClass}
-            >
+            <button type="submit" disabled={isSendingOtp} className={submitButtonClass}>
               {isSendingOtp ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -181,9 +181,7 @@ export default function PopUpForgotPassword({
 
         {step === "OTP" && (
           <div className="flex flex-col items-center gap-4 text-center">
-            <p className="text-sm text-gray-600">
-              {t("forgot_password.otp_step.desc", { email })}
-            </p>
+            <p className="text-sm text-gray-600">{t("forgot_password.otp_step.desc", { email })}</p>
             <OtpInput length={6} value={otp} onChange={setOtp} onComplete={onOtpComplete} />
             <button
               type="button"
@@ -222,8 +220,12 @@ export default function PopUpForgotPassword({
             noValidate
           >
             <p className="text-sm text-gray-600 mb-2">{t("forgot_password.reset_step.desc")}</p>
-            
-            <AuthField id="new-password" label={t("forgot_password.reset_step.new_password")} error={resetForm.formState.errors.password?.message}>
+
+            <AuthField
+              id="new-password"
+              label={t("forgot_password.reset_step.new_password")}
+              error={resetForm.formState.errors.password?.message}
+            >
               <div className="relative">
                 <input
                   id="new-password"
@@ -243,7 +245,11 @@ export default function PopUpForgotPassword({
               </div>
             </AuthField>
 
-            <AuthField id="confirm-password" label={t("forgot_password.reset_step.confirm_password")} error={resetForm.formState.errors.confirmPassword?.message}>
+            <AuthField
+              id="confirm-password"
+              label={t("forgot_password.reset_step.confirm_password")}
+              error={resetForm.formState.errors.confirmPassword?.message}
+            >
               <div className="relative">
                 <input
                   id="confirm-password"

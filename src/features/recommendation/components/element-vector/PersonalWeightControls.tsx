@@ -1,11 +1,7 @@
 ﻿import { useState } from "react";
 import { Info, RotateCcw, UserRound } from "lucide-react";
 import type { ScoreBreakdown } from "../../types/recommendation";
-import {
-  personalAxisOffReason,
-  scoreToPercent,
-  simulateScore,
-} from "../../lib/breakdown";
+import { personalAxisOffReason, scoreToPercent, simulateScore } from "../../lib/breakdown";
 
 interface PersonalWeightControlsProps {
   breakdown: ScoreBreakdown;
@@ -69,9 +65,7 @@ export default function PersonalWeightControls({
         )}
       </div>
 
-      {showReason && (
-        <p className="mt-2 text-[11px] leading-snug text-gray-600">{pw.reasonVi}</p>
-      )}
+      {showReason && <p className="mt-2 text-[11px] leading-snug text-gray-600">{pw.reasonVi}</p>}
 
       <div className="mt-3">
         <div className="flex items-center justify-between text-[11px] text-gray-500">
@@ -106,8 +100,8 @@ function PersonalAxisOffNotice({ reason }: { reason: ReturnType<typeof personalA
   if (reason === "public-space") {
     return (
       <p className="rounded-xl bg-gray-50 px-3 py-2 text-[11px] leading-snug text-gray-600">
-        <span className="font-medium">Không gian chung</span> — điểm không neo vào bản mệnh của riêng
-        ai, chỉ tính theo nhu cầu của phòng.
+        <span className="font-medium">Không gian chung</span> — điểm không neo vào bản mệnh của
+        riêng ai, chỉ tính theo nhu cầu của phòng.
       </p>
     );
   }

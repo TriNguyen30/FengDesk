@@ -47,9 +47,7 @@ export function ConflictResolutionBanner({ conflict }: { conflict: ConflictResol
     <div className="flex gap-2.5 rounded-xl border border-[#D9AD41]/40 bg-[#D9AD41]/10 px-3 py-2.5">
       <Sparkles size={15} className="mt-0.5 shrink-0 text-[#8a6d1f]" />
       <div className="min-w-0 text-xs leading-relaxed text-[#6b5416]">
-        <p className="font-semibold">
-          Ưu tiên hành {elementVi(conflict.bridge)} để hoá giải
-        </p>
+        <p className="font-semibold">Ưu tiên hành {elementVi(conflict.bridge)} để hoá giải</p>
         <p className="mt-0.5">{conflict.reasonVi}</p>
       </div>
     </div>

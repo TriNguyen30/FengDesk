@@ -64,7 +64,7 @@ export function getLastMessagePreview(box: Chatbox, meId?: string): string {
 /** Hiển thị thông báo trình duyệt (Chrome Notification) nếu tab không focus. */
 export function showBrowserNotification(title: string, body: string, onClick?: () => void) {
   if (!("Notification" in window)) return;
-  
+
   if (document.hasFocus()) return; // Không hiển thị notification OS nếu user đang xem tab
 
   const show = () => {
