@@ -1,7 +1,8 @@
 import { useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useAppSelector } from "@/app/store";
 import { toast } from "sonner";
-import { ChevronLeft, ChevronRight, Eye, Loader2, Package, Search, Truck, Check } from "lucide-react";
+import { ChevronLeft, ChevronRight, Eye, Loader2, Package, Search, Truck, Check, UserPlus, X } from "lucide-react";
 import {
   DeliveryDetailModal,
   useCreateDeliveryShipment,
@@ -9,6 +10,7 @@ import {
   useUpdateOrderDeliveryStatus,
 } from "@/features/orders";
 import { devMarkDeliveryShippingDelivered, devMarkDeliveryDelivering } from "../api/delivery.api";
+import { AssignStaffModal } from "./AssignStaffModal";
 import type { StoreDelivery } from "@/features/orders";
 import { formatOrderDate, formatVnd } from "@/features/orders/utils/orderUtils";
 import Tabs from "@/components/ui/Tabs";
@@ -49,6 +51,7 @@ export function ShopDeliveriesView({ storeId }: ShopDeliveriesViewProps) {
   const [shippingOutId, setShippingOutId] = useState<string | null>(null);
   const [deliveringId, setDeliveringId] = useState<string | null>(null);
   const [detailDeliveryId, setDetailDeliveryId] = useState<string | null>(null);
+  const [assigningId, setAssigningId] = useState<string | null>(null);
 
   const { deliveries, pagination, listStatus } = useStoreDeliveries(storeId, {
     page,
@@ -57,6 +60,7 @@ export function ShopDeliveriesView({ storeId }: ShopDeliveriesViewProps) {
   const updateStatus = useUpdateOrderDeliveryStatus();
   const createShipment = useCreateDeliveryShipment();
   const queryClient = useQueryClient();
+  const currentUser = useAppSelector((state) => state.auth.user);
 
   const counts = useMemo(() => {
     const acc: Record<string, number> = { All: deliveries.length };
@@ -84,7 +88,7 @@ export function ShopDeliveriesView({ storeId }: ShopDeliveriesViewProps) {
     try {
       const res = await devMarkDeliveryDelivering(delivery.id) as any;
       if (res.isSuccess || res.status === 200 || !res.error) {
-        toast.success(res.message || "Đã cập nhật trạng thái đang giao");
+        toast.success("Đã cập nhật trạng thái đang giao");
         queryClient.invalidateQueries({ queryKey: ["store-deliveries"] });
         queryClient.invalidateQueries({ queryKey: ["orders"] });
       } else {
@@ -103,7 +107,7 @@ export function ShopDeliveriesView({ storeId }: ShopDeliveriesViewProps) {
     try {
       const res = await devMarkDeliveryShippingDelivered(delivery.id) as any;
       if (res.isSuccess || res.status === 200 || !res.error) {
-        toast.success(res.message || "Đã cập nhật trạng thái đã giao");
+        toast.success("Đã cập nhật trạng thái đã giao");
         queryClient.invalidateQueries({ queryKey: ["store-deliveries"] });
         queryClient.invalidateQueries({ queryKey: ["orders"] });
       } else {
@@ -253,8 +257,8 @@ export function ShopDeliveriesView({ storeId }: ShopDeliveriesViewProps) {
                       {d.status === "Pending" && (
                         <button
                           onClick={() => handleConfirm(d)}
-                          disabled={busyConfirm}
-                          className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer"
+                          disabled={busyConfirm || !["Manager", "GardenOwner", "GardenStaff", "Admin"].some(role => (currentUser?.role || "").includes(role))}
+                          className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer whitespace-nowrap"
                         >
                           {busyConfirm ? (
                             <Loader2 size={13} className="animate-spin" />
@@ -267,8 +271,9 @@ export function ShopDeliveriesView({ storeId }: ShopDeliveriesViewProps) {
                       {d.status === "Confirmed" && (
                         <button
                           onClick={() => handleCreateShipment(d)}
-                          disabled={busyShip}
-                          className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-primary-dark disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer"
+                          disabled={busyShip || (!["Manager", "GardenOwner", "GardenStaff", "Admin"].some(role => (currentUser?.role || "").includes(role)) && !d.assignedStaffId)}
+                          title={!["Manager", "GardenOwner", "GardenStaff", "Admin"].some(role => (currentUser?.role || "").includes(role)) && !d.assignedStaffId ? "Vui lòng giao việc cho nhân viên trước khi tạo đơn ship" : ""}
+                          className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-primary-dark disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer whitespace-nowrap"
                         >
                           {busyShip ? (
                             <Loader2 size={13} className="animate-spin" />
@@ -282,7 +287,7 @@ export function ShopDeliveriesView({ storeId }: ShopDeliveriesViewProps) {
                         <button
                           onClick={() => handleSetShipped(d)}
                           disabled={busyShippingOut}
-                          className="inline-flex items-center gap-1.5 rounded-lg bg-cyan-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-cyan-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer"
+                          className="inline-flex items-center gap-1.5 rounded-lg bg-cyan-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-cyan-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer whitespace-nowrap"
                         >
                           {busyShippingOut ? (
                             <Loader2 size={13} className="animate-spin" />
@@ -296,7 +301,7 @@ export function ShopDeliveriesView({ storeId }: ShopDeliveriesViewProps) {
                         <button
                           onClick={() => handleSetDelivered(d)}
                           disabled={busyDelivered}
-                          className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer"
+                          className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer whitespace-nowrap"
                         >
                           {busyDelivered ? (
                             <Loader2 size={13} className="animate-spin" />
@@ -306,10 +311,20 @@ export function ShopDeliveriesView({ storeId }: ShopDeliveriesViewProps) {
                           Đã giao
                         </button>
                       )}
+                      {["Confirmed", "Preparing", "Shipped"].includes(d.status) && !d.assignedStaffId && ["Manager", "GardenOwner", "Admin"].some(role => (currentUser?.role || "").includes(role)) && (
+                        <button
+                          onClick={() => setAssigningId(d.id)}
+                          title="Giao cho nhân viên"
+                          className="inline-flex items-center gap-1.5 rounded-lg border border-indigo-200 bg-indigo-50 px-2.5 py-1.5 text-xs font-semibold text-indigo-700 hover:bg-indigo-100 transition-colors cursor-pointer whitespace-nowrap"
+                        >
+                          <UserPlus size={13} />
+                          Giao việc
+                        </button>
+                      )}
                       <button
                         onClick={() => setDetailDeliveryId(d.id)}
                         title="Xem chi tiết đơn giao"
-                        className="inline-flex items-center gap-1 rounded-lg border border-gray-200 bg-gray-50 px-2.5 py-1.5 text-xs font-semibold text-gray-600 hover:bg-gray-100 transition-colors cursor-pointer"
+                        className="inline-flex items-center gap-1 rounded-lg border border-gray-200 bg-gray-50 px-2.5 py-1.5 text-xs font-semibold text-gray-600 hover:bg-gray-100 transition-colors cursor-pointer whitespace-nowrap"
                       >
                         <Eye size={13} />
                         Chi tiết
@@ -351,6 +366,13 @@ export function ShopDeliveriesView({ storeId }: ShopDeliveriesViewProps) {
         deliveryId={detailDeliveryId}
         open={detailDeliveryId !== null}
         onClose={() => setDetailDeliveryId(null)}
+      />
+
+      <AssignStaffModal
+        open={assigningId !== null}
+        onClose={() => setAssigningId(null)}
+        storeId={storeId}
+        deliveryId={assigningId || ""}
       />
     </div>
   );

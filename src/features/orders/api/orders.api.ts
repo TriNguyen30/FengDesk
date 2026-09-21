@@ -13,6 +13,7 @@ import type {
   PreviewShippingFeePayload,
   ShippingFeePreview,
   UpdateDeliveryStatusRequest,
+  AssignDeliveryStaffRequest,
 } from "../types/orders";
 
 export const ordersApi = {
@@ -38,6 +39,12 @@ export const ordersApi = {
   updateDeliveryStatus: (deliveryId: string, payload: UpdateDeliveryStatusRequest) => {
     return fetchHttpClient.patch<ApiResponse<any>>(
       `/orders/deliveries/${deliveryId}/status`,
+      payload,
+    );
+  },
+  assignDeliveryStaff: (deliveryId: string, payload: AssignDeliveryStaffRequest) => {
+    return fetchHttpClient.put<ApiResponse<any>>(
+      `/orders/deliveries/${deliveryId}/assignee`,
       payload,
     );
   },
@@ -70,4 +77,6 @@ export const ordersApi = {
       `/orders/deliveries/${deliveryId}/detail`,
     );
   },
+
+  
 };
