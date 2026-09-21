@@ -56,8 +56,9 @@ function Segmented<T extends string | number>({
     <div
       role="radiogroup"
       aria-label={label}
-      className={`flex gap-1 rounded-lg bg-neutral-dark/60 p-1 ${highlight ? "ring-2 ring-primary" : ""
-        }`}
+      className={`flex gap-1 rounded-lg bg-neutral-dark/60 p-1 ${
+        highlight ? "ring-2 ring-primary" : ""
+      }`}
     >
       {choices.map((choice) => {
         const selected = value === choice.value;
@@ -69,10 +70,11 @@ function Segmented<T extends string | number>({
             role="radio"
             aria-checked={selected}
             onClick={() => onChange(choice.value)}
-            className={`flex-1 cursor-pointer rounded-md px-2 py-1.5 text-xs font-semibold transition-colors ${selected
+            className={`flex-1 cursor-pointer rounded-md px-2 py-1.5 text-xs font-semibold transition-colors ${
+              selected
                 ? "bg-primary text-white"
                 : "text-text-secondary hover:bg-neutral-dark hover:text-text-primary"
-              }`}
+            }`}
           >
             {t(choice.label)}
           </button>
@@ -110,12 +112,14 @@ function Toggle({
         role="switch"
         aria-checked={on}
         aria-label={label}
-        className={`relative block h-5 w-9 shrink-0 rounded-full transition-colors duration-200 ${on ? "bg-primary" : "bg-border-dark"
-          }`}
+        className={`relative block h-5 w-9 shrink-0 rounded-full transition-colors duration-200 ${
+          on ? "bg-primary" : "bg-border-dark"
+        }`}
       >
         <span
-          className={`absolute top-0.5 block h-4 w-4 rounded-full bg-neutral shadow transition-transform duration-200 ${on ? "translate-x-4.5" : "translate-x-0.5"
-            }`}
+          className={`absolute top-0.5 block h-4 w-4 rounded-full bg-neutral shadow transition-transform duration-200 ${
+            on ? "translate-x-4.5" : "translate-x-0.5"
+          }`}
         />
       </span>
     </button>
@@ -123,14 +127,24 @@ function Toggle({
 }
 
 /** Nhãn nhỏ phía trên mỗi nhóm điều khiển trong phần nâng cao. */
-function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
+function Field({
+  label,
+  hint,
+  children,
+}: {
+  label: string;
+  hint?: string;
+  children: React.ReactNode;
+}) {
   return (
     <div className="px-1 py-2">
       <div className="mb-1.5 text-sm font-medium text-text-secondary">{label}</div>
 
       {children}
 
-      {hint ? <p className="mt-1.5 text-[11px] leading-snug text-text-secondary/70">{hint}</p> : null}
+      {hint ? (
+        <p className="mt-1.5 text-[11px] leading-snug text-text-secondary/70">{hint}</p>
+      ) : null}
     </div>
   );
 }
@@ -184,7 +198,9 @@ export default function AppearanceSettings() {
         className="flex min-w-[36px] cursor-pointer flex-col items-center gap-0.5 rounded-lg px-1 py-1 text-gray-700 transition-colors hover:text-primary sm:min-w-[44px]"
       >
         <Monitor size={22} strokeWidth={1.8} />
-        <span className="hidden text-[10px] font-medium sm:block sm:text-xs">{t("appearance.theme")}</span>
+        <span className="hidden text-[10px] font-medium sm:block sm:text-xs">
+          {t("appearance.theme")}
+        </span>
       </button>
 
       {open && (
@@ -193,14 +209,7 @@ export default function AppearanceSettings() {
           aria-label={t("appearance.title")}
           className="nav-dropdown-enter absolute right-0 top-full z-50 flex w-72 flex-col gap-1 rounded-lg bg-white p-3 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] ring-1 ring-black/5"
         >
-          <Field
-            label={t("appearance.bg_effect")}
-            hint={
-              preset === null
-                ? ""
-                : undefined
-            }
-          >
+          <Field label={t("appearance.bg_effect")} hint={preset === null ? "" : undefined}>
             <Segmented
               label={t("appearance.bg_effect_level")}
               value={preset}
@@ -230,8 +239,9 @@ export default function AppearanceSettings() {
               `inert` chặn tab-focus vào các nút đang bị thu gọn. */}
           <div
             inert={!advanced}
-            className={`grid transition-[grid-template-rows] duration-300 ease-out ${advanced ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
-              }`}
+            className={`grid transition-[grid-template-rows] duration-300 ease-out ${
+              advanced ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+            }`}
           >
             <div className="overflow-hidden">
               <div className="flex flex-col divide-y divide-border-light/60 border-t border-border-light/60 pt-1">
@@ -240,7 +250,11 @@ export default function AppearanceSettings() {
                 </div>
 
                 <Field
-                  label={effects.fluidFps === 0 ? t("appearance.fluid_fps_off") : t("appearance.fluid_fps", { fps: effects.fluidFps })}
+                  label={
+                    effects.fluidFps === 0
+                      ? t("appearance.fluid_fps_off")
+                      : t("appearance.fluid_fps", { fps: effects.fluidFps })
+                  }
                 >
                   <input
                     type="range"
@@ -255,7 +269,14 @@ export default function AppearanceSettings() {
                 </Field>
 
                 <Field
-                  label={effects.fluidDrift === 0 ? t("appearance.fluid_drift_off") : t("appearance.fluid_drift", { drift: effects.fluidDrift, max: FLUID_DRIFT_MAX })}
+                  label={
+                    effects.fluidDrift === 0
+                      ? t("appearance.fluid_drift_off")
+                      : t("appearance.fluid_drift", {
+                          drift: effects.fluidDrift,
+                          max: FLUID_DRIFT_MAX,
+                        })
+                  }
                 >
                   <input
                     type="range"
@@ -269,10 +290,7 @@ export default function AppearanceSettings() {
                   />
                 </Field>
 
-                <Field
-                  label={t("appearance.fluid_rail")}
-                  hint={t("appearance.fluid_rail_hint")}
-                >
+                <Field label={t("appearance.fluid_rail")} hint={t("appearance.fluid_rail_hint")}>
                   <Segmented
                     label={t("appearance.fluid_rail")}
                     value={effects.fluidRail}

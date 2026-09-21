@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { Store, Plus } from "lucide-react";
+import { Store, Plus, AlertCircle, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import Modal from "@/components/ui/Modal";
+import { useAppSelector } from "@/app/store";
 import {
   getProvinces,
   getDistrictsByProvinceId,
@@ -15,6 +17,7 @@ import {
 import { splitOpeningHours } from "@/features/shop/utils/opening-hours";
 import {
   getAllShopRequest,
+  getMyShopsRequest,
   getShopRequestById,
   createShopRequest,
   updateShopRequest,
@@ -38,6 +41,28 @@ import {
 } from "@/features/manager/components";
 
 export default function ManageStoresPage() {
+  const currentUser = useAppSelector((s) => s.auth.user);
+  const userRoles = useMemo(
+    () => (currentUser?.role ?? "").split(",").map((r) => r.trim()),
+    [currentUser?.role],
+  );
+  const isAdmin = useMemo(
+    () => userRoles.some((r) => ["Admin", "SystemAdmin"].includes(r)),
+    [userRoles],
+  );
+
+  const isStorePermitted = useCallback(
+    (store: Shop) => {
+      if (isAdmin) return true;
+      return (
+        store.isOwner ||
+        (store as any).isStaff ||
+        (!!currentUser?.id && store.ownerUserId === currentUser.id)
+      );
+    },
+    [isAdmin, currentUser],
+  );
+
   // Lists
   const [stores, setStores] = useState<Shop[]>([]);
   const [loading, setLoading] = useState(false);
@@ -113,38 +138,103 @@ export default function ManageStoresPage() {
 
   // Staff Deletion
   const [deletingStaffId, setDeletingStaffId] = useState<string | null>(null);
+  const [removeStaffTarget, setRemoveStaffTarget] = useState<StoreStaff | null>(null);
 
-  // Fetch all stores
+  // Fetch all stores and my stores
   const fetchStores = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await getAllShopRequest();
-      if (response.isSuccess && response.data) {
-        setStores(response.data);
-        // If a store was already selected, update its reference
-        if (selectedStore) {
-          const updated = response.data.find((s) => s.id === selectedStore.id);
-          if (updated) {
-            setSelectedStore(updated);
+      const [allRes, mineRes] = await Promise.allSettled([
+        getAllShopRequest(),
+        getMyShopsRequest(),
+      ]);
+
+      let allStores: Shop[] = [];
+      if (allRes.status === "fulfilled" && allRes.value?.isSuccess && allRes.value.data) {
+        allStores = allRes.value.data;
+      }
+
+      const ownedIds = new Set<string>();
+      const staffIds = new Set<string>();
+
+      if (mineRes.status === "fulfilled" && mineRes.value?.isSuccess && mineRes.value.data) {
+        mineRes.value.data.forEach((s) => {
+          if (s.isOwner !== false) {
+            ownedIds.add(s.id);
+          } else {
+            staffIds.add(s.id);
+          }
+        });
+      }
+
+      // Enrich stores list with ownership and staff flags
+      let enrichedStores = allStores.map((s) => ({
+        ...s,
+        isOwner:
+          s.isOwner ||
+          ownedIds.has(s.id) ||
+          (!!currentUser?.id && s.ownerUserId === currentUser.id),
+        isStaff: staffIds.has(s.id),
+      }));
+
+      // If allStores was empty or blocked, fallback to user's shops from mineRes
+      if (enrichedStores.length === 0 && mineRes.status === "fulfilled" && mineRes.value?.data) {
+        enrichedStores = mineRes.value.data.map((s) => ({
+          ...s,
+          isOwner: s.isOwner !== false || (!!currentUser?.id && s.ownerUserId === currentUser.id),
+          isStaff: s.isOwner === false,
+        }));
+      }
+
+      const visibleStores = isAdmin
+        ? enrichedStores
+        : enrichedStores.filter(
+            (s) =>
+              s.isOwner ||
+              (s as any).isStaff ||
+              (!!currentUser?.id && s.ownerUserId === currentUser.id),
+          );
+
+      setStores(visibleStores);
+
+      setSelectedStore((prev) => {
+        if (prev) {
+          const updated = visibleStores.find((s) => s.id === prev.id);
+          if (updated && isStorePermitted(updated)) {
+            return updated;
           }
         }
-      } else {
-        toast.error("Không thể tải danh sách cửa hàng");
-      }
+        return visibleStores[0] || null;
+      });
     } catch (err) {
       console.error(err);
       toast.error("Đã xảy ra lỗi khi tải danh sách cửa hàng");
     } finally {
       setLoading(false);
     }
-  }, [selectedStore]);
+  }, [currentUser, isAdmin, isStorePermitted]);
 
   useEffect(() => {
     fetchStores();
   }, []);
 
+  const handleSelectStore = (store: Shop) => {
+    if (!isStorePermitted(store)) {
+      toast.error("Bạn không có quyền xem hoặc quản lý cửa hàng này.");
+      return;
+    }
+    setSelectedStore(store);
+    setActiveTab("info");
+  };
+
   // Fetch detailed store info (to get nested address if any) and staff
   const fetchStoreDetails = async (storeId: string) => {
+    const target = stores.find((s) => s.id === storeId);
+    if (target && !isStorePermitted(target)) {
+      toast.error("Bạn không có quyền truy cập thông tin cửa hàng này.");
+      setSelectedStoreDetails(null);
+      return;
+    }
     try {
       const response = await getShopRequestById(storeId);
       if (response.isSuccess && response.data) {
@@ -156,6 +246,11 @@ export default function ManageStoresPage() {
   };
 
   const fetchStaff = async (storeId: string) => {
+    const target = stores.find((s) => s.id === storeId);
+    if (target && !isStorePermitted(target)) {
+      setStaff([]);
+      return;
+    }
     setLoadingStaff(true);
     try {
       const response = await getShopStaffRequest(storeId);
@@ -231,7 +326,9 @@ export default function ManageStoresPage() {
   // wardId gửi lên BE luôn bám theo dropdown đang hiển thị — nếu giữ lại phường
   // cũ trong khi khu vực đã đổi thì đơn GHN sẽ về sai quận/phường.
   useEffect(() => {
-    setAddressForm((prev) => (prev.wardId === selectedWardId ? prev : { ...prev, wardId: selectedWardId }));
+    setAddressForm((prev) =>
+      prev.wardId === selectedWardId ? prev : { ...prev, wardId: selectedWardId },
+    );
   }, [selectedWardId]);
 
   // ── Dropdown → Map: geocode selected location and zoom map ────────────
@@ -635,16 +732,27 @@ export default function ManageStoresPage() {
     }
   };
 
-  // Delete staff assignment
-  const handleRemoveStaff = async (assignmentId: string) => {
-    if (!selectedStore) return;
-    if (!window.confirm("Bạn có chắc chắn muốn gỡ nhân viên này ra khỏi cửa hàng?")) return;
+  // Delete staff assignment - open modal
+  const handleRemoveStaff = (assignmentId: string) => {
+    const target = staff.find((s) => s.id === assignmentId);
+    if (target) {
+      setRemoveStaffTarget(target);
+    } else {
+      // Fallback if staff object not found by id
+      setRemoveStaffTarget({ id: assignmentId } as StoreStaff);
+    }
+  };
 
-    setDeletingStaffId(assignmentId);
+  // Confirm staff removal from modal
+  const handleConfirmRemoveStaff = async () => {
+    if (!selectedStore || !removeStaffTarget) return;
+
+    setDeletingStaffId(removeStaffTarget.id);
     try {
-      const res = await removeShopStaffRequest(selectedStore.id, assignmentId);
+      const res = await removeShopStaffRequest(selectedStore.id, removeStaffTarget.id);
       if (res.isSuccess) {
         toast.success("Đã gỡ nhân viên thành công");
+        setRemoveStaffTarget(null);
         fetchStaff(selectedStore.id);
       } else {
         toast.error(res.message || "Lỗi khi gỡ nhân viên");
@@ -681,10 +789,13 @@ export default function ManageStoresPage() {
         <StoreList
           stores={stores}
           selectedStore={selectedStore}
-          onSelectStore={setSelectedStore}
+          onSelectStore={handleSelectStore}
           onEditStore={handleOpenStoreModal}
           onDeleteStore={handleDeleteStoreClick}
           loading={loading}
+          currentUserId={currentUser?.id}
+          userRoles={userRoles}
+          isAdmin={isAdmin}
         />
 
         {/* ── Right Column: Selected Store Details & Management ──────────────── */}
@@ -707,6 +818,7 @@ export default function ManageStoresPage() {
               submittingStaff={submittingStaff}
               onRemoveStaff={handleRemoveStaff}
               deletingStaffId={deletingStaffId}
+              currentUserId={currentUser?.id}
             />
           ) : (
             <div className="rounded-2xl border-2 border-dashed border-gray-200 bg-white p-12 text-center shadow-sm">
@@ -778,6 +890,80 @@ export default function ManageStoresPage() {
         onMapLocationChange={handleMapLocationChange}
         isReverseGeocoding={isReverseGeocoding}
       />
+
+      {/* ── Modal: Remove Staff Confirmation ───────────────────────────────── */}
+      <Modal
+        open={removeStaffTarget !== null}
+        title="Gỡ nhân viên khỏi cửa hàng"
+        onClose={() => {
+          if (!deletingStaffId) setRemoveStaffTarget(null);
+        }}
+      >
+        <div className="space-y-4">
+          <div className="flex items-start gap-3 rounded-xl bg-amber-50 p-3.5 text-amber-800 border border-amber-200">
+            <AlertCircle size={20} className="shrink-0 mt-0.5 text-amber-600" />
+            <div>
+              <p className="text-sm font-bold text-amber-900">Xác nhận gỡ phân công nhân viên</p>
+              <p className="text-xs text-amber-700 mt-1">
+                Nhân viên sẽ không còn quyền truy cập và quản lý các đơn hàng/sản phẩm thuộc cửa
+                hàng này.
+              </p>
+            </div>
+          </div>
+
+          {removeStaffTarget && (
+            <div className="rounded-xl border border-gray-100 bg-gray-50 p-3.5 flex items-center gap-3">
+              <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm uppercase">
+                {removeStaffTarget.staffName?.charAt(0) || "U"}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-bold text-gray-900 truncate">
+                  {removeStaffTarget.staffName || "Nhân viên chưa cập nhật tên"}
+                </p>
+                <p className="text-xs text-gray-500 font-mono mt-0.5 truncate">
+                  {removeStaffTarget.staffEmail ||
+                    removeStaffTarget.staffPhone ||
+                    removeStaffTarget.staffId}
+                </p>
+              </div>
+            </div>
+          )}
+
+          <p className="text-sm text-gray-600">
+            Bạn có chắc chắn muốn gỡ nhân viên{" "}
+            <span className="font-semibold text-gray-900">
+              {removeStaffTarget?.staffName || "này"}
+            </span>{" "}
+            ra khỏi cửa hàng không?
+          </p>
+
+          <div className="flex gap-3 pt-2">
+            <button
+              type="button"
+              onClick={() => setRemoveStaffTarget(null)}
+              disabled={deletingStaffId !== null}
+              className="flex-1 rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50 cursor-pointer disabled:opacity-50"
+            >
+              Hủy
+            </button>
+            <button
+              type="button"
+              onClick={handleConfirmRemoveStaff}
+              disabled={deletingStaffId !== null}
+              className="flex-1 rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-red-700 cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              {deletingStaffId ? (
+                <>
+                  <Loader2 size={16} className="animate-spin" />
+                  Đang gỡ...
+                </>
+              ) : (
+                "Xác nhận gỡ"
+              )}
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

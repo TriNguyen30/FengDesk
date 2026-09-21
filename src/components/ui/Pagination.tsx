@@ -54,10 +54,7 @@ export const Pagination: React.FC<PaginationProps> = ({
   const lastPage = paginationRange[paginationRange.length - 1];
 
   return (
-    <ul
-      ref={listRef}
-      className={`relative flex items-center space-x-1 ${className}`}
-    >
+    <ul ref={listRef} className={`relative flex items-center space-x-1 ${className}`}>
       {/* Sliding active-page indicator */}
       {indicator && (
         <span
@@ -94,17 +91,15 @@ export const Pagination: React.FC<PaginationProps> = ({
         const isActive = page === currentPage;
 
         return (
-          <li
-            key={idx}
-            style={{ animation: `pg-fade-in 260ms ease-out ${idx * 25}ms both` }}
-          >
+          <li key={idx} style={{ animation: `pg-fade-in 260ms ease-out ${idx * 25}ms both` }}>
             <button
               ref={(el) => (itemRefs.current[page] = el)}
               onClick={() => onPageChange(page)}
-              className={`relative z-10 flex h-9 w-9 items-center justify-center rounded-md text-sm font-medium transition-all duration-200 ease-out active:scale-90 active:duration-100 cursor-pointer ${isActive
+              className={`relative z-10 flex h-9 w-9 items-center justify-center rounded-md text-sm font-medium transition-all duration-200 ease-out active:scale-90 active:duration-100 cursor-pointer ${
+                isActive
                   ? "text-white"
                   : "border border-transparent text-gray-600 hover:bg-gray-100 hover:scale-105 dark:text-gray-400 dark:hover:bg-gray-800"
-                }`}
+              }`}
               aria-current={isActive ? "page" : undefined}
             >
               {page}

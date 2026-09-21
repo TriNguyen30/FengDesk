@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useCallback } from "react";
+﻿import { useEffect, useMemo, useState, useCallback } from "react";
 import { toast } from "sonner";
 import { Clock, Loader2, MapPin, Pencil, Phone, Power, Store, X } from "lucide-react";
 import { Shop, StoreAddress } from "../types/shop";
@@ -148,7 +148,8 @@ function EditShopProfileModal({ shop, onClose, onSaved }: EditShopProfileModalPr
   // BE trả `address` dạng chuỗi (store chưa có địa chỉ chi tiết) hoặc object
   // StoreAddressResponse. Chỉ trường hợp object mới có wardId để dựng lại khu vực.
   const savedAddress = useMemo(
-    () => (typeof shop.address === "object" && shop.address ? (shop.address as StoreAddress) : null),
+    () =>
+      typeof shop.address === "object" && shop.address ? (shop.address as StoreAddress) : null,
     [shop.address],
   );
 
@@ -472,8 +473,8 @@ function EditShopProfileModal({ shop, onClose, onSaved }: EditShopProfileModalPr
                 <p className="text-xs font-semibold text-gray-700">Trạng thái cửa hàng</p>
                 <p className="text-[11px] text-gray-500">
                   {isActive
-                    ? "Đang hoạt động — khách thấy được."
-                    : "Tạm ngừng — ẩn khỏi danh sách."}
+                    ? "Đang hoạt động - khách thấy được."
+                    : "Tạm ngừng - ẩn khỏi danh sách."}
                 </p>
               </div>
             </div>

@@ -4,6 +4,7 @@ import { Bot, User } from "lucide-react";
 import Markdown from "./Markdown";
 import PaymentAttachment from "./PaymentAttachment";
 import { extractPaymentBlock } from "@/features/chatbox/utils/paymentBlock";
+import Tooltip from "@/components/ui/Tooltip";
 
 interface ChatMessageBubbleProps {
   message: ChatMessage;
@@ -29,56 +30,56 @@ export default function ChatMessageBubble({ message, isOwn }: ChatMessageBubbleP
   }
 
   return (
-    <div className={`flex ${isOwn ? "justify-end" : "justify-start"}`}>
-      <div className={`flex max-w-[85%] flex-col gap-1 ${isOwn ? "items-end" : "items-start"}`}>
+    <div className={`flex flex-col w-full mb-2 ${isOwn ? "items-end" : "items-start"}`}>
+      <div
+        className={`flex max-w-[75%] gap-2 ${isOwn ? "flex-row-reverse" : "flex-row"} items-end`}
+      >
         {!isOwn && (
-          <div className="flex items-center gap-1.5 px-1">
-            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/15 text-primary">
-              {isAi ? <Bot size={14} /> : <User size={14} />}
-            </span>
-            <span className="text-[11px] font-medium text-gray-500">
-              {isAi ? "Trợ lý AI" : (message.senderName ?? "Người dùng")}
-            </span>
-          </div>
-        )}
-
-        {message.images?.length > 0 && (
-          <div className="flex flex-wrap gap-1.5">
-            {message.images.map((url) => (
-              <a key={url} href={url} target="_blank" rel="noreferrer">
-                <img
-                  src={url}
-                  alt="Ảnh đính kèm"
-                  className="max-h-44 rounded-xl border border-gray-200 object-cover"
-                />
-              </a>
-            ))}
-          </div>
-        )}
-
-        {aiText.trim() && (
-          <div
-            className={`rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed shadow-sm ${
-              isOwn
-                ? "rounded-br-md bg-primary text-white"
-                : isAi
-                  ? "rounded-bl-md border border-primary/15 bg-primary/5 text-gray-800"
-                  : "rounded-bl-md border border-gray-200 bg-white text-gray-800"
-            }`}
+          <Tooltip
+            content={isAi ? "Trợ lý AI" : (message.senderName ?? "Người dùng")}
+            position="left"
           >
-            {isAi ? (
-              <Markdown text={aiText} />
-            ) : (
-              <p className="whitespace-pre-wrap break-words">{aiText}</p>
-            )}
-          </div>
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gray-200 text-gray-500 mb-0.5">
+              {isAi ? <Bot size={16} /> : <User size={16} />}
+            </span>
+          </Tooltip>
         )}
 
-        {payment && <PaymentAttachment payment={payment} />}
+        <Tooltip content={formatMessageTime(message.createdAt)} position={isOwn ? "left" : "right"}>
+          <div className={`flex flex-col gap-1 ${isOwn ? "items-end" : "items-start"}`}>
+            {message.images?.length > 0 && (
+              <div className={`flex flex-wrap gap-1 ${isOwn ? "justify-end" : "justify-start"}`}>
+                {message.images.map((url) => (
+                  <a key={url} href={url} target="_blank" rel="noreferrer">
+                    <img
+                      src={url}
+                      alt="Ảnh đính kèm"
+                      className="max-h-44 rounded-2xl object-cover"
+                    />
+                  </a>
+                ))}
+              </div>
+            )}
 
-        <span className="px-1 text-[10px] text-gray-400 tabular-nums">
-          {formatMessageTime(message.createdAt)}
-        </span>
+            {aiText.trim() && (
+              <div
+                className={`px-3.5 py-2 text-sm leading-relaxed shadow-sm ${
+                  isOwn
+                    ? "bg-primary text-white rounded-[18px] rounded-br-[4px]"
+                    : "bg-[#e4e6eb] text-gray-900 rounded-[18px] rounded-bl-[4px]"
+                }`}
+              >
+                {isAi ? (
+                  <Markdown text={aiText} />
+                ) : (
+                  <p className="whitespace-pre-wrap break-words">{aiText}</p>
+                )}
+              </div>
+            )}
+
+            {payment && <PaymentAttachment payment={payment} />}
+          </div>
+        </Tooltip>
       </div>
     </div>
   );

@@ -1,13 +1,19 @@
 import { useEffect, useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
-import { getWorkspaces, deleteWorkspace, setDefaultWorkspace } from "../api/workspace.api";
+import { useNavigate, useParams } from "react-router-dom";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { deleteWorkspace, setDefaultWorkspace } from "../api/workspace.api";
 import { Workspace } from "../types/workspace";
 import { toast } from "sonner";
 import WorkspaceModal from "../components/WorkspaceModal";
-import { useWorkspaceElementAnalysis } from "../hooks/useWorkspace";
+import { useWorkspaceIntakeRunning } from "../hooks/useWorkspaceIntakeDraft";
+import { useWorkspaceElementAnalysis, useWorkspaces } from "../hooks/useWorkspace";
 import { fromCm2 } from "../utils/deskArea";
-import ElementVectorFit from "@/features/recommendation/components/element-vector/ElementVectorFit";
-import WorkspacePlacementSection from "../components/WorkspacePlacementSection";
+import { resolveSelectedWorkspace, workspacePath } from "../utils/selectWorkspace";
+import ElementVectorFit, {
+  type ProductPreviewLayer,
+} from "@/features/recommendation/components/element-vector/ElementVectorFit";
+import { useProductFit } from "@/features/recommendation/hooks/useProductFit";
+import { useWorkspaceHover } from "../context/WorkspaceHoverContext";
 import {
   MapPinHouse,
   Briefcase,
@@ -69,9 +75,18 @@ function CompatibilityRing({ percent, loading }: { percent: number | null; loadi
   );
 }
 
-// ── Ngũ hành không gian: mọi workspace card đều hiện panel full 5 hành ──
+// ── Ngũ hành không gian (hover sản phẩm ở sidebar → radar xem trước) ──
 function WorkspaceElementSection({ workspace }: { workspace: Workspace }) {
   const { analysis, status } = useWorkspaceElementAnalysis(workspace.id);
+
+  // Món đang hover trong panel sản phẩm (sidebar, qua context) → fit của món đó với phòng này → lớp
+  // nét đứt trên radar. react-query cache theo (productId, workspaceId) nên hover lại không tốn request.
+  const { hovered } = useWorkspaceHover();
+  const { fit } = useProductFit(hovered?.productId, workspace.id);
+  const productPreview: ProductPreviewLayer | null =
+    hovered && fit && fit.productId === hovered.productId
+      ? { label: hovered.label, rows: fit.gap }
+      : null;
 
   if (status === "pending") {
     return (
@@ -82,12 +97,7 @@ function WorkspaceElementSection({ workspace }: { workspace: Workspace }) {
 
   return (
     <div className="mt-4">
-      <ElementVectorFit analysis={analysis} variant="full" />
-      {/* Đặt sản phẩm đã mua vào phòng — radar ở trên tự morph khi đặt/gỡ (invalidate ["workspace"]). */}
-      <WorkspacePlacementSection
-        workspaceId={workspace.id}
-        placedProducts={analysis.placedProducts ?? []}
-      />
+      <ElementVectorFit analysis={analysis} variant="full" productPreview={productPreview} />
     </div>
   );
 }
@@ -106,7 +116,7 @@ function WorkspaceCard({ workspace, onEdit, onDelete, onSetDefault }: WorkspaceC
   return (
     <div className="relative rounded-xl border border-gray-100 bg-white p-5 shadow-sm transition-shadow hover:shadow-md">
       {/* Header */}
-      <div className="mb-4 flex items-center justify-between">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <CompatibilityRing
             percent={analysis?.compatibilityPercent ?? null}
@@ -248,13 +258,62 @@ function ConfirmDeleteDialog({ workspaceName, onConfirm, onCancel }: ConfirmDele
 }
 
 // ── Main Page ───────────────────────────────────────────────
+/**
+ * Trang hiện MỘT phòng tại một thời điểm: phòng chọn trên sidebar (`/profile/workspace/:workspaceId`),
+ * không có id thì phòng mặc định. Danh sách phòng ở react-query (["workspaces"]) để dùng chung với
+ * WorkspaceNavList — sửa/xóa/đặt mặc định ở đây, sidebar tự cập nhật.
+ */
 export default function ProfileWorkspace() {
-  const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { workspaceId } = useParams<{ workspaceId: string }>();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { workspaces, status } = useWorkspaces();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  // Có lượt "AI điền giúp" đang chạy nền (user đã đóng modal) → chip nhỏ cạnh nút Tạo mới.
+  const intakeRunning = useWorkspaceIntakeRunning();
   const [editingWorkspace, setEditingWorkspace] = useState<Workspace | null>(null);
   const [deletingWorkspace, setDeletingWorkspace] = useState<Workspace | null>(null);
-  const queryClient = useQueryClient();
+
+  const selected = resolveSelectedWorkspace(workspaces, workspaceId);
+
+  // URL trỏ tới phòng không còn (đã xóa / link cũ) → về đường dẫn gốc, để mặc định tự chọn.
+  useEffect(() => {
+    if (status === "success" && workspaceId && selected && selected.id !== workspaceId) {
+      navigate(workspacePath(), { replace: true });
+    }
+  }, [status, workspaceId, selected, navigate]);
+
+  const invalidateWorkspaces = () => {
+    queryClient.invalidateQueries({ queryKey: ["workspaces"] });
+    // Radar/ngũ hành nằm ở key ["workspace", id, "element-analysis"] — refetch danh sách KHÔNG đụng
+    // tới cache này. Phải invalidate để radar tính lại sau khi sửa.
+    queryClient.invalidateQueries({ queryKey: ["workspace"] });
+  };
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => deleteWorkspace(id),
+    onSuccess: (_, id) => {
+      toast.success("Đã xóa không gian làm việc");
+      invalidateWorkspaces();
+      if (id === workspaceId) navigate(workspacePath(), { replace: true });
+    },
+    onError: (error) => {
+      toast.error("Không thể xóa không gian làm việc");
+      console.error(error);
+    },
+  });
+
+  const setDefaultMutation = useMutation({
+    mutationFn: (id: string) => setDefaultWorkspace(id),
+    onSuccess: () => {
+      toast.success("Đã đặt làm mặc định");
+      queryClient.invalidateQueries({ queryKey: ["workspaces"] });
+    },
+    onError: (error) => {
+      toast.error("Không thể đặt làm mặc định");
+      console.error(error);
+    },
+  });
 
   const handleOpenCreate = () => {
     setEditingWorkspace(null);
@@ -266,52 +325,19 @@ export default function ProfileWorkspace() {
     setIsModalOpen(true);
   };
 
-  const handleDeleteConfirm = async () => {
+  const handleDeleteConfirm = () => {
     if (!deletingWorkspace) return;
     const idToDelete = deletingWorkspace.id;
     setDeletingWorkspace(null); // đóng dialog ngay
-    try {
-      setLoading(true);
-      await deleteWorkspace(idToDelete);
-      // Xóa khỏi state local thay vì dùng data trả về từ API
-      setWorkspaces((prev) => prev.filter((w) => w.id !== idToDelete));
-    } catch (error) {
-      toast.error("Không thể xóa không gian làm việc");
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
+    deleteMutation.mutate(idToDelete);
   };
 
-  const handleSetDefault = async (workspace: Workspace) => {
+  const handleSetDefault = (workspace: Workspace) => {
     if (workspace.isDefault) return; // đã là default rồi thì bỏ qua
-    try {
-      await setDefaultWorkspace(workspace.id);
-      // Cập nhật state local: bật isDefault cho workspace được chọn, tắt các cái còn lại
-      setWorkspaces((prev) => prev.map((w) => ({ ...w, isDefault: w.id === workspace.id })));
-      toast.success("Đã đặt làm mặc định");
-    } catch (error) {
-      toast.error("Không thể đặt làm mặc định");
-      console.error(error);
-    }
+    setDefaultMutation.mutate(workspace.id);
   };
 
-  useEffect(() => {
-    fetchWorkspaces();
-  }, []);
-
-  const fetchWorkspaces = async () => {
-    try {
-      setLoading(true);
-      const data = await getWorkspaces();
-      setWorkspaces(data || []);
-    } catch (error) {
-      toast.error("Không thể tải danh sách không gian làm việc");
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const loading = status === "pending" || deleteMutation.isPending;
 
   return (
     <div>
@@ -328,22 +354,40 @@ export default function ProfileWorkspace() {
         <div>
           <h1 className="text-xl font-bold tracking-tight text-gray-900">Không gian làm việc</h1>
           <p className="mt-0.5 text-sm text-gray-500">
-            Quản lý các không gian làm việc của bạn để nhận tư vấn phong thủy.
+            Quản lý các không gian làm việc của bạn.
           </p>
         </div>
-        <button
-          onClick={handleOpenCreate}
-          className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90 transition-colors cursor-pointer"
-        >
-          + Tạo mới
-        </button>
+        <div className="flex items-center gap-3">
+          {/* Dấu hiệu nhỏ: AI vẫn đang phân tích mô tả user gửi lúc nãy — mở "Tạo mới" là thấy tiến trình,
+              xong thì form đã được điền sẵn. Không có nút hủy: job nền cứ chạy, không cần cancel. */}
+          {intakeRunning && !isModalOpen && (
+            <button
+              type="button"
+              onClick={handleOpenCreate}
+              className="inline-flex items-center gap-2 rounded-full border border-primary/25 bg-primary/5 px-3 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/10 cursor-pointer"
+              title="AI đang phân tích mô tả không gian bạn đã gửi - bấm để xem tiến trình"
+            >
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary/60" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
+              </span>
+              AI đang phân tích không gian…
+            </button>
+          )}
+          <button
+            onClick={handleOpenCreate}
+            className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90 transition-colors cursor-pointer"
+          >
+            + Tạo mới
+          </button>
+        </div>
       </div>
 
       {loading ? (
         <div className="flex h-40 items-center justify-center">
           <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
         </div>
-      ) : workspaces.length === 0 ? (
+      ) : !selected ? (
         <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-200 py-12 text-center">
           <div className="mb-4 rounded-full bg-gray-50 p-3 text-gray-400">
             <MapPinHouse size={24} />
@@ -354,17 +398,13 @@ export default function ProfileWorkspace() {
           </p>
         </div>
       ) : (
-        <div className="space-y-4">
-          {workspaces.map((workspace) => (
-            <WorkspaceCard
-              key={workspace.id}
-              workspace={workspace}
-              onEdit={handleOpenEdit}
-              onDelete={setDeletingWorkspace}
-              onSetDefault={handleSetDefault}
-            />
-          ))}
-        </div>
+        <WorkspaceCard
+          key={selected.id}
+          workspace={selected}
+          onEdit={handleOpenEdit}
+          onDelete={setDeletingWorkspace}
+          onSetDefault={handleSetDefault}
+        />
       )}
 
       <WorkspaceModal
@@ -373,12 +413,7 @@ export default function ProfileWorkspace() {
           setIsModalOpen(false);
           setEditingWorkspace(null);
         }}
-        onSuccess={() => {
-          fetchWorkspaces();
-          // Radar/ngũ hành nằm ở React Query (key ["workspace", id, "element-analysis"]) — refetch danh
-          // sách (local state) KHÔNG đụng tới cache này. Phải invalidate để radar tính lại sau khi sửa.
-          queryClient.invalidateQueries({ queryKey: ["workspace"] });
-        }}
+        onSuccess={invalidateWorkspaces}
         workspace={editingWorkspace}
       />
     </div>

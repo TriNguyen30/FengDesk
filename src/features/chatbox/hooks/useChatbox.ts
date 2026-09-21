@@ -281,11 +281,12 @@ export function useChatbox() {
 
   // Tạo/mở phòng hỗ trợ qua REST — KHÔNG phụ thuộc SignalR. forceNew=true → luôn tạo phòng mới.
   const startSupport = useCallback(
-    async (forceNew = false) => {
+    async (forceNew: boolean | unknown = false) => {
       if (ensuringSupportRef.current) return;
       ensuringSupportRef.current = true;
+      const isForceNew = typeof forceNew === "boolean" ? forceNew : false;
       try {
-        const res = await chatApi.startSupport(forceNew);
+        const res = await chatApi.startSupport(isForceNew);
         if (res.data.isSuccess) {
           dispatch(upsertChatbox(res.data.data));
           await openRoom(res.data.data.id);

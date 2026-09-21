@@ -1,4 +1,5 @@
 import fetchHttpClient from "@/lib/httpClient";
+import { normalizeImageForUpload } from "@/utils/imageResize";
 import type {
   ReturnQueryParams,
   ReturnListResponse,
@@ -56,7 +57,10 @@ export const returnApi = {
   },
 
   approveRefund: async (returnId: string, payload: ApproveRefundRequest) => {
-    return fetchHttpClient.post<ApproveRefundResponse>(`/returns/${returnId}/approve-refund`, payload);
+    return fetchHttpClient.post<ApproveRefundResponse>(
+      `/returns/${returnId}/approve-refund`,
+      payload,
+    );
   },
 
   approveExchange: async (returnId: string, payload: ApproveExchangeRequest) => {
@@ -72,19 +76,24 @@ export const returnApi = {
   },
 
   confirmReceived: async (returnId: string) => {
-    return fetchHttpClient.post<ConfirmReceivedResponse>(`/returns/${returnId}/confirm-received`, {});
+    return fetchHttpClient.post<ConfirmReceivedResponse>(
+      `/returns/${returnId}/confirm-received`,
+      {},
+    );
   },
 
   requestMoreEvidence: async (returnId: string, payload: RequestMoreEvidenceRequest) => {
     return fetchHttpClient.post<RequestMoreEvidenceResponse>(
       `/returns/${returnId}/request-more-evidence`,
-      payload
+      payload,
     );
   },
 
   resubmitEvidence: async (returnId: string, files: File[]) => {
+    // Backend chỉ nhận JPG/PNG/BMP/GIF — .webp phải đổi sang JPEG trước, nếu không sẽ bị trả 422.
+    const normalized = await Promise.all(files.map(normalizeImageForUpload));
     const formData = new FormData();
-    files.forEach((file) => {
+    normalized.forEach((file) => {
       formData.append("files", file);
     });
     return fetchHttpClient.post<ResubmitEvidenceResponse>(
@@ -94,14 +103,14 @@ export const returnApi = {
         headers: {
           "Content-Type": "multipart/form-data",
         },
-      }
+      },
     );
   },
 
   managerConfirmRefund: async (refundId: string, payload: ManagerConfirmRefundRequest) => {
     return fetchHttpClient.post<ManagerConfirmRefundResponse>(
       `/refunds/${refundId}/manager-confirm`,
-      payload
+      payload,
     );
   },
 };

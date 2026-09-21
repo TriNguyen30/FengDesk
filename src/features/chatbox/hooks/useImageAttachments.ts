@@ -69,11 +69,29 @@ export function useImageAttachments(upload: UploadFn) {
     controllers.current.clear();
   }, []);
 
+  /**
+   * Nạp lại các ảnh ĐÃ upload xong từ link server (khôi phục bản nháp sau khi đóng tab).
+   * Dùng chính link server làm ảnh preview — object URL cục bộ không sống qua reload.
+   * Bỏ qua nếu đang có ảnh trong danh sách, để không đè lên thao tác user đang làm dở.
+   */
+  const restore = useCallback((urls: string[]) => {
+    if (urls.length === 0) return;
+    setItems((prev) => {
+      if (prev.length > 0) return prev;
+      return urls.map((url) => ({
+        id: `restored-${url}`,
+        previewUrl: url,
+        status: "done" as const,
+        url,
+      }));
+    });
+  }, []);
+
   // Dọn object URL khi unmount.
   useEffect(() => () => clear(), [clear]);
 
   const uploading = items.some((it) => it.status === "uploading");
   const urls = items.filter((it) => it.status === "done" && it.url).map((it) => it.url!);
 
-  return { items, add, remove, clear, uploading, urls };
+  return { items, add, remove, clear, restore, uploading, urls };
 }

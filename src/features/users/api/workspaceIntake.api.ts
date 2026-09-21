@@ -1,6 +1,6 @@
 import fetchHttpClient from "@/lib/httpClient";
 import type { ApiResponse } from "@/types/api";
-import { AI_REQUEST_TIMEOUT_MS } from "@/features/chatbox/api/chat.api";
+import { AI_REQUEST_TIMEOUT_MS } from "@/config/axios.config";
 import type { WorkspaceProfileDraft } from "../types/workspace";
 
 /** Bắt đầu 1 job intake async — trả operationId ngay (không chờ LLM). FE nghe realtime + poll fallback. */

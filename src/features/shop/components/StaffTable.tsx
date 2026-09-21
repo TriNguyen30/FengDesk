@@ -1,4 +1,4 @@
-import {
+﻿import {
   UserCircle2,
   Mail,
   Phone,
@@ -108,7 +108,7 @@ export default function StaffTable({ staff, onRemove, removingId }: Props) {
                       <UserCircle2 size={20} />
                     </span>
                     <div>
-                      <p className="font-semibold text-gray-900">{s.staffName || "—"}</p>
+                      <p className="font-semibold text-gray-900">{s.staffName || "-"}</p>
                       <p className="text-xs text-gray-500">{s.staffEmail}</p>
                     </div>
                   </div>
@@ -116,7 +116,7 @@ export default function StaffTable({ staff, onRemove, removingId }: Props) {
                 <td className="px-4 py-3 text-gray-700">
                   <span className="inline-flex items-center gap-1.5 text-xs">
                     <Phone size={13} className="text-gray-400" />
-                    {s.staffPhone || "—"}
+                    {s.staffPhone || "-"}
                   </span>
                 </td>
                 <td className="px-4 py-3">
@@ -126,7 +126,7 @@ export default function StaffTable({ staff, onRemove, removingId }: Props) {
                   {formatDate(getStaffDisplayDate(s))}
                 </td>
                 <td className="px-4 py-3 text-xs text-gray-600">
-                  {s.assignedByName || s.invitedByName || "—"}
+                  {s.assignedByName || s.invitedByName || "-"}
                 </td>
                 <td className="px-4 py-3 text-right">
                   <button
@@ -153,7 +153,7 @@ export default function StaffTable({ staff, onRemove, removingId }: Props) {
             </span>
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
-                <p className="truncate font-semibold text-gray-900">{s.staffName || "—"}</p>
+                <p className="truncate font-semibold text-gray-900">{s.staffName || "-"}</p>
                 <StatusBadge status={s.status} isActive={s.isActive} />
               </div>
               <p className="mt-0.5 flex items-center gap-1 truncate text-xs text-gray-500">

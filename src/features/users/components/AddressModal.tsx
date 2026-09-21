@@ -151,7 +151,6 @@ export default function AddressModal({ isOpen, onClose, onSuccess, address }: Ad
     }
   }, [selectedDistrictId]);
 
-
   // ── Dropdown → Map: geocode selected location and zoom map ────────────
   const handleDropdownGeocode = useCallback(
     async (provinceName: string, districtName: string, wardName: string) => {
@@ -367,159 +366,163 @@ export default function AddressModal({ isOpen, onClose, onSuccess, address }: Ad
             className="relative z-[101] w-full max-w-2xl rounded-2xl bg-white shadow-xl max-h-[90vh] overflow-y-auto"
           >
             <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4 sticky top-0 bg-white z-[500]">
-          <h2 className="text-lg font-bold text-gray-900">
-            {address ? "Cập nhật địa chỉ" : "Thêm địa chỉ mới"}
-          </h2>
-          <button
-            onClick={onClose}
-            className="rounded-full p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors cursor-pointer"
-          >
-            <X size={20} />
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="p-6">
-          <div className="space-y-4">
-            <div>
-              <label className="mb-1.5 block text-sm font-medium text-gray-700">
-                Họ tên người nhận
-              </label>
-              <input
-                type="text"
-                name="recipientName"
-                required
-                value={formData.recipientName}
-                onChange={handleChange}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-                placeholder="Nhập họ tên"
-              />
-            </div>
-
-            <div>
-              <label className="mb-1.5 block text-sm font-medium text-gray-700">
-                Số điện thoại
-              </label>
-              <input
-                type="tel"
-                name="recipientPhone"
-                required
-                value={formData.recipientPhone}
-                onChange={handleChange}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-                placeholder="Nhập số điện thoại"
-              />
-            </div>
-
-            {/* Location Section — khi sửa, khu vực cũ được nạp sẵn từ wardId đã lưu */}
-            <AddressLocationFields
-              streetAddress={formData.streetAddress}
-              wardId={selectedWardId}
-              latitude={formData.latitude}
-              longitude={formData.longitude}
-              provinces={provinces}
-              districts={districts}
-              wards={wards}
-              selectedProvinceId={selectedProvinceId}
-              selectedDistrictId={selectedDistrictId}
-              selectedWardId={selectedWardId}
-              onProvinceChange={handleProvinceChange}
-              onDistrictChange={handleDistrictChange}
-              onWardChange={handleWardChange}
-              onStreetAddressChange={(value) =>
-                setFormData((prev) => ({ ...prev, streetAddress: value }))
-              }
-              zoomToLocation={zoomToLocation}
-              onMapLocationChange={handleMapLocationChange}
-              isReverseGeocoding={isReverseGeocoding}
-              areaTitle="Khu vực"
-              streetLabel="Địa chỉ cụ thể"
-              streetPlaceholder="Số nhà, tên đường..."
-              mapLabel="Vị trí trên bản đồ"
-              mapNote="Chạm vào bản đồ để chọn vị trí chính xác của địa chỉ nhận hàng"
-            />
-            {isLoadingRegion && (
-              <p className="text-xs text-gray-400">Đang tải khu vực của địa chỉ...</p>
-            )}
-
-            <div>
-              <label className="mb-1.5 block text-sm font-medium text-gray-700">Loại địa chỉ</label>
-              <select
-                name="label"
-                value={formData.label}
-                onChange={handleChange}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer"
+              <h2 className="text-lg font-bold text-gray-900">
+                {address ? "Cập nhật địa chỉ" : "Thêm địa chỉ mới"}
+              </h2>
+              <button
+                onClick={onClose}
+                className="rounded-full p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors cursor-pointer"
               >
-                <option value="Nhà riêng">Nhà riêng</option>
-                <option value="Công ty">Công ty</option>
-                <option value="Khác">Khác</option>
-              </select>
+                <X size={20} />
+              </button>
             </div>
 
-            {/* Không dùng checkbox: hệ thống luôn cần đúng 1 địa chỉ mặc định,
+            <form onSubmit={handleSubmit} className="p-6">
+              <div className="space-y-4">
+                <div>
+                  <label className="mb-1.5 block text-sm font-medium text-gray-700">
+                    Họ tên người nhận
+                  </label>
+                  <input
+                    type="text"
+                    name="recipientName"
+                    required
+                    value={formData.recipientName}
+                    onChange={handleChange}
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                    placeholder="Nhập họ tên"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-1.5 block text-sm font-medium text-gray-700">
+                    Số điện thoại
+                  </label>
+                  <input
+                    type="tel"
+                    name="recipientPhone"
+                    required
+                    value={formData.recipientPhone}
+                    onChange={handleChange}
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                    placeholder="Nhập số điện thoại"
+                  />
+                </div>
+
+                {/* Location Section — khi sửa, khu vực cũ được nạp sẵn từ wardId đã lưu */}
+                <AddressLocationFields
+                  streetAddress={formData.streetAddress}
+                  wardId={selectedWardId}
+                  latitude={formData.latitude}
+                  longitude={formData.longitude}
+                  provinces={provinces}
+                  districts={districts}
+                  wards={wards}
+                  selectedProvinceId={selectedProvinceId}
+                  selectedDistrictId={selectedDistrictId}
+                  selectedWardId={selectedWardId}
+                  onProvinceChange={handleProvinceChange}
+                  onDistrictChange={handleDistrictChange}
+                  onWardChange={handleWardChange}
+                  onStreetAddressChange={(value) =>
+                    setFormData((prev) => ({ ...prev, streetAddress: value }))
+                  }
+                  zoomToLocation={zoomToLocation}
+                  onMapLocationChange={handleMapLocationChange}
+                  isReverseGeocoding={isReverseGeocoding}
+                  areaTitle="Khu vực"
+                  streetLabel="Địa chỉ cụ thể"
+                  streetPlaceholder="Số nhà, tên đường..."
+                  mapLabel="Vị trí trên bản đồ"
+                  mapNote="Chạm vào bản đồ để chọn vị trí chính xác của địa chỉ nhận hàng"
+                />
+                {isLoadingRegion && (
+                  <p className="text-xs text-gray-400">Đang tải khu vực của địa chỉ...</p>
+                )}
+
+                <div>
+                  <label className="mb-1.5 block text-sm font-medium text-gray-700">
+                    Loại địa chỉ
+                  </label>
+                  <select
+                    name="label"
+                    value={formData.label}
+                    onChange={handleChange}
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer"
+                  >
+                    <option value="Nhà riêng">Nhà riêng</option>
+                    <option value="Công ty">Công ty</option>
+                    <option value="Khác">Khác</option>
+                  </select>
+                </div>
+
+                {/* Không dùng checkbox: hệ thống luôn cần đúng 1 địa chỉ mặc định,
                 nên "bỏ tick" (un-default) không phải thao tác hợp lệ — chỉ có
                 thể "đặt địa chỉ khác làm mặc định" (một chiều). */}
-            {!address ? (
-              // Thêm mới: chưa có id nên chỉ đánh dấu cục bộ, áp dụng khi Lưu.
-              <div className="pt-2">
-                <button
-                  type="button"
-                  onClick={() =>
-                    setFormData((prev) => ({ ...prev, isDefault: !prev.isDefault }))
-                  }
-                  className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors cursor-pointer ${
-                    formData.isDefault
-                      ? "border-primary bg-primary/10 text-primary"
-                      : "border-gray-300 text-gray-700 hover:bg-gray-50"
-                  }`}
-                >
-                  <CheckCircle size={14} />
-                  {formData.isDefault ? "Sẽ đặt làm địa chỉ mặc định" : "Đặt làm địa chỉ mặc định"}
-                </button>
+                {!address ? (
+                  // Thêm mới: chưa có id nên chỉ đánh dấu cục bộ, áp dụng khi Lưu.
+                  <div className="pt-2">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setFormData((prev) => ({ ...prev, isDefault: !prev.isDefault }))
+                      }
+                      className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors cursor-pointer ${
+                        formData.isDefault
+                          ? "border-primary bg-primary/10 text-primary"
+                          : "border-gray-300 text-gray-700 hover:bg-gray-50"
+                      }`}
+                    >
+                      <CheckCircle size={14} />
+                      {formData.isDefault
+                        ? "Sẽ đặt làm địa chỉ mặc định"
+                        : "Đặt làm địa chỉ mặc định"}
+                    </button>
+                  </div>
+                ) : address.isDefault ? (
+                  // Đang sửa chính địa chỉ mặc định: ẩn nút, chỉ hiện badge tĩnh.
+                  <div className="flex items-center gap-2 pt-2 text-sm font-medium text-primary">
+                    <CheckCircle size={16} />
+                    Đây là địa chỉ mặc định
+                  </div>
+                ) : formData.isDefault ? (
+                  // Vừa bấm đặt mặc định thành công trong phiên sửa này.
+                  <div className="flex items-center gap-2 pt-2 text-sm font-medium text-primary">
+                    <CheckCircle size={16} />
+                    Đã đặt làm địa chỉ mặc định
+                  </div>
+                ) : (
+                  <div className="pt-2">
+                    <button
+                      type="button"
+                      onClick={handleSetDefaultInModal}
+                      disabled={isSettingDefault}
+                      className="flex items-center gap-1.5 rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <CheckCircle size={14} />
+                      {isSettingDefault ? "Đang đặt làm mặc định..." : "Đặt làm địa chỉ mặc định"}
+                    </button>
+                  </div>
+                )}
               </div>
-            ) : address.isDefault ? (
-              // Đang sửa chính địa chỉ mặc định: ẩn nút, chỉ hiện badge tĩnh.
-              <div className="flex items-center gap-2 pt-2 text-sm font-medium text-primary">
-                <CheckCircle size={16} />
-                Đây là địa chỉ mặc định
-              </div>
-            ) : formData.isDefault ? (
-              // Vừa bấm đặt mặc định thành công trong phiên sửa này.
-              <div className="flex items-center gap-2 pt-2 text-sm font-medium text-primary">
-                <CheckCircle size={16} />
-                Đã đặt làm địa chỉ mặc định
-              </div>
-            ) : (
-              <div className="pt-2">
-                <button
-                  type="button"
-                  onClick={handleSetDefaultInModal}
-                  disabled={isSettingDefault}
-                  className="flex items-center gap-1.5 rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <CheckCircle size={14} />
-                  {isSettingDefault ? "Đang đặt làm mặc định..." : "Đặt làm địa chỉ mặc định"}
-                </button>
-              </div>
-            )}
-          </div>
 
-          <div className="mt-8 flex gap-3">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
-            >
-              Hủy
-            </button>
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="flex-1 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-white hover:bg-primary/90 disabled:opacity-50 transition-colors cursor-pointer"
-            >
-              {isLoading ? "Đang lưu..." : "Lưu địa chỉ"}
-            </button>
-          </div>
-        </form>
+              <div className="mt-8 flex gap-3">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="flex-1 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
+                >
+                  Hủy
+                </button>
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="flex-1 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-white hover:bg-primary/90 disabled:opacity-50 transition-colors cursor-pointer"
+                >
+                  {isLoading ? "Đang lưu..." : "Lưu địa chỉ"}
+                </button>
+              </div>
+            </form>
           </motion.div>
         </div>
       )}

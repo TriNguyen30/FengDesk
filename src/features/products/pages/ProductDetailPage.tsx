@@ -25,7 +25,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { toast } from "sonner";
 import confetti from "canvas-confetti";
 import { useTranslation } from "react-i18next";
-import { ProductItem } from "../types/product";
+import { ProductDetail, ProductItem } from "../types/product";
 import { useProductDetail, useProductList } from "../hooks/useProducts";
 import { useProductModel3D } from "../hooks/useProductModel3D";
 import Product3DViewer, { Model3DViewSwitcher } from "@/components/ui/3DSection";
@@ -46,6 +46,8 @@ import {
 import { setAuthModal } from "@/features/auth/store/authSlice";
 import { cleanRichTextHtml } from "@/utils";
 import ProductFitPanel from "@/features/recommendation/components/element-vector/ProductFitPanel";
+import PersonalFitPanel from "@/features/recommendation/components/element-vector/PersonalFitPanel";
+import OccupationFitChips from "@/features/recommendation/components/element-vector/OccupationFitChips";
 import { useAiAssistant } from "@/features/chatbox/hooks/useAiAssistant";
 import FeatureBar from "@/components/ui/FeatureBar";
 import CommitmentPage from "@/components/ui/CommitmentPage";
@@ -112,10 +114,14 @@ export default function ProductDetailPage() {
       .then(([vibeRes, styleRes]) => {
         const map: Record<string, string> = {};
         if (vibeRes.isSuccess && vibeRes.data) {
-          vibeRes.data.forEach((v: any) => { map[v.code] = v.name; });
+          vibeRes.data.forEach((v: any) => {
+            map[v.code] = v.name;
+          });
         }
         if (styleRes.isSuccess && styleRes.data) {
-          styleRes.data.forEach((s: any) => { map[s.code] = s.name; });
+          styleRes.data.forEach((s: any) => {
+            map[s.code] = s.name;
+          });
         }
         setVibeStyleMap(map);
       })
@@ -125,6 +131,7 @@ export default function ProductDetailPage() {
   useEffect(() => {
     if (!product) return;
 
+    document.title = `${product.name} - Feng Shui Garden`;
     setSelectedItem(product.items[0] ?? null);
     setActiveImage(sortedImages[0]?.url ?? "");
     setQuantity(1);
@@ -160,7 +167,7 @@ export default function ProductDetailPage() {
             particleCount: 100,
             spread: 70,
             origin: { x, y },
-            colors: ['#26aa99', '#f39c12', '#e74c3c', '#9b59b6', '#3498db']
+            colors: ["#26aa99", "#f39c12", "#e74c3c", "#9b59b6", "#3498db"],
           });
         }
       } catch (error) {
@@ -266,10 +273,13 @@ export default function ProductDetailPage() {
     setActiveImage(sortedImages[prevIndex].url);
   };
 
-  const scrollThumbnails = (direction: 'left' | 'right') => {
+  const scrollThumbnails = (direction: "left" | "right") => {
     if (thumbRef.current) {
       const scrollAmount = thumbRef.current.clientWidth / 2; // Scroll half a page for smoother UX
-      thumbRef.current.scrollBy({ left: direction === 'left' ? -scrollAmount : scrollAmount, behavior: 'smooth' });
+      thumbRef.current.scrollBy({
+        left: direction === "left" ? -scrollAmount : scrollAmount,
+        behavior: "smooth",
+      });
     }
   };
 
@@ -412,7 +422,9 @@ export default function ProductDetailPage() {
     return (
       <div className="flex min-h-[50vh] flex-col items-center justify-center gap-4 text-center px-4">
         <AlertCircle className="h-12 w-12 text-red-500" />
-        <p className="text-base font-medium text-gray-800">{error || t("product_detail.error.not_found")}</p>
+        <p className="text-base font-medium text-gray-800">
+          {error || t("product_detail.error.not_found")}
+        </p>
         <button
           onClick={() => navigate(-1)}
           className="rounded-lg bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 cursor-pointer"
@@ -469,15 +481,6 @@ export default function ProductDetailPage() {
         <div className="flex flex-col sm:flex-row">
           {/* ── Left: Images ─────────────────────────────────────────────── */}
           <div className="relative w-full shrink-0 p-4 sm:w-[440px] sm:p-6 lg:w-[520px]">
-            {model3D && (
-              <div className="mb-3 flex flex-wrap items-center justify-between gap-3 px-0.5">
-                <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-gray-400">
-                  {t("product_detail.model_3d.view_mode")}
-                </span>
-                <Model3DViewSwitcher activeMode={viewMode} onChange={setViewMode} />
-              </div>
-            )}
-
             {/* Main image / 3D viewer */}
             <div
               id="product-media-viewer"
@@ -490,6 +493,15 @@ export default function ProductDetailPage() {
                   className={`absolute top-3 right-3 z-10 rounded-md px-2.5 py-1 text-xs font-bold uppercase tracking-wider text-white shadow-sm pointer-events-none ${elementColor}`}
                 >
                   {t("product_detail.labels.element")} {elementLabel}
+                </div>
+              )}
+
+              {/* Nút 2D/3D nằm ĐÈ lên khung ảnh thay vì chiếm một hàng riêng phía trên: nó chỉ xuất hiện ở ảnh
+                  có mô hình 3D, nên khi slider tự chuyển ảnh, hàng đó nhảy ra/vào và đẩy mọi thứ bên dưới
+                  (kể cả bảng độ phù hợp) lên xuống. Overlay thì khung ảnh giữ nguyên chiều cao. */}
+              {model3D && (
+                <div className="absolute bottom-3 left-3 z-20">
+                  <Model3DViewSwitcher activeMode={viewMode} onChange={setViewMode} />
                 </div>
               )}
 
@@ -544,7 +556,7 @@ export default function ProductDetailPage() {
               <div className="relative mt-3 group/thumb">
                 {sortedImages.length > 5 && (
                   <button
-                    onClick={() => scrollThumbnails('left')}
+                    onClick={() => scrollThumbnails("left")}
                     className="absolute left-1 top-1/2 -translate-y-1/2 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-white/90 text-gray-800 shadow-md backdrop-blur-sm opacity-0 transition-all duration-200 group-hover/thumb:opacity-100 hover:bg-white cursor-pointer"
                   >
                     <ChevronLeft size={16} />
@@ -561,7 +573,7 @@ export default function ProductDetailPage() {
                 <div
                   ref={thumbRef}
                   className="flex gap-2 sm:gap-3 overflow-x-auto snap-x snap-mandatory pb-1 hide-scrollbar-force"
-                  style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                  style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
                 >
                   {sortedImages.map((img) => (
                     <button
@@ -571,18 +583,22 @@ export default function ProductDetailPage() {
                         setViewMode("image");
                       }}
                       className={`group aspect-square w-[calc(20%-0.4rem)] sm:w-[calc(20%-0.6rem)] shrink-0 snap-start overflow-hidden rounded-lg border-2 bg-gray-50 transition-all cursor-pointer ${activeImage === img.url
-                        ? "border-primary"
-                        : "border-transparent hover:border-gray-300"
+                          ? "border-primary"
+                          : "border-transparent hover:border-gray-300"
                         }`}
                     >
-                      <img src={img.url} alt="thumb" className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110" />
+                      <img
+                        src={img.url}
+                        alt="thumb"
+                        className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
+                      />
                     </button>
                   ))}
                 </div>
 
                 {sortedImages.length > 5 && (
                   <button
-                    onClick={() => scrollThumbnails('right')}
+                    onClick={() => scrollThumbnails("right")}
                     className="absolute right-1 top-1/2 -translate-y-1/2 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-white/90 text-gray-800 shadow-md backdrop-blur-sm opacity-0 transition-all duration-200 group-hover/thumb:opacity-100 hover:bg-white cursor-pointer"
                   >
                     <ChevronRight size={16} />
@@ -596,14 +612,15 @@ export default function ProductDetailPage() {
           <div className="flex flex-1 flex-col gap-5 border-t border-gray-100 p-4 sm:border-l sm:border-t-0 sm:p-6">
             {/* Categories & AI Assistant */}
             <div className="flex flex-wrap items-center gap-1.5">
-              {product.categories.length > 0 && product.categories.map((cat) => (
-                <span
-                  key={cat.id}
-                  className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary"
-                >
-                  {cat.name}
-                </span>
-              ))}
+              {product.categories.length > 0 &&
+                product.categories.map((cat) => (
+                  <span
+                    key={cat.id}
+                    className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary"
+                  >
+                    {cat.name}
+                  </span>
+                ))}
 
               <div className="relative inline-flex shrink-0 overflow-hidden rounded-full p-[1px]">
                 <span className="absolute inset-[-1000%] animate-[spin_2s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,transparent_0%,transparent_60%,var(--color-primary)_100%)]" />
@@ -647,8 +664,10 @@ export default function ProductDetailPage() {
                 <span className="hidden sm:block h-3 w-px bg-gray-300"></span>
                 <p>
                   {t("product_detail.labels.status")}{" "}
-                  <span className={`font-medium ${outOfStock ? 'text-red-500' : 'text-green-600'}`}>
-                    {outOfStock ? t("product_detail.actions.out_of_stock_sm") : t("product_detail.actions.in_stock")}
+                  <span className={`font-medium ${outOfStock ? "text-red-500" : "text-green-600"}`}>
+                    {outOfStock
+                      ? t("product_detail.actions.out_of_stock_sm")
+                      : t("product_detail.actions.in_stock")}
                   </span>
                 </p>
               </div>
@@ -666,7 +685,9 @@ export default function ProductDetailPage() {
             {product.items.length > 0 && (
               <div>
                 <div className="mb-2.5 flex items-center gap-3">
-                  <span className="text-sm font-medium text-gray-700">{t("product_detail.labels.variant")}</span>
+                  <span className="text-sm font-medium text-gray-700">
+                    {t("product_detail.labels.variant")}
+                  </span>
                   {selectedItem && (
                     <span className="text-xs text-gray-400">
                       {t("product_detail.labels.stock", { stock: selectedItem.stock })}
@@ -682,8 +703,8 @@ export default function ProductDetailPage() {
                         whileTap={{ scale: 0.95 }}
                         onClick={() => setSelectedItem(item)}
                         className={`relative flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-colors focus:outline-none cursor-not-allowed ${isSelected
-                          ? "border-primary text-primary"
-                          : "border-gray-200 text-gray-600 hover:border-primary/40 hover:bg-gray-50 cursor-pointer"
+                            ? "border-primary text-primary"
+                            : "border-gray-200 text-gray-600 hover:border-primary/40 hover:bg-gray-50 cursor-pointer"
                           }`}
                       >
                         {isSelected && (
@@ -718,48 +739,66 @@ export default function ProductDetailPage() {
               </div>
             )}
 
-            {/* Feng Shui attributes */}
-            {product.primaryElement && (
-              <div className="flex flex-wrap gap-1.5">
-                <span className="rounded-md bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">
-                  {t("product_detail.labels.element")} {ELEMENT_LABELS[product.primaryElement] ?? product.primaryElement}
-                </span>
-                {(product.secondaryElements ?? []).map((el) => (
-                  <span
-                    key={el}
-                    className="rounded-md bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-500"
-                  >
-                    {ELEMENT_LABELS[el] ?? el}
+            {/* Ba hàng thuộc tính: nhãn cột trái cố định + dãy chip — gọn hơn nhãn đứng riêng một dòng,
+                giữ cột thông tin không cao hơn cột ảnh. */}
+            <div className="flex flex-col gap-3">
+              {product.primaryElement && (
+                <div className="flex items-start gap-3">
+                  <span className="w-24 shrink-0 pt-1 text-sm font-medium text-gray-700">
+                    {t("product_detail.labels.variant_attrs")}
                   </span>
-                ))}
-                {(product.vibes ?? []).concat(product.styles ?? []).map((code) => (
-                  <span
-                    key={code}
-                    className="rounded-md bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-500"
-                  >
-                    {vibeStyleMap[code] || code}
-                  </span>
-                ))}
-              </div>
-            )}
-
-            {/* Physical attributes */}
-            {selectedItem && (selectedItem.weightGram > 0 || selectedItem.lengthCm > 0) && (
-              <div className="flex flex-wrap gap-1.5">
-                {selectedItem.weightGram > 0 && (
-                  <span className="rounded-md  border border-gray-200 px-2.5 py-1 text-xs font-medium text-gray-500">
-                    {t("product_detail.labels.weight", { weight: selectedItem.weightGram })}
-                  </span>
-                )}
-                {(selectedItem.lengthCm > 0 ||
-                  selectedItem.widthCm > 0 ||
-                  selectedItem.heightCm > 0) && (
-                    <span className="rounded-md  border border-gray-200 px-2.5 py-1 text-xs font-medium text-gray-500">
-                      {t("product_detail.labels.size", { l: selectedItem.lengthCm, w: selectedItem.widthCm, h: selectedItem.heightCm })}
+                  <div className="flex min-w-0 flex-wrap gap-1.5">
+                    <span className="rounded-md bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">
+                      {t("product_detail.labels.element")} {ELEMENT_LABELS[product.primaryElement] ?? product.primaryElement}
                     </span>
-                  )}
-              </div>
-            )}
+                    {(product.secondaryElements ?? []).map((el) => (
+                      <span
+                        key={el}
+                        className="rounded-md bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-500"
+                      >
+                        {ELEMENT_LABELS[el] ?? el}
+                      </span>
+                    ))}
+                    {(product.vibes ?? []).concat(product.styles ?? []).map((code) => (
+                      <span
+                        key={code}
+                        className="rounded-md bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-500"
+                      >
+                        {vibeStyleMap[code] || code}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Physical attributes */}
+              {selectedItem && (selectedItem.weightGram > 0 || selectedItem.lengthCm > 0) && (
+                <div className="flex items-start gap-3">
+                  <span className="w-24 shrink-0 pt-1 text-sm font-medium text-gray-700">
+                    {t("product_detail.labels.specs")}
+                  </span>
+                  <div className="flex min-w-0 flex-wrap gap-1.5">
+                    {selectedItem.weightGram > 0 && (
+                      <span className="rounded-md border border-gray-200 px-2.5 py-1 text-xs font-medium text-gray-500">
+                        {t("product_detail.labels.weight", { weight: selectedItem.weightGram })}
+                      </span>
+                    )}
+                    {(selectedItem.lengthCm > 0 ||
+                      selectedItem.widthCm > 0 ||
+                      selectedItem.heightCm > 0) && (
+                        <span className="rounded-md border border-gray-200 px-2.5 py-1 text-xs font-medium text-gray-500">
+                          {t("product_detail.labels.size", { l: selectedItem.lengthCm, w: selectedItem.widthCm, h: selectedItem.heightCm })}
+                        </span>
+                      )}
+                  </div>
+                </div>
+              )}
+
+              {/* Hợp với nghề — top 3, chip kiểu Phân loại, fill theo % (mặt A của trục nghề, public) */}
+              {product.placement !== "Consumable" && (
+                <OccupationFitChips productId={product.id} limit={3} />
+              )}
+            </div>
 
             {/* Add to cart */}
             <div className="mt-auto pt-2 flex flex-col gap-3">
@@ -808,7 +847,11 @@ export default function ProductDetailPage() {
                   className="flex flex-1 items-center justify-center gap-2 rounded-lg border-1 border-primary bg-primary/5 px-2 sm:px-4 py-0 text-sm font-semibold text-primary transition-all hover:bg-primary/10 active:scale-95 disabled:cursor-not-allowed disabled:border-gray-200 disabled:text-gray-400 disabled:bg-gray-50 cursor-pointer h-10 sm:h-11 w-full"
                 >
                   <ShoppingCart className="h-4 w-4 shrink-0" />
-                  <span className="truncate">{outOfStock ? t("product_detail.actions.out_of_stock_sm") : t("product_detail.actions.add_to_cart")}</span>
+                  <span className="truncate">
+                    {outOfStock
+                      ? t("product_detail.actions.out_of_stock_sm")
+                      : t("product_detail.actions.add_to_cart")}
+                  </span>
                 </button>
               </div>
 
@@ -817,7 +860,9 @@ export default function ProductDetailPage() {
                 disabled={!selectedItem || outOfStock}
                 className="flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-0 text-lg font-bold text-white shadow-sm transition-all hover:bg-primary-dark active:scale-95 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:shadow-none cursor-pointer h-11 sm:h-12 w-full"
               >
-                {outOfStock ? t("product_detail.actions.out_of_stock") : t("product_detail.actions.buy_now")}
+                {outOfStock
+                  ? t("product_detail.actions.out_of_stock")
+                  : t("product_detail.actions.buy_now")}
               </button>
             </div>
 
@@ -827,9 +872,7 @@ export default function ProductDetailPage() {
                 <div className="flex h-8 w-8 items-center justify-center rounded-full bg-green-100 text-green-600 shrink-0 shadow-sm">
                   <Truck className="h-4 w-4" />
                 </div>
-                <span className="font-semibold">
-                  {t("product_detail.labels.free_ship")}
-                </span>
+                <span className="font-semibold">{t("product_detail.labels.free_ship")}</span>
               </div>
             </div>
           </div>
@@ -837,7 +880,9 @@ export default function ProductDetailPage() {
       </div>
 
       {/* ── Độ phù hợp phong thủy với không gian của bạn ─────────────────── */}
-      {product.primaryElement && <ProductFitSection productId={product.id} />}
+      {product.primaryElement && (
+        <ProductFitSection productId={product.id} placement={product.placement} />
+      )}
 
       {/* ── Store Info ─────────────────────────────────────────────────── */}
       {shop && (
@@ -878,7 +923,9 @@ export default function ProductDetailPage() {
               <span className="flex items-center gap-1.5">
                 <Phone className="h-4 w-4" /> {t("product_detail.labels.hotline")}
               </span>
-              <span className="font-semibold text-primary">{shop.hotline || t("product_detail.labels.updating")}</span>
+              <span className="font-semibold text-primary">
+                {shop.hotline || t("product_detail.labels.updating")}
+              </span>
             </div>
             <div className="flex flex-col gap-1.5 text-gray-500">
               <span className="flex items-center gap-1.5">
@@ -1055,8 +1102,8 @@ export default function ProductDetailPage() {
                       setPanOffset({ x: 0, y: 0 });
                     }}
                     className={`h-12 w-12 sm:h-16 sm:w-16 shrink-0 overflow-hidden rounded-lg border-2 bg-gray-900 transition-all ${lightboxIndex === idx
-                      ? "border-primary"
-                      : "border-transparent opacity-50 hover:opacity-100"
+                        ? "border-primary"
+                        : "border-transparent opacity-50 hover:opacity-100"
                       }`}
                   >
                     <img
@@ -1075,7 +1122,16 @@ export default function ProductDetailPage() {
   );
 }
 
-function ProductFitSection({ productId }: { productId: string }) {
+function ProductFitSection({
+  productId,
+  placement,
+}: {
+  productId: string;
+  placement?: ProductDetail["placement"];
+}) {
+  // Vật mang theo người đi hẳn một luồng khác: chấm theo dụng thần của user chứ không theo phòng nào.
+  // Dùng panel của phòng cho nó sẽ hiện "phòng đang thiếu hành gì" cho một cái vòng tay — vô nghĩa.
+  const isCarry = placement === "Carry";
   const { t } = useTranslation();
   const dispatch = useAppDispatch();
   const isAuthenticated = useAppSelector((s) => !!s.auth.token);
@@ -1083,7 +1139,11 @@ function ProductFitSection({ productId }: { productId: string }) {
   return (
     <div className="mt-6 rounded-2xl bg-white shadow-sm ring-1 ring-gray-100 p-4 sm:p-6">
       {isAuthenticated ? (
-        <ProductFitPanel productId={productId} />
+        isCarry ? (
+          <PersonalFitPanel productId={productId} />
+        ) : (
+          <ProductFitPanel productId={productId} />
+        )
       ) : (
         <div className="flex flex-col items-center gap-3 py-4 text-center">
           <span className="text-sm font-bold text-gray-900">

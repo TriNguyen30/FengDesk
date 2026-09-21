@@ -12,6 +12,10 @@ const POLL_INTERVAL_MS = 5000;
 /**
  * AI intake ASYNC: bấm "AI điền giúp" → đẩy job nền, vào ngay trang điền trong lúc AI chạy; kết quả về
  * qua SignalR ("workspaceIntakeResult"). Có poll fallback theo operationId cho trường hợp lỡ event / F5.
+ *
+ * `resume(operationId)`: nối lại một job đã bắt đầu ở lần mở trước (đóng modal / đổi trang / F5 — nháp
+ * giữ operationId). Cùng effect với `start`: join group + poll ngay, job đã xong thì lần poll đầu trả
+ * draft luôn. BE chỉ giữ job 30'; quá hạn poll nhận 404 → coi là "failed" với lời nhắc phân tích lại.
  */
 export function useWorkspaceIntake() {
   const [operationId, setOperationId] = useState<string | null>(null);
@@ -58,8 +62,11 @@ export function useWorkspaceIntake() {
         if (st.status === "done" && st.draft) finishDone(st.draft);
         else if (st.status === "failed") finishFailed(st.message);
         if (settledRef.current) stopPolling();
-      } catch {
-        /* job có thể chưa kịp vào cache / lỗi tạm — cứ để lần poll sau hoặc realtime lo */
+      } catch (e) {
+        // 404 = BE không còn job này (quá TTL 30'). Không phải lỗi tạm — chờ thêm cũng không ra kết quả.
+        if (isAxiosError(e) && e.response?.status === 404)
+          finishFailed("Phiên phân tích trước đã hết hạn - bạn có thể bấm phân tích lại.");
+        /* lỗi khác: job có thể chưa kịp vào cache / lỗi tạm — cứ để lần poll sau hoặc realtime lo */
       }
     };
 
@@ -104,6 +111,15 @@ export function useWorkspaceIntake() {
     }
   }, []);
 
+  /** Nối lại job đã có (từ nháp). Không gọi API start; effect theo operationId sẽ join + poll. */
+  const resume = useCallback((opId: string) => {
+    settledRef.current = false;
+    setDraft(null);
+    setError(null);
+    setStatus("running");
+    setOperationId(opId);
+  }, []);
+
   const reset = useCallback(() => {
     settledRef.current = false;
     setOperationId(null);
@@ -114,5 +130,5 @@ export function useWorkspaceIntake() {
 
   const isRunning = status === "starting" || status === "running";
 
-  return { start, reset, operationId, draft, status, error, isRunning };
+  return { start, resume, reset, operationId, draft, status, error, isRunning };
 }

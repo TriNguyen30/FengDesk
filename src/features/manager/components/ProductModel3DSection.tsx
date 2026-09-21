@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+﻿import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Box,
   Check,
@@ -54,7 +54,11 @@ const REQUEST_STATUS_STYLE: Record<Model3DRequestStatus, string> = {
   Rejected: "bg-gray-100 text-gray-500",
 };
 
-export function ProductModel3DSection({ productId, images, onRefreshProduct }: ProductModel3DSectionProps) {
+export function ProductModel3DSection({
+  productId,
+  images,
+  onRefreshProduct,
+}: ProductModel3DSectionProps) {
   const [models, setModels] = useState<ProductModel3D[]>([]);
   const [requests, setRequests] = useState<Model3DRequest[]>([]);
   const [loading, setLoading] = useState(true);
@@ -65,7 +69,10 @@ export function ProductModel3DSection({ productId, images, onRefreshProduct }: P
   const [submitting, setSubmitting] = useState(false);
   const [selectedImageIds, setSelectedImageIds] = useState<string[]>([]);
   const [newFiles, setNewFiles] = useState<File[]>([]);
-  const sortedImages = useMemo(() => [...images].sort((a, b) => a.sortOrder - b.sortOrder), [images]);
+  const sortedImages = useMemo(
+    () => [...images].sort((a, b) => a.sortOrder - b.sortOrder),
+    [images],
+  );
   const [targetImageId, setTargetImageId] = useState<string>(sortedImages[0]?.id ?? "");
 
   useEffect(() => {
@@ -99,9 +106,11 @@ export function ProductModel3DSection({ productId, images, onRefreshProduct }: P
   );
 
   const openRequest = useMemo(
-    () => requests.find(
-      (r) => r.productImageId === targetImageId && OPEN_MODEL3D_REQUEST_STATUSES.includes(r.status),
-    ),
+    () =>
+      requests.find(
+        (r) =>
+          r.productImageId === targetImageId && OPEN_MODEL3D_REQUEST_STATUSES.includes(r.status),
+      ),
     [requests, targetImageId],
   );
 
@@ -166,7 +175,7 @@ export function ProductModel3DSection({ productId, images, onRefreshProduct }: P
         newImageFiles: newFiles,
       });
       if (res.data.isSuccess) {
-        toast.success(res.data.message || "Đã gửi yêu cầu — đội ngũ sàn sẽ xử lý");
+        toast.success(res.data.message || "Đã gửi yêu cầu - đội ngũ sàn sẽ xử lý");
         resetPicker();
         load();
         onRefreshProduct();
@@ -185,7 +194,7 @@ export function ProductModel3DSection({ productId, images, onRefreshProduct }: P
     try {
       const res = await model3DApi.requestModel3D(productId, { productImageId: targetImageId });
       if (res.data.isSuccess) {
-        toast.success(res.data.message || "Đã gửi yêu cầu tạo lại — đội ngũ sàn sẽ xử lý thủ công");
+        toast.success(res.data.message || "Đã gửi yêu cầu tạo lại - đội ngũ sàn sẽ xử lý thủ công");
         load();
         onRefreshProduct();
       } else {
@@ -204,8 +213,11 @@ export function ProductModel3DSection({ productId, images, onRefreshProduct }: P
       if (!model) return;
       const res = await model3DApi.toggleModel3D(productId, model.id, nextEnabled);
       if (res.data.isSuccess) {
-        setModels((current) => current.map((item) =>
-          item.id === model.id ? { ...item, isEnabled: nextEnabled } : item));
+        setModels((current) =>
+          current.map((item) =>
+            item.id === model.id ? { ...item, isEnabled: nextEnabled } : item,
+          ),
+        );
         toast.success(nextEnabled ? "Đã bật hiển thị mô hình 3D" : "Đã tắt hiển thị mô hình 3D");
         onRefreshProduct();
       } else {
@@ -220,7 +232,7 @@ export function ProductModel3DSection({ productId, images, onRefreshProduct }: P
 
   const handleDelete = async () => {
     if (!model) return;
-    
+
     setDeleting(true);
     try {
       const res = await model3DApi.deleteModel3D(productId, model.id);
@@ -261,7 +273,9 @@ export function ProductModel3DSection({ productId, images, onRefreshProduct }: P
             <p className="text-xs font-semibold text-gray-600">Chọn ảnh/kiểu dáng cần quản lý</p>
             <div className="grid grid-cols-4 gap-2 sm:grid-cols-6">
               {sortedImages.map((image) => {
-                const imageModel = models.find((candidate) => candidate.productImageId === image.id);
+                const imageModel = models.find(
+                  (candidate) => candidate.productImageId === image.id,
+                );
                 const selected = targetImageId === image.id;
                 return (
                   <button
@@ -274,7 +288,9 @@ export function ProductModel3DSection({ productId, images, onRefreshProduct }: P
                       setNewFiles([]);
                     }}
                     className={`relative aspect-square overflow-hidden rounded-xl border-2 transition-all cursor-pointer ${
-                      selected ? "border-primary ring-2 ring-primary/15" : "border-gray-100 hover:border-gray-300"
+                      selected
+                        ? "border-primary ring-2 ring-primary/15"
+                        : "border-gray-100 hover:border-gray-300"
                     }`}
                   >
                     <img src={image.url} alt="" className="h-full w-full object-cover" />
@@ -291,7 +307,9 @@ export function ProductModel3DSection({ productId, images, onRefreshProduct }: P
         )}
 
         {sortedImages.length === 0 ? (
-          <div className="py-8 text-center text-sm text-gray-400">Hãy thêm ảnh sản phẩm trước khi tạo model 3D.</div>
+          <div className="py-8 text-center text-sm text-gray-400">
+            Hãy thêm ảnh sản phẩm trước khi tạo model 3D.
+          </div>
         ) : !model ? (
           <div className="flex flex-col items-center justify-center py-10 text-center text-gray-400">
             <Box size={32} className="stroke-1 text-gray-300 mb-2" />
@@ -313,9 +331,7 @@ export function ProductModel3DSection({ productId, images, onRefreshProduct }: P
                   <span className="text-xs text-gray-400">{model.progress}%</span>
                 )}
               </div>
-              {model.errorMessage && (
-                <p className="text-xs text-red-500">{model.errorMessage}</p>
-              )}
+              {model.errorMessage && <p className="text-xs text-red-500">{model.errorMessage}</p>}
 
               <div className="flex flex-wrap items-center gap-2 pt-1">
                 {model.status === "Succeeded" && (
@@ -336,7 +352,7 @@ export function ProductModel3DSection({ productId, images, onRefreshProduct }: P
                     ) : (
                       <EyeOff size={14} />
                     )}
-                    {model.isEnabled ? "Đang hiển thị trên trang sản phẩm" : "Đang ẩn — bấm để hiển thị lại"}
+                    {model.isEnabled ? "Đang hiển thị trên trang sản phẩm" : "Đang ẩn - bấm để hiển thị lại"}
                   </button>
                 )}
                 {["Succeeded", "Failed"].includes(model.status) && (
@@ -373,7 +389,7 @@ export function ProductModel3DSection({ productId, images, onRefreshProduct }: P
           <div className="flex items-center gap-3 rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-700">
             <Clock size={16} className="shrink-0" />
             <span>
-              Đang có 1 yêu cầu chưa hoàn tất —{" "}
+              Đang có 1 yêu cầu chưa hoàn tất -{" "}
               <span className="font-semibold">{REQUEST_STATUS_LABEL[openRequest.status]}</span>.
             </span>
           </div>
@@ -381,7 +397,7 @@ export function ProductModel3DSection({ productId, images, onRefreshProduct }: P
           <div className="space-y-3">
             <p className="text-sm text-gray-500">
               Ảnh/kiểu dáng này đã có mô hình 3D. Muốn tạo lại? Yêu cầu sẽ được
-              đội ngũ sàn xử lý thủ công — họ sẽ tự chọn ảnh phù hợp.
+              đội ngũ sàn xử lý thủ công - họ sẽ tự chọn ảnh phù hợp.
             </p>
             <button
               type="button"
@@ -491,7 +507,10 @@ export function ProductModel3DSection({ productId, images, onRefreshProduct }: P
 }
 
 function ModelStatusBadge({ status }: { status: ProductModel3D["status"] }) {
-  const map: Record<ProductModel3D["status"], { label: string; className: string; Icon: typeof Clock }> = {
+  const map: Record<
+    ProductModel3D["status"],
+    { label: string; className: string; Icon: typeof Clock }
+  > = {
     Pending: { label: "Đang chờ", className: "bg-amber-50 text-amber-700", Icon: Clock },
     Processing: { label: "Đang tạo", className: "bg-blue-50 text-blue-700", Icon: Loader2 },
     Succeeded: { label: "Hoàn tất", className: "bg-green-50 text-green-700", Icon: CheckCircle2 },
@@ -499,7 +518,9 @@ function ModelStatusBadge({ status }: { status: ProductModel3D["status"] }) {
   };
   const { label, className, Icon } = map[status];
   return (
-    <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold ${className}`}>
+    <span
+      className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold ${className}`}
+    >
       <Icon size={12} className={status === "Processing" ? "animate-spin" : undefined} />
       {label}
     </span>
@@ -537,7 +558,7 @@ function ImagePicker({
   return (
     <div className="space-y-4">
       <p className="text-xs text-gray-400">
-        Chọn 1–{MAX_IMAGES} ảnh. Mẹo: chụp ảnh sản phẩm ở nhiều góc độ khác nhau sẽ cho ra mô hình 3D
+        Chọn 1-{MAX_IMAGES} ảnh. Mẹo: chụp ảnh sản phẩm ở nhiều góc độ khác nhau sẽ cho ra mô hình 3D
         chính xác hơn.
       </p>
 
@@ -570,7 +591,10 @@ function ImagePicker({
       {newFiles.length > 0 && (
         <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
           {newFiles.map((file, idx) => (
-            <div key={idx} className="relative aspect-square rounded-xl overflow-hidden ring-2 ring-primary/50">
+            <div
+              key={idx}
+              className="relative aspect-square rounded-xl overflow-hidden ring-2 ring-primary/50"
+            >
               <img src={URL.createObjectURL(file)} alt="" className="h-full w-full object-cover" />
               <button
                 type="button"

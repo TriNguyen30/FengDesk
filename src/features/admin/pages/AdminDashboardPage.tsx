@@ -1,43 +1,103 @@
-import { useMemo } from "react";
+import { useMemo, useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-import { Users, ShoppingBag, DollarSign, Package } from "lucide-react";
+import {
+  Users,
+  ShoppingBag,
+  DollarSign,
+  Package,
+  Store as StoreIcon,
+  Truck,
+  Building2,
+  ArrowUpRight,
+  ShieldCheck,
+} from "lucide-react";
 import { useAllOrdersList } from "@/features/orders";
 import { formatVnd, formatOrderDate, STATUS_MAP } from "@/features/orders/utils/orderUtils";
+import { getAllShopRequest, getStoreStatisticsRequest } from "@/features/shop/api/shop.api";
+import type { Shop, StoreStatistics } from "@/features/shop/types/shop";
+
+interface ShopWithStats {
+  shop: Shop;
+  stats: StoreStatistics | null;
+}
 
 export default function AdminDashboardPage() {
   const { orders, listStatus } = useAllOrdersList({ page: 1, pageSize: 1000 });
+  const [shopStatsList, setShopStatsList] = useState<ShopWithStats[]>([]);
+  const [loadingShops, setLoadingShops] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+    setLoadingShops(true);
+
+    getAllShopRequest()
+      .then(async (res) => {
+        if (!active) return;
+        if (res.isSuccess && res.data) {
+          const shops = res.data;
+          const statsPromises = shops.map((shop) =>
+            getStoreStatisticsRequest(shop.id)
+              .then((statRes) => ({
+                shop,
+                stats: statRes.isSuccess && statRes.data ? statRes.data : null,
+              }))
+              .catch(() => ({ shop, stats: null })),
+          );
+          const results = await Promise.all(statsPromises);
+          if (active) {
+            setShopStatsList(results);
+          }
+        }
+      })
+      .catch((err) => {
+        console.error("Error loading shops for admin dashboard:", err);
+      })
+      .finally(() => {
+        if (active) setLoadingShops(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const {
-    totalRevenue,
+    totalOrderRevenue,
     newOrdersCount,
     activeUsersCount,
     chartData,
     recentOrders,
     completedOrdersCount,
   } = useMemo(() => {
+    const uniqueUsers = new Set<string>();
+    orders.forEach((o) => {
+      uniqueUsers.add(o.customerId);
+    });
+
     let totalRev = 0;
     let newOrders = 0;
     let completedOrders = 0;
-    const uniqueUsers = new Set<string>();
     const monthlyRevenue = Array(12).fill(0);
 
     const now = new Date();
     const currentYear = now.getFullYear();
 
-    orders.forEach((o) => {
-      uniqueUsers.add(o.customerId);
+    shopStatsList.forEach(({ stats }) => {
+      if (stats) {
+        // Doanh thu tổng bao gồm doanh thu sản phẩm và phí vận chuyển
+        totalRev += (stats.totalRevenue || 0) + (stats.totalShippingFee || 0);
+        newOrders += stats.deliveriesByStatus["Pending"] || 0;
+        completedOrders +=
+          (stats.deliveriesByStatus["Delivered"] || 0) +
+          (stats.deliveriesByStatus["Completed"] || 0);
 
-      if (o.status === "Pending") {
-        newOrders++;
-      }
-
-      if (o.status === "Completed") {
-        completedOrders++;
-        totalRev += o.totalAmount || 0;
-
-        const orderDate = new Date(o.createdAt);
-        if (orderDate.getFullYear() === currentYear) {
-          monthlyRevenue[orderDate.getMonth()] += o.totalAmount || 0;
+        if (stats.revenueByMonth) {
+          stats.revenueByMonth.forEach((point) => {
+            if (point.year === currentYear && point.month >= 1 && point.month <= 12) {
+              monthlyRevenue[point.month - 1] += point.revenue;
+            }
+          });
         }
       }
     });
@@ -62,42 +122,63 @@ export default function AdminDashboardPage() {
     }));
 
     return {
-      totalRevenue: totalRev,
+      totalOrderRevenue: totalRev,
       newOrdersCount: newOrders,
       activeUsersCount: uniqueUsers.size,
       completedOrdersCount: completedOrders,
       chartData: chart,
-      recentOrders: orders.slice(0, 5), // Assuming orders are returned newest first
+      recentOrders: orders.slice(0, 5),
     };
-  }, [orders]);
+  }, [orders, shopStatsList]);
+
+  // Aggregate total product revenue and shipping fees from all shops
+  const { totalShopsRevenue, totalShopsShippingFee, totalShopsDeliveries } = useMemo(() => {
+    let rev = 0;
+    let shipping = 0;
+    let deliveries = 0;
+
+    shopStatsList.forEach(({ stats }) => {
+      if (stats) {
+        rev += stats.totalRevenue || 0;
+        shipping += stats.totalShippingFee || 0;
+        deliveries += stats.totalDeliveries || 0;
+      }
+    });
+
+    return {
+      totalShopsRevenue: rev,
+      totalShopsShippingFee: shipping,
+      totalShopsDeliveries: deliveries,
+    };
+  }, [shopStatsList]);
 
   const stats = [
     {
-      title: "Tổng Doanh Thu",
-      value: formatVnd(totalRevenue),
+      title: "Doanh Thu Sản Phẩm (Tất cả cửa hàng)",
+      value: formatVnd(totalShopsRevenue),
       icon: DollarSign,
-      trend: "Từ đầu năm",
+      trend: `${shopStatsList.length} cửa hàng`,
       color: "bg-green-50 text-green-600",
+    },
+    {
+      title: "Tổng Phí Vận Chuyển",
+      value: formatVnd(totalShopsShippingFee),
+      icon: Truck,
+      trend: `${totalShopsDeliveries} đơn giao`,
+      color: "bg-blue-50 text-blue-600",
     },
     {
       title: "Đơn Hàng Mới",
       value: newOrdersCount.toString(),
       icon: ShoppingBag,
       trend: "Đang chờ xử lý",
-      color: "bg-blue-50 text-blue-600",
-    },
-    {
-      title: "Khách Hàng",
-      value: activeUsersCount.toString(),
-      icon: Users,
-      trend: "Đã đặt hàng",
       color: "bg-purple-50 text-purple-600",
     },
     {
-      title: "Đơn Hoàn Thành",
+      title: "Đơn Hoàn Thành / Đã Giao",
       value: completedOrdersCount.toString(),
       icon: Package,
-      trend: "Đã giao thành công",
+      trend: `${activeUsersCount} khách hàng`,
       color: "bg-orange-50 text-orange-600",
     },
   ];
@@ -114,28 +195,134 @@ export default function AdminDashboardPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-gray-900">Admin Dashboard</h1>
-        <p className="text-gray-500 mt-1">Tổng quan hiệu suất hoạt động kinh doanh toàn hệ thống.</p>
+        <p className="text-gray-500 mt-1">
+          Tổng quan hiệu suất hoạt động kinh doanh toàn hệ thống và từng cửa hàng.
+        </p>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        {stats.map((stat, index) => (
-          <div key={index} className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-500">{stat.title}</p>
-                <h3 className="text-2xl font-bold text-gray-900 mt-1">{stat.value}</h3>
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        {stats.map((stat, index) => {
+          const Icon = stat.icon;
+          return (
+            <div
+              key={index}
+              className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition-all hover:shadow-md"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-gray-500">
+                  <Icon size={18} className="text-primary" />
+                  <span className="text-xs font-semibold uppercase tracking-wide">
+                    {stat.title}
+                  </span>
+                </div>
               </div>
-              <div
-                className={`w-12 h-12 rounded-full flex items-center justify-center ${stat.color}`}
-              >
-                <stat.icon size={24} />
-              </div>
+              <p className="mt-3 text-2xl font-bold text-gray-900 tracking-tight">{stat.value}</p>
+              <p className="mt-1 text-xs text-gray-400 font-medium">{stat.trend}</p>
             </div>
-            <div className="mt-4 flex items-center gap-2">
-              <span className="text-sm text-gray-500">{stat.trend}</span>
-            </div>
+          );
+        })}
+      </div>
+
+      {/* Doanh thu theo Cửa hàng */}
+      <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+              <StoreIcon size={20} className="text-primary" />
+              Doanh Thu Theo Cửa Hàng ({shopStatsList.length})
+            </h2>
+            <p className="text-xs text-gray-500 mt-0.5">
+              Thống kê doanh thu sản phẩm và phí vận chuyển riêng cho từng cửa hàng trong hệ thống.
+            </p>
           </div>
-        ))}
+          <div className="text-right">
+            <span className="text-xs font-semibold text-gray-500">Tổng doanh thu đơn hàng: </span>
+            <span className="text-sm font-bold text-emerald-600">
+              {formatVnd(totalOrderRevenue)}
+            </span>
+          </div>
+        </div>
+
+        {loadingShops ? (
+          <div className="py-8 text-center text-sm text-gray-400">
+            Đang tải thống kê cửa hàng...
+          </div>
+        ) : shopStatsList.length === 0 ? (
+          <div className="py-8 text-center text-sm text-gray-500">Chưa có dữ liệu cửa hàng.</div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead>
+                <tr className="border-b border-gray-100 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                  <th className="pb-3 pr-4">Cửa hàng</th>
+                  <th className="pb-3 px-4">Hotline</th>
+                  <th className="pb-3 px-4 text-center">Đơn thành công</th>
+                  <th className="pb-3 px-4 text-right">Phí vận chuyển</th>
+                  <th className="pb-3 px-4 text-right">Doanh thu sản phẩm</th>
+                  <th className="pb-3 px-4 text-right">% Doanh thu</th>
+                  <th className="pb-3 pl-4 text-right">Thao tác</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {shopStatsList.map(({ shop, stats }) => {
+                  const shopRev = stats?.totalRevenue ?? 0;
+                  const shopShip = stats?.totalShippingFee ?? 0;
+                  const deliveredCount = stats?.deliveriesByStatus["Delivered"] ?? 0;
+                  const pct = totalShopsRevenue > 0 ? (shopRev / totalShopsRevenue) * 100 : 0;
+
+                  return (
+                    <tr key={shop.id} className="hover:bg-gray-50/60 transition-colors">
+                      <td className="py-3 pr-4 font-semibold text-gray-900">
+                        <div className="flex items-center gap-2">
+                          <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-xs">
+                            {shop.name.charAt(0).toUpperCase()}
+                          </div>
+                          <div>
+                            <p className="font-bold text-gray-900 text-sm">{shop.name}</p>
+                            <p className="text-[11px] text-gray-400 font-normal">
+                              {typeof shop.address === "string" ? shop.address : "Cơ sở cửa hàng"}
+                            </p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="py-3 px-4 text-gray-600 font-mono text-xs">
+                        {shop.hotline || "N/A"}
+                      </td>
+                      <td className="py-3 px-4 text-center font-semibold text-gray-700">
+                        {deliveredCount}
+                      </td>
+                      <td className="py-3 px-4 text-right text-gray-600">{formatVnd(shopShip)}</td>
+                      <td className="py-3 px-4 text-right font-bold text-emerald-600">
+                        {formatVnd(shopRev)}
+                      </td>
+                      <td className="py-3 px-4 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <span className="text-xs font-semibold text-gray-600">
+                            {pct.toFixed(1)}%
+                          </span>
+                          <div className="w-12 h-1.5 rounded-full bg-gray-100 overflow-hidden">
+                            <div
+                              className="h-full rounded-full bg-emerald-500"
+                              style={{ width: `${Math.min(pct, 100)}%` }}
+                            />
+                          </div>
+                        </div>
+                      </td>
+                      <td className="py-3 pl-4 text-right">
+                        <Link
+                          to={`/stores/${shop.id}`}
+                          className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
+                        >
+                          Chi tiết <ArrowUpRight size={12} />
+                        </Link>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       <div className="grid gap-6 lg:grid-cols-7">
@@ -144,7 +331,11 @@ export default function AdminDashboardPage() {
           <div className="h-[300px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-gray-200)" />
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  vertical={false}
+                  stroke="var(--color-gray-200)"
+                />
                 <XAxis
                   dataKey="name"
                   axisLine={false}

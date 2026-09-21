@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   ChevronLeft,
@@ -14,8 +14,13 @@ import {
   DollarSign,
   Upload,
 } from "lucide-react";
+import { useAppSelector } from "@/app/store";
 import { productApi } from "@/features/products/api/product.api";
-import { getAllShopRequest, getShopRequestById } from "@/features/shop/api/shop.api";
+import {
+  getAllShopRequest,
+  getMyShopsRequest,
+  getShopRequestById,
+} from "@/features/shop/api/shop.api";
 import { getCategoriesRequest } from "@/features/category/api/category.api";
 import { getVibes, getStyles } from "@/features/products/api/taxonomy.api";
 import type { Shop } from "@/features/shop/types/shop";
@@ -34,6 +39,16 @@ import { RichTextEditor } from "@/components/ui/RichTextEditor";
 
 export default function CreateProductPage() {
   const navigate = useNavigate();
+  const currentUser = useAppSelector((s) => s.auth.user);
+  const userRoles = useMemo(
+    () => (currentUser?.role ?? "").split(",").map((r) => r.trim()),
+    [currentUser?.role],
+  );
+  const isAdmin = useMemo(
+    () => userRoles.some((r) => ["Admin", "SystemAdmin"].includes(r)),
+    [userRoles],
+  );
+
   // Mở từ trang shop (/seller/:storeId/products/new) → khóa luôn store, ẩn dropdown chọn shop
   // (dropdown đó chỉ có ý nghĩa cho staff/manager thao tác ở /manager/products/new).
   const { storeId: lockedStoreId } = useParams<{ storeId: string }>();
@@ -95,33 +110,103 @@ export default function CreateProductPage() {
 
     const fetchOptions = async () => {
       try {
-        const [shopsRes, categoriesRes, vibesRes, stylesRes] = await Promise.all([
-          lockedStoreId ? getShopRequestById(lockedStoreId) : getAllShopRequest(),
-          getCategoriesRequest(),
-          getVibes(),
-          getStyles(),
-        ]);
         if (lockedStoreId) {
+          const [shopsRes, categoriesRes, vibesRes, stylesRes] = await Promise.all([
+            getShopRequestById(lockedStoreId),
+            getCategoriesRequest(),
+            getVibes(),
+            getStyles(),
+          ]);
           if (shopsRes.isSuccess && shopsRes.data && !Array.isArray(shopsRes.data)) {
             setLockedShopName(shopsRes.data.name);
           }
-        } else if (shopsRes.isSuccess && shopsRes.data && Array.isArray(shopsRes.data)) {
-          setShops(shopsRes.data);
-          if (shopsRes.data.length > 0) {
-            setGardenStoreId(shopsRes.data[0].id);
+          if (categoriesRes.isSuccess && categoriesRes.data) {
+            setCategories(categoriesRes.data.filter((c) => c.isActive));
+          }
+          if (vibesRes.isSuccess && vibesRes.data) setVibeOptions(vibesRes.data);
+          if (stylesRes.isSuccess && stylesRes.data) setStyleOptions(stylesRes.data);
+        } else {
+          const [allRes, mineRes, categoriesRes, vibesRes, stylesRes] = await Promise.allSettled([
+            getAllShopRequest(),
+            getMyShopsRequest(),
+            getCategoriesRequest(),
+            getVibes(),
+            getStyles(),
+          ]);
+
+          let allStores: Shop[] = [];
+          if (allRes.status === "fulfilled" && allRes.value?.isSuccess && allRes.value.data) {
+            allStores = allRes.value.data;
+          }
+
+          const ownedIds = new Set<string>();
+          const staffIds = new Set<string>();
+          if (mineRes.status === "fulfilled" && mineRes.value?.isSuccess && mineRes.value.data) {
+            mineRes.value.data.forEach((s) => {
+              if (s.isOwner !== false) ownedIds.add(s.id);
+              else staffIds.add(s.id);
+            });
+          }
+
+          let enrichedStores = allStores.map((s) => ({
+            ...s,
+            isOwner:
+              s.isOwner ||
+              ownedIds.has(s.id) ||
+              (!!currentUser?.id && s.ownerUserId === currentUser.id),
+            isStaff: staffIds.has(s.id),
+          }));
+
+          if (
+            enrichedStores.length === 0 &&
+            mineRes.status === "fulfilled" &&
+            mineRes.value?.data
+          ) {
+            enrichedStores = mineRes.value.data.map((s) => ({
+              ...s,
+              isOwner: s.isOwner !== false,
+              isStaff: s.isOwner === false,
+            }));
+          }
+
+          const allowedStores = isAdmin
+            ? enrichedStores
+            : enrichedStores.filter(
+                (s) =>
+                  s.isOwner ||
+                  (s as any).isStaff ||
+                  (!!currentUser?.id && s.ownerUserId === currentUser.id),
+              );
+
+          setShops(allowedStores);
+          if (allowedStores.length > 0) {
+            setGardenStoreId(allowedStores[0].id);
+          }
+
+          if (
+            categoriesRes.status === "fulfilled" &&
+            categoriesRes.value?.isSuccess &&
+            categoriesRes.value.data
+          ) {
+            setCategories(categoriesRes.value.data.filter((c) => c.isActive));
+          }
+          if (vibesRes.status === "fulfilled" && vibesRes.value?.isSuccess && vibesRes.value.data) {
+            setVibeOptions(vibesRes.value.data);
+          }
+          if (
+            stylesRes.status === "fulfilled" &&
+            stylesRes.value?.isSuccess &&
+            stylesRes.value.data
+          ) {
+            setStyleOptions(stylesRes.value.data);
           }
         }
-        if (categoriesRes.isSuccess && categoriesRes.data) {
-          setCategories(categoriesRes.data.filter((c) => c.isActive));
-        }
-        if (vibesRes.isSuccess && vibesRes.data) setVibeOptions(vibesRes.data);
-        if (stylesRes.isSuccess && stylesRes.data) setStyleOptions(stylesRes.data);
       } catch (err) {
         console.error("Failed to load options", err);
       }
     };
     fetchOptions();
-  }, [lockedStoreId]);
+  }, [lockedStoreId, isAdmin, currentUser?.id]);
 
   // Set default SKU based on name if empty
   useEffect(() => {
@@ -273,7 +358,7 @@ export default function CreateProductPage() {
         toast.success("Đã tạo sản phẩm mới thành công");
         if (elementInputs.length === 0 && !fengShui.primaryElement) {
           toast.warning(
-            "Sản phẩm chưa có dữ liệu phong thủy nên sẽ không xuất hiện trong gợi ý — bổ sung Đặc điểm sản phẩm nhé",
+            "Sản phẩm chưa có dữ liệu phong thủy nên sẽ không xuất hiện trong gợi ý - bổ sung Đặc điểm sản phẩm nhé",
           );
         }
         navigate(lockedStoreId ? `/stores/${lockedStoreId}` : "/manager/products");
@@ -371,7 +456,9 @@ export default function CreateProductPage() {
               </div>
 
               <div className="space-y-1.5 sm:col-span-2">
-                <label className="text-sm font-semibold text-gray-700 dark:text-gray-200">Mô tả sản phẩm</label>
+                <label className="text-sm font-semibold text-gray-700 dark:text-gray-200">
+                  Mô tả sản phẩm
+                </label>
                 <RichTextEditor
                   value={description}
                   onChange={setDescription}
@@ -528,19 +615,19 @@ export default function CreateProductPage() {
             {/* Dropzone File Upload */}
             <div
               onClick={() => {
-                if (!images.some(img => img.uploading)) {
+                if (!images.some((img) => img.uploading)) {
                   document.getElementById("file-upload-input")?.click();
                 }
               }}
               onDragOver={(e) => e.preventDefault()}
               onDrop={async (e) => {
                 e.preventDefault();
-                if (!images.some(img => img.uploading) && e.dataTransfer.files) {
+                if (!images.some((img) => img.uploading) && e.dataTransfer.files) {
                   await uploadImages(Array.from(e.dataTransfer.files));
                 }
               }}
               className={`border-2 border-dashed border-gray-200 rounded-2xl p-6 text-center cursor-pointer transition-all duration-200 flex flex-col items-center justify-center gap-2 group ${
-                images.some(img => img.uploading)
+                images.some((img) => img.uploading)
                   ? "opacity-60 cursor-not-allowed bg-gray-50"
                   : "hover:border-primary hover:bg-primary/5"
               }`}
@@ -551,7 +638,7 @@ export default function CreateProductPage() {
                 multiple
                 accept="image/*"
                 onChange={handleFileChange}
-                disabled={images.some(img => img.uploading)}
+                disabled={images.some((img) => img.uploading)}
                 className="hidden"
               />
               <div className="h-10 w-10 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 group-hover:bg-primary/10 group-hover:text-primary transition-colors">
@@ -663,7 +750,7 @@ export default function CreateProductPage() {
               />
             </summary>
             <p className="mb-4 text-xs text-gray-400 italic">
-              Chỉ dùng nếu bạn đã biết chính xác — thường không cần, hệ thống tự tính từ Đặc điểm
+              Chỉ dùng nếu bạn đã biết chính xác - thường không cần, hệ thống tự tính từ Đặc điểm
               sản phẩm.
             </p>
             <div className="border-t border-gray-100 pt-4">

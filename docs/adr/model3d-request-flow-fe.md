@@ -16,15 +16,16 @@
 
 ## 1. Tổng quan 3 mảng UI
 
-| # | Actor | Vị trí | Mục đích |
-|---|---|---|---|
-| 1 | Khách (public, không cần đăng nhập) | Trang chi tiết sản phẩm `/products/:id` | Xem mô hình 3D nếu chủ shop đã bật hiển thị |
-| 2 | Garden owner / garden staff (nhân viên store) | Modal sửa sản phẩm, tab "Mô hình 3D" (`/seller/:storeId` **hoặc** `/manager/products`) | Tạo yêu cầu sinh model, bật/tắt hiển thị, xem lịch sử |
-| 3 | Staff sàn (`Staff`/`Manager`/`Admin`) | `/manager/model3d-queue` | Xử lý thủ công yêu cầu "tạo lại" (Regenerate): chọn ảnh, gửi Meshy, duyệt kết quả |
+| #   | Actor                                         | Vị trí                                                                                 | Mục đích                                                                          |
+| --- | --------------------------------------------- | -------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| 1   | Khách (public, không cần đăng nhập)           | Trang chi tiết sản phẩm `/products/:id`                                                | Xem mô hình 3D nếu chủ shop đã bật hiển thị                                       |
+| 2   | Garden owner / garden staff (nhân viên store) | Modal sửa sản phẩm, tab "Mô hình 3D" (`/seller/:storeId` **hoặc** `/manager/products`) | Tạo yêu cầu sinh model, bật/tắt hiển thị, xem lịch sử                             |
+| 3   | Staff sàn (`Staff`/`Manager`/`Admin`)         | `/manager/model3d-queue`                                                               | Xử lý thủ công yêu cầu "tạo lại" (Regenerate): chọn ảnh, gửi Meshy, duyệt kết quả |
 
 ## 2. Actor 1 — Khách xem model 3D (public)
 
 **File:**
+
 - `src/components/ui/3DSection.tsx` — component `Product3DViewer` (default export) + `Model3DViewSwitcher`.
   Dùng `@react-three/fiber` (`Canvas`) + `@react-three/drei` (`useGLTF`, `OrbitControls`, `Center`).
   Tự tính bounding box (`THREE.Box3`) để scale mọi model về cùng kích thước hiển thị bất kể tỉ lệ gốc
@@ -44,6 +45,7 @@
 ## 3. Actor 2 — Garden owner / garden staff
 
 `EditProductModal.tsx` (`src/features/manager/components/`) dùng chung bởi **2 nơi**:
+
 - `/seller/:storeId` → `ShopDetailPage` → `ShopProductCatalog` (garden owner/staff xem sản phẩm của
   chính store mình).
 - `/manager/products` → `ManageProductsPage` (staff sàn xem **mọi** sản phẩm — cùng modal, cùng tab).
@@ -53,11 +55,12 @@
 thêm.
 
 **File mới:**
+
 - `src/features/manager/components/ProductModel3DSection.tsx` — nội dung tab "Mô hình 3D":
   - **Trạng thái hiện tại**: thumbnail, badge trạng thái (`Pending`/`Processing`/`Succeeded`/`Failed`),
     progress %, nút bật/tắt hiển thị (`Eye`/`EyeOff`, chỉ actionable khi `Succeeded`).
   - **Tạo yêu cầu**: server tự quyết Initial hay Regenerate (FE mirror qua `model?.status ===
-    "Succeeded"` để biết hiện picker hay không):
+"Succeeded"` để biết hiện picker hay không):
     - **Initial** (chưa từng có model Succeeded): mở picker — tick ảnh có sẵn (`images` prop) + upload
       ảnh mới, tối đa **4 ảnh** tổng, note nhỏ "chụp nhiều góc độ cho kết quả chính xác hơn".
     - **Regenerate** (đã có model Succeeded): không cần chọn ảnh — chỉ 1 nút "Gửi yêu cầu tạo lại",
@@ -79,14 +82,15 @@ Route `/manager/model3d-queue` (`requireStaffOrAbove` — `Staff`/`Manager`/`Adm
 `ManagerLayout.tsx` (nhóm "Sản phẩm" → "Hàng chờ Model 3D").
 
 **File mới:**
+
 - `src/features/manager/pages/Model3DQueuePage.tsx` — danh sách, tab lọc:
 
-  | Tab | Filter API | Ý nghĩa |
-  |---|---|---|
-  | Chờ xử lý (mặc định) | `status=AwaitingStaff` | Regenerate mới, chưa ai đụng vào |
-  | Đang xử lý | `status=InProgress` | Đã gửi Meshy, chờ preview/accept |
-  | Kẹt tự động | `status=Queued&reason=InsufficientCredits` | Request **Initial** đang kẹt vì hết credit — **chỉ để theo dõi**, không thao tác được (xem mục 4.1) |
-  | Hoàn tất / Đã từ chối / Tất cả | — | Đọc lịch sử |
+  | Tab                            | Filter API                                 | Ý nghĩa                                                                                             |
+  | ------------------------------ | ------------------------------------------ | --------------------------------------------------------------------------------------------------- |
+  | Chờ xử lý (mặc định)           | `status=AwaitingStaff`                     | Regenerate mới, chưa ai đụng vào                                                                    |
+  | Đang xử lý                     | `status=InProgress`                        | Đã gửi Meshy, chờ preview/accept                                                                    |
+  | Kẹt tự động                    | `status=Queued&reason=InsufficientCredits` | Request **Initial** đang kẹt vì hết credit — **chỉ để theo dõi**, không thao tác được (xem mục 4.1) |
+  | Hoàn tất / Đã từ chối / Tất cả | —                                          | Đọc lịch sử                                                                                         |
 
 - `src/features/manager/components/Model3DQueueItemModal.tsx` — modal xử lý 1 item, nhánh theo
   `status`:

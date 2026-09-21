@@ -1,560 +1,174 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
-import {
-  ShoppingBag,
-  Loader2,
-  Search,
-  Eye,
-  X,
-  Check,
-  ExternalLink,
-  Calendar,
-  MapPin,
-  Phone,
-  User,
-  DollarSign,
-  Tag,
-} from "lucide-react";
-import { toast } from "sonner";
-import { getAllShopRequest } from "@/features/shop/api/shop.api";
-import { useAllOrdersList, useUpdateOrderDeliveryStatus } from "@/features/orders";
-import type { Order, OrderDetail } from "@/features/orders";
-import Tabs from "@/components/ui/Tabs";
-import { formatOrderDate, formatVnd } from "@/features/orders/utils/orderUtils";
-import { ordersApi } from "@/features/orders";
-import { STATUS_MAP } from "@/features/orders/utils/orderUtils";
-import { useQueryClient } from "@tanstack/react-query";
-
-const DELIVERY_STATUS_MAP: Record<string, { label: string; className: string }> = {
-  Pending: { label: "Đang chờ", className: "bg-amber-50 text-amber-600 border border-amber-200" },
-  Confirmed: {
-    label: "Đã xác nhận",
-    className: "bg-indigo-50 text-indigo-600 border border-indigo-200",
-  },
-  Preparing: { label: "Đang chuẩn bị", className: "bg-blue-50 text-blue-600 border border-blue-200" },
-  Shipped: { label: "Đang giao hàng", className: "bg-sky-50 text-sky-600 border border-sky-200" },
-  Delivered: {
-    label: "Đã giao hàng",
-    className: "bg-emerald-50 text-emerald-600 border border-emerald-200",
-  },
-  Cancelled: { label: "Đã hủy", className: "bg-red-50 text-red-500 border border-red-200" },
-  Returned: { label: "Đã trả hàng", className: "bg-purple-50 text-purple-600 border border-purple-200" },
-};
-
-const TABS = [
-  { value: "All", label: "Tất cả" },
-  { value: "Pending", label: "Đang chờ thanh toán" },
-  { value: "Paid", label: "Đã thanh toán" },
-  { value: "Processing", label: "Đang xử lý" },
-  { value: "Shipping", label: "Đang vận chuyển" },
-  { value: "Completed", label: "Đã hoàn thành" },
-  { value: "Cancelled", label: "Đã hủy" },
-  { value: "Expired", label: "Đã hết hạn" },
-];
+import { useState, useEffect, useMemo } from "react";
+import { Store as StoreIcon, Loader2 } from "lucide-react";
+import { useAppSelector } from "@/app/store";
+import { getAllShopRequest, getMyShopsRequest } from "@/features/shop/api/shop.api";
+import type { Shop } from "@/features/shop/types/shop";
+import { ShopDeliveriesView } from "@/features/shop/components/ShopDeliveriesView";
 
 export default function ManageOrdersPage() {
-  const [activeTab, setActiveTab] = useState<string>("All");
-  const [searchTerm, setSearchTerm] = useState<string>("");
+  const currentUser = useAppSelector((s) => s.auth.user);
+  const userRoles = useMemo(
+    () => (currentUser?.role ?? "").split(",").map((r) => r.trim()),
+    [currentUser?.role],
+  );
+  const isAdmin = useMemo(
+    () => userRoles.some((r) => ["Admin", "SystemAdmin"].includes(r)),
+    [userRoles],
+  );
 
-  // Detailed Modal states
-  const [selectedOrder, setSelectedOrder] = useState<OrderDetail | null>(null);
-  const [loadingDetailId, setLoadingDetailId] = useState<string | null>(null);
-  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [userActiveStores, setUserActiveStores] = useState<Shop[]>([]);
+  const [selectedStoreId, setSelectedStoreId] = useState<string>("");
+  const [loadingStores, setLoadingStores] = useState<boolean>(true);
 
-  const { orders, listStatus } = useAllOrdersList({ page: 1, pageSize: 100 });
-  const updateDeliveryStatusMutation = useUpdateOrderDeliveryStatus();
-  const queryClient = useQueryClient();
-  const handleStatusChange = async (deliveryId: string, newStatus: string) => {
-    try {
-      await updateDeliveryStatusMutation.mutateAsync({ deliveryId, data: { status: newStatus } });
-      toast.success("Cập nhật trạng thái giao hàng thành công");
+  // Fetch active stores where user is in role (Owner, Staff, or Manager/Admin)
+  useEffect(() => {
+    let isMounted = true;
+    const fetchUserStores = async () => {
+      setLoadingStores(true);
+      try {
+        const [allRes, mineRes] = await Promise.allSettled([
+          getAllShopRequest(),
+          getMyShopsRequest(),
+        ]);
 
-      // Invalidate cả list lẫn detail
-      await queryClient.invalidateQueries({ queryKey: ["orders"] });
-      await queryClient.invalidateQueries({ queryKey: ["order", selectedOrder?.id] });
+        let allStores: Shop[] = [];
+        if (allRes.status === "fulfilled" && allRes.value?.isSuccess && allRes.value.data) {
+          allStores = allRes.value.data;
+        }
 
-      // Refetch lại detail để cập nhật modal
-      if (selectedOrder) {
-        const { data } = await ordersApi.getOrderById(selectedOrder.id);
-        if (data.isSuccess && data.data) setSelectedOrder(data.data);
+        const ownedIds = new Set<string>();
+        const staffIds = new Set<string>();
+
+        if (mineRes.status === "fulfilled" && mineRes.value?.isSuccess && mineRes.value.data) {
+          mineRes.value.data.forEach((s) => {
+            if (s.isOwner !== false) {
+              ownedIds.add(s.id);
+            } else {
+              staffIds.add(s.id);
+            }
+          });
+        }
+
+        let enrichedStores = allStores.map((s) => ({
+          ...s,
+          isOwner:
+            s.isOwner ||
+            ownedIds.has(s.id) ||
+            (!!currentUser?.id && s.ownerUserId === currentUser.id),
+          isStaff: staffIds.has(s.id),
+        }));
+
+        if (enrichedStores.length === 0 && mineRes.status === "fulfilled" && mineRes.value?.data) {
+          enrichedStores = mineRes.value.data.map((s) => ({
+            ...s,
+            isOwner: s.isOwner !== false || (!!currentUser?.id && s.ownerUserId === currentUser.id),
+            isStaff: !s.isOwner && (s as any).isStaff,
+          }));
+        }
+
+        // Filter ONLY ACTIVE stores (isActive === true)
+        const activeStores = enrichedStores.filter((s) => s.isActive);
+
+        // Filter for stores where user has a role (isOwner || isStaff), unless Admin
+        const validStores = activeStores.filter((s) => {
+          if (isAdmin) return true;
+          return (
+            s.isOwner ||
+            (s as any).isStaff ||
+            (!!currentUser?.id && s.ownerUserId === currentUser.id)
+          );
+        });
+
+        if (isMounted) {
+          setUserActiveStores(validStores);
+          if (validStores.length > 0) {
+            setSelectedStoreId((prev) =>
+              validStores.some((s) => s.id === prev) ? prev : validStores[0].id,
+            );
+          } else {
+            setSelectedStoreId("");
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load active stores for orders page:", err);
+      } finally {
+        if (isMounted) {
+          setLoadingStores(false);
+        }
       }
-    } catch (err) {
-      console.error(err);
-      toast.error("Không thể cập nhật trạng thái đơn hàng");
-    }
-  };
+    };
 
-  // View order detail
-  const handleViewDetail = async (orderId: string) => {
-    setLoadingDetailId(orderId);
-    try {
-      const { data } = await ordersApi.getOrderById(orderId);
-      if (data.isSuccess && data.data) {
-        setSelectedOrder(data.data);
-        setIsDetailModalOpen(true);
-      } else {
-        toast.error(data.message || "Không thể tải chi tiết đơn hàng");
-      }
-    } catch (err) {
-      console.error(err);
-      toast.error("Có lỗi xảy ra khi tải chi tiết đơn hàng");
-    } finally {
-      setLoadingDetailId(null);
-    }
-  };
-
-  // Badge số lượng cho từng tab. Bản cũ gọi orders.filter() HAI lần cho MỖI tab ngay trong JSX
-  // (8 tab × 2 = 16 lượt quét toàn bộ danh sách mỗi lần render) — gom lại còn một lượt duy nhất.
-  const tabsWithCounts = useMemo(() => {
-    const byStatus = new Map<string, number>();
-    for (const o of orders) byStatus.set(o.status, (byStatus.get(o.status) ?? 0) + 1);
-    return TABS.map((tab) => ({
-      ...tab,
-      count: tab.value === "All" ? orders.length : (byStatus.get(tab.value) ?? 0),
-    }));
-  }, [orders]);
-
-  // Filter orders by active tab and search term
-  const filteredOrders = orders.filter((order) => {
-    // 1. Filter by Tab
-    if (activeTab !== "All" && order.status !== activeTab) {
-      return false;
-    }
-    // 2. Filter by Search (Order Code)
-    if (searchTerm.trim() !== "") {
-      const search = searchTerm.toLowerCase();
-      const codeMatch =
-        order.orderCode?.toLowerCase().includes(search) || order.id.toLowerCase().includes(search);
-      return codeMatch;
-    }
-    return true;
-  });
+    fetchUserStores();
+    return () => {
+      isMounted = false;
+    };
+  }, [currentUser?.id, isAdmin]);
 
   return (
     <div className="space-y-6">
+      {/* Header section with active store selector */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-gray-900">Quản lý Đơn hàng</h1>
-          <p className="text-gray-500 mt-1 text-sm">Xem và quản lý tất cả các đơn hàng.</p>
+          <p className="text-gray-500 mt-1 text-sm">
+            Xem và xử lý các đơn giao thuộc cửa hàng bạn quản lý.
+          </p>
         </div>
-      </div>
 
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-        {/* Tabs & Search controls */}
-        <div className="border-b border-gray-100 p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gray-50/30">
-          {/* Filter tab: chỉ đổi bộ lọc trên cùng một bảng → KHÔNG bọc TabPanel. */}
-          <Tabs
-            items={tabsWithCounts}
-            value={activeTab}
-            onChange={setActiveTab}
-            ariaLabel="Lọc đơn hàng theo trạng thái"
-          />
-
-          {/* Search Input */}
-          <div className="relative w-full md:w-72">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Tìm mã đơn, tên, sđt..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full rounded-lg border border-gray-200 bg-white py-2 pl-9 pr-3 text-sm text-gray-700 placeholder-gray-400 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/20 transition-all shadow-inner"
-            />
-            {searchTerm && (
-              <button
-                onClick={() => setSearchTerm("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer"
+        {/* Store Selector dropdown */}
+        {userActiveStores.length > 0 && (
+          <div className="flex items-center gap-2 bg-white px-3.5 py-2.5 rounded-2xl border border-gray-200 shadow-xs">
+            <StoreIcon size={16} className="text-emerald-600 shrink-0" />
+            <span className="text-xs font-semibold text-gray-600">Cửa hàng của tôi:</span>
+            {loadingStores ? (
+              <div className="flex items-center gap-1.5 text-xs text-gray-400">
+                <Loader2 size={13} className="animate-spin text-emerald-600" />
+                <span>Đang tải...</span>
+              </div>
+            ) : (
+              <select
+                value={selectedStoreId}
+                onChange={(e) => {
+                  const targetId = e.target.value;
+                  if (!isAdmin && !userActiveStores.some((s) => s.id === targetId)) {
+                    return;
+                  }
+                  setSelectedStoreId(targetId);
+                }}
+                className="bg-transparent text-xs font-bold text-gray-900 focus:outline-none cursor-pointer pr-1"
               >
-                <X size={14} />
-              </button>
+                {userActiveStores.map((store) => (
+                  <option key={store.id} value={store.id}>
+                    {store.name}{" "}
+                    {store.isOwner ? "(Chủ cửa hàng)" : (store as any).isStaff ? "(Nhân viên)" : ""}
+                  </option>
+                ))}
+              </select>
             )}
-          </div>
-        </div>
-
-        {/* ── Table Content ────────────────────────────────────────────────── */}
-        {listStatus === "loading" && filteredOrders.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 gap-3">
-            <Loader2 className="h-8 w-8 text-primary animate-spin" />
-            <p className="text-sm text-gray-400 font-medium">Đang tải danh sách đơn hàng...</p>
-          </div>
-        ) : filteredOrders.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-center">
-            <ShoppingBag className="mb-4 h-12 w-12 text-gray-300" />
-            <h3 className="text-base font-semibold text-gray-900">Không tìm thấy đơn hàng nào</h3>
-            <p className="text-sm text-gray-500 mt-1">
-              Vui lòng kiểm tra lại bộ lọc hoặc điều kiện tìm kiếm.
-            </p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm border-collapse">
-              <thead>
-                <tr className="border-b border-gray-200 bg-gray-50/50 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                  <th className="p-4 w-28">Mã đơn</th>
-                  <th className="p-4 w-32">Ngày đặt</th>
-                  <th className="p-4 w-32">Phương thức</th>
-                  <th className="p-4 w-32">Tổng tiền</th>
-                  <th className="p-4 w-44">Trạng thái thanh toán</th>
-                  <th className="p-4 w-32 text-right">Thao tác</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {filteredOrders.map((order) => {
-                  const statusMeta = STATUS_MAP[order.status] || {
-                    label: order.status,
-                    className: "bg-gray-100 text-gray-500 border border-gray-200",
-                  };
-
-                  const isDetailLoading = loadingDetailId === order.id;
-
-                  return (
-                    <tr key={order.id} className="hover:bg-gray-50/30 transition-colors">
-                      {/* Order Code */}
-                      <td className="p-4 font-mono font-bold text-gray-900">
-                        {order.orderCode ? `#${order.orderCode}` : `#${order.id.substring(0, 8)}`}
-                      </td>
-
-                      {/* Date */}
-                      <td className="p-4 text-xs text-gray-500 whitespace-nowrap">
-                        {formatOrderDate(order.createdAt)}
-                      </td>
-
-                      {/* Payment Method */}
-                      <td className="p-4">
-                        <p className="font-semibold text-gray-900">{order.paymentMethod}</p>
-                      </td>
-
-                      {/* Total Amount */}
-                      <td className="p-4 font-bold text-gray-900 whitespace-nowrap">
-                        {formatVnd(order.totalAmount || 0)}
-                      </td>
-
-                      {/* Payment Status */}
-                      <td className="p-4 whitespace-nowrap">
-                        <span
-                          className={`inline-block rounded-lg border px-2.5 py-1 text-xs font-semibold ${statusMeta.className}`}
-                        >
-                          {statusMeta.label}
-                        </span>
-                      </td>
-
-                      {/* View Actions */}
-                      <td className="p-4 text-right">
-                        <div className="flex items-center justify-end gap-1">
-                          <button
-                            onClick={() => handleViewDetail(order.id)}
-                            disabled={isDetailLoading}
-                            title="Xem chi tiết đơn hàng"
-                            className="group flex items-center rounded-lg border border-gray-200 bg-gray-50 px-2 py-1.5 text-xs font-semibold text-gray-600 hover:bg-gray-100 transition-all duration-300 disabled:opacity-50 cursor-pointer"
-                          >
-                            {isDetailLoading ? (
-                              <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                            ) : (
-                              <Eye size={16} />
-                            )}
-                            <span className="max-w-0 overflow-hidden whitespace-nowrap opacity-0 transition-all duration-300 group-hover:max-w-[80px] group-hover:ml-1.5 group-hover:opacity-100">
-                              Chi tiết
-                            </span>
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
           </div>
         )}
       </div>
 
-      {/* ── DETAIL MODAL ───────────────────────────────────────────────────── */}
-      {isDetailModalOpen && selectedOrder && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm select-none">
-          <div className="relative w-full max-w-3xl bg-white rounded-2xl shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-            {/* Modal Header */}
-            <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4 bg-gray-50/50">
-              <div>
-                <span className="text-xs font-bold text-primary uppercase tracking-wide">
-                  Chi tiết đơn hàng
-                </span>
-                <h3 className="text-lg font-bold text-gray-900 mt-0.5">
-                  #{selectedOrder.id.substring(0, 8).toUpperCase()}
-                </h3>
-              </div>
-              <button
-                onClick={() => setIsDetailModalOpen(false)}
-                className="rounded-full p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors cursor-pointer"
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            {/* Modal Body */}
-            <div className="px-6 py-5 max-h-[75vh] overflow-y-auto space-y-5 text-sm">
-              {/* ── Thông tin chung ── */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div className="flex items-start gap-2.5 p-3 rounded-xl border border-gray-100 bg-gray-50/40">
-                  <Calendar className="h-4 w-4 text-gray-400 shrink-0 mt-0.5" />
-                  <div>
-                    <p className="text-xs text-gray-400 font-medium">Thời gian đặt</p>
-                    <p className="font-semibold text-gray-800 mt-0.5 text-xs">
-                      {formatOrderDate(selectedOrder.createdAt)}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-2.5 p-3 rounded-xl border border-gray-100 bg-gray-50/40">
-                  <DollarSign className="h-4 w-4 text-gray-400 shrink-0 mt-0.5" />
-                  <div>
-                    <p className="text-xs text-gray-400 font-medium">Phương thức thanh toán</p>
-                    <p className="font-semibold text-gray-800 mt-0.5 text-xs">
-                      {selectedOrder.paymentMethod === "COD"
-                        ? "Thanh toán khi nhận hàng (COD)"
-                        : selectedOrder.paymentMethod}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-2.5 p-3 rounded-xl border border-gray-100 bg-gray-50/40">
-                  <Tag className="h-4 w-4 text-gray-400 shrink-0 mt-0.5" />
-                  <div>
-                    <p className="text-xs text-gray-400 font-medium">Trạng thái thanh toán</p>
-                    <span
-                      className={`inline-block mt-1 rounded-md border px-2 py-0.5 text-xs font-semibold ${
-                        STATUS_MAP[selectedOrder.status]?.className ??
-                        "bg-gray-100 text-gray-500 border border-gray-200"
-                      }`}
-                    >
-                      {STATUS_MAP[selectedOrder.status]?.label ?? selectedOrder.status}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* ── Ghi chú ── */}
-              {selectedOrder.note && (
-                <div className="border border-amber-100 rounded-xl p-4 bg-amber-50/20 text-xs">
-                  <h4 className="font-bold text-amber-800 mb-1">Ghi chú của khách hàng</h4>
-                  <p className="text-amber-700 italic leading-relaxed">{selectedOrder.note}</p>
-                </div>
-              )}
-
-              {/* ── Sản phẩm ── */}
-              <div>
-                <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
-                  Sản phẩm đặt mua
-                </h4>
-                <div className="border border-gray-100 rounded-xl overflow-hidden">
-                  <table className="w-full text-left text-xs border-collapse">
-                    <thead>
-                      <tr className="border-b border-gray-100 bg-gray-50 text-xs font-semibold text-gray-500">
-                        <th className="p-3">Sản phẩm</th>
-                        <th className="p-3 w-20 text-center">SL</th>
-                        <th className="p-3 w-28 text-right">Đơn giá</th>
-                        <th className="p-3 w-28 text-right">Thành tiền</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-50">
-                      {selectedOrder.items.map((item) => (
-                        <tr key={item.id} className="hover:bg-gray-50/30">
-                          <td className="p-3">
-                            <p className="font-semibold text-gray-800">{item.productName}</p>
-                            {item.variantName && (
-                              <p className="text-[10px] text-gray-400 mt-0.5">
-                                Phân loại: {item.variantName}
-                              </p>
-                            )}
-                          </td>
-                          <td className="p-3 text-center text-gray-700 font-medium">
-                            {item.quantity}
-                          </td>
-                          <td className="p-3 text-right text-gray-600">
-                            {formatVnd(item.unitPrice)}
-                          </td>
-                          <td className="p-3 text-right font-bold text-gray-800">
-                            {formatVnd(item.lineTotal)}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-
-              {/* ── Deliveries ── */}
-              {selectedOrder.deliveries && selectedOrder.deliveries.length > 0 && (
-                <div>
-                  <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
-                    Thông tin giao hàng
-                  </h4>
-                  <div className="space-y-3">
-                    {selectedOrder.deliveries.map((delivery) => (
-                      <div
-                        key={delivery.id}
-                        className="border border-gray-100 rounded-xl p-4 bg-gray-50/20 space-y-3"
-                      >
-                        {/* Store + Status */}
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="flex items-center gap-2">
-                            <ShoppingBag className="h-4 w-4 text-primary shrink-0" />
-                            <span className="font-semibold text-gray-800 text-xs">
-                              {delivery.storeName}
-                            </span>
-                          </div>
-                          <select
-                            value={delivery.status}
-                            onChange={(e) => handleStatusChange(delivery.id, e.target.value)}
-                            disabled={updateDeliveryStatusMutation.isPending}
-                            className={`shrink-0 rounded-md border px-2 py-1 text-xs font-semibold focus:outline-none transition-all cursor-pointer ${
-                              DELIVERY_STATUS_MAP[delivery.status]?.className ??
-                              "bg-gray-100 text-gray-500 border border-gray-200"
-                            }`}
-                          >
-                            {Object.entries(DELIVERY_STATUS_MAP).map(([key, meta]) => (
-                              <option key={key} value={key}>
-                                {meta.label}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-
-                        {/* Delivery details grid */}
-                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-2 text-xs text-gray-500">
-                          <div>
-                            <p className="text-gray-400">Phí ship</p>
-                            <p className="font-semibold text-gray-700">
-                              {formatVnd(delivery.shippingFee)}
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-gray-400">Tạm tính</p>
-                            <p className="font-semibold text-gray-700">
-                              {formatVnd(delivery.subtotal)}
-                            </p>
-                          </div>
-                          {delivery.trackingCode && (
-                            <div>
-                              <p className="text-gray-400">Mã vận đơn</p>
-                              <p className="font-semibold text-gray-700 font-mono">
-                                {delivery.trackingCode}
-                              </p>
-                            </div>
-                          )}
-                          {delivery.shippingProvider && (
-                            <div>
-                              <p className="text-gray-400">Đơn vị vận chuyển</p>
-                              <p className="font-semibold text-gray-700">
-                                {delivery.shippingProvider}
-                              </p>
-                            </div>
-                          )}
-                          {delivery.estimatedDeliveryDate && (
-                            <div>
-                              <p className="text-gray-400">Dự kiến giao</p>
-                              <p className="font-semibold text-gray-700">
-                                {formatOrderDate(delivery.estimatedDeliveryDate)}
-                              </p>
-                            </div>
-                          )}
-                          {delivery.shippedAt && (
-                            <div>
-                              <p className="text-gray-400">Đã gửi lúc</p>
-                              <p className="font-semibold text-gray-700">
-                                {formatOrderDate(delivery.shippedAt)}
-                              </p>
-                            </div>
-                          )}
-                          {delivery.deliveredAt && (
-                            <div>
-                              <p className="text-gray-400">Giao thành công</p>
-                              <p className="font-semibold text-gray-700">
-                                {formatOrderDate(delivery.deliveredAt)}
-                              </p>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* ── Status Logs ── */}
-              {selectedOrder.statusLogs && selectedOrder.statusLogs.length > 0 && (
-                <div>
-                  <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
-                    Lịch sử trạng thái
-                  </h4>
-                  <div className="relative border border-gray-100 rounded-xl p-4 bg-gray-50/20 space-y-3">
-                    {selectedOrder.statusLogs.map((log, idx) => (
-                      <div key={idx} className="flex items-start gap-3 text-xs">
-                        <div className="mt-0.5 h-2 w-2 rounded-full bg-primary shrink-0 ring-2 ring-primary/20" />
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-1.5 flex-wrap">
-                            {log.fromStatus && (
-                              <>
-                                <span
-                                  className={`inline-block rounded-md border px-2 py-0.5 text-xs font-semibold ${
-                                    STATUS_MAP[log.fromStatus]?.className ??
-                                    "bg-gray-100 text-gray-500 border border-gray-200"
-                                  }`}
-                                >
-                                  {STATUS_MAP[log.fromStatus]?.label ?? log.fromStatus}
-                                </span>
-                                <span className="text-gray-300">→</span>
-                              </>
-                            )}
-                            <span
-                              className={`inline-block rounded-md border px-2 py-0.5 text-xs font-semibold ${
-                                STATUS_MAP[log.toStatus]?.className ??
-                                "bg-gray-100 text-gray-500 border border-gray-200"
-                              }`}
-                            >
-                              {STATUS_MAP[log.toStatus]?.label ?? log.toStatus}
-                            </span>
-                          </div>
-                          {log.note && <p className="text-gray-400 mt-0.5 italic">{log.note}</p>}
-                        </div>
-                        <span className="text-gray-400 whitespace-nowrap shrink-0">
-                          {formatOrderDate(log.changedAt)}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* ── Tổng tiền ── */}
-              <div className="flex flex-col items-end gap-1.5 border-t border-gray-100 pt-4 text-xs font-semibold text-gray-500">
-                <div className="flex justify-between w-60">
-                  <span>Tạm tính:</span>
-                  <span className="text-gray-800">{formatVnd(selectedOrder.subtotal)}</span>
-                </div>
-                <div className="flex justify-between w-60">
-                  <span>Phí vận chuyển:</span>
-                  <span className="text-gray-800">
-                    {formatVnd(selectedOrder.totalShippingFee ?? 0)}
-                  </span>
-                </div>
-                <div className="flex justify-between w-60 border-t border-dashed border-gray-200 pt-2 text-sm font-bold">
-                  <span className="text-gray-900">Tổng thanh toán:</span>
-                  <span className="text-primary">{formatVnd(selectedOrder.totalAmount)}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Modal Footer */}
-            <div className="flex justify-end border-t border-gray-100 px-6 py-4 bg-gray-50/50">
-              <button
-                type="button"
-                onClick={() => setIsDetailModalOpen(false)}
-                className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
-              >
-                Đóng
-              </button>
-            </div>
-          </div>
+      {/* Main Content Area */}
+      {loadingStores ? (
+        <div className="flex flex-col items-center justify-center py-20 gap-3 bg-white rounded-2xl border border-gray-100 shadow-xs">
+          <Loader2 className="h-8 w-8 text-emerald-600 animate-spin" />
+          <p className="text-sm text-gray-400 font-medium">Đang tải chi nhánh hoạt động...</p>
         </div>
-      )}
+      ) : userActiveStores.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-20 text-center bg-white rounded-2xl border border-gray-100 shadow-xs px-4">
+          <div className="h-14 w-14 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mb-3">
+            <StoreIcon size={28} />
+          </div>
+          <h3 className="text-base font-bold text-gray-900">Không tìm thấy chi nhánh hoạt động</h3>
+          <p className="text-sm text-gray-500 mt-1 max-w-md">
+            Bạn chưa thuộc chi nhánh nào đang hoạt động với vai trò Garden Owner hoặc Staff, hoặc
+            cửa hàng hiện tại đang tạm ngưng.
+          </p>
+        </div>
+      ) : selectedStoreId ? (
+        <ShopDeliveriesView key={selectedStoreId} storeId={selectedStoreId} />
+      ) : null}
     </div>
   );
 }

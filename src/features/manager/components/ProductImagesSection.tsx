@@ -120,10 +120,11 @@ export function ProductImagesSection({
                 await handleDropImage(e.dataTransfer.files);
               }
             }}
-            className={`border-2 border-dashed border-gray-200 rounded-2xl p-6 text-center cursor-pointer transition-all duration-200 flex flex-col items-center justify-center gap-2 group ${addingImage
+            className={`border-2 border-dashed border-gray-200 rounded-2xl p-6 text-center cursor-pointer transition-all duration-200 flex flex-col items-center justify-center gap-2 group ${
+              addingImage
                 ? "opacity-60 cursor-not-allowed bg-gray-50"
                 : "hover:border-primary hover:bg-primary/5"
-              }`}
+            }`}
           >
             <input
               id="edit-file-upload-input"
@@ -166,36 +167,40 @@ export function ProductImagesSection({
           </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-            {[...(images || [])].sort((a, b) => a.sortOrder - b.sortOrder).map((img) => (
-              <div
-                key={img.id}
-                className="relative group rounded-xl overflow-hidden bg-gray-50 ring-1 ring-gray-100 flex flex-col items-center justify-center p-2"
-              >
-                <div className="aspect-square w-full overflow-hidden flex items-center justify-center rounded-lg">
-                  <img
-                    src={img.url}
-                    alt="product"
-                    className="max-h-full max-w-full object-contain"
-                  />
+            {[...(images || [])]
+              .sort((a, b) => a.sortOrder - b.sortOrder)
+              .map((img) => (
+                <div
+                  key={img.id}
+                  className="relative group rounded-xl overflow-hidden bg-gray-50 ring-1 ring-gray-100 flex flex-col items-center justify-center p-2"
+                >
+                  <div className="aspect-square w-full overflow-hidden flex items-center justify-center rounded-lg">
+                    <img
+                      src={img.url}
+                      alt="product"
+                      className="max-h-full max-w-full object-contain"
+                    />
+                  </div>
+                  <div className="mt-2 w-full flex items-center justify-between px-1">
+                    <span className="text-xs text-gray-400 font-medium">
+                      Thứ tự: {img.sortOrder}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteImage(img.id)}
+                      disabled={deletingImageId === img.id}
+                      className="p-1 rounded text-red-500 hover:bg-red-50 transition-colors cursor-pointer disabled:opacity-55"
+                      title="Xóa ảnh"
+                    >
+                      {deletingImageId === img.id ? (
+                        <RefreshCw size={14} className="animate-spin" />
+                      ) : (
+                        <Trash2 size={14} />
+                      )}
+                    </button>
+                  </div>
                 </div>
-                <div className="mt-2 w-full flex items-center justify-between px-1">
-                  <span className="text-xs text-gray-400 font-medium">Thứ tự: {img.sortOrder}</span>
-                  <button
-                    type="button"
-                    onClick={() => handleDeleteImage(img.id)}
-                    disabled={deletingImageId === img.id}
-                    className="p-1 rounded text-red-500 hover:bg-red-50 transition-colors cursor-pointer disabled:opacity-55"
-                    title="Xóa ảnh"
-                  >
-                    {deletingImageId === img.id ? (
-                      <RefreshCw size={14} className="animate-spin" />
-                    ) : (
-                      <Trash2 size={14} />
-                    )}
-                  </button>
-                </div>
-              </div>
-            ))}
+              ))}
           </div>
         )}
       </div>

@@ -1,6 +1,6 @@
-{
+﻿{
   "navbar": {
-    "disclaimer_short": "Dự án thử nghiệm — Không phải web bán hàng thật",
+    "disclaimer_short": "Dự án thử nghiệm - Không phải web bán hàng thật",
     "disclaimer_long": "Lưu ý: Đây là website dự án thử nghiệm, không phải sàn thương mại điện tử thực tế. Mọi dữ liệu và thanh toán chỉ mang tính chất minh họa.",
     "promo_freeship_short": "Freeship từ 500k",
     "promo_freeship_long": "Miễn phí vận chuyển từ 500.000đ",
@@ -272,6 +272,11 @@
       "element": "Hành:",
       "weight": "Nặng: {{weight}}g",
       "size": "Kích thước: {{l}}x{{w}}x{{h}} cm",
+      "variant_attrs": "Phong thủy",
+      "occupation_fit": "Hợp với nghề",
+      "occupation_fit_hint": "Theo ngũ hành nghề cần so với ngũ hành sản phẩm. 50% = trung tính, không thay cho phần hợp bản mệnh.",
+      "occupation_mine": "nghề của bạn",
+      "specs": "Thông số",
       "free_ship": "Free Ship TP.Hồ Chí Minh cho hoá đơn từ 500.000đ",
       "hotline": "Hotline",
       "opening_hours": "Giờ mở cửa",
@@ -628,6 +633,7 @@
     },
     "title": "Đơn hàng của tôi",
     "subtitle": "Theo dõi và quản lý các đơn hàng bạn đã đặt.",
+    "search_placeholder": "Bạn có thể tìm kiếm theo tên Shop, Tên Sản Phẩm, Mã đơn hàng",
     "orders_count": "đơn hàng",
     "empty": {
       "message": "Bạn chưa có đơn hàng nào",
@@ -708,6 +714,7 @@
       "return_pending": "Đang chờ xử lý trả hàng",
       "return_processing": "Đang xử lý trả hàng",
       "return_btn": "Trả",
+      "return_expired": "Quá hạn",
       "delivered": "Đã giao hàng"
     },
     "delivery_status": {
@@ -861,7 +868,7 @@
   },
   "my_invitations": {
     "title": "Lời mời làm nhân viên",
-    "desc": "Các cửa hàng đã mời bạn tham gia — chấp nhận để có quyền nhận đơn và giao hàng.",
+    "desc": "Các cửa hàng đã mời bạn tham gia - chấp nhận để có quyền nhận đơn và giao hàng.",
     "refresh": "Làm mới",
     "empty": {
       "title": "Không có lời mời nào",
@@ -996,10 +1003,10 @@
     "fluid_drift_off": "Fluid frequency: Tắt",
     "fluid_drift_aria": "Cường độ fluid trôi nổi ngẫu nhiên",
     "fluid_rail": "Fluid sau dải nội dung",
-    "fluid_rail_hint": "Nối mép: bỏ hẳn phần giữa khỏi lưới nên rẻ hơn, đổi lại sóng hất vào mép trái sẽ bật ra ở mép phải ngay lập tức.",
+    "fluid_rail_hint": "",
     "cloud_mode": "Mảng mây",
     "rail_surface": "Dải nội dung",
-    "rail_surface_hint": "Kính mờ đẹp nhất nhưng đắt nhất: mỗi khung hình là một lượt làm mờ gần kín màn.",
+    "rail_surface_hint": "",
     "rail_surface_label": "Chất liệu dải nội dung",
     "chat_bg": "Nền khung chat AI",
     "chat_bg_label": "Chất liệu nền khung chat AI",

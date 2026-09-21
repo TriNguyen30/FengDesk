@@ -1,6 +1,7 @@
 import { useCallback, useRef, useState } from "react";
 import fetchHttpClient from "@/lib/httpClient";
 import type { ApiResponse } from "@/types/api";
+import { AI_REQUEST_TIMEOUT_MS } from "@/config/axios.config";
 
 /**
  * Cờ bật/tắt Whisper LẤY TỪ BE (GET /workspace/speech-config → { enabled }). BE là nguồn điều khiển
@@ -60,41 +61,46 @@ export function useWhisperTranscription() {
    * @param language "vi" | "en" — bắt buộc có ý nghĩa khi BE đang dùng provider Moonshine (chọn model);
    * provider Whisper thì BE bỏ qua giá trị này.
    */
-  const stopAndTranscribe = useCallback(async (language: "vi" | "en" = "vi"): Promise<string | null> => {
-    const recorder = recorderRef.current;
-    recorderRef.current = null;
-    if (!recorder) return null; // không có bản ghi (BE tắt hoặc không xin được mic) → dùng text Web Speech
+  const stopAndTranscribe = useCallback(
+    async (language: "vi" | "en" = "vi"): Promise<string | null> => {
+      const recorder = recorderRef.current;
+      recorderRef.current = null;
+      if (!recorder) return null; // không có bản ghi (BE tắt hoặc không xin được mic) → dùng text Web Speech
 
-    const blob = await new Promise<Blob>((resolve) => {
-      recorder.onstop = () =>
-        resolve(new Blob(chunksRef.current, { type: recorder.mimeType || "audio/webm" }));
-      recorder.stop();
-    });
-    streamRef.current?.getTracks().forEach((t) => t.stop());
-    streamRef.current = null;
+      const blob = await new Promise<Blob>((resolve) => {
+        recorder.onstop = () =>
+          resolve(new Blob(chunksRef.current, { type: recorder.mimeType || "audio/webm" }));
+        recorder.stop();
+      });
+      streamRef.current?.getTracks().forEach((t) => t.stop());
+      streamRef.current = null;
 
-    if (blob.size < 1000) return null; // quá ngắn/rỗng — không đáng gửi
+      if (blob.size < 1000) return null; // quá ngắn/rỗng — không đáng gửi
 
-    setIsTranscribing(true);
-    try {
-      const formData = new FormData();
-      formData.append("file", blob, "recording.webm");
-      formData.append("language", language);
-      const res = await fetchHttpClient.post<ApiResponse<string>>(
-        "/workspace/transcriptions",
-        formData,
-        {
-          headers: { "Content-Type": "multipart/form-data" },
-        },
-      );
-      const text = res.data?.data?.trim();
-      return text || null;
-    } catch {
-      return null; // BE down — fallback flow cũ (Web Speech)
-    } finally {
-      setIsTranscribing(false);
-    }
-  }, []);
+      setIsTranscribing(true);
+      try {
+        const formData = new FormData();
+        formData.append("file", blob, "recording.webm");
+        formData.append("language", language);
+        const res = await fetchHttpClient.post<ApiResponse<string>>(
+          "/workspace/transcriptions",
+          formData,
+          {
+            headers: { "Content-Type": "multipart/form-data" },
+            // Whisper/Moonshine chạy trên BE — đây là thời gian model phiên âm, không phải độ trễ mạng.
+            timeout: AI_REQUEST_TIMEOUT_MS,
+          },
+        );
+        const text = res.data?.data?.trim();
+        return text || null;
+      } catch {
+        return null; // BE down — fallback flow cũ (Web Speech)
+      } finally {
+        setIsTranscribing(false);
+      }
+    },
+    [],
+  );
 
   /** Hủy ghi âm không gửi (unmount, đổi bước). */
   const cancelRecording = useCallback(() => {

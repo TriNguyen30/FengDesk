@@ -35,12 +35,7 @@ export default function ChatWidget() {
   const initial = activeName ? activeName.charAt(0).toUpperCase() : "";
 
   return (
-    <div
-      className={`fixed z-40 flex flex-col items-end gap-3 ${isOpen
-          ? "bottom-0 right-[max(1rem,env(safe-area-inset-right))]"
-          : "bottom-[max(1rem,env(safe-area-inset-bottom))] right-[max(1rem,env(safe-area-inset-right))]"
-        }`}
-    >
+    <div className="fixed z-40 flex flex-col items-end gap-3 bottom-[max(1rem,env(safe-area-inset-bottom))] right-[max(1rem,env(safe-area-inset-right))]">
       {isOpen && user && (
         <ChatPanel
           view={view}

@@ -17,6 +17,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import Modal from "@/components/ui/Modal";
 import ChangeEmailFlow from "../components/ChangeEmailFlow";
+import { getOccupationsRequest } from "../api/occupation.api";
 
 type GenderValue = UpdateProfilePayload["gender"];
 
@@ -24,11 +25,19 @@ interface ProfileForm {
   fullName: string;
   phone: string;
   gender: GenderValue;
+  /** "" = chưa khai / xóa nghề. */
+  occupationCode: string;
   /** "YYYY-MM-DD" cho <input type="date">; rỗng = chưa khai. */
   dateOfBirth: string;
 }
 
-const EMPTY_FORM: ProfileForm = { fullName: "", phone: "", gender: "Unspecified", dateOfBirth: "" };
+const EMPTY_FORM: ProfileForm = {
+  fullName: "",
+  phone: "",
+  gender: "Unspecified",
+  dateOfBirth: "",
+  occupationCode: "",
+};
 
 export default function ProfileInfoPage() {
   const { t } = useTranslation();
@@ -44,6 +53,15 @@ export default function ProfileInfoPage() {
 
   const profile = profileResponse?.data || user;
   const queryClient = useQueryClient();
+
+  // Bảng tra cứu nghề: đổi rất hiếm, và mất nó chỉ làm ô chọn rỗng chứ không chặn lưu hồ sơ —
+  // nên cache dài và không cần trạng thái lỗi riêng.
+  const { data: occupationsResponse, isLoading: occupationsLoading } = useQuery({
+    queryKey: ["occupations"],
+    queryFn: getOccupationsRequest,
+    staleTime: 30 * 60 * 1000,
+  });
+  const occupations = occupationsResponse?.data ?? [];
 
   // Giờ sinh — lưu riêng qua endpoint có sẵn (PUT /Auth/me/birth-time), không đi cùng form chính.
   const [birthTime, setBirthTime] = useState("");
@@ -76,6 +94,7 @@ export default function ProfileInfoPage() {
     phone: profile?.phone ?? "",
     gender: (profile?.gender as GenderValue) || "Unspecified",
     dateOfBirth: profile?.dateOfBirth ? profile.dateOfBirth.slice(0, 10) : "",
+    occupationCode: profile?.occupationCode ?? "",
   };
 
   useEffect(() => {
@@ -89,8 +108,15 @@ export default function ProfileInfoPage() {
       phone: profile?.phone ?? "",
       gender: (profile?.gender as GenderValue) || "Unspecified",
       dateOfBirth: profile?.dateOfBirth ? profile.dateOfBirth.slice(0, 10) : "",
+      occupationCode: profile?.occupationCode ?? "",
     });
-  }, [profile?.fullName, profile?.phone, profile?.gender, profile?.dateOfBirth]);
+  }, [
+    profile?.fullName,
+    profile?.phone,
+    profile?.gender,
+    profile?.dateOfBirth,
+    profile?.occupationCode,
+  ]);
 
   const isDirty = (Object.keys(savedForm) as (keyof ProfileForm)[]).some(
     (key) => form[key] !== savedForm[key],
@@ -122,6 +148,8 @@ export default function ProfileInfoPage() {
         phone: form.phone.trim() || null,
         gender: form.gender,
         dateOfBirth: form.dateOfBirth || null,
+        // "" là XÓA nghề chứ không phải "bỏ qua" - xem chú thích trên UpdateProfilePayload.
+        occupationCode: form.occupationCode,
       });
       if (res.isSuccess) {
         toast.success(res.message || t("profile_info.toast.update_success"));
@@ -178,18 +206,29 @@ export default function ProfileInfoPage() {
     "block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm text-gray-900 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/20";
 
   const getRoleLabel = (roleStr?: string, rolesArr?: string[]) => {
-    const rolesList = rolesArr?.length ? rolesArr : (roleStr ? roleStr.split(",").map(r => r.trim()) : []);
+    const rolesList = rolesArr?.length
+      ? rolesArr
+      : roleStr
+        ? roleStr.split(",").map((r) => r.trim())
+        : [];
     if (rolesList.length === 0) return t("profile_info.roles.customer");
 
-    const translatedRoles = rolesList.map(r => {
+    const translatedRoles = rolesList.map((r) => {
       switch (r) {
-        case "Admin": return t("profile_info.roles.admin");
-        case "Manager": return t("profile_info.roles.manager");
-        case "Staff": return t("profile_info.roles.staff");
-        case "GardenOwner": return t("profile_info.roles.garden_owner");
-        case "GardenStaff": return t("profile_info.roles.garden_staff");
-        case "Customer": return t("profile_info.roles.customer");
-        default: return r;
+        case "Admin":
+          return t("profile_info.roles.admin");
+        case "Manager":
+          return t("profile_info.roles.manager");
+        case "Staff":
+          return t("profile_info.roles.staff");
+        case "GardenOwner":
+          return t("profile_info.roles.garden_owner");
+        case "GardenStaff":
+          return t("profile_info.roles.garden_staff");
+        case "Customer":
+          return t("profile_info.roles.customer");
+        default:
+          return r;
       }
     });
 
@@ -199,7 +238,9 @@ export default function ProfileInfoPage() {
   return (
     <div className="w-full">
       <div className="mb-6">
-        <h1 className="text-xl font-bold tracking-tight text-gray-900">{t("profile_info.title")}</h1>
+        <h1 className="text-xl font-bold tracking-tight text-gray-900">
+          {t("profile_info.title")}
+        </h1>
         <p className="mt-0.5 text-sm text-gray-500">{t("profile_info.subtitle")}</p>
       </div>
 
@@ -212,9 +253,7 @@ export default function ProfileInfoPage() {
             <h2 className="text-xl font-semibold text-gray-900">
               {profile.fullName || t("profile_info.default_user")}
             </h2>
-            <p className="text-sm text-gray-500">
-              {getRoleLabel(profile.role, profile.roles)}
-            </p>
+            <p className="text-sm text-gray-500">{getRoleLabel(profile.role, profile.roles)}</p>
           </div>
         </div>
 
@@ -268,6 +307,27 @@ export default function ProfileInfoPage() {
                 <option value="Other">{t("profile_info.values.other")}</option>
               </select>
             </div>
+          </div>
+
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-gray-700">Nghề nghiệp</label>
+            <select
+              value={form.occupationCode}
+              onChange={(e) => setForm((f) => ({ ...f, occupationCode: e.target.value }))}
+              disabled={occupationsLoading}
+              className={`${inputClass} cursor-pointer`}
+            >
+              <option value="">Chưa khai báo</option>
+              {occupations.map((o) => (
+                <option key={o.code} value={o.code}>
+                  {o.nameVi}
+                </option>
+              ))}
+            </select>
+            <p className="mt-1.5 text-xs text-gray-500">
+              Tuỳ chọn. Nghề nghiệp chỉ đổi mức <strong>ưa thích</strong> giữa các hành, không đổi bản
+              mệnh của bạn: hành đang khắc mệnh thì vẫn khắc.
+            </p>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -331,9 +391,7 @@ export default function ProfileInfoPage() {
           <div>
             <label className="mb-1.5 block text-sm font-medium text-gray-700">
               {t("profile_info.fields.birth_time")}{" "}
-              <span className="font-normal text-gray-400">
-                {t("profile_info.fields.optional")}
-              </span>
+              <span className="font-normal text-gray-400">{t("profile_info.fields.optional")}</span>
             </label>
             <div className="flex gap-2">
               <input

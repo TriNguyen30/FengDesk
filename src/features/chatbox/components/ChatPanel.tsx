@@ -100,22 +100,21 @@ export default function ChatPanel({
       aria-label="Tin nhắn FengDesk"
       onClick={() => setIsFocused(true)}
       onFocusCapture={() => setIsFocused(true)}
-      className={`flex h-[min(36rem,calc(100dvh-8rem))] w-[min(calc(100vw-1.5rem),24rem)] flex-col overflow-hidden rounded-t-2xl border-x border-t bg-white transition-all duration-200 sm:h-[min(38rem,calc(100dvh-8rem))] sm:w-96 ${composerAiActive
-        ? "border-primary ring-2 ring-primary/40 shadow-2xl"
-        : isFocused
-          ? "border-gray-300 shadow-2xl"
-          : "border-gray-200 shadow-md"
-        }`}
+      className={`flex h-[min(460px,calc(100dvh-6rem))] w-[min(calc(100vw-1.5rem),338px)] flex-col rounded-2xl border bg-white transition-all duration-200 sm:h-[460px] sm:w-[338px] ${
+        composerAiActive
+          ? "border-primary ring-2 ring-primary/40 shadow-2xl"
+          : isFocused
+            ? "border-gray-300 shadow-2xl"
+            : "border-gray-200 shadow-lg"
+      }`}
     >
-      <header
-        className={`flex items-center justify-between gap-2 border-b border-gray-100 px-3 py-3 text-white transition-colors duration-200 ${isFocused ? "bg-primary" : "bg-primary/80"}`}
-      >
+      <header className="flex items-center justify-between gap-2 border-b border-gray-100 px-3 py-2 bg-white text-gray-900 transition-colors duration-200 shadow-sm rounded-t-2xl">
         <div className="flex min-w-0 items-center gap-2">
           {isConversation && (
             <button
               type="button"
               onClick={onBack}
-              className="rounded-lg p-1.5 text-white/90 transition-colors hover:bg-white/15 cursor-pointer"
+              className="rounded-full p-1.5 text-primary transition-colors hover:bg-gray-100 cursor-pointer"
               aria-label="Quay lại danh sách"
             >
               <ArrowLeft size={18} />
@@ -123,48 +122,51 @@ export default function ChatPanel({
           )}
           <div className="min-w-0">
             <div className="flex items-center gap-1.5">
-              <h2 className="truncate text-sm font-bold">{title}</h2>
+              <h2 className="truncate text-[15px] font-bold">{title}</h2>
               {kindTag && (
-                <span className="shrink-0 rounded-full border border-white/30 bg-white/15 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-white/90">
+                <span className="shrink-0 rounded-full bg-gray-100 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-gray-600">
                   {kindTag.label}
                 </span>
               )}
             </div>
-            <div className="mt-0.5 flex items-center gap-1.5 text-[11px] text-white/85">
-              <StatusIcon size={12} />
+            <div className="mt-0.5 flex items-center gap-1.5 text-[12px] text-gray-500">
+              <StatusIcon
+                size={12}
+                className={connectionStatus === "connected" ? "text-green-500" : ""}
+              />
               <span>{statusLabel}</span>
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-0.5">
           {!isConversation && (
             <button
               type="button"
               onClick={onNewChat}
-              className="rounded-lg p-1.5 text-white/90 transition-colors hover:bg-white/15 cursor-pointer"
+              className="rounded-full p-2 text-primary transition-colors hover:bg-gray-100 cursor-pointer"
               aria-label="Trò chuyện mới"
               title="Trò chuyện mới"
             >
-              <Plus size={18} />
+              <Plus size={20} />
             </button>
           )}
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg p-1.5 text-white/90 transition-colors hover:bg-white/15 cursor-pointer"
+            className="rounded-full p-2 text-primary transition-colors hover:bg-gray-100 cursor-pointer"
             aria-label="Thu nhỏ"
             title="Thu nhỏ"
           >
-            <Minus size={18} />
+            <Minus size={20} />
           </button>
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg p-1.5 text-white/90 transition-colors hover:bg-white/15 cursor-pointer"
+            className="rounded-full p-2 text-primary transition-colors hover:bg-gray-100 cursor-pointer"
             aria-label="Đóng"
             title="Đóng"
           >
-            <X size={18} />
+            <X size={20} />
           </button>
         </div>
       </header>

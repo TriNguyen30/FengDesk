@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { Bot, Lock } from "lucide-react";
 import type { ChatMessage } from "@/features/chatbox/types/chatbox";
 import type { AiActivity } from "@/features/shared/ai-activity";
@@ -50,7 +50,7 @@ export default function ChatConversation({
       {isClosed ? (
         <div className="flex items-center justify-center gap-2 border-t border-gray-100 bg-gray-50 px-3 py-3 text-xs text-gray-400">
           <Lock size={13} />
-          Cuộc trò chuyện đã đóng — không thể gửi tin mới.
+          Cuộc trò chuyện đã đóng - không thể gửi tin mới.
         </div>
       ) : (
         <>
@@ -61,10 +61,11 @@ export default function ChatConversation({
               onClick={askAi}
               aria-pressed={aiOn}
               title={aiOn ? "Bấm lần nữa để tắt @AI" : "Thêm @AI để hỏi trợ lý"}
-              className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium transition-colors cursor-pointer ${aiOn
+              className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium transition-colors cursor-pointer ${
+                aiOn
                   ? "bg-primary text-white hover:bg-primary-dark"
                   : "bg-primary/10 text-primary hover:bg-primary/20"
-                }`}
+              }`}
             >
               <Bot size={13} />
               {aiOn ? "Đang hỏi AI" : "Hỏi trợ lý AI"}

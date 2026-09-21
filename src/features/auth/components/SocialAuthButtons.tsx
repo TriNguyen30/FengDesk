@@ -35,7 +35,10 @@ type SocialAuthButtonsProps = {
   onSuccess?: () => void;
 };
 
-export default function SocialAuthButtons({ dividerLabel = "HOẶC", onSuccess }: SocialAuthButtonsProps) {
+export default function SocialAuthButtons({
+  dividerLabel = "HOẶC",
+  onSuccess,
+}: SocialAuthButtonsProps) {
   const { persistSession } = useAuthSession();
 
   const handleGoogleSuccess = async (credentialResponse: CredentialResponse) => {

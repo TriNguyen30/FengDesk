@@ -12,6 +12,8 @@ import {
   PurchasedItem,
 } from "../types/workspace";
 import type { ApiResponse } from "@/types/api";
+import { normalizeImageForUpload } from "@/utils/imageResize";
+import { AI_REQUEST_TIMEOUT_MS } from "@/config/axios.config";
 
 export const getWorkspaces = async (): Promise<Workspace[]> => {
   const response = await fetchHttpClient.get<ApiResponse<Workspace[]>>("/workspace");
@@ -105,16 +107,27 @@ export const classifyElementInput = async (
   const response = await fetchHttpClient.post<ApiResponse<ClassifyElementInputResult>>(
     "/workspace/element-inputs/classify",
     { kind, label },
+    // Chờ model phân loại xong — không phải độ trễ mạng.
+    { timeout: AI_REQUEST_TIMEOUT_MS },
   );
   return response.data.data;
 };
 
-/** Tải ảnh không gian lên storage → trả link để đính kèm parse-description. signal để hủy giữa chừng. */
+/**
+ * Tải ảnh không gian lên storage → trả link để đính kèm parse-description. signal để hủy giữa chừng.
+ * Ảnh được CHUẨN HOÁ trước khi gửi (xem utils/imageResize) — ảnh gốc từ điện thoại làm chậm cả chuỗi
+ * upload → tải về → base64 → vision model, trong khi model không cần độ phân giải đó; .webp thì
+ * backend không đọc được nên đổi sang JPEG luôn ở đây.
+ */
 export const uploadWorkspaceImage = async (file: File, signal?: AbortSignal): Promise<string> => {
+  const optimized = await normalizeImageForUpload(file);
   const formData = new FormData();
-  formData.append("file", file);
+  formData.append("file", optimized);
   const response = await fetchHttpClient.post<ApiResponse<string>>("/workspace/images", formData, {
     headers: { "Content-Type": "multipart/form-data" },
+    // Ảnh đã thu nhỏ nhưng mạng yếu vẫn có thể lâu — cùng ngưỡng với các bước AI để user
+    // không mất ảnh đúng lúc sắp xong.
+    timeout: AI_REQUEST_TIMEOUT_MS,
     signal,
   });
   return response.data.data;

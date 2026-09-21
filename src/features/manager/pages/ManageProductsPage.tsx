@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { Link } from "react-router-dom";
 import {
   Plus,
@@ -15,8 +15,9 @@ import {
   Package,
   Loader2,
 } from "lucide-react";
+import { useAppSelector } from "@/app/store";
 import { useProductList, useDeleteProduct } from "@/features/products";
-import { getAllShopRequest } from "@/features/shop/api/shop.api";
+import { getAllShopRequest, getMyShopsRequest } from "@/features/shop/api/shop.api";
 import { getCategoriesRequest } from "@/features/category/api/category.api";
 import { getTags } from "@/features/products/api/tag.api";
 import type { Product } from "@/features/products/types/product";
@@ -33,6 +34,16 @@ function formatVnd(n: number): string {
 }
 
 export default function ManageProductsPage() {
+  const currentUser = useAppSelector((s) => s.auth.user);
+  const userRoles = useMemo(
+    () => (currentUser?.role ?? "").split(",").map((r) => r.trim()),
+    [currentUser?.role],
+  );
+  const isAdmin = useMemo(
+    () => userRoles.some((r) => ["Admin", "SystemAdmin"].includes(r)),
+    [userRoles],
+  );
+
   const [page, setPage] = useState(1);
   const [pageSize] = useState(10);
 
@@ -59,32 +70,89 @@ export default function ManageProductsPage() {
   useEffect(() => {
     const fetchFilters = async () => {
       try {
-        const [shopsRes, categoriesRes, tagsRes] = await Promise.all([
+        const [allRes, mineRes, categoriesRes, tagsRes] = await Promise.allSettled([
           getAllShopRequest(),
+          getMyShopsRequest(),
           getCategoriesRequest(),
           getTags(),
         ]);
-        if (shopsRes.isSuccess && shopsRes.data) {
-          setShops(shopsRes.data);
+
+        let allStores: Shop[] = [];
+        if (allRes.status === "fulfilled" && allRes.value?.isSuccess && allRes.value.data) {
+          allStores = allRes.value.data;
         }
-        if (categoriesRes.isSuccess && categoriesRes.data) {
-          setCategories(categoriesRes.data);
+
+        const ownedIds = new Set<string>();
+        const staffIds = new Set<string>();
+        if (mineRes.status === "fulfilled" && mineRes.value?.isSuccess && mineRes.value.data) {
+          mineRes.value.data.forEach((s) => {
+            if (s.isOwner !== false) {
+              ownedIds.add(s.id);
+            } else {
+              staffIds.add(s.id);
+            }
+          });
         }
-        if (tagsRes.isSuccess && tagsRes.data) {
-          setTags(tagsRes.data);
+
+        let enrichedStores = allStores.map((s) => ({
+          ...s,
+          isOwner:
+            s.isOwner ||
+            ownedIds.has(s.id) ||
+            (!!currentUser?.id && s.ownerUserId === currentUser.id),
+          isStaff: staffIds.has(s.id),
+        }));
+
+        if (enrichedStores.length === 0 && mineRes.status === "fulfilled" && mineRes.value?.data) {
+          enrichedStores = mineRes.value.data.map((s) => ({
+            ...s,
+            isOwner: s.isOwner !== false,
+            isStaff: s.isOwner === false,
+          }));
+        }
+
+        setShops(enrichedStores);
+
+        if (
+          categoriesRes.status === "fulfilled" &&
+          categoriesRes.value?.isSuccess &&
+          categoriesRes.value.data
+        ) {
+          setCategories(categoriesRes.value.data);
+        }
+        if (tagsRes.status === "fulfilled" && tagsRes.value?.isSuccess && tagsRes.value.data) {
+          setTags(tagsRes.value.data);
         }
       } catch (err) {
         console.error("Failed to load filter options", err);
       }
     };
     fetchFilters();
-  }, []);
+  }, [currentUser?.id]);
+
+  const allowedStores = useMemo(() => {
+    if (isAdmin) return shops;
+    return shops.filter(
+      (s) =>
+        s.isOwner || (s as any).isStaff || (!!currentUser?.id && s.ownerUserId === currentUser.id),
+    );
+  }, [shops, isAdmin, currentUser?.id]);
+
+  const allowedStoreIds = useMemo(() => new Set(allowedStores.map((s) => s.id)), [allowedStores]);
+
+  useEffect(() => {
+    if (!isAdmin && allowedStores.length > 0) {
+      if (!selectedStoreId || !allowedStoreIds.has(selectedStoreId)) {
+        setSelectedStoreId(allowedStores[0].id);
+      }
+    }
+  }, [isAdmin, allowedStores, allowedStoreIds, selectedStoreId]);
 
   const { products, loading, totalCount, query } = useProductList({
     page,
     pageSize,
     search: search.trim() || undefined,
-    storeId: selectedStoreId || undefined,
+    storeId: selectedStoreId || (isAdmin ? undefined : allowedStores[0]?.id),
     categoryId: selectedCategoryId || undefined,
     tagId: selectedTagId || undefined,
   });
@@ -95,10 +163,27 @@ export default function ManageProductsPage() {
   // Reset filters
   const handleResetFilters = () => {
     setSearch("");
-    setSelectedStoreId("");
+    setSelectedStoreId(isAdmin ? "" : allowedStores[0]?.id || "");
     setSelectedCategoryId("");
     setSelectedTagId("");
     setPage(1);
+  };
+
+  const handleEditProduct = (product: Product) => {
+    if (!isAdmin && !allowedStoreIds.has(product.gardenStoreId)) {
+      toast.error("Bạn không có quyền quản lý sản phẩm của cửa hàng này");
+      return;
+    }
+    setEditingProductId(product.id);
+  };
+
+  const handleDeleteProduct = (product: Product) => {
+    if (!isAdmin && !allowedStoreIds.has(product.gardenStoreId)) {
+      toast.error("Bạn không có quyền xóa sản phẩm của cửa hàng này");
+      return;
+    }
+    setDeleteId(product.id);
+    setDeleteName(product.name);
   };
 
   const handleDeleteConfirm = async () => {
@@ -165,8 +250,8 @@ export default function ManageProductsPage() {
               }}
               className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm text-gray-700 focus:border-primary focus:bg-white focus:outline-none focus:ring-1 focus:ring-primary/30 appearance-none"
             >
-              <option value="">Tất cả cửa hàng</option>
-              {shops.map((shop) => (
+              {isAdmin && <option value="">Tất cả cửa hàng</option>}
+              {allowedStores.map((shop) => (
                 <option key={shop.id} value={shop.id}>
                   {shop.name}
                 </option>
@@ -311,7 +396,7 @@ export default function ManageProductsPage() {
                             </span>
                           </Link>
                           <button
-                            onClick={() => setEditingProductId(product.id)}
+                            onClick={() => handleEditProduct(product)}
                             title="Chỉnh sửa sản phẩm"
                             className="group flex items-center rounded-lg border border-green-200 bg-green-50 px-2 py-1.5 text-xs font-semibold text-green-600 hover:bg-green-100 transition-all duration-300 cursor-pointer"
                           >
@@ -321,10 +406,7 @@ export default function ManageProductsPage() {
                             </span>
                           </button>
                           <button
-                            onClick={() => {
-                              setDeleteId(product.id);
-                              setDeleteName(product.name);
-                            }}
+                            onClick={() => handleDeleteProduct(product)}
                             title="Xóa sản phẩm"
                             className="group flex items-center rounded-lg border border-red-200 bg-red-50 px-2 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-100 transition-all duration-300 cursor-pointer"
                           >

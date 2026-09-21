@@ -9,11 +9,7 @@ type PreviewFile =
   | { attempt: number; url: string; error?: never }
   | { attempt: number; url?: never; error: string };
 
-export default function Model3DQueuePreview({
-  requestId,
-}: {
-  requestId: string;
-}) {
+export default function Model3DQueuePreview({ requestId }: { requestId: string }) {
   const [attempt, setAttempt] = useState(0);
   const [file, setFile] = useState<PreviewFile | null>(null);
 

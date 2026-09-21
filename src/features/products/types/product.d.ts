@@ -106,6 +106,11 @@ export interface ProductDetail {
   // Thuộc tính phong thủy (thay cho tags)
   primaryElement?: string | null;
   secondaryElements?: string[];
+  /**
+   * `Desk` | `Living` | `Carry` | `Consumable` — quyết định sản phẩm đi luồng chấm điểm nào:
+   * đồ đặt trong phòng chấm theo gap ngũ hành của phòng, còn vật mang theo người chấm theo dụng thần.
+   */
+  placement?: "Desk" | "Living" | "Carry" | "Consumable";
   sizeClass?: string | null;
   vibes?: string[];
   styles?: string[];
