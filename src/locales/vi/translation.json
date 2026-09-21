@@ -791,13 +791,16 @@
     },
     "title": "Yêu cầu trả hàng",
     "desc": "Quản lý và theo dõi các yêu cầu trả hàng, hoàn tiền của bạn.",
+    "handoff": {
+      "title": "Bàn giao hàng cho cửa hàng",
+      "desc": "Liên hệ cửa hàng để thống nhất cách gửi hoặc bàn giao trực tiếp. Bạn không cần nhập mã vận đơn; cửa hàng sẽ xác nhận trên hệ thống sau khi thực tế nhận và kiểm tra hàng."
+    },
     "list": {
       "order_num": "Đơn #",
       "reason": "Lý do: ",
       "products": " sản phẩm",
       "view_detail": "Xem chi tiết",
       "cancel_req": "Hủy yêu cầu",
-      "ship_back": "Trả hàng",
       "view_order": "Xem đơn hàng"
     },
     "pagination": {
@@ -810,14 +813,6 @@
       "no": "Không",
       "cancelling": "Đang hủy...",
       "confirm": "Xác nhận hủy"
-    },
-    "ship_modal": {
-      "title": "Xác nhận trả hàng",
-      "desc": "Nhập mã vận đơn (tracking code) nếu bạn có (không bắt buộc).",
-      "placeholder": "Mã vận đơn...",
-      "close": "Đóng",
-      "processing": "Đang xử lý...",
-      "confirm": "Xác nhận"
     },
     "detail_modal": {
       "tag": "Chi tiết yêu cầu trả hàng",
@@ -838,7 +833,6 @@
       "images": "Hình ảnh",
       "history": "Lịch sử trạng thái",
       "cancel": "Hủy yêu cầu",
-      "ship_back": "Trả hàng",
       "close": "Đóng"
     },
     "types": {
@@ -862,7 +856,7 @@
       "processing": "Đang xử lý",
       "completed": "Hoàn tất",
       "cancelled": "Đã hủy",
-      "return_in_transit": "Đang chuyển hàng trả lại"
+      "return_in_transit": "Chờ cửa hàng nhận hàng"
     }
   },
   "my_invitations": {

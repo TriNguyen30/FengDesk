@@ -22,6 +22,7 @@ import { uploadFile } from "@/services/upload.service";
 import type { ReturnItem, ReturnDetail } from "@/features/return/types/return.d.ts";
 import { formatOrderDate, formatVnd } from "@/features/orders/utils/orderUtils";
 import { useQueryClient } from "@tanstack/react-query";
+import { useAppSelector } from "@/app/store";
 
 const RETURN_STATUS_META: Record<string, { label: string; className: string }> = {
   Requested: {
@@ -44,7 +45,7 @@ const RETURN_STATUS_META: Record<string, { label: string; className: string }> =
   },
   Cancelled: { label: "Đã hủy", className: "bg-gray-100 text-gray-500 border border-gray-200" },
   ReturnInTransit: {
-    label: "Đang chuyển về",
+    label: "Chờ cửa hàng nhận hàng",
     className: "bg-sky-50 text-sky-600 border border-sky-200",
   },
   ItemReceived: {
@@ -69,7 +70,7 @@ const RETURN_TYPE_LABEL: Record<string, string> = {
 const TABS: { value: string; label: string }[] = [
   { value: "All", label: "Tất cả" },
   { value: "Requested", label: "Yêu cầu mới" },
-  { value: "ReturnInTransit", label: "Đang chuyển về" },
+  { value: "ReturnInTransit", label: "Chờ nhận hàng trả" },
   { value: "Processing", label: "Đang xử lý" },
   { value: "Completed", label: "Hoàn tất" },
 ];
@@ -113,6 +114,7 @@ interface DetailModalState {
 interface ApproveRefundModalState {
   open: boolean;
   returnId: string | null;
+  type: "Refund" | "Exchange";
 }
 
 // ── Manager Confirm Refund modal state ───────────────────────────────────────
@@ -123,6 +125,9 @@ interface ManagerConfirmModalState {
 }
 
 export default function ManageOrderReturnPage() {
+  const { user } = useAppSelector((state) => state.auth);
+  const roles = (user?.role ?? "").split(",").map((role) => role.trim());
+  const canManageRefund = roles.includes("Manager") || roles.includes("Admin");
   const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -153,7 +158,11 @@ export default function ManageOrderReturnPage() {
   const [loadingDetail, setLoadingDetail] = useState(false);
 
   // Approve Refund modal
-  const [approveRefundModal, setApproveRefundModal] = useState<ApproveRefundModalState>({ open: false, returnId: null });
+  const [approveRefundModal, setApproveRefundModal] = useState<ApproveRefundModalState>({
+    open: false,
+    returnId: null,
+    type: "Refund",
+  });
   const [refundRestock, setRefundRestock] = useState(true);
   const [refundNote, setRefundNote] = useState("");
   const [approvingRefund, setApprovingRefund] = useState(false);
@@ -264,32 +273,37 @@ export default function ManageOrderReturnPage() {
   };
 
   // ── Approve Refund handlers ──────────────────────────────────────────────────
-  const openApproveRefundModal = (returnId: string) => {
+  const openApproveRefundModal = (returnId: string, type: "Refund" | "Exchange") => {
     setRefundRestock(true);
     setRefundNote("");
-    setApproveRefundModal({ open: true, returnId });
+    setApproveRefundModal({ open: true, returnId, type });
   };
 
-  const closeApproveRefundModal = () => setApproveRefundModal({ open: false, returnId: null });
+  const closeApproveRefundModal = () =>
+    setApproveRefundModal({ open: false, returnId: null, type: "Refund" });
 
   const handleApproveRefund = async () => {
     if (!approveRefundModal.returnId) return;
     setApprovingRefund(true);
     try {
-      const res = await returnApi.approveRefund(approveRefundModal.returnId, {
-        restock: refundRestock,
-        note: refundNote || null,
-      });
+      const payload = { restock: refundRestock, note: refundNote || null };
+      const res = approveRefundModal.type === "Exchange"
+        ? await returnApi.approveExchange(approveRefundModal.returnId, payload)
+        : await returnApi.approveRefund(approveRefundModal.returnId, payload);
       if (res.data.isSuccess) {
-        toast.success("Đã duyệt hoàn tiền thành công");
+        toast.success(
+          approveRefundModal.type === "Exchange"
+            ? "Đã duyệt đổi hàng thành công"
+            : "Đã duyệt hoàn tiền thành công",
+        );
         closeApproveRefundModal();
         fetchReturns(page);
         queryClient.invalidateQueries({ queryKey: ["admin-stats"] });
       } else {
-        toast.error(res.data.message || "Không thể duyệt hoàn tiền");
+        toast.error(res.data.message || "Không thể duyệt yêu cầu");
       }
     } catch (err: any) {
-      toast.error(err?.response?.data?.message || "Có lỗi xảy ra khi duyệt hoàn tiền");
+      toast.error(err?.response?.data?.message || "Có lỗi xảy ra khi duyệt yêu cầu");
     } finally {
       setApprovingRefund(false);
     }
@@ -333,10 +347,14 @@ export default function ManageOrderReturnPage() {
 
       if (!targetRefundId) {
         const detailRes = await returnApi.getReturnById(managerConfirmModal.returnId);
-        if (detailRes.data.isSuccess && detailRes.data.data.refund?.id) {
+        if (
+          detailRes.data.isSuccess &&
+          detailRes.data.data.refund?.id &&
+          detailRes.data.data.refund.status === "ManagerReview"
+        ) {
           targetRefundId = detailRes.data.data.refund.id;
         } else {
-          toast.error("Không tìm thấy thông tin hoàn tiền");
+          toast.error("Khoản hoàn tiền chưa ở trạng thái chờ Manager xác nhận");
           setManagerConfirming(false);
           return;
         }
@@ -564,20 +582,13 @@ export default function ManageOrderReturnPage() {
                         )}
                         {r.status === "Reviewing" && (
                           <button
-                            onClick={() => openApproveRefundModal(r.id)}
+                            onClick={() => openApproveRefundModal(r.id, r.type)}
                             className="group flex items-center rounded-lg border border-violet-200 bg-violet-50 px-2 py-1.5 text-xs font-semibold text-violet-600 hover:bg-violet-100 transition-all duration-300 cursor-pointer"
                           >
                             <CheckCircle2 size={16} />
-                            <span className="max-w-0 overflow-hidden whitespace-nowrap opacity-0 transition-all duration-300 group-hover:max-w-[105px] group-hover:ml-1.5 group-hover:opacity-100">Duyệt hoàn tiền</span>
-                          </button>
-                        )}
-                        {r.status === "Refunding" && (
-                          <button
-                            onClick={() => openManagerConfirmModal(r.id)}
-                            className="group flex items-center rounded-lg border border-teal-200 bg-teal-50 px-2 py-1.5 text-xs font-semibold text-teal-600 hover:bg-teal-100 transition-all duration-300 cursor-pointer"
-                          >
-                            <CheckCircle2 size={16} />
-                            <span className="max-w-0 overflow-hidden whitespace-nowrap opacity-0 transition-all duration-300 group-hover:max-w-[110px] group-hover:ml-1.5 group-hover:opacity-100">Xác nhận hoàn tiền</span>
+                            <span className="max-w-0 overflow-hidden whitespace-nowrap opacity-0 transition-all duration-300 group-hover:max-w-[105px] group-hover:ml-1.5 group-hover:opacity-100">
+                              {r.type === "Exchange" ? "Duyệt đổi hàng" : "Duyệt hoàn tiền"}
+                            </span>
                           </button>
                         )}
                         {(r.status === "Requested" || r.status === "Reviewing") && (
@@ -705,6 +716,22 @@ export default function ManageOrderReturnPage() {
                       <span className="text-gray-700">
                         {formatOrderDate(returnDetail.createdAt)}
                       </span>
+                    </p>
+                  </div>
+
+                  <div className="rounded-xl border border-blue-100 bg-blue-50/50 p-4">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-blue-700">
+                      Phản hồi từ cửa hàng
+                    </p>
+                    <p className="mt-1 text-sm font-medium text-blue-900">
+                      {returnDetail.vendorResponse === "Acknowledged"
+                        ? "Cửa hàng đã ghi nhận / đồng ý"
+                        : returnDetail.vendorResponse === "Disputed"
+                          ? "Cửa hàng phản đối — xem lý do trong lịch sử"
+                          : "Chưa phản hồi"}
+                    </p>
+                    <p className="mt-1 text-xs text-blue-700">
+                      Ý kiến này không chặn Staff ra quyết định cuối cùng.
                     </p>
                   </div>
 
@@ -875,23 +902,27 @@ export default function ManageOrderReturnPage() {
                 <button
                   onClick={() => {
                     closeDetailModal();
-                    openApproveRefundModal(returnDetail.id);
+                    openApproveRefundModal(returnDetail.id, returnDetail.type);
                   }}
                   className="flex-1 flex items-center justify-center gap-1.5 rounded-lg border border-violet-200 bg-violet-50 px-3 py-2 text-sm font-semibold text-violet-600 hover:bg-violet-100 transition-colors cursor-pointer"
                 >
                   <CheckCircle2 className="h-4 w-4" />
-                  Duyệt hoàn tiền
+                  {returnDetail.type === "Exchange" ? "Duyệt đổi hàng" : "Duyệt hoàn tiền"}
                 </button>
               </div>
             )}
 
             {/* Footer: quick actions when manager confirm refund */}
-            {returnDetail && returnDetail.status === "Refunding" && returnDetail.refund?.id && (
+            {returnDetail &&
+              canManageRefund &&
+              returnDetail.status === "Refunding" &&
+              returnDetail.refund?.status === "ManagerReview" &&
+              returnDetail.refund.id && (
               <div className="flex gap-2 border-t border-gray-100 px-6 py-4 bg-gray-50/50">
                 <button
                   onClick={() => {
                     closeDetailModal();
-                    openManagerConfirmModal(returnDetail.id, returnDetail.refund.id);
+                    openManagerConfirmModal(returnDetail.id, returnDetail.refund!.id);
                   }}
                   className="flex-1 flex items-center justify-center gap-1.5 rounded-lg border border-teal-200 bg-teal-50 px-3 py-2 text-sm font-semibold text-teal-600 hover:bg-teal-100 transition-colors cursor-pointer"
                 >
@@ -900,6 +931,14 @@ export default function ManageOrderReturnPage() {
                 </button>
               </div>
             )}
+            {returnDetail &&
+              returnDetail.status === "Refunding" &&
+              returnDetail.refund &&
+              returnDetail.refund.status !== "ManagerReview" && (
+                <div className="border-t border-amber-100 bg-amber-50 px-6 py-4 text-sm text-amber-700">
+                  Chưa thể xác nhận thủ công. Trạng thái khoản hoàn tiền hiện tại: {returnDetail.refund.status}.
+                </div>
+              )}
           </div>
         </div>
       )}
@@ -1075,9 +1114,13 @@ export default function ManageOrderReturnPage() {
                 <CheckCircle2 className="h-5 w-5 text-violet-500" />
               </div>
               <div>
-                <h3 className="text-base font-bold text-gray-900">Duyệt hoàn tiền?</h3>
+                <h3 className="text-base font-bold text-gray-900">
+                  {approveRefundModal.type === "Exchange" ? "Duyệt đổi hàng?" : "Duyệt hoàn tiền?"}
+                </h3>
                 <p className="mt-1 text-sm text-gray-500">
-                  Xác nhận đã hoàn tiền cho khách hàng và nhập kho sản phẩm (nếu có).
+                  {approveRefundModal.type === "Exchange"
+                    ? "Xác nhận tạo luồng giao sản phẩm thay thế và nhập lại hàng cũ nếu đạt điều kiện."
+                    : "Xác nhận tạo khoản hoàn tiền cho khách hàng và nhập lại hàng nếu đạt điều kiện."}
                 </p>
               </div>
             </div>
@@ -1134,7 +1177,7 @@ export default function ManageOrderReturnPage() {
       )}
 
       {/* ── Manager Confirm Refund Modal ─────────────────────────────────── */}
-      {managerConfirmModal.open && (
+      {canManageRefund && managerConfirmModal.open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
           <div className="w-full max-w-sm rounded-2xl bg-white shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
             <div className="flex items-start gap-3 px-6 py-5 border-b border-gray-100">
@@ -1145,6 +1188,9 @@ export default function ManageOrderReturnPage() {
                 <h3 className="text-base font-bold text-gray-900">Xác nhận hoàn tiền?</h3>
                 <p className="mt-1 text-sm text-gray-500">
                   Xác nhận đã chuyển khoản hoàn tiền cho khách hàng thành công.
+                </p>
+                <p className="mt-2 text-xs font-medium text-amber-600">
+                  Chỉ thực hiện khi khoản hoàn tiền đang ở trạng thái ManagerReview.
                 </p>
               </div>
             </div>

@@ -30,6 +30,23 @@ export interface ReturnStatusLog {
   changedAt: string;
 }
 
+export type RefundStatus =
+  | "Pending"
+  | "Processing"
+  | "ManagerReview"
+  | "Completed"
+  | "Failed"
+  | "Cancelled";
+
+export interface RefundDetail {
+  id: string;
+  status: RefundStatus;
+  amount?: number;
+  method?: string | null;
+  manualReason?: string | null;
+  evidenceUrl?: string | null;
+}
+
 export interface ReturnDetail {
   id: string;
   orderId: string;
@@ -45,6 +62,9 @@ export interface ReturnDetail {
   bankAccountNumber: string | null;
   bankName: string | null;
   returnTrackingCode: string | null;
+  vendorResponse: "Pending" | "Acknowledged" | "Disputed";
+  vendorResponseDeadline: string | null;
+  evidenceDeadline: string | null;
   approvedAt: string | null;
   rejectedReason: string | null;
   receivedAt: string | null;
@@ -53,7 +73,7 @@ export interface ReturnDetail {
   items: ReturnDetailItem[];
   imageUrls: string[];
   statusLogs: ReturnStatusLog[];
-  refund: any | null;
+  refund: RefundDetail | null;
 }
 
 // ── Query / Request types ────────────────────────────────────────────────────
@@ -107,6 +127,10 @@ export interface RejectReturnRequest {
   reason?: string | null;
 }
 
+export interface VendorDisputeRequest {
+  reason: string;
+}
+
 export interface RequestMoreEvidenceRequest {
   note?: string | null;
   deadlineHours?: number | null;
@@ -145,7 +169,20 @@ export interface AcceptReturnResponse {
   errors: any;
 }
 
+export interface VendorResponse {
+  data: ReturnDetail;
+  isSuccess: boolean;
+  statusCode: number;
+  message: string | null;
+  errors: any;
+}
+
 export interface ApproveRefundRequest {
+  restock: boolean;
+  note?: string | null;
+}
+
+export interface ApproveExchangeRequest {
   restock: boolean;
   note?: string | null;
 }
@@ -172,7 +209,7 @@ export interface ManagerConfirmRefundRequest {
 }
 
 export interface ManagerConfirmRefundResponse {
-  data: ReturnDetail;
+  data: RefundDetail;
   isSuccess: boolean;
   statusCode: number;
   message: string | null;

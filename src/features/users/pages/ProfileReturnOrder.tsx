@@ -583,6 +583,17 @@ export default function ProfileReturnOrder() {
                     </span>
                   </p>
 
+                  {returnDetail.status === "ReturnInTransit" && (
+                    <div className="rounded-xl border border-sky-100 bg-sky-50 p-4">
+                      <p className="text-sm font-semibold text-sky-800">
+                        {t("profile_return_order.handoff.title")}
+                      </p>
+                      <p className="mt-1 text-sm leading-6 text-sky-700">
+                        {t("profile_return_order.handoff.desc")}
+                      </p>
+                    </div>
+                  )}
+
                   {/* Reason */}
                   <div className="rounded-xl border border-gray-100 p-4">
                     <p className="text-xs font-semibold text-gray-600 mb-1">{t("profile_return_order.detail_modal.reason")}</p>

@@ -15,6 +15,9 @@ import type {
   ApproveRefundRequest,
   ApproveRefundResponse,
   ConfirmReceivedResponse,
+  VendorDisputeRequest,
+  VendorResponse,
+  ApproveExchangeRequest,
   ManagerConfirmRefundRequest,
   ManagerConfirmRefundResponse,
 } from "@/features/return/types/return.d.ts";
@@ -54,6 +57,18 @@ export const returnApi = {
 
   approveRefund: async (returnId: string, payload: ApproveRefundRequest) => {
     return fetchHttpClient.post<ApproveRefundResponse>(`/returns/${returnId}/approve-refund`, payload);
+  },
+
+  approveExchange: async (returnId: string, payload: ApproveExchangeRequest) => {
+    return fetchHttpClient.post<ApproveRefundResponse>(`/returns/${returnId}/approve-exchange`, payload);
+  },
+
+  vendorAcknowledge: async (returnId: string) => {
+    return fetchHttpClient.post<VendorResponse>(`/returns/${returnId}/vendor-acknowledge`, {});
+  },
+
+  vendorDispute: async (returnId: string, payload: VendorDisputeRequest) => {
+    return fetchHttpClient.post<VendorResponse>(`/returns/${returnId}/vendor-dispute`, payload);
   },
 
   confirmReceived: async (returnId: string) => {
