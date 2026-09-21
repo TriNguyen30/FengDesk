@@ -1,12 +1,14 @@
-﻿import { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ChevronLeft, ChevronRight, Eye, Loader2, Package, Search, Truck, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Eye, Loader2, Package, Search, Truck, Check } from "lucide-react";
 import {
   DeliveryDetailModal,
   useCreateDeliveryShipment,
   useStoreDeliveries,
   useUpdateOrderDeliveryStatus,
 } from "@/features/orders";
+import { devMarkDeliveryShippingDelivered, devMarkDeliveryDelivering } from "../api/delivery.api";
 import type { StoreDelivery } from "@/features/orders";
 import { formatOrderDate, formatVnd } from "@/features/orders/utils/orderUtils";
 import Tabs from "@/components/ui/Tabs";
@@ -44,6 +46,8 @@ export function ShopDeliveriesView({ storeId }: ShopDeliveriesViewProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
   const [shippingId, setShippingId] = useState<string | null>(null);
+  const [shippingOutId, setShippingOutId] = useState<string | null>(null);
+  const [deliveringId, setDeliveringId] = useState<string | null>(null);
   const [detailDeliveryId, setDetailDeliveryId] = useState<string | null>(null);
 
   const { deliveries, pagination, listStatus } = useStoreDeliveries(storeId, {
@@ -52,6 +56,7 @@ export function ShopDeliveriesView({ storeId }: ShopDeliveriesViewProps) {
   });
   const updateStatus = useUpdateOrderDeliveryStatus();
   const createShipment = useCreateDeliveryShipment();
+  const queryClient = useQueryClient();
 
   const counts = useMemo(() => {
     const acc: Record<string, number> = { All: deliveries.length };
@@ -73,6 +78,44 @@ export function ShopDeliveriesView({ storeId }: ShopDeliveriesViewProps) {
       return true;
     });
   }, [deliveries, activeTab, searchTerm]);
+
+  const handleSetShipped = async (delivery: StoreDelivery) => {
+    setShippingOutId(delivery.id);
+    try {
+      const res = await devMarkDeliveryDelivering(delivery.id) as any;
+      if (res.isSuccess || res.status === 200 || !res.error) {
+        toast.success(res.message || "Đã cập nhật trạng thái đang giao");
+        queryClient.invalidateQueries({ queryKey: ["store-deliveries"] });
+        queryClient.invalidateQueries({ queryKey: ["orders"] });
+      } else {
+        toast.error(res.message || "Không thể cập nhật trạng thái");
+      }
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err?.response?.data?.message || "Có lỗi xảy ra khi cập nhật trạng thái");
+    } finally {
+      setShippingOutId(null);
+    }
+  };
+
+  const handleSetDelivered = async (delivery: StoreDelivery) => {
+    setDeliveringId(delivery.id);
+    try {
+      const res = await devMarkDeliveryShippingDelivered(delivery.id) as any;
+      if (res.isSuccess || res.status === 200 || !res.error) {
+        toast.success(res.message || "Đã cập nhật trạng thái đã giao");
+        queryClient.invalidateQueries({ queryKey: ["store-deliveries"] });
+        queryClient.invalidateQueries({ queryKey: ["orders"] });
+      } else {
+        toast.error(res.message || "Không thể cập nhật trạng thái");
+      }
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err?.response?.data?.message || "Có lỗi xảy ra khi cập nhật trạng thái");
+    } finally {
+      setDeliveringId(null);
+    }
+  };
 
   const handleConfirm = async (delivery: StoreDelivery) => {
     setConfirmingId(delivery.id);
@@ -172,6 +215,8 @@ export function ShopDeliveriesView({ storeId }: ShopDeliveriesViewProps) {
                 };
                 const busyConfirm = confirmingId === d.id;
                 const busyShip = shippingId === d.id;
+                const busyShippingOut = shippingOutId === d.id;
+                const busyDelivered = deliveringId === d.id;
 
                 return (
                   <tr
@@ -231,6 +276,34 @@ export function ShopDeliveriesView({ storeId }: ShopDeliveriesViewProps) {
                             <Truck size={13} />
                           )}
                           Tạo đơn ship
+                        </button>
+                      )}
+                      {d.status === "Preparing" && (
+                        <button
+                          onClick={() => handleSetShipped(d)}
+                          disabled={busyShippingOut}
+                          className="inline-flex items-center gap-1.5 rounded-lg bg-cyan-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-cyan-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer"
+                        >
+                          {busyShippingOut ? (
+                            <Loader2 size={13} className="animate-spin" />
+                          ) : (
+                            <Truck size={13} />
+                          )}
+                          Bắt đầu giao
+                        </button>
+                      )}
+                      {d.status === "Shipped" && (
+                        <button
+                          onClick={() => handleSetDelivered(d)}
+                          disabled={busyDelivered}
+                          className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer"
+                        >
+                          {busyDelivered ? (
+                            <Loader2 size={13} className="animate-spin" />
+                          ) : (
+                            <Check size={13} />
+                          )}
+                          Đã giao
                         </button>
                       )}
                       <button
