@@ -102,6 +102,10 @@ export interface UpdateDeliveryStatusRequest {
   note?: string | null;
 }
 
+export interface AssignDeliveryStaffRequest {
+  staffId: string;
+}
+
 export interface PreviewShippingFeePayload {
   shippingAddressId: string;
   items: OrdersItem[];
@@ -126,6 +130,7 @@ export interface StoreDelivery {
   id: string;
   orderId: string;
   status: string;
+  assignedStaffId?: string | null;
   shippingFee: number;
   subtotal: number;
   trackingCode: string | null;
@@ -139,6 +144,7 @@ export interface DeliveryDetail {
   id: string;
   gardenStoreId: string;
   storeName: string | null;
+  assignedStaffId?: string | null;
   status: string;
   shippingFee: number;
   subtotal: number;

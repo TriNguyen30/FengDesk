@@ -798,13 +798,16 @@
     },
     "title": "Return Requests",
     "desc": "Manage and track your return and refund requests.",
+    "handoff": {
+      "title": "Hand the item back to the store",
+      "desc": "Contact the store to arrange delivery or an in-person handoff. No tracking code is required; the store will confirm after it has actually received and inspected the item."
+    },
     "list": {
       "order_num": "Order #",
       "reason": "Reason: ",
       "products": " items",
       "view_detail": "View details",
       "cancel_req": "Cancel request",
-      "ship_back": "Return items",
       "view_order": "View order"
     },
     "pagination": {
@@ -817,14 +820,6 @@
       "no": "No",
       "cancelling": "Cancelling...",
       "confirm": "Confirm cancel"
-    },
-    "ship_modal": {
-      "title": "Confirm return",
-      "desc": "Enter tracking code if you have one (optional).",
-      "placeholder": "Tracking code...",
-      "close": "Close",
-      "processing": "Processing...",
-      "confirm": "Confirm"
     },
     "detail_modal": {
       "tag": "Return Request Details",
@@ -845,7 +840,6 @@
       "images": "Images",
       "history": "Status history",
       "cancel": "Cancel request",
-      "ship_back": "Return items",
       "close": "Close"
     },
     "types": {
@@ -869,7 +863,7 @@
       "processing": "Processing",
       "completed": "Completed",
       "cancelled": "Cancelled",
-      "return_in_transit": "Returning in transit"
+      "return_in_transit": "Waiting for store receipt"
     }
   },
   "my_invitations": {

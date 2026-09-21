@@ -37,10 +37,12 @@ import type {
 import type { OrderLineItem } from "@/features/orders/types/orders";
 import { useAddressDetail } from "@/features/users/hooks/useAddress";
 import { useTranslation } from "react-i18next";
+import { productApi } from "@/features/products/api/product.api";
+import type { ProductItem } from "@/features/products/types/product";
 
-const getReturnTypeOptions = (t: any) => [
+const getReturnTypeOptions = (t: any): Array<{ value: ReturnType; label: string }> => [
   { value: "Refund", label: t("order_detail.return_modal.types.refund") },
-  // { value: "Exchange", label: t("order_detail.return_modal.types.exchange") },
+  { value: "Exchange", label: t("order_detail.return_modal.types.exchange") },
 ];
 
 const getReasonOptions = (t: any) => [
@@ -85,6 +87,7 @@ interface SelectedItem {
   orderItemId: string;
   quantity: number;
   maxQuantity: number;
+  exchangeProductItemId?: string;
 }
 
 interface ReturnModalState {
@@ -139,8 +142,9 @@ export default function OrderDetailPage() {
   const [submittingReturn, setSubmittingReturn] = useState(false);
   const [selectedItems, setSelectedItems] = useState<Record<string, SelectedItem>>({});
   const [deliveryPickerOpen, setDeliveryPickerOpen] = useState(false);
+  const [exchangeOptions, setExchangeOptions] = useState<Record<string, ProductItem[]>>({});
 
-  const openReturnModal = (deliveryId: string, items: OrderLineItem[]) => {
+  const openReturnModal = async (deliveryId: string, items: OrderLineItem[]) => {
     setReturnType("Refund");
     setReturnReason("PlantHealth");
     setReasonDetail("");
@@ -149,7 +153,18 @@ export default function OrderDetailPage() {
     setBankAccountNumber("");
     setBankName("");
     setSelectedItems({});
+    setExchangeOptions({});
     setReturnModal({ open: true, deliveryId, items });
+    const products = await Promise.allSettled(items.map((item) => productApi.getProductById(item.productId)));
+    const options: Record<string, ProductItem[]> = {};
+    products.forEach((result, index) => {
+      if (result.status === "fulfilled" && result.value.data.isSuccess) {
+        options[items[index].id] = result.value.data.data.items.filter(
+          (variant) => variant.id !== items[index].productItemId,
+        );
+      }
+    });
+    setExchangeOptions(options);
   };
 
   const closeReturnModal = () => setReturnModal({ open: false, deliveryId: null, items: [] });
@@ -191,6 +206,13 @@ export default function OrderDetailPage() {
     });
   };
 
+  const handleExchangeItemChange = (itemId: string, exchangeProductItemId: string) => {
+    setSelectedItems((prev) => ({
+      ...prev,
+      [itemId]: { ...prev[itemId], exchangeProductItemId },
+    }));
+  };
+
   const handleUploadImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return;
     const filesArray = Array.from(e.target.files);
@@ -227,11 +249,16 @@ export default function OrderDetailPage() {
       toast.error(t("order_detail.toast.no_item_selected"));
       return;
     }
+    if (returnType === "Exchange" && checkedItems.some((item) => !item.exchangeProductItemId)) {
+      toast.error("Vui lòng chọn sản phẩm thay thế cho từng sản phẩm đổi");
+      return;
+    }
     setSubmittingReturn(true);
     try {
       const items: CreateReturnItemRequest[] = checkedItems.map((si) => ({
         orderItemId: si.orderItemId,
         quantity: si.quantity,
+        exchangeProductItemId: returnType === "Exchange" ? si.exchangeProductItemId : null,
       }));
       const payload: CreateReturnRequest = {
         deliveryId: returnModal.deliveryId,
@@ -1199,6 +1226,43 @@ export default function OrderDetailPage() {
                   ))}
                 </div>
               </div>
+
+              {returnType === "Exchange" && Object.keys(selectedItems).length > 0 && (
+                <div className="space-y-3 rounded-xl border border-blue-100 bg-blue-50/50 p-4">
+                  <div>
+                    <p className="text-xs font-semibold text-blue-800">Sản phẩm thay thế</p>
+                    <p className="mt-1 text-xs text-blue-600">
+                      Chọn một biến thể thay thế cho từng sản phẩm. Sản phẩm thay thế không được đắt hơn hàng trả.
+                    </p>
+                  </div>
+                  {returnModal.items
+                    .filter((item) => selectedItems[item.id])
+                    .map((item) => (
+                      <div key={item.id}>
+                        <label className="mb-1 block text-xs font-medium text-gray-700">
+                          {item.productName}{item.variantName ? ` — ${item.variantName}` : ""}
+                        </label>
+                        <select
+                          value={selectedItems[item.id]?.exchangeProductItemId ?? ""}
+                          onChange={(event) => handleExchangeItemChange(item.id, event.target.value)}
+                          className="w-full rounded-lg border border-blue-200 bg-white px-3 py-2 text-sm text-gray-700 focus:border-blue-400 focus:outline-none"
+                        >
+                          <option value="">Chọn sản phẩm thay thế</option>
+                          {(exchangeOptions[item.id] ?? []).map((variant) => (
+                            <option key={variant.id} value={variant.id} disabled={variant.stock <= 0}>
+                              {variant.name} — {formatVnd(variant.price)} — tồn {variant.stock}
+                            </option>
+                          ))}
+                        </select>
+                        {(exchangeOptions[item.id] ?? []).length === 0 && (
+                          <p className="mt-1 text-xs text-red-500">
+                            Sản phẩm này chưa có biến thể khác để đổi.
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                </div>
+              )}
 
               {/* Reason */}
               <div>
