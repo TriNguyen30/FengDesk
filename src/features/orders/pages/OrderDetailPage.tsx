@@ -142,7 +142,9 @@ export default function OrderDetailPage() {
   const [submittingReturn, setSubmittingReturn] = useState(false);
   const [selectedItems, setSelectedItems] = useState<Record<string, SelectedItem>>({});
   const [deliveryPickerOpen, setDeliveryPickerOpen] = useState(false);
-  const [exchangeOptions, setExchangeOptions] = useState<Record<string, ProductItem[]>>({});
+  const [exchangeOptions, setExchangeOptions] = useState<Array<{ productName: string; variant: ProductItem }>>([]);
+  const [loadingExchangeOptions, setLoadingExchangeOptions] = useState(false);
+  const [exchangeOptionsError, setExchangeOptionsError] = useState(false);
 
   const openReturnModal = async (deliveryId: string, items: OrderLineItem[]) => {
     setReturnType("Refund");
@@ -153,18 +155,37 @@ export default function OrderDetailPage() {
     setBankAccountNumber("");
     setBankName("");
     setSelectedItems({});
-    setExchangeOptions({});
+    setExchangeOptions([]);
+    setExchangeOptionsError(false);
     setReturnModal({ open: true, deliveryId, items });
-    const products = await Promise.allSettled(items.map((item) => productApi.getProductById(item.productId)));
-    const options: Record<string, ProductItem[]> = {};
-    products.forEach((result, index) => {
-      if (result.status === "fulfilled" && result.value.data.isSuccess) {
-        options[items[index].id] = result.value.data.data.items.filter(
-          (variant) => variant.id !== items[index].productItemId,
-        );
-      }
-    });
-    setExchangeOptions(options);
+    if (items.length === 0) return;
+    setLoadingExchangeOptions(true);
+    try {
+      // Các item trong cùng delivery luôn thuộc một Garden Store.
+      const original = await productApi.getProductById(items[0].productId);
+      if (!original.data.isSuccess) throw new Error("Không tìm thấy cửa hàng của sản phẩm");
+      const storeId = original.data.data.gardenStoreId;
+      const options: Array<{ productName: string; variant: ProductItem }> = [];
+      let page = 1;
+      let totalPages = 1;
+      do {
+        const response = await productApi.getProducts({ storeId, page, pageSize: 50 });
+        if (!response.data.isSuccess) throw new Error("Không tải được sản phẩm thay thế");
+        for (const product of response.data.data.items) {
+          if (product.gardenStoreId !== storeId || !product.isActive) continue;
+          for (const variant of product.items) {
+            if (variant.stock > 0) options.push({ productName: product.name, variant });
+          }
+        }
+        totalPages = response.data.data.totalPages;
+        page += 1;
+      } while (page <= totalPages);
+      setExchangeOptions(options);
+    } catch {
+      setExchangeOptionsError(true);
+    } finally {
+      setLoadingExchangeOptions(false);
+    }
   };
 
   const closeReturnModal = () => setReturnModal({ open: false, deliveryId: null, items: [] });
@@ -253,6 +274,20 @@ export default function OrderDetailPage() {
       toast.error("Vui lòng chọn sản phẩm thay thế cho từng sản phẩm đổi");
       return;
     }
+    if (returnType === "Exchange") {
+      const returnedValue = checkedItems.reduce((sum, selected) => {
+        const original = returnModal.items.find((item) => item.id === selected.orderItemId);
+        return sum + (original?.unitPrice ?? 0) * selected.quantity;
+      }, 0);
+      const replacementValue = checkedItems.reduce((sum, selected) => {
+        const replacement = exchangeOptions.find(({ variant }) => variant.id === selected.exchangeProductItemId);
+        return sum + (replacement?.variant.price ?? 0) * selected.quantity;
+      }, 0);
+      if (replacementValue > returnedValue) {
+        toast.error("Tổng giá trị sản phẩm thay thế không được cao hơn hàng trả");
+        return;
+      }
+    }
     setSubmittingReturn(true);
     try {
       const items: CreateReturnItemRequest[] = checkedItems.map((si) => ({
@@ -267,7 +302,7 @@ export default function OrderDetailPage() {
         reasonDetail: reasonDetail || null,
         items,
         imageUrls: imageUrls.length > 0 ? imageUrls : null,
-        ...(returnType === "Refund" && {
+        ...((returnType === "Refund" || (returnType === "Exchange" && currentOrder?.paymentMethod === "COD")) && {
           bankAccountName: bankAccountName || null,
           bankAccountNumber: bankAccountNumber || null,
           bankName: bankName || null,
@@ -1248,15 +1283,17 @@ export default function OrderDetailPage() {
                           className="w-full rounded-lg border border-blue-200 bg-white px-3 py-2 text-sm text-gray-700 focus:border-blue-400 focus:outline-none"
                         >
                           <option value="">Chọn sản phẩm thay thế</option>
-                          {(exchangeOptions[item.id] ?? []).map((variant) => (
-                            <option key={variant.id} value={variant.id} disabled={variant.stock <= 0}>
-                              {variant.name} — {formatVnd(variant.price)} — tồn {variant.stock}
+                          {exchangeOptions.map(({ productName, variant }) => (
+                            <option key={variant.id} value={variant.id} disabled={variant.stock < selectedItems[item.id].quantity}>
+                              {productName}{variant.name ? ` — ${variant.name}` : ""} — {formatVnd(variant.price)} — tồn {variant.stock}
                             </option>
                           ))}
                         </select>
-                        {(exchangeOptions[item.id] ?? []).length === 0 && (
+                        {loadingExchangeOptions && <p className="mt-1 text-xs text-blue-600">Đang tải sản phẩm thay thế...</p>}
+                        {exchangeOptionsError && <p className="mt-1 text-xs text-red-500">Không tải được sản phẩm thay thế. Đóng và mở lại để thử lại.</p>}
+                        {!loadingExchangeOptions && !exchangeOptionsError && exchangeOptions.length === 0 && (
                           <p className="mt-1 text-xs text-red-500">
-                            Sản phẩm này chưa có biến thể khác để đổi.
+                            Cửa hàng chưa có sản phẩm còn hàng để đổi.
                           </p>
                         )}
                       </div>
@@ -1347,11 +1384,14 @@ export default function OrderDetailPage() {
               </div>
 
               {/* Bank info */}
-              {returnType === "Refund" && (
+              {(returnType === "Refund" || (returnType === "Exchange" && currentOrder?.paymentMethod === "COD")) && (
                 <div className="rounded-xl border border-blue-100 bg-blue-50/40 p-4 space-y-3">
                   <p className="text-xs font-bold text-blue-700 uppercase tracking-wide">
                     {t("order_detail.return_modal.bank_info")}
                   </p>
+                  {returnType === "Exchange" && (
+                    <p className="text-xs text-blue-600">Cần thông tin tài khoản nếu sản phẩm thay thế rẻ hơn và cửa hàng phải hoàn chênh lệch.</p>
+                  )}
                   <div>
                     <label className="block text-xs text-gray-600 mb-1">
                       {t("order_detail.return_modal.account_name")}

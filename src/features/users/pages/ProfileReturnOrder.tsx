@@ -19,6 +19,10 @@ import { returnApi } from "@/features/return/api/return.api";
 import type { ReturnItem, ReturnDetail } from "@/features/return/types/return.d.ts";
 import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "framer-motion";
+import { useAppDispatch } from "@/app/store";
+import { chatApi, chatHub } from "@/features/chatbox";
+import { openChatbox, setActiveChatbox, setMessages, setView, upsertChatbox } from "@/features/chatbox/store/chatboxSlice";
+import { ordersApi } from "@/features/orders/api/orders.api";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -123,6 +127,7 @@ const modalVariants = {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function ProfileReturnOrder() {
+  const dispatch = useAppDispatch();
   const { t } = useTranslation();
   const [returns, setReturns] = useState<ReturnItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -210,6 +215,28 @@ export default function ProfileReturnOrder() {
   const closeDetailModal = () => {
     setDetailModal({ open: false, returnId: null });
     setReturnDetail(null);
+  };
+
+  const contactStoreForHandoff = async (ticket: ReturnDetail) => {
+    try {
+      const orderResponse = await ordersApi.getOrderById(ticket.orderId);
+      const storeId = orderResponse.data.data.deliveries.find((delivery) => delivery.id === ticket.deliveryId)?.gardenStoreId;
+      if (!orderResponse.data.isSuccess || !storeId) throw new Error("Không tìm thấy cửa hàng của đơn giao");
+      const response = await chatApi.startStoreSupport(storeId);
+      if (!response.data.isSuccess) throw new Error(response.data.message || "Không mở được cuộc trò chuyện");
+      const box = response.data.data;
+      dispatch(upsertChatbox(box));
+      dispatch(setActiveChatbox(box.id));
+      dispatch(setView("conversation"));
+      dispatch(openChatbox());
+      void chatHub.joinChatbox(box.id).catch(() => {});
+      const messages = await chatApi.getMessages(box.id);
+      if (messages.data.isSuccess) {
+        dispatch(setMessages({ roomId: box.id, messages: [...messages.data.data.items].reverse() }));
+      }
+    } catch {
+      toast.error("Không mở được chat cửa hàng. Vui lòng thử lại từ trang cửa hàng.");
+    }
   };
 
   // ── Resubmit evidence handlers ─────────────────────────────────────────
@@ -591,6 +618,18 @@ export default function ProfileReturnOrder() {
                       <p className="mt-1 text-sm leading-6 text-sky-700">
                         {t("profile_return_order.handoff.desc")}
                       </p>
+                      <p className="mt-2 text-xs text-sky-700">Hãy thống nhất địa điểm, thời gian, phí gửi trả và lưu mã vận đơn/biên nhận trong chat. Cửa hàng chỉ xác nhận sau khi đã kiểm tra hàng thực tế.</p>
+                      <button type="button" onClick={() => contactStoreForHandoff(returnDetail)} className="mt-3 rounded-lg bg-sky-700 px-3 py-2 text-xs font-semibold text-white hover:bg-sky-800">
+                        Trao đổi với cửa hàng
+                      </button>
+                    </div>
+                  )}
+                  {returnDetail.type === "Exchange" && returnDetail.status === "Exchanging" && (
+                    <div className="rounded-xl border border-indigo-100 bg-indigo-50 p-4 text-sm text-indigo-800">
+                      Staff đã duyệt đổi hàng. Cửa hàng sẽ xác nhận và gửi sản phẩm thay thế; yêu cầu hoàn tất khi đơn thay thế được giao thành công.
+                      {returnDetail.replacementDeliveryId && (
+                        <p className="mt-2 font-mono text-xs">Mã đơn giao thay thế: {returnDetail.replacementDeliveryId}</p>
+                      )}
                     </div>
                   )}
 

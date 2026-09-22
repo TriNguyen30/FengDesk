@@ -125,6 +125,7 @@ export interface ShippingFeePreview {
 export interface StoreDelivery {
   id: string;
   orderId: string;
+  isExchange?: boolean;
   status: string;
   shippingFee: number;
   subtotal: number;
