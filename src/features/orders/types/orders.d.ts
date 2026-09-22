@@ -129,6 +129,7 @@ export interface ShippingFeePreview {
 export interface StoreDelivery {
   id: string;
   orderId: string;
+  isExchange?: boolean;
   status: string;
   assignedStaffId?: string | null;
   shippingFee: number;

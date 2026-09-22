@@ -2,6 +2,7 @@ import type { ApiResponse, PaginatedResponse } from "@/features/orders/types/ord
 
 export interface Delivery {
   id: string;
+  gardenStoreId?: string;
   orderId: string;
   orderCode?: string;
   status: string;

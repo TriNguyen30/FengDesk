@@ -230,6 +230,7 @@ export function ShopDeliveriesView({ storeId }: ShopDeliveriesViewProps) {
                   >
                     <td className="p-4 font-mono font-bold text-gray-900">
                       #{d.id.substring(0, 8)}
+                      {d.isExchange && <span className="ml-2 rounded bg-violet-50 px-2 py-0.5 font-sans text-[10px] text-violet-700">Hàng đổi</span>}
                     </td>
                     <td className="p-4 text-xs text-gray-500 whitespace-nowrap">
                       {formatOrderDate(d.createdAt)}
@@ -265,7 +266,7 @@ export function ShopDeliveriesView({ storeId }: ShopDeliveriesViewProps) {
                           ) : (
                             <Package size={13} />
                           )}
-                          Nhận đơn
+                          {d.isExchange ? "Xác nhận đơn đổi" : "Nhận đơn"}
                         </button>
                       )}
                       {d.status === "Confirmed" && (
@@ -280,7 +281,7 @@ export function ShopDeliveriesView({ storeId }: ShopDeliveriesViewProps) {
                           ) : (
                             <Truck size={13} />
                           )}
-                          Tạo đơn ship
+                          {d.isExchange ? "Gửi hàng đổi" : "Tạo đơn ship"}
                         </button>
                       )}
                       {d.status === "Preparing" && (
