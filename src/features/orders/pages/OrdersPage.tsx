@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   ChevronRight,
   Loader2,
@@ -22,6 +23,7 @@ import { ordersApi } from "../api/orders.api";
 import PaymentQrModal from "@/features/payment/components/PaymentQrModal";
 import OrderItemImage from "../components/OrderItemImage";
 import { useTranslation } from "react-i18next";
+import { devMarkOrderShippingDelivered } from "@/features/shop/api/delivery.api";
 
 export default function OrdersPage() {
   const { t } = useTranslation();
@@ -51,6 +53,8 @@ export default function OrdersPage() {
   const [submittingReview, setSubmittingReview] = useState(false);
   // Đơn Pending/PayOS chưa trả tiền → mở modal QR + link thanh toán ngay từ danh sách.
   const [payingOrderId, setPayingOrderId] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+  const [confirmingOrder, setConfirmingOrder] = useState<string | null>(null);
 
   const { orders, listStatus, pagination } = useOrdersList({
     page: 1,
@@ -302,6 +306,32 @@ export default function OrdersPage() {
                         className="flex-1 sm:flex-none rounded-lg bg-primary px-6 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-dark cursor-pointer"
                       >
                         {t("orders_page.actions.pay")}
+                      </button>
+                    )}
+                    {["Shipping"].includes(order.status) && (
+                      <button
+                        disabled={confirmingOrder === order.id}
+                        onClick={async (e) => {
+                          e.preventDefault();
+                          setConfirmingOrder(order.id);
+                          try {
+                            const res = await devMarkOrderShippingDelivered(order.id) as any;
+                            if (res.isSuccess || res.status === 200 || !res.error) {
+                              toast.success("Xác nhận đã nhận hàng thành công");
+                              queryClient.invalidateQueries({ queryKey: ["orders"] });
+                            } else {
+                              toast.error(res.message || "Không thể xác nhận");
+                            }
+                          } catch (err: any) {
+                            toast.error("Có lỗi xảy ra khi xác nhận");
+                          } finally {
+                            setConfirmingOrder(null);
+                          }
+                        }}
+                        className="flex-1 sm:flex-none rounded-lg bg-emerald-600 px-6 py-2 text-sm font-medium text-white transition-colors hover:bg-emerald-700 cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
+                      >
+                        {confirmingOrder === order.id && <Loader2 className="h-4 w-4 animate-spin" />}
+                        Đã nhận hàng
                       </button>
                     )}
                     {order.status === "Completed" && (

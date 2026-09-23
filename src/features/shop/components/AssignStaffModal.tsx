@@ -10,30 +10,44 @@ interface AssignStaffModalProps {
   open: boolean;
   onClose: () => void;
   storeId: string;
-  deliveryId: string;
+  deliveryIds: string[];
 }
 
-export function AssignStaffModal({ open, onClose, storeId, deliveryId }: AssignStaffModalProps) {
+export function AssignStaffModal({ open, onClose, storeId, deliveryIds }: AssignStaffModalProps) {
   const { staff, isLoading: isStaffLoading } = useShopStaff(storeId);
   const [selectedStaffId, setSelectedStaffId] = useState("");
   const queryClient = useQueryClient();
 
   const { mutate: assignStaff, isPending } = useMutation({
-    mutationFn: (staffId: string) => ordersApi.assignDeliveryStaff(deliveryId, { staffId }),
-    onSuccess: (res) => {
-      if (res.data.isSuccess || res.status === 200) {
-        toast.success(res.data.message || "Giao việc thành công");
-        queryClient.invalidateQueries({ queryKey: ["store-deliveries"] });
-        queryClient.invalidateQueries({ queryKey: ["orders"] });
-        onClose();
-        setSelectedStaffId(""); // reset
-      } else {
-        toast.error(res.data.message || "Không thể giao việc");
+    mutationFn: async (staffId: string) => {
+      if (!deliveryIds || deliveryIds.length === 0) {
+        throw new Error("Không có đơn hàng nào được chọn");
       }
+      const results = await Promise.allSettled(
+        deliveryIds.map((id) => ordersApi.assignDeliveryStaff(id, { staffId }))
+      );
+      const successes = results.filter(
+        (r) => r.status === "fulfilled" && (r.value.data.isSuccess || r.value.status === 200)
+      );
+      if (successes.length === 0) {
+        throw new Error("Không thể giao việc cho đơn nào");
+      }
+      return { successCount: successes.length, total: deliveryIds.length };
+    },
+    onSuccess: ({ successCount, total }) => {
+      if (total === 1) {
+        toast.success("Giao việc thành công");
+      } else {
+        toast.success(`Giao việc thành công ${successCount}/${total} đơn`);
+      }
+      queryClient.invalidateQueries({ queryKey: ["store-deliveries"] });
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
+      onClose();
+      setSelectedStaffId(""); // reset
     },
     onError: (err: any) => {
       console.error(err);
-      toast.error(err?.response?.data?.message || "Có lỗi xảy ra khi giao việc");
+      toast.error(err.message || "Có lỗi xảy ra khi giao việc");
     },
   });
 

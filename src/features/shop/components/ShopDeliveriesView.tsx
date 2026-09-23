@@ -51,7 +51,12 @@ export function ShopDeliveriesView({ storeId }: ShopDeliveriesViewProps) {
   const [shippingOutId, setShippingOutId] = useState<string | null>(null);
   const [deliveringId, setDeliveringId] = useState<string | null>(null);
   const [detailDeliveryId, setDetailDeliveryId] = useState<string | null>(null);
-  const [assigningId, setAssigningId] = useState<string | null>(null);
+  const [assigningIds, setAssigningIds] = useState<string[] | null>(null);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [isBulkConfirming, setIsBulkConfirming] = useState(false);
+  const [isBulkShipping, setIsBulkShipping] = useState(false);
+  const [isBulkShippingOut, setIsBulkShippingOut] = useState(false);
+  const [isBulkDelivered, setIsBulkDelivered] = useState(false);
 
   const { deliveries, pagination, listStatus } = useStoreDeliveries(storeId, {
     page,
@@ -82,6 +87,180 @@ export function ShopDeliveriesView({ storeId }: ShopDeliveriesViewProps) {
       return true;
     });
   }, [deliveries, activeTab, searchTerm]);
+
+  const isEligibleForConfirm = (d: StoreDelivery) =>
+    d.status === "Pending" &&
+    ["Manager", "GardenOwner", "GardenStaff", "Admin"].some((role) => (currentUser?.role || "").includes(role));
+
+  const isEligibleForAssignment = (d: StoreDelivery) =>
+    ["Confirmed", "Preparing", "Shipped"].includes(d.status) &&
+    !d.assignedStaffId &&
+    ["Manager", "GardenOwner", "Admin"].some((role) => (currentUser?.role || "").includes(role));
+
+  const isEligibleForShipmentCreation = (d: StoreDelivery) =>
+    d.status === "Confirmed" &&
+    (["Manager", "GardenOwner", "GardenStaff", "Admin"].some((role) => (currentUser?.role || "").includes(role)) || !!d.assignedStaffId);
+
+  const isEligibleForShippingOut = (d: StoreDelivery) => d.status === "Preparing";
+  const isEligibleForDelivered = (d: StoreDelivery) => d.status === "Shipped";
+
+  const isEligibleForSelection = (d: StoreDelivery) => 
+    isEligibleForAssignment(d) || 
+    isEligibleForConfirm(d) || 
+    isEligibleForShipmentCreation(d) ||
+    isEligibleForShippingOut(d) ||
+    isEligibleForDelivered(d);
+
+  const eligibleFiltered = useMemo(() => filtered.filter(isEligibleForSelection), [filtered, currentUser]);
+  const isAllSelected = eligibleFiltered.length > 0 && eligibleFiltered.every((d) => selectedIds.includes(d.id));
+
+  const toggleAll = () => {
+    if (isAllSelected) {
+      setSelectedIds((prev) => prev.filter((id) => !eligibleFiltered.some((d) => d.id === id)));
+    } else {
+      const newIds = [...selectedIds];
+      eligibleFiltered.forEach((d) => {
+        if (!newIds.includes(d.id)) newIds.push(d.id);
+      });
+      setSelectedIds(newIds);
+    }
+  };
+
+  const toggleOne = (id: string) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((prevId) => prevId !== id) : [...prev, id]
+    );
+  };
+
+  const handleBulkConfirm = async () => {
+    const pendingIds = deliveries.filter(d => selectedIds.includes(d.id) && d.status === "Pending").map(d => d.id);
+    if (pendingIds.length === 0) return;
+    
+    setIsBulkConfirming(true);
+    try {
+      const results = await Promise.allSettled(
+        pendingIds.map(id => 
+          updateStatus.mutateAsync({
+            deliveryId: id,
+            data: { status: "Confirmed", note: "Cửa hàng xác nhận đơn" },
+          })
+        )
+      );
+      const successCount = results.filter(r => r.status === "fulfilled" && (r as any).value.data.isSuccess).length;
+      if (successCount > 0) {
+        toast.success(`Đã xác nhận ${successCount}/${pendingIds.length} đơn giao`);
+        const successIds = pendingIds.filter((_, i) => results[i].status === "fulfilled" && (results[i] as any).value.data.isSuccess);
+        setSelectedIds(prev => prev.filter(id => !successIds.includes(id)));
+      } else {
+        toast.error("Không thể xác nhận các đơn giao đã chọn");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Có lỗi xảy ra khi xác nhận đơn giao hàng loạt");
+    } finally {
+      setIsBulkConfirming(false);
+    }
+  };
+
+  const handleBulkCreateShipment = async () => {
+    const shipmentIds = deliveries
+      .filter((d) => selectedIds.includes(d.id) && isEligibleForShipmentCreation(d))
+      .map((d) => d.id);
+    if (shipmentIds.length === 0) return;
+
+    setIsBulkShipping(true);
+    try {
+      const results = await Promise.allSettled(
+        shipmentIds.map((id) => createShipment.mutateAsync(id))
+      );
+      const successCount = results.filter(
+        (r) => r.status === "fulfilled" && (r.value as any).data.isSuccess
+      ).length;
+      
+      if (successCount > 0) {
+        toast.success(`Đã tạo vận đơn thành công ${successCount}/${shipmentIds.length} đơn`);
+        const successIds = shipmentIds.filter(
+          (_, i) => results[i].status === "fulfilled" && (results[i] as any).value.data.isSuccess
+        );
+        setSelectedIds((prev) => prev.filter((id) => !successIds.includes(id)));
+      } else {
+        toast.error("Không thể tạo vận đơn cho các đơn đã chọn");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Có lỗi xảy ra khi tạo vận đơn hàng loạt");
+    } finally {
+      setIsBulkShipping(false);
+    }
+  };
+
+  const handleBulkSetShipped = async () => {
+    const shippingOutIds = deliveries
+      .filter((d) => selectedIds.includes(d.id) && isEligibleForShippingOut(d))
+      .map((d) => d.id);
+    if (shippingOutIds.length === 0) return;
+
+    setIsBulkShippingOut(true);
+    try {
+      const results = await Promise.allSettled(
+        shippingOutIds.map((id) => devMarkDeliveryDelivering(id))
+      );
+      const successCount = results.filter(
+        (r) => r.status === "fulfilled" && ((r.value as any).isSuccess || (r.value as any).status === 200 || !(r.value as any).error)
+      ).length;
+
+      if (successCount > 0) {
+        toast.success(`Đã cập nhật trạng thái đang giao ${successCount}/${shippingOutIds.length} đơn`);
+        queryClient.invalidateQueries({ queryKey: ["store-deliveries"] });
+        queryClient.invalidateQueries({ queryKey: ["orders"] });
+        const successIds = shippingOutIds.filter(
+          (_, i) => results[i].status === "fulfilled" && ((results[i].value as any).isSuccess || (results[i].value as any).status === 200 || !(results[i].value as any).error)
+        );
+        setSelectedIds((prev) => prev.filter((id) => !successIds.includes(id)));
+      } else {
+        toast.error("Không thể cập nhật trạng thái cho các đơn đã chọn");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Có lỗi xảy ra khi cập nhật trạng thái hàng loạt");
+    } finally {
+      setIsBulkShippingOut(false);
+    }
+  };
+
+  const handleBulkSetDelivered = async () => {
+    const deliveredIds = deliveries
+      .filter((d) => selectedIds.includes(d.id) && isEligibleForDelivered(d))
+      .map((d) => d.id);
+    if (deliveredIds.length === 0) return;
+
+    setIsBulkDelivered(true);
+    try {
+      const results = await Promise.allSettled(
+        deliveredIds.map((id) => devMarkDeliveryShippingDelivered(id))
+      );
+      const successCount = results.filter(
+        (r) => r.status === "fulfilled" && ((r.value as any).isSuccess || (r.value as any).status === 200 || !(r.value as any).error)
+      ).length;
+
+      if (successCount > 0) {
+        toast.success(`Đã cập nhật trạng thái đã giao ${successCount}/${deliveredIds.length} đơn`);
+        queryClient.invalidateQueries({ queryKey: ["store-deliveries"] });
+        queryClient.invalidateQueries({ queryKey: ["orders"] });
+        const successIds = deliveredIds.filter(
+          (_, i) => results[i].status === "fulfilled" && ((results[i].value as any).isSuccess || (results[i].value as any).status === 200 || !(results[i].value as any).error)
+        );
+        setSelectedIds((prev) => prev.filter((id) => !successIds.includes(id)));
+      } else {
+        toast.error("Không thể cập nhật trạng thái cho các đơn đã chọn");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Có lỗi xảy ra khi cập nhật trạng thái hàng loạt");
+    } finally {
+      setIsBulkDelivered(false);
+    }
+  };
 
   const handleSetShipped = async (delivery: StoreDelivery) => {
     setShippingOutId(delivery.id);
@@ -164,23 +343,78 @@ export function ShopDeliveriesView({ storeId }: ShopDeliveriesViewProps) {
           ariaLabel="Lọc đơn giao theo trạng thái"
         />
 
-        <div className="relative w-full md:w-72">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Tìm theo mã đơn / mã vận đơn..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full rounded-lg border border-gray-200 bg-white py-2 pl-9 pr-3 text-sm text-gray-700 placeholder-gray-400 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/20 transition-all shadow-inner"
-          />
-          {searchTerm && (
+        <div className="flex items-center gap-3 w-full md:w-auto">
+          {selectedIds.some(id => deliveries.find(d => d.id === id)?.status === "Pending") && (
             <button
-              onClick={() => setSearchTerm("")}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer"
+              onClick={handleBulkConfirm}
+              disabled={isBulkConfirming}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all whitespace-nowrap cursor-pointer"
             >
-              <X size={14} />
+              {isBulkConfirming ? (
+                <Loader2 size={16} className="animate-spin" />
+              ) : (
+                <Package size={16} />
+              )}
+              Nhận {selectedIds.filter(id => deliveries.find(d => d.id === id)?.status === "Pending").length} đơn
             </button>
           )}
+          {selectedIds.some(id => isEligibleForAssignment(deliveries.find(d => d.id === id) as StoreDelivery)) && (
+            <button
+              onClick={() => setAssigningIds(selectedIds.filter(id => isEligibleForAssignment(deliveries.find(d => d.id === id) as StoreDelivery)))}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-50 border border-indigo-200 px-3 py-2 text-sm font-semibold text-indigo-700 shadow-sm hover:bg-indigo-100 transition-all whitespace-nowrap cursor-pointer"
+            >
+              <UserPlus size={16} />
+              Giao việc {selectedIds.filter(id => isEligibleForAssignment(deliveries.find(d => d.id === id) as StoreDelivery)).length} đơn
+            </button>
+          )}
+          {selectedIds.some((id) => isEligibleForShipmentCreation(deliveries.find((d) => d.id === id) as StoreDelivery)) && (
+            <button
+              onClick={handleBulkCreateShipment}
+              disabled={isBulkShipping}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-dark disabled:opacity-50 disabled:cursor-not-allowed transition-all whitespace-nowrap cursor-pointer"
+            >
+              {isBulkShipping ? <Loader2 size={16} className="animate-spin" /> : <Truck size={16} />}
+              Tạo {selectedIds.filter((id) => isEligibleForShipmentCreation(deliveries.find((d) => d.id === id) as StoreDelivery)).length} đơn ship
+            </button>
+          )}
+          {selectedIds.some((id) => isEligibleForShippingOut(deliveries.find((d) => d.id === id) as StoreDelivery)) && (
+            <button
+              onClick={handleBulkSetShipped}
+              disabled={isBulkShippingOut}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-cyan-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-cyan-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all whitespace-nowrap cursor-pointer"
+            >
+              {isBulkShippingOut ? <Loader2 size={16} className="animate-spin" /> : <Truck size={16} />}
+              Bắt đầu giao {selectedIds.filter((id) => isEligibleForShippingOut(deliveries.find((d) => d.id === id) as StoreDelivery)).length} đơn
+            </button>
+          )}
+          {selectedIds.some((id) => isEligibleForDelivered(deliveries.find((d) => d.id === id) as StoreDelivery)) && (
+            <button
+              onClick={handleBulkSetDelivered}
+              disabled={isBulkDelivered}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all whitespace-nowrap cursor-pointer"
+            >
+              {isBulkDelivered ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
+              Đã giao {selectedIds.filter((id) => isEligibleForDelivered(deliveries.find((d) => d.id === id) as StoreDelivery)).length} đơn
+            </button>
+          )}
+          <div className="relative w-full md:w-72">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Tìm theo mã đơn / mã vận đơn..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full rounded-lg border border-gray-200 bg-white py-2 pl-9 pr-3 text-sm text-gray-700 placeholder-gray-400 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/20 transition-all shadow-inner"
+            />
+            {searchTerm && (
+              <button
+                onClick={() => setSearchTerm("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer"
+              >
+                <X size={14} />
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -202,7 +436,19 @@ export function ShopDeliveriesView({ storeId }: ShopDeliveriesViewProps) {
           <table className="w-full text-left text-sm border-collapse">
             <thead>
               <tr className="border-b border-gray-200 bg-gray-50/50 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                <th className="p-4 w-32">Mã đơn giao</th>
+                <th className="p-4 w-40">
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="checkbox"
+                      checked={isAllSelected}
+                      onChange={toggleAll}
+                      disabled={eligibleFiltered.length === 0}
+                      className="rounded border-gray-300 text-primary focus:ring-primary cursor-pointer disabled:cursor-not-allowed"
+                      title="Chọn tất cả"
+                    />
+                    Mã đơn giao
+                  </div>
+                </th>
                 <th className="p-4 w-32">Ngày tạo</th>
                 <th className="p-4 w-32">Tạm tính</th>
                 <th className="p-4 w-28">Phí ship</th>
@@ -229,8 +475,23 @@ export function ShopDeliveriesView({ storeId }: ShopDeliveriesViewProps) {
                     onClick={() => setDetailDeliveryId(d.id)}
                   >
                     <td className="p-4 font-mono font-bold text-gray-900">
-                      #{d.id.substring(0, 8)}
-                      {d.isExchange && <span className="ml-2 rounded bg-violet-50 px-2 py-0.5 font-sans text-[10px] text-violet-700">Hàng đổi</span>}
+                      <div className="flex items-center gap-3">
+                        {isEligibleForSelection(d) ? (
+                          <input
+                            type="checkbox"
+                            checked={selectedIds.includes(d.id)}
+                            onChange={() => toggleOne(d.id)}
+                            onClick={(e) => e.stopPropagation()}
+                            className="rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
+                          />
+                        ) : (
+                          <div className="w-3.5" />
+                        )}
+                        <span>
+                          #{d.id.substring(0, 8)}
+                          {d.isExchange && <span className="ml-2 rounded bg-violet-50 px-2 py-0.5 font-sans text-[10px] text-violet-700">Hàng đổi</span>}
+                        </span>
+                      </div>
                     </td>
                     <td className="p-4 text-xs text-gray-500 whitespace-nowrap">
                       {formatOrderDate(d.createdAt)}
@@ -314,7 +575,7 @@ export function ShopDeliveriesView({ storeId }: ShopDeliveriesViewProps) {
                       )}
                       {["Confirmed", "Preparing", "Shipped"].includes(d.status) && !d.assignedStaffId && ["Manager", "GardenOwner", "Admin"].some(role => (currentUser?.role || "").includes(role)) && (
                         <button
-                          onClick={() => setAssigningId(d.id)}
+                          onClick={() => setAssigningIds([d.id])}
                           title="Giao cho nhân viên"
                           className="inline-flex items-center gap-1.5 rounded-lg border border-indigo-200 bg-indigo-50 px-2.5 py-1.5 text-xs font-semibold text-indigo-700 hover:bg-indigo-100 transition-colors cursor-pointer whitespace-nowrap"
                         >
@@ -370,10 +631,14 @@ export function ShopDeliveriesView({ storeId }: ShopDeliveriesViewProps) {
       />
 
       <AssignStaffModal
-        open={assigningId !== null}
-        onClose={() => setAssigningId(null)}
+        open={assigningIds !== null}
+        onClose={() => {
+          setAssigningIds(null);
+          // Auto clear selected ids that were assigned (simple heuristic: clear all)
+          setSelectedIds([]);
+        }}
         storeId={storeId}
-        deliveryId={assigningId || ""}
+        deliveryIds={assigningIds || []}
       />
     </div>
   );
