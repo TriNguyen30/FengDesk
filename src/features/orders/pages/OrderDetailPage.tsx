@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import {
@@ -52,6 +52,8 @@ const getReasonOptions = (t: any) => [
   { value: "DamagedPackage", label: t("order_detail.return_modal.reasons.damaged_package") },
   { value: "NotAsDescribed", label: t("order_detail.return_modal.reasons.not_as_described") },
 ];
+
+type DeliveryStatusLabelMap = Record<string, { label: string; pillClass: string }>;
 
 const getDeliveryStatusLabel = (t: any) => ({
   Pending: {
@@ -144,7 +146,9 @@ export default function OrderDetailPage() {
   const [submittingReturn, setSubmittingReturn] = useState(false);
   const [selectedItems, setSelectedItems] = useState<Record<string, SelectedItem>>({});
   const [deliveryPickerOpen, setDeliveryPickerOpen] = useState(false);
-  const [exchangeOptions, setExchangeOptions] = useState<Array<{ productName: string; variant: ProductItem }>>([]);
+  const [exchangeOptions, setExchangeOptions] = useState<
+    Array<{ productName: string; variant: ProductItem }>
+  >([]);
   const [loadingExchangeOptions, setLoadingExchangeOptions] = useState(false);
   const [exchangeOptionsError, setExchangeOptionsError] = useState(false);
 
@@ -282,7 +286,9 @@ export default function OrderDetailPage() {
         return sum + (original?.unitPrice ?? 0) * selected.quantity;
       }, 0);
       const replacementValue = checkedItems.reduce((sum, selected) => {
-        const replacement = exchangeOptions.find(({ variant }) => variant.id === selected.exchangeProductItemId);
+        const replacement = exchangeOptions.find(
+          ({ variant }) => variant.id === selected.exchangeProductItemId,
+        );
         return sum + (replacement?.variant.price ?? 0) * selected.quantity;
       }, 0);
       if (replacementValue > returnedValue) {
@@ -304,7 +310,8 @@ export default function OrderDetailPage() {
         reasonDetail: reasonDetail || null,
         items,
         imageUrls: imageUrls.length > 0 ? imageUrls : null,
-        ...((returnType === "Refund" || (returnType === "Exchange" && currentOrder?.paymentMethod === "COD")) && {
+        ...((returnType === "Refund" ||
+          (returnType === "Exchange" && currentOrder?.paymentMethod === "COD")) && {
           bankAccountName: bankAccountName || null,
           bankAccountNumber: bankAccountNumber || null,
           bankName: bankName || null,
@@ -538,12 +545,13 @@ export default function OrderDetailPage() {
         <div className="rounded-xl bg-white border border-gray-100 overflow-hidden">
           {/* Banner */}
           <div
-            className={`flex items-center justify-between px-5 py-4 border-b-2 ${order.status === "Cancelled" || order.status === "Expired"
+            className={`flex items-center justify-between px-5 py-4 border-b-2 ${
+              order.status === "Cancelled" || order.status === "Expired"
                 ? "bg-red-50 border-red-400"
                 : order.status === "Completed"
                   ? "bg-emerald-50 border-emerald-500"
                   : "bg-violet-50 border-primary"
-              }`}
+            }`}
           >
             <div className="flex items-center gap-3">
               {order.status === "Cancelled" || order.status === "Expired" ? (
@@ -555,12 +563,13 @@ export default function OrderDetailPage() {
               )}
               <div>
                 <p
-                  className={`font-semibold text-base leading-tight ${order.status === "Cancelled" || order.status === "Expired"
+                  className={`font-semibold text-base leading-tight ${
+                    order.status === "Cancelled" || order.status === "Expired"
                       ? "text-red-700"
                       : order.status === "Completed"
                         ? "text-emerald-700"
                         : "text-violet-800"
-                    }`}
+                  }`}
                 >
                   {statusMeta.label}
                 </p>
@@ -634,14 +643,15 @@ export default function OrderDetailPage() {
                     <div className="w-full flex items-center">
                       {/* left line */}
                       <div
-                        className={`flex-1 h-0.5 transition-all duration-500 ${idx === 0
+                        className={`flex-1 h-0.5 transition-all duration-500 ${
+                          idx === 0
                             ? "invisible"
                             : step.isError
                               ? "bg-red-400"
                               : leftReached
                                 ? "bg-primary group-hover:brightness-110"
                                 : "bg-gray-100 group-hover:bg-gray-200"
-                          }`}
+                        }`}
                       />
 
                       {/* Dot icon with pulse effect & hover animation */}
@@ -676,25 +686,27 @@ export default function OrderDetailPage() {
 
                       {/* right line */}
                       <div
-                        className={`flex-1 h-0.5 transition-all duration-500 ${isLast
+                        className={`flex-1 h-0.5 transition-all duration-500 ${
+                          isLast
                             ? "invisible"
                             : step.isError
                               ? "bg-red-400"
                               : rightReached
                                 ? "bg-primary group-hover:brightness-110"
                                 : "bg-gray-100 group-hover:bg-gray-200"
-                          }`}
+                        }`}
                       />
                     </div>
 
                     <div className="text-center px-1 transition-transform duration-200 group-hover:-translate-y-0.5">
                       <p
-                        className={`text-xs font-semibold leading-tight transition-colors duration-200 ${step.isError
+                        className={`text-xs font-semibold leading-tight transition-colors duration-200 ${
+                          step.isError
                             ? "text-red-600 group-hover:text-red-700"
                             : step.completed || isActive
                               ? "text-gray-900 group-hover:text-primary"
                               : "text-gray-400 group-hover:text-gray-600"
-                          }`}
+                        }`}
                       >
                         {step.label}
                       </p>
@@ -812,10 +824,11 @@ export default function OrderDetailPage() {
                 <button
                   onClick={() => setDeliveryPickerOpen(true)}
                   disabled={!hasReturnableDelivery}
-                  className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors ${hasReturnableDelivery
+                  className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors ${
+                    hasReturnableDelivery
                       ? "text-orange-600 bg-orange-50 border border-orange-200 hover:bg-orange-100 cursor-pointer"
                       : "text-gray-400 bg-gray-50 border border-gray-200 cursor-not-allowed"
-                    }`}
+                  }`}
                 >
                   <RotateCcw className="h-3.5 w-3.5" />
                   {!hasReturnableDelivery
@@ -827,9 +840,10 @@ export default function OrderDetailPage() {
 
             <div className="divide-y divide-gray-100">
               {deliveries.map((delivery) => {
-                const statusInfo = getDeliveryStatusLabel(t)[
-                  delivery.status as keyof ReturnType<typeof getDeliveryStatusLabel>
-                ] ?? {
+                // `ReturnType` ở file này là kiểu RMA import từ types, che mất `ReturnType<T>` của TS —
+                // lấy kiểu bảng nhãn qua một alias riêng thay vì gọi utility bị che.
+                const statusMap: DeliveryStatusLabelMap = getDeliveryStatusLabel(t);
+                const statusInfo = statusMap[delivery.status as keyof DeliveryStatusLabelMap] ?? {
                   label: delivery.status,
                   pillClass: "bg-gray-100 text-gray-600",
                 };
@@ -886,10 +900,11 @@ export default function OrderDetailPage() {
                                 openReturnModal(delivery.id, getDeliveryItems(delivery.id))
                               }
                               disabled={isDisabled}
-                              className={`flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-lg transition-colors ${!isDisabled
+                              className={`flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-lg transition-colors ${
+                                !isDisabled
                                   ? "text-orange-600 bg-orange-50 border border-orange-200 hover:bg-orange-100 cursor-pointer"
                                   : "text-gray-400 bg-gray-50 border border-gray-200 cursor-not-allowed"
-                                }`}
+                              }`}
                             >
                               <RotateCcw className="h-3 w-3" />
                               {hasActiveReturn
@@ -974,7 +989,7 @@ export default function OrderDetailPage() {
                 onClick={async () => {
                   setConfirmingOrder(true);
                   try {
-                    const res = await devMarkOrderShippingDelivered(order.id) as any;
+                    const res = (await devMarkOrderShippingDelivered(order.id)) as any;
                     if (res.isSuccess || res.status === 200 || !res.error) {
                       toast.success("Xác nhận đã nhận hàng thành công");
                       queryClient.invalidateQueries({ queryKey: ["order", order.id] });
@@ -990,7 +1005,11 @@ export default function OrderDetailPage() {
                 }}
                 className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-emerald-600 text-white text-sm font-semibold py-2.5 hover:bg-emerald-700 cursor-pointer disabled:opacity-50 transition-colors"
               >
-                {confirmingOrder ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle className="h-4 w-4" />}
+                {confirmingOrder ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <CheckCircle className="h-4 w-4" />
+                )}
                 Đã nhận hàng
               </button>
             )}
@@ -1002,10 +1021,11 @@ export default function OrderDetailPage() {
                 <button
                   onClick={() => setDeliveryPickerOpen(true)}
                   disabled={!hasReturnableDelivery}
-                  className={`flex-1 flex items-center justify-center gap-2 rounded-lg border text-sm font-semibold py-2.5 transition-colors ${hasReturnableDelivery
+                  className={`flex-1 flex items-center justify-center gap-2 rounded-lg border text-sm font-semibold py-2.5 transition-colors ${
+                    hasReturnableDelivery
                       ? "border-orange-300 text-orange-600 bg-orange-50 hover:bg-orange-100 cursor-pointer"
                       : "border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed"
-                    }`}
+                  }`}
                 >
                   <RotateCcw className="h-4 w-4" />
                   {!hasReturnableDelivery
@@ -1272,10 +1292,11 @@ export default function OrderDetailPage() {
                       key={opt.value}
                       type="button"
                       onClick={() => setReturnType(opt.value)}
-                      className={`rounded-lg border px-3 py-2 text-sm font-semibold transition-all cursor-pointer ${returnType === opt.value
+                      className={`rounded-lg border px-3 py-2 text-sm font-semibold transition-all cursor-pointer ${
+                        returnType === opt.value
                           ? "border-orange-400 bg-orange-50 text-orange-600"
                           : "border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50"
-                        }`}
+                      }`}
                     >
                       {opt.label}
                     </button>
@@ -1288,7 +1309,8 @@ export default function OrderDetailPage() {
                   <div>
                     <p className="text-xs font-semibold text-blue-800">Sản phẩm thay thế</p>
                     <p className="mt-1 text-xs text-blue-600">
-                      Chọn một biến thể thay thế cho từng sản phẩm. Sản phẩm thay thế không được đắt hơn hàng trả.
+                      Chọn một biến thể thay thế cho từng sản phẩm. Sản phẩm thay thế không được đắt
+                      hơn hàng trả.
                     </p>
                   </div>
                   {returnModal.items
@@ -1296,27 +1318,46 @@ export default function OrderDetailPage() {
                     .map((item) => (
                       <div key={item.id}>
                         <label className="mb-1 block text-xs font-medium text-gray-700">
-                          {item.productName}{item.variantName ? ` — ${item.variantName}` : ""}
+                          {item.productName}
+                          {item.variantName ? ` — ${item.variantName}` : ""}
                         </label>
                         <select
                           value={selectedItems[item.id]?.exchangeProductItemId ?? ""}
-                          onChange={(event) => handleExchangeItemChange(item.id, event.target.value)}
+                          onChange={(event) =>
+                            handleExchangeItemChange(item.id, event.target.value)
+                          }
                           className="w-full rounded-lg border border-blue-200 bg-white px-3 py-2 text-sm text-gray-700 focus:border-blue-400 focus:outline-none"
                         >
                           <option value="">Chọn sản phẩm thay thế</option>
                           {exchangeOptions.map(({ productName, variant }) => (
-                            <option key={variant.id} value={variant.id} disabled={variant.stock < selectedItems[item.id].quantity}>
-                              {productName}{variant.name ? ` — ${variant.name}` : ""} — {formatVnd(variant.price)} — tồn {variant.stock}
+                            <option
+                              key={variant.id}
+                              value={variant.id}
+                              disabled={variant.stock < selectedItems[item.id].quantity}
+                            >
+                              {productName}
+                              {variant.name ? ` — ${variant.name}` : ""} —{" "}
+                              {formatVnd(variant.price)} — tồn {variant.stock}
                             </option>
                           ))}
                         </select>
-                        {loadingExchangeOptions && <p className="mt-1 text-xs text-blue-600">Đang tải sản phẩm thay thế...</p>}
-                        {exchangeOptionsError && <p className="mt-1 text-xs text-red-500">Không tải được sản phẩm thay thế. Đóng và mở lại để thử lại.</p>}
-                        {!loadingExchangeOptions && !exchangeOptionsError && exchangeOptions.length === 0 && (
-                          <p className="mt-1 text-xs text-red-500">
-                            Cửa hàng chưa có sản phẩm còn hàng để đổi.
+                        {loadingExchangeOptions && (
+                          <p className="mt-1 text-xs text-blue-600">
+                            Đang tải sản phẩm thay thế...
                           </p>
                         )}
+                        {exchangeOptionsError && (
+                          <p className="mt-1 text-xs text-red-500">
+                            Không tải được sản phẩm thay thế. Đóng và mở lại để thử lại.
+                          </p>
+                        )}
+                        {!loadingExchangeOptions &&
+                          !exchangeOptionsError &&
+                          exchangeOptions.length === 0 && (
+                            <p className="mt-1 text-xs text-red-500">
+                              Cửa hàng chưa có sản phẩm còn hàng để đổi.
+                            </p>
+                          )}
                       </div>
                     ))}
                 </div>
@@ -1405,13 +1446,17 @@ export default function OrderDetailPage() {
               </div>
 
               {/* Bank info */}
-              {(returnType === "Refund" || (returnType === "Exchange" && currentOrder?.paymentMethod === "COD")) && (
+              {(returnType === "Refund" ||
+                (returnType === "Exchange" && currentOrder?.paymentMethod === "COD")) && (
                 <div className="rounded-xl border border-blue-100 bg-blue-50/40 p-4 space-y-3">
                   <p className="text-xs font-bold text-blue-700 uppercase tracking-wide">
                     {t("order_detail.return_modal.bank_info")}
                   </p>
                   {returnType === "Exchange" && (
-                    <p className="text-xs text-blue-600">Cần thông tin tài khoản nếu sản phẩm thay thế rẻ hơn và cửa hàng phải hoàn chênh lệch.</p>
+                    <p className="text-xs text-blue-600">
+                      Cần thông tin tài khoản nếu sản phẩm thay thế rẻ hơn và cửa hàng phải hoàn
+                      chênh lệch.
+                    </p>
                   )}
                   <div>
                     <label className="block text-xs text-gray-600 mb-1">

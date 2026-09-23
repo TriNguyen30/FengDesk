@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { ChevronLeft, ChevronRight, Loader2, Pencil, ShoppingCart } from "lucide-react";
+import { ChevronLeft, ChevronRight, Loader2, Pencil, ShoppingCart, Store } from "lucide-react";
 import { useProductList } from "../hooks/useProducts";
 import { Product } from "../types/product";
 import { useCart } from "@/features/cart";
@@ -107,6 +107,14 @@ export default function ProductCard({ product, soldCount, onEdit }: ProductCardP
           <p className="line-clamp-2 text-[13px] font-medium leading-snug text-gray-800 min-h-[38px] group-hover:text-primary transition-colors">
             {product.name}
           </p>
+
+          {/* Bán bởi ai — khách cần biết trước khi bấm vào, nhất là khi cùng một món có ở nhiều vườn. */}
+          {product.storeName && (
+            <p className="mt-1 flex items-center gap-1 text-[11px] text-gray-500">
+              <Store size={11} className="shrink-0 text-gray-400" />
+              <span className="truncate">{product.storeName}</span>
+            </p>
+          )}
 
           <div className="mt-2 mb-3">
             <p className="text-base font-bold text-primary">{formatPrice(product.minPrice)}</p>

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+﻿import { useState, useEffect, useCallback, useRef } from "react";
 import { Link } from "react-router-dom";
 import {
   Loader2,
@@ -13,6 +13,7 @@ import {
   Upload,
   ImagePlus,
   Trash2,
+  Truck,
 } from "lucide-react";
 import { toast } from "sonner";
 import { returnApi } from "@/features/return/api/return.api";
@@ -21,7 +22,13 @@ import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAppDispatch } from "@/app/store";
 import { chatApi, chatHub } from "@/features/chatbox";
-import { openChatbox, setActiveChatbox, setMessages, setView, upsertChatbox } from "@/features/chatbox/store/chatboxSlice";
+import {
+  openChatbox,
+  setActiveChatbox,
+  setMessages,
+  setView,
+  upsertChatbox,
+} from "@/features/chatbox/store/chatboxSlice";
 import { ordersApi } from "@/features/orders/api/orders.api";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -63,13 +70,22 @@ const getReturnStatusMeta = (t: any): Record<string, { label: string; className:
     label: t("profile_return_order.statuses.refunding"),
     className: "bg-orange-50 text-orange-600 border border-orange-200",
   },
-  Rejected: { label: t("profile_return_order.statuses.rejected"), className: "bg-red-50 text-red-500 border border-red-200" },
-  Processing: { label: t("profile_return_order.statuses.processing"), className: "bg-blue-50 text-blue-600 border border-blue-200" },
+  Rejected: {
+    label: t("profile_return_order.statuses.rejected"),
+    className: "bg-red-50 text-red-500 border border-red-200",
+  },
+  Processing: {
+    label: t("profile_return_order.statuses.processing"),
+    className: "bg-blue-50 text-blue-600 border border-blue-200",
+  },
   Completed: {
     label: t("profile_return_order.statuses.completed"),
     className: "bg-emerald-50 text-emerald-600 border border-emerald-200",
   },
-  Cancelled: { label: t("profile_return_order.statuses.cancelled"), className: "bg-gray-100 text-gray-500 border border-gray-200" },
+  Cancelled: {
+    label: t("profile_return_order.statuses.cancelled"),
+    className: "bg-gray-100 text-gray-500 border border-gray-200",
+  },
   ReturnInTransit: {
     label: t("profile_return_order.statuses.return_in_transit"),
     className: "bg-sky-50 text-sky-600 border border-sky-200",
@@ -78,6 +94,11 @@ const getReturnStatusMeta = (t: any): Record<string, { label: string; className:
 
 const CANCELLABLE_STATUSES = ["Requested"];
 const RESUBMIT_STATUSES = ["NeedMoreEvidence"];
+/**
+ * Trạng thái mà khách PHẢI khai mã vận đơn trả hàng. Thiếu bước này thì cửa hàng bấm "đã nhận hàng"
+ * sẽ bị chặn 409 và cả ticket đứng yên — đúng chỗ luồng đổi/trả hay tắc.
+ */
+const SHIP_BACK_STATUSES = ["ReturnInTransit"];
 const MAX_FILES = 5;
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
@@ -120,7 +141,12 @@ const backdropVariants = {
 
 const modalVariants = {
   hidden: { opacity: 0, scale: 0.95, y: 20 },
-  visible: { opacity: 1, scale: 1, y: 0, transition: { type: "spring" as const, damping: 25, stiffness: 300 } },
+  visible: {
+    opacity: 1,
+    scale: 1,
+    y: 0,
+    transition: { type: "spring" as const, damping: 25, stiffness: 300 },
+  },
   exit: { opacity: 0, scale: 0.95, y: 20, transition: { duration: 0.15 } },
 };
 
@@ -148,6 +174,14 @@ export default function ProfileReturnOrder() {
     returnId: null,
   });
   const [resubmitFiles, setResubmitFiles] = useState<File[]>([]);
+
+  // Khai mã vận đơn trả hàng
+  const [shipBackModal, setShipBackModal] = useState<{ open: boolean; returnId: string | null }>({
+    open: false,
+    returnId: null,
+  });
+  const [trackingCode, setTrackingCode] = useState("");
+  const [submittingTracking, setSubmittingTracking] = useState(false);
   const [submittingEvidence, setSubmittingEvidence] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -206,7 +240,9 @@ export default function ProfileReturnOrder() {
         toast.error(res.data.message || t("profile_return_order.toast.load_detail_error"));
       }
     } catch (err: any) {
-      toast.error(err?.response?.data?.message || t("profile_return_order.toast.load_detail_exception"));
+      toast.error(
+        err?.response?.data?.message || t("profile_return_order.toast.load_detail_exception"),
+      );
     } finally {
       setLoadingDetail(false);
     }
@@ -220,10 +256,14 @@ export default function ProfileReturnOrder() {
   const contactStoreForHandoff = async (ticket: ReturnDetail) => {
     try {
       const orderResponse = await ordersApi.getOrderById(ticket.orderId);
-      const storeId = orderResponse.data.data.deliveries.find((delivery) => delivery.id === ticket.deliveryId)?.gardenStoreId;
-      if (!orderResponse.data.isSuccess || !storeId) throw new Error("Không tìm thấy cửa hàng của đơn giao");
+      const storeId = orderResponse.data.data.deliveries.find(
+        (delivery) => delivery.id === ticket.deliveryId,
+      )?.gardenStoreId;
+      if (!orderResponse.data.isSuccess || !storeId)
+        throw new Error("Không tìm thấy cửa hàng của đơn giao");
       const response = await chatApi.startStoreSupport(storeId);
-      if (!response.data.isSuccess) throw new Error(response.data.message || "Không mở được cuộc trò chuyện");
+      if (!response.data.isSuccess)
+        throw new Error(response.data.message || "Không mở được cuộc trò chuyện");
       const box = response.data.data;
       dispatch(upsertChatbox(box));
       dispatch(setActiveChatbox(box.id));
@@ -232,7 +272,9 @@ export default function ProfileReturnOrder() {
       void chatHub.joinChatbox(box.id).catch(() => {});
       const messages = await chatApi.getMessages(box.id);
       if (messages.data.isSuccess) {
-        dispatch(setMessages({ roomId: box.id, messages: [...messages.data.data.items].reverse() }));
+        dispatch(
+          setMessages({ roomId: box.id, messages: [...messages.data.data.items].reverse() }),
+        );
       }
     } catch {
       toast.error("Không mở được chat cửa hàng. Vui lòng thử lại từ trang cửa hàng.");
@@ -240,6 +282,39 @@ export default function ProfileReturnOrder() {
   };
 
   // ── Resubmit evidence handlers ─────────────────────────────────────────
+  const openShipBackModal = (returnId: string) => {
+    setShipBackModal({ open: true, returnId });
+    setTrackingCode("");
+  };
+
+  const handleShipBack = async () => {
+    const code = trackingCode.trim();
+    if (!shipBackModal.returnId || !code) {
+      toast.error("Vui lòng nhập mã vận đơn trả hàng");
+      return;
+    }
+    setSubmittingTracking(true);
+    try {
+      const res = await returnApi.shipBack(shipBackModal.returnId, code);
+      if (res.data.isSuccess) {
+        toast.success("Đã gửi mã vận đơn cho cửa hàng");
+        setShipBackModal({ open: false, returnId: null });
+        fetchReturns(page);
+        if (detailModal.open && detailModal.returnId === shipBackModal.returnId) {
+          setReturnDetail(res.data.data);
+        }
+      } else {
+        toast.error(res.data.message || "Không gửi được mã vận đơn");
+      }
+    } catch (err) {
+      const message = (err as { response?: { data?: { message?: string } } })?.response?.data
+        ?.message;
+      toast.error(message || "Có lỗi xảy ra khi gửi mã vận đơn");
+    } finally {
+      setSubmittingTracking(false);
+    }
+  };
+
   const openResubmitModal = (returnId: string) => {
     setResubmitModal({ open: true, returnId });
     setResubmitFiles([]);
@@ -327,10 +402,10 @@ export default function ProfileReturnOrder() {
         <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-orange-50">
           <PackageX className="h-8 w-8 text-orange-300" />
         </div>
-        <p className="text-base font-semibold text-gray-700">{t("profile_return_order.empty.title")}</p>
-        <p className="mt-1 text-sm text-gray-400">
-          {t("profile_return_order.empty.desc")}
+        <p className="text-base font-semibold text-gray-700">
+          {t("profile_return_order.empty.title")}
         </p>
+        <p className="mt-1 text-sm text-gray-400">{t("profile_return_order.empty.desc")}</p>
         <Link
           to="/profile/orders"
           className="mt-5 inline-flex items-center gap-1.5 rounded-lg bg-orange-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-orange-600 transition-colors"
@@ -345,10 +420,10 @@ export default function ProfileReturnOrder() {
     <div>
       {/* Title row */}
       <div className="mb-5">
-        <h1 className="text-xl font-bold tracking-tight text-gray-900">{t("profile_return_order.title")}</h1>
-        <p className="mt-0.5 text-sm text-gray-500">
-          {t("profile_return_order.desc")}
-        </p>
+        <h1 className="text-xl font-bold tracking-tight text-gray-900">
+          {t("profile_return_order.title")}
+        </h1>
+        <p className="mt-0.5 text-sm text-gray-500">{t("profile_return_order.desc")}</p>
       </div>
 
       {/* List */}
@@ -376,7 +451,8 @@ export default function ProfileReturnOrder() {
                       #{item.id.slice(0, 8).toUpperCase()}
                     </p>
                     <p className="mt-0.5 text-sm font-semibold text-gray-700">
-                      {t("profile_return_order.list.order_num")}{item.deliveryId.slice(0, 8).toUpperCase()}
+                      {t("profile_return_order.list.order_num")}
+                      {item.deliveryId.slice(0, 8).toUpperCase()}
                     </p>
                   </div>
                   <span
@@ -392,8 +468,14 @@ export default function ProfileReturnOrder() {
                     <RefreshCw className="h-3 w-3 text-orange-400" />
                     {getReturnTypeLabel(t)[item.type] ?? item.type}
                   </span>
-                  <span>{t("profile_return_order.list.reason")}{getReasonLabel(t)[item.reason] ?? item.reason}</span>
-                  <span>{item.itemCount}{t("profile_return_order.list.products")}</span>
+                  <span>
+                    {t("profile_return_order.list.reason")}
+                    {getReasonLabel(t)[item.reason] ?? item.reason}
+                  </span>
+                  <span>
+                    {item.itemCount}
+                    {t("profile_return_order.list.products")}
+                  </span>
                   {item.refundAmount > 0 && (
                     <span className="font-semibold text-orange-600">
                       {formatVnd(item.refundAmount)}
@@ -498,34 +580,36 @@ export default function ProfileReturnOrder() {
               exit="exit"
               className="relative z-[101] w-full max-w-sm rounded-2xl bg-white shadow-xl overflow-hidden"
             >
-            <div className="px-6 py-5 border-b border-gray-100">
-              <h3 className="text-base font-bold text-gray-900">{t("profile_return_order.cancel_modal.title")}</h3>
-              <p className="mt-1 text-sm text-gray-500">
-                {t("profile_return_order.cancel_modal.desc")}
-              </p>
-            </div>
-            <div className="flex gap-3 px-6 py-4">
-              <button
-                onClick={() => setCancelId(null)}
-                className="flex-1 rounded-lg border border-gray-200 px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
-              >
-                {t("profile_return_order.cancel_modal.no")}
-              </button>
-              <button
-                onClick={handleCancelReturn}
-                disabled={cancelling}
-                className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-red-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-600 disabled:opacity-60 transition-colors cursor-pointer"
-              >
-                {cancelling ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    {t("profile_return_order.cancel_modal.cancelling")}
-                  </>
-                ) : (
-                  t("profile_return_order.cancel_modal.confirm")
-                )}
-              </button>
-            </div>
+              <div className="px-6 py-5 border-b border-gray-100">
+                <h3 className="text-base font-bold text-gray-900">
+                  {t("profile_return_order.cancel_modal.title")}
+                </h3>
+                <p className="mt-1 text-sm text-gray-500">
+                  {t("profile_return_order.cancel_modal.desc")}
+                </p>
+              </div>
+              <div className="flex gap-3 px-6 py-4">
+                <button
+                  onClick={() => setCancelId(null)}
+                  className="flex-1 rounded-lg border border-gray-200 px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
+                >
+                  {t("profile_return_order.cancel_modal.no")}
+                </button>
+                <button
+                  onClick={handleCancelReturn}
+                  disabled={cancelling}
+                  className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-red-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-600 disabled:opacity-60 transition-colors cursor-pointer"
+                >
+                  {cancelling ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      {t("profile_return_order.cancel_modal.cancelling")}
+                    </>
+                  ) : (
+                    t("profile_return_order.cancel_modal.confirm")
+                  )}
+                </button>
+              </div>
             </motion.div>
           </div>
         )}
@@ -550,252 +634,347 @@ export default function ProfileReturnOrder() {
               exit="exit"
               className="relative z-[101] w-full max-w-2xl bg-white rounded-2xl shadow-xl overflow-hidden"
             >
-            {/* Header */}
-            <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4 bg-orange-50/60">
-              <div>
-                <span className="text-xs font-bold text-orange-500 uppercase tracking-wide">
-                  {t("profile_return_order.detail_modal.tag")}
-                </span>
-                <h3 className="text-base font-bold text-gray-900 mt-0.5 font-mono">
-                  {returnDetail ? `#${returnDetail.id.slice(0, 8).toUpperCase()}` : t("profile_return_order.detail_modal.loading")}
-                </h3>
-              </div>
-              <button
-                onClick={closeDetailModal}
-                className="rounded-full p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors cursor-pointer"
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            {/* Body */}
-            <div className="px-6 py-5 space-y-5 max-h-[75vh] overflow-y-auto">
-              {loadingDetail ? (
-                <div className="flex h-48 items-center justify-center">
-                  <Loader2 className="h-8 w-8 animate-spin text-orange-400" />
+              {/* Header */}
+              <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4 bg-orange-50/60">
+                <div>
+                  <span className="text-xs font-bold text-orange-500 uppercase tracking-wide">
+                    {t("profile_return_order.detail_modal.tag")}
+                  </span>
+                  <h3 className="text-base font-bold text-gray-900 mt-0.5 font-mono">
+                    {returnDetail
+                      ? `#${returnDetail.id.slice(0, 8).toUpperCase()}`
+                      : t("profile_return_order.detail_modal.loading")}
+                  </h3>
                 </div>
-              ) : !returnDetail ? (
-                <p className="py-10 text-center text-sm text-gray-400">{t("profile_return_order.detail_modal.not_found")}</p>
-              ) : (
-                <>
-                  {/* Overview */}
-                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                    <div className="rounded-lg border border-gray-100 bg-gray-50/50 p-3">
-                      <p className="text-xs text-gray-400">{t("profile_return_order.detail_modal.status")}</p>
-                      <span
-                        className={`mt-1 inline-block rounded-full px-2.5 py-1 text-xs font-semibold ${getStatusMeta(returnDetail.status, t).className}`}
-                      >
-                        {getStatusMeta(returnDetail.status, t).label}
-                      </span>
-                    </div>
-                    <div className="rounded-lg border border-gray-100 bg-gray-50/50 p-3">
-                      <p className="text-xs text-gray-400">{t("profile_return_order.detail_modal.type")}</p>
-                      <p className="mt-1 text-sm font-semibold text-gray-800">
-                        {getReturnTypeLabel(t)[returnDetail.type] ?? returnDetail.type}
-                      </p>
-                    </div>
-                    <div className="rounded-lg border border-gray-100 bg-gray-50/50 p-3">
-                      <p className="text-xs text-gray-400">{t("profile_return_order.detail_modal.refund_amount")}</p>
-                      <p className="mt-1 text-sm font-bold text-orange-600">
-                        {returnDetail.refundAmount > 0 ? formatVnd(returnDetail.refundAmount) : "-"}
-                      </p>
-                    </div>
+                <button
+                  onClick={closeDetailModal}
+                  className="rounded-full p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors cursor-pointer"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              {/* Body */}
+              <div className="px-6 py-5 space-y-5 max-h-[75vh] overflow-y-auto">
+                {loadingDetail ? (
+                  <div className="flex h-48 items-center justify-center">
+                    <Loader2 className="h-8 w-8 animate-spin text-orange-400" />
                   </div>
-
-                  {/* Ngày tạo */}
-                  <p className="text-xs text-gray-500">
-                    {t("profile_return_order.detail_modal.created_at")} {" "}
-                    <span className="text-gray-700 font-medium">
-                      {formatDate(returnDetail.createdAt)}
-                    </span>
+                ) : !returnDetail ? (
+                  <p className="py-10 text-center text-sm text-gray-400">
+                    {t("profile_return_order.detail_modal.not_found")}
                   </p>
-
-                  {returnDetail.status === "ReturnInTransit" && (
-                    <div className="rounded-xl border border-sky-100 bg-sky-50 p-4">
-                      <p className="text-sm font-semibold text-sky-800">
-                        {t("profile_return_order.handoff.title")}
-                      </p>
-                      <p className="mt-1 text-sm leading-6 text-sky-700">
-                        {t("profile_return_order.handoff.desc")}
-                      </p>
-                      <p className="mt-2 text-xs text-sky-700">Hãy thống nhất địa điểm, thời gian, phí gửi trả và lưu mã vận đơn/biên nhận trong chat. Cửa hàng chỉ xác nhận sau khi đã kiểm tra hàng thực tế.</p>
-                      <button type="button" onClick={() => contactStoreForHandoff(returnDetail)} className="mt-3 rounded-lg bg-sky-700 px-3 py-2 text-xs font-semibold text-white hover:bg-sky-800">
-                        Trao đổi với cửa hàng
-                      </button>
+                ) : (
+                  <>
+                    {/* Overview */}
+                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                      <div className="rounded-lg border border-gray-100 bg-gray-50/50 p-3">
+                        <p className="text-xs text-gray-400">
+                          {t("profile_return_order.detail_modal.status")}
+                        </p>
+                        <span
+                          className={`mt-1 inline-block rounded-full px-2.5 py-1 text-xs font-semibold ${getStatusMeta(returnDetail.status, t).className}`}
+                        >
+                          {getStatusMeta(returnDetail.status, t).label}
+                        </span>
+                      </div>
+                      <div className="rounded-lg border border-gray-100 bg-gray-50/50 p-3">
+                        <p className="text-xs text-gray-400">
+                          {t("profile_return_order.detail_modal.type")}
+                        </p>
+                        <p className="mt-1 text-sm font-semibold text-gray-800">
+                          {getReturnTypeLabel(t)[returnDetail.type] ?? returnDetail.type}
+                        </p>
+                      </div>
+                      <div className="rounded-lg border border-gray-100 bg-gray-50/50 p-3">
+                        <p className="text-xs text-gray-400">
+                          {t("profile_return_order.detail_modal.refund_amount")}
+                        </p>
+                        <p className="mt-1 text-sm font-bold text-orange-600">
+                          {returnDetail.refundAmount > 0
+                            ? formatVnd(returnDetail.refundAmount)
+                            : "-"}
+                        </p>
+                      </div>
                     </div>
-                  )}
-                  {returnDetail.type === "Exchange" && returnDetail.status === "Exchanging" && (
-                    <div className="rounded-xl border border-indigo-100 bg-indigo-50 p-4 text-sm text-indigo-800">
-                      Staff đã duyệt đổi hàng. Cửa hàng sẽ xác nhận và gửi sản phẩm thay thế; yêu cầu hoàn tất khi đơn thay thế được giao thành công.
-                      {returnDetail.replacementDeliveryId && (
-                        <p className="mt-2 font-mono text-xs">Mã đơn giao thay thế: {returnDetail.replacementDeliveryId}</p>
-                      )}
-                    </div>
-                  )}
 
-                  {/* Reason */}
-                  <div className="rounded-xl border border-gray-100 p-4">
-                    <p className="text-xs font-semibold text-gray-600 mb-1">{t("profile_return_order.detail_modal.reason")}</p>
-                    <p className="text-sm font-medium text-gray-800">
-                      {getReasonLabel(t)[returnDetail.reason] ?? returnDetail.reason}
+                    {/* Ngày tạo */}
+                    <p className="text-xs text-gray-500">
+                      {t("profile_return_order.detail_modal.created_at")}{" "}
+                      <span className="text-gray-700 font-medium">
+                        {formatDate(returnDetail.createdAt)}
+                      </span>
                     </p>
-                    {returnDetail.reasonDetail && (
-                      <p className="mt-1.5 text-sm text-gray-500">{returnDetail.reasonDetail}</p>
-                    )}
-                    {returnDetail.rejectedReason && (
-                      <div className="mt-2 rounded-lg border border-red-100 bg-red-50/50 px-3 py-2">
-                        <p className="text-xs font-semibold text-red-500">{t("profile_return_order.detail_modal.rejected_reason")}</p>
-                        <p className="text-sm text-red-600 mt-0.5">{returnDetail.rejectedReason}</p>
+
+                    {returnDetail.status === "ReturnInTransit" && (
+                      <div className="rounded-xl border border-sky-100 bg-sky-50 p-4">
+                        <p className="text-sm font-semibold text-sky-800">
+                          {t("profile_return_order.handoff.title")}
+                        </p>
+                        <p className="mt-1 text-sm leading-6 text-sky-700">
+                          {t("profile_return_order.handoff.desc")}
+                        </p>
+                        <p className="mt-2 text-xs text-sky-700">
+                          Hãy thống nhất địa điểm, thời gian, phí gửi trả và lưu mã vận đơn/biên
+                          nhận trong chat. Cửa hàng chỉ xác nhận sau khi đã kiểm tra hàng thực tế.
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => contactStoreForHandoff(returnDetail)}
+                          className="mt-3 rounded-lg bg-sky-700 px-3 py-2 text-xs font-semibold text-white hover:bg-sky-800"
+                        >
+                          Trao đổi với cửa hàng
+                        </button>
                       </div>
                     )}
-                  </div>
-
-                  {/* Items */}
-                  <div>
-                    <p className="text-xs font-semibold text-gray-600 mb-2">{t("profile_return_order.detail_modal.return_items")}</p>
-                    <div className="rounded-xl border border-gray-100 overflow-hidden divide-y divide-gray-100">
-                      {returnDetail.items.map((it) => (
-                        <div key={it.id} className="flex items-center gap-3 p-3">
-                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gray-100">
-                            <Package className="h-5 w-5 text-gray-400" />
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <p className="text-sm font-medium text-gray-900 truncate">
-                              {it.productName}
-                            </p>
-                            <p className="text-xs text-gray-500 mt-0.5">
-                              {formatVnd(it.unitPrice)} x {it.quantity}
-                            </p>
-                          </div>
-                          <p className="shrink-0 text-sm font-semibold text-gray-900">
-                            {formatVnd(it.lineTotal)}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Bank info (only for Refund) */}
-                  {returnDetail.type === "Refund" &&
-                    (returnDetail.bankAccountName ||
-                      returnDetail.bankAccountNumber ||
-                      returnDetail.bankName) && (
-                      <div className="rounded-xl border border-blue-100 bg-blue-50/40 p-4 space-y-1.5">
-                        <p className="text-xs font-bold text-blue-700 uppercase tracking-wide mb-1">
-                          {t("profile_return_order.detail_modal.bank_info")}
-                        </p>
-                        <p className="text-sm text-gray-700">
-                          {t("profile_return_order.detail_modal.account_name")} {" "}
-                          <span className="font-medium">{returnDetail.bankAccountName || "-"}</span>
-                        </p>
-                        <p className="text-sm text-gray-700">
-                          {t("profile_return_order.detail_modal.account_number")} {" "}
-                          <span className="font-medium">
-                            {returnDetail.bankAccountNumber || "-"}
-                          </span>
-                        </p>
-                        <p className="text-sm text-gray-700">
-                          {t("profile_return_order.detail_modal.bank_name")} {" "}
-                          <span className="font-medium">{returnDetail.bankName || "-"}</span>
-                        </p>
-                        {returnDetail.refundMethod && (
-                          <p className="text-sm text-gray-700">
-                            {t("profile_return_order.detail_modal.refund_method")} {" "}
-                            <span className="font-medium">{returnDetail.refundMethod}</span>
+                    {returnDetail.type === "Exchange" && returnDetail.status === "Exchanging" && (
+                      <div className="rounded-xl border border-indigo-100 bg-indigo-50 p-4 text-sm text-indigo-800">
+                        Staff đã duyệt đổi hàng. Cửa hàng sẽ xác nhận và gửi sản phẩm thay thế; yêu
+                        cầu hoàn tất khi đơn thay thế được giao thành công.
+                        {returnDetail.replacementDeliveryId && (
+                          <p className="mt-2 font-mono text-xs">
+                            Mã đơn giao thay thế: {returnDetail.replacementDeliveryId}
                           </p>
                         )}
                       </div>
                     )}
 
-                  {/* Images */}
-                  {returnDetail.imageUrls.length > 0 && (
+                    {/* Reason */}
+                    <div className="rounded-xl border border-gray-100 p-4">
+                      <p className="text-xs font-semibold text-gray-600 mb-1">
+                        {t("profile_return_order.detail_modal.reason")}
+                      </p>
+                      <p className="text-sm font-medium text-gray-800">
+                        {getReasonLabel(t)[returnDetail.reason] ?? returnDetail.reason}
+                      </p>
+                      {returnDetail.reasonDetail && (
+                        <p className="mt-1.5 text-sm text-gray-500">{returnDetail.reasonDetail}</p>
+                      )}
+                      {returnDetail.rejectedReason && (
+                        <div className="mt-2 rounded-lg border border-red-100 bg-red-50/50 px-3 py-2">
+                          <p className="text-xs font-semibold text-red-500">
+                            {t("profile_return_order.detail_modal.rejected_reason")}
+                          </p>
+                          <p className="text-sm text-red-600 mt-0.5">
+                            {returnDetail.rejectedReason}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Items */}
                     <div>
-                      <p className="text-xs font-semibold text-gray-600 mb-2">{t("profile_return_order.detail_modal.images")}</p>
-                      <div className="flex flex-wrap gap-2">
-                        {returnDetail.imageUrls.map((url, idx) => (
-                          <a key={idx} href={url} target="_blank" rel="noopener noreferrer">
-                            <img
-                              src={url}
-                              alt={`return-img-${idx}`}
-                              className="h-20 w-20 rounded-lg object-cover border border-gray-100"
-                            />
-                          </a>
+                      <p className="text-xs font-semibold text-gray-600 mb-2">
+                        {t("profile_return_order.detail_modal.return_items")}
+                      </p>
+                      <div className="rounded-xl border border-gray-100 overflow-hidden divide-y divide-gray-100">
+                        {returnDetail.items.map((it) => (
+                          <div key={it.id} className="flex items-center gap-3 p-3">
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gray-100">
+                              <Package className="h-5 w-5 text-gray-400" />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <p className="text-sm font-medium text-gray-900 truncate">
+                                {it.productName}
+                              </p>
+                              <p className="text-xs text-gray-500 mt-0.5">
+                                {formatVnd(it.unitPrice)} x {it.quantity}
+                              </p>
+                            </div>
+                            <p className="shrink-0 text-sm font-semibold text-gray-900">
+                              {formatVnd(it.lineTotal)}
+                            </p>
+                          </div>
                         ))}
                       </div>
                     </div>
-                  )}
 
-                  {/* Status logs / timeline */}
-                  <div>
-                    <p className="text-xs font-semibold text-gray-600 mb-2">{t("profile_return_order.detail_modal.history")}</p>
-                    <div className="space-y-3">
-                      {returnDetail.statusLogs.map((log, idx) => (
-                        <div key={idx} className="flex gap-3">
-                          <div className="flex flex-col items-center">
-                            <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-orange-100">
-                              <Clock className="h-3.5 w-3.5 text-orange-500" />
-                            </div>
-                            {idx !== returnDetail.statusLogs.length - 1 && (
-                              <div className="w-px flex-1 bg-gray-100 mt-1" />
-                            )}
-                          </div>
-                          <div className="pb-3">
-                            <p className="text-sm font-semibold text-gray-800">
-                              {log.fromStatus
-                                ? `${getReturnStatusMeta(t)[log.fromStatus]?.label ?? log.fromStatus} → ${getReturnStatusMeta(t)[log.toStatus]?.label ?? log.toStatus}`
-                                : (getReturnStatusMeta(t)[log.toStatus]?.label ?? log.toStatus)}
+                    {/* Bank info (only for Refund) */}
+                    {returnDetail.type === "Refund" &&
+                      (returnDetail.bankAccountName ||
+                        returnDetail.bankAccountNumber ||
+                        returnDetail.bankName) && (
+                        <div className="rounded-xl border border-blue-100 bg-blue-50/40 p-4 space-y-1.5">
+                          <p className="text-xs font-bold text-blue-700 uppercase tracking-wide mb-1">
+                            {t("profile_return_order.detail_modal.bank_info")}
+                          </p>
+                          <p className="text-sm text-gray-700">
+                            {t("profile_return_order.detail_modal.account_name")}{" "}
+                            <span className="font-medium">
+                              {returnDetail.bankAccountName || "-"}
+                            </span>
+                          </p>
+                          <p className="text-sm text-gray-700">
+                            {t("profile_return_order.detail_modal.account_number")}{" "}
+                            <span className="font-medium">
+                              {returnDetail.bankAccountNumber || "-"}
+                            </span>
+                          </p>
+                          <p className="text-sm text-gray-700">
+                            {t("profile_return_order.detail_modal.bank_name")}{" "}
+                            <span className="font-medium">{returnDetail.bankName || "-"}</span>
+                          </p>
+                          {returnDetail.refundMethod && (
+                            <p className="text-sm text-gray-700">
+                              {t("profile_return_order.detail_modal.refund_method")}{" "}
+                              <span className="font-medium">{returnDetail.refundMethod}</span>
                             </p>
-                            {log.note && <p className="text-xs text-gray-500 mt-0.5">{log.note}</p>}
-                            <p className="text-xs text-gray-400 mt-0.5">
-                              {formatDate(log.changedAt)}
-                            </p>
-                          </div>
+                          )}
                         </div>
-                      ))}
-                    </div>
-                  </div>
-                </>
-              )}
-            </div>
+                      )}
 
-            {/* Footer */}
-            <div className="flex gap-3 border-t border-gray-100 px-6 py-4 bg-gray-50/50">
-              {returnDetail && RESUBMIT_STATUSES.includes(returnDetail.status) && (
+                    {/* Images */}
+                    {returnDetail.imageUrls.length > 0 && (
+                      <div>
+                        <p className="text-xs font-semibold text-gray-600 mb-2">
+                          {t("profile_return_order.detail_modal.images")}
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          {returnDetail.imageUrls.map((url, idx) => (
+                            <a key={idx} href={url} target="_blank" rel="noopener noreferrer">
+                              <img
+                                src={url}
+                                alt={`return-img-${idx}`}
+                                className="h-20 w-20 rounded-lg object-cover border border-gray-100"
+                              />
+                            </a>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Status logs / timeline */}
+                    <div>
+                      <p className="text-xs font-semibold text-gray-600 mb-2">
+                        {t("profile_return_order.detail_modal.history")}
+                      </p>
+                      <div className="space-y-3">
+                        {returnDetail.statusLogs.map((log, idx) => (
+                          <div key={idx} className="flex gap-3">
+                            <div className="flex flex-col items-center">
+                              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-orange-100">
+                                <Clock className="h-3.5 w-3.5 text-orange-500" />
+                              </div>
+                              {idx !== returnDetail.statusLogs.length - 1 && (
+                                <div className="w-px flex-1 bg-gray-100 mt-1" />
+                              )}
+                            </div>
+                            <div className="pb-3">
+                              <p className="text-sm font-semibold text-gray-800">
+                                {log.fromStatus
+                                  ? `${getReturnStatusMeta(t)[log.fromStatus]?.label ?? log.fromStatus} → ${getReturnStatusMeta(t)[log.toStatus]?.label ?? log.toStatus}`
+                                  : (getReturnStatusMeta(t)[log.toStatus]?.label ?? log.toStatus)}
+                              </p>
+                              {log.note && (
+                                <p className="text-xs text-gray-500 mt-0.5">{log.note}</p>
+                              )}
+                              <p className="text-xs text-gray-400 mt-0.5">
+                                {formatDate(log.changedAt)}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {/* Footer */}
+              <div className="flex gap-3 border-t border-gray-100 px-6 py-4 bg-gray-50/50">
+                {returnDetail && SHIP_BACK_STATUSES.includes(returnDetail.status) && (
+                  <button
+                    onClick={() => openShipBackModal(returnDetail.id)}
+                    className="flex-1 flex items-center justify-center gap-1.5 rounded-lg bg-sky-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-sky-600 transition-colors cursor-pointer"
+                  >
+                    <Truck className="h-4 w-4" />
+                    {returnDetail.returnTrackingCode ? "Sửa mã vận đơn" : "Khai mã vận đơn"}
+                  </button>
+                )}
+                {returnDetail && RESUBMIT_STATUSES.includes(returnDetail.status) && (
+                  <button
+                    onClick={() => {
+                      openResubmitModal(returnDetail.id);
+                    }}
+                    className="flex-1 flex items-center justify-center gap-1.5 rounded-lg bg-orange-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-orange-600 transition-colors cursor-pointer"
+                  >
+                    <Upload className="h-4 w-4" />
+                    Bổ sung bằng chứng
+                  </button>
+                )}
+                {returnDetail && CANCELLABLE_STATUSES.includes(returnDetail.status) && (
+                  <button
+                    onClick={() => {
+                      closeDetailModal();
+                      setCancelId(returnDetail.id);
+                    }}
+                    className="flex-1 flex items-center justify-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-semibold text-red-500 hover:bg-red-100 transition-colors cursor-pointer"
+                  >
+                    <Ban className="h-4 w-4" />
+                    {t("profile_return_order.detail_modal.cancel")}
+                  </button>
+                )}
                 <button
-                  onClick={() => {
-                    openResubmitModal(returnDetail.id);
-                  }}
-                  className="flex-1 flex items-center justify-center gap-1.5 rounded-lg bg-orange-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-orange-600 transition-colors cursor-pointer"
+                  onClick={closeDetailModal}
+                  className="flex-1 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
                 >
-                  <Upload className="h-4 w-4" />
-                  Bổ sung bằng chứng
+                  {t("profile_return_order.detail_modal.close")}
                 </button>
-              )}
-              {returnDetail && CANCELLABLE_STATUSES.includes(returnDetail.status) && (
-                <button
-                  onClick={() => {
-                    closeDetailModal();
-                    setCancelId(returnDetail.id);
-                  }}
-                  className="flex-1 flex items-center justify-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-semibold text-red-500 hover:bg-red-100 transition-colors cursor-pointer"
-                >
-                  <Ban className="h-4 w-4" />
-                  {t("profile_return_order.detail_modal.cancel")}
-                </button>
-              )}
-              <button
-                onClick={closeDetailModal}
-                className="flex-1 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
-              >
-                {t("profile_return_order.detail_modal.close")}
-              </button>
-            </div>
+              </div>
             </motion.div>
           </div>
         )}
       </AnimatePresence>
 
       {/* ── Resubmit Evidence Modal ────────────────────────────────────────── */}
+      <AnimatePresence>
+        {shipBackModal.open && (
+          <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-black/50 backdrop-blur-[2px]"
+              onClick={() => setShipBackModal({ open: false, returnId: null })}
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.96, y: 12 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.96, y: 12 }}
+              className="relative z-10 w-full max-w-md rounded-2xl bg-white p-6 shadow-xl"
+            >
+              <h3 className="text-base font-bold text-gray-900">Khai mã vận đơn trả hàng</h3>
+              <p className="mt-1 text-xs leading-relaxed text-gray-500">
+                Nhập mã vận đơn của đơn vị vận chuyển sau khi bạn đã gửi hàng về cửa hàng. Cửa hàng
+                cần mã này để xác nhận đã nhận được hàng.
+              </p>
+              <input
+                value={trackingCode}
+                onChange={(e) => setTrackingCode(e.target.value)}
+                maxLength={100}
+                placeholder="VD: GHN123456789"
+                className="mt-4 w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm outline-none focus:border-primary"
+              />
+              <div className="mt-5 flex gap-3">
+                <button
+                  onClick={handleShipBack}
+                  disabled={submittingTracking || !trackingCode.trim()}
+                  className="flex-1 rounded-lg bg-sky-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-sky-600 disabled:opacity-50 transition-colors cursor-pointer"
+                >
+                  {submittingTracking ? "Đang gửi..." : "Gửi cho cửa hàng"}
+                </button>
+                <button
+                  onClick={() => setShipBackModal({ open: false, returnId: null })}
+                  className="flex-1 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
+                >
+                  Đóng
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
       {resubmitModal.open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
           <div className="relative w-full max-w-lg bg-white rounded-2xl shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
@@ -820,8 +999,8 @@ export default function ProfileReturnOrder() {
             {/* Body */}
             <div className="px-6 py-5 space-y-4">
               <p className="text-sm text-gray-500">
-                Vui lòng tải lên hình ảnh bổ sung để hỗ trợ yêu cầu trả hàng của bạn.
-                Tối đa {MAX_FILES} ảnh, mỗi ảnh không quá 5 MB.
+                Vui lòng tải lên hình ảnh bổ sung để hỗ trợ yêu cầu trả hàng của bạn. Tối đa{" "}
+                {MAX_FILES} ảnh, mỗi ảnh không quá 5 MB.
               </p>
 
               {/* Drop zone */}
@@ -839,9 +1018,12 @@ export default function ProfileReturnOrder() {
                     : "border-gray-200 bg-gray-50/50 hover:border-orange-300 hover:bg-orange-50/30"
                 }`}
               >
-                <ImagePlus className={`h-8 w-8 ${dragOver ? "text-orange-500" : "text-gray-300"}`} />
+                <ImagePlus
+                  className={`h-8 w-8 ${dragOver ? "text-orange-500" : "text-gray-300"}`}
+                />
                 <p className="text-sm font-medium text-gray-600">
-                  Kéo thả ảnh vào đây hoặc <span className="text-orange-500 underline">chọn file</span>
+                  Kéo thả ảnh vào đây hoặc{" "}
+                  <span className="text-orange-500 underline">chọn file</span>
                 </p>
                 <p className="text-xs text-gray-400">JPG, PNG, WebP, GIF — tối đa 5 MB</p>
                 <input

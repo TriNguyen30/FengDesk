@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { getPurchasedItems, placeProduct, removePlacement } from "../api/workspace.api";
 import type { PurchasedItem } from "../types/workspace";
-import { useWorkspaces } from "../hooks/useWorkspace";
+import { useWorkspaceElementAnalysis, useWorkspaces } from "../hooks/useWorkspace";
 import { resolveSelectedWorkspace } from "../utils/selectWorkspace";
 import { useWorkspaceHover, type HoveredProduct } from "../context/WorkspaceHoverContext";
 import { useWorkspaceRecommendationPreview } from "@/features/recommendation/hooks/useProductFit";
@@ -62,6 +62,9 @@ export default function WorkspaceProductPanel() {
 function ProductPanelBody({ workspaceId }: { workspaceId: string }) {
   const reduceMotion = useReducedMotion();
   const { hovered, setHovered: onHover } = useWorkspaceHover();
+  // Chỉ để dọn vật phẩm "mồ côi" (xem `orphans` bên dưới) — trạng thái đặt/chưa đặt của các dòng
+  // chính đọc từ danh sách đã mua, không chờ query này.
+  const { analysis } = useWorkspaceElementAnalysis(workspaceId);
   const [tab, setTab] = useState<Tab>("purchased");
   const queryClient = useQueryClient();
 
@@ -131,6 +134,12 @@ function ProductPanelBody({ workspaceId }: { workspaceId: string }) {
   const busy = placeMutation.isPending || removeMutation.isPending;
   const recommendedCount = recommendation.preview?.items.length ?? 0;
 
+  // Vật phẩm đang nằm trong phòng nhưng KHÔNG còn trong danh sách đặt phòng — điển hình là đồ Carry
+  // đặt từ trước khi backend lọc theo `ProductPlacement`. Không hiện thì chúng vẫn kéo radar mà user
+  // không có cách nào gỡ.
+  const purchasedIds = new Set(purchased.map((i) => i.orderItemId));
+  const orphans = (analysis?.placedProducts ?? []).filter((p) => !purchasedIds.has(p.orderItemId));
+
   return (
     <motion.div
       initial={reduceMotion ? false : { opacity: 0, y: 8 }}
@@ -165,8 +174,8 @@ function ProductPanelBody({ workspaceId }: { workspaceId: string }) {
         {tab === "purchased" ? (
           purchasedLoading ? (
             <ListSkeleton />
-          ) : purchased.length === 0 ? (
-            <EmptyRow>Bạn chưa mua sản phẩm nào đủ điều kiện đặt phòng.</EmptyRow>
+          ) : purchased.length === 0 && orphans.length === 0 ? (
+            <EmptyRow>Bạn chưa mua sản phẩm nào đặt được vào phòng.</EmptyRow>
           ) : (
             <ul className="space-y-1">
               {purchased.map((item) => {
@@ -190,55 +199,74 @@ function ProductPanelBody({ workspaceId }: { workspaceId: string }) {
                         : undefined
                     }
                     onLeave={endHover}
-                    subtitle={<PurchasedStatus item={item} inThisRoom={inThisRoom} />}
+                    status={<PurchasedStatus item={item} inThisRoom={inThisRoom} />}
                     action={
                       inThisRoom ? (
-                        <IconButton
-                          title="Gỡ khỏi phòng"
-                          tone="danger"
-                          disabled={busy}
+                        <RowButton
+                          tone="ghost"
+                          icon={PackageX}
+                          busy={busy}
                           onClick={() => removeMutation.mutate(item.orderItemId)}
+                          title="Gỡ khỏi phòng này"
                         >
-                          <PackageX size={15} />
-                        </IconButton>
+                          Gỡ ra
+                        </RowButton>
                       ) : elsewhere ? (
-                        <button
-                          type="button"
-                          disabled={busy}
+                        <RowButton
+                          tone="move"
+                          icon={ArrowRightLeft}
+                          busy={busy}
                           onClick={() =>
                             placeMutation.mutate({ orderItemId: item.orderItemId, moving: true })
                           }
                           title={`Chuyển từ "${item.placedWorkspaceName ?? "phòng khác"}" sang phòng này`}
-                          className="flex shrink-0 items-center gap-1 rounded-md border border-amber-300 bg-amber-50 px-2 py-1 text-[11px] font-semibold text-amber-800 transition-colors hover:bg-amber-100 disabled:opacity-50 cursor-pointer"
                         >
-                          {busy ? (
-                            <Loader2 size={12} className="animate-spin" />
-                          ) : (
-                            <ArrowRightLeft size={12} />
-                          )}
                           Chuyển
-                        </button>
+                        </RowButton>
                       ) : (
-                        <button
-                          type="button"
-                          disabled={busy}
+                        <RowButton
+                          tone="primary"
+                          icon={PackagePlus}
+                          busy={busy}
                           onClick={() =>
                             placeMutation.mutate({ orderItemId: item.orderItemId, moving: false })
                           }
-                          className="flex shrink-0 items-center gap-1 rounded-md bg-primary px-2 py-1 text-[11px] font-semibold text-white transition-colors hover:bg-primary-dark disabled:opacity-50 cursor-pointer"
+                          title="Đặt vào phòng này"
                         >
-                          {busy ? (
-                            <Loader2 size={12} className="animate-spin" />
-                          ) : (
-                            <PackagePlus size={12} />
-                          )}
                           Đặt vào
-                        </button>
+                        </RowButton>
                       )
                     }
                   />
                 );
               })}
+              {orphans.map((p) => (
+                <ProductRow
+                  key={p.placementId}
+                  image={p.productImage}
+                  name={p.productName}
+                  productId={p.productId}
+                  active={false}
+                  previewable={false}
+                  onLeave={endHover}
+                  status={
+                    <span className="truncate text-[11px] text-amber-600">
+                      Không còn đặt được vào phòng
+                    </span>
+                  }
+                  action={
+                    <RowButton
+                      tone="ghost"
+                      icon={PackageX}
+                      busy={busy}
+                      onClick={() => removeMutation.mutate(p.orderItemId)}
+                      title="Gỡ khỏi phòng này"
+                    >
+                      Gỡ ra
+                    </RowButton>
+                  }
+                />
+              ))}
             </ul>
           )
         ) : recommendation.status === "pending" ? (
@@ -339,28 +367,37 @@ function ListSkeleton() {
   );
 }
 
-function IconButton({
-  title,
+const ROW_BUTTON_TONE = {
+  primary: "bg-primary text-white hover:bg-primary-dark border-transparent",
+  move: "border-amber-300 bg-amber-50 text-amber-800 hover:bg-amber-100",
+  ghost: "border-gray-200 text-gray-500 hover:border-red-200 hover:bg-red-50 hover:text-red-500",
+} as const;
+
+/** Nút hành động của một dòng — nằm ở dòng thứ hai nên đủ chỗ cho nhãn chữ, không cần icon trần. */
+function RowButton({
   tone,
-  disabled,
+  icon: Icon,
+  busy,
   onClick,
+  title,
   children,
 }: {
-  title: string;
-  tone: "danger";
-  disabled?: boolean;
+  tone: keyof typeof ROW_BUTTON_TONE;
+  icon: typeof PackagePlus;
+  busy: boolean;
   onClick: () => void;
+  title: string;
   children: React.ReactNode;
 }) {
-  const toneClass = tone === "danger" ? "hover:bg-red-50 hover:text-red-500" : "";
   return (
     <button
       type="button"
       title={title}
-      disabled={disabled}
+      disabled={busy}
       onClick={onClick}
-      className={`shrink-0 rounded-md p-1.5 text-gray-400 transition-colors disabled:opacity-50 cursor-pointer ${toneClass}`}
+      className={`flex shrink-0 items-center gap-1 rounded-md border px-2 py-0.5 text-[11px] font-semibold transition-colors disabled:opacity-50 cursor-pointer ${ROW_BUTTON_TONE[tone]}`}
     >
+      {busy ? <Loader2 size={11} className="animate-spin" /> : <Icon size={11} />}
       {children}
     </button>
   );
@@ -370,21 +407,27 @@ interface ProductRowProps {
   image?: string | null;
   name: string;
   productId: string;
-  subtitle?: React.ReactNode;
+  /** Dòng phụ bên TRÁI hàng thứ hai (trạng thái / giá) — co lại khi hẹp, nút giữ nguyên. */
+  status?: React.ReactNode;
+  /** Nút hoặc badge bên PHẢI hàng thứ hai. */
   action?: React.ReactNode;
   active: boolean;
-  /** false = món này không xem trước được (đã nằm trong phòng / phòng khác) — không đổi nền khi hover. */
+  /** false = món này không xem trước được (đã nằm trong phòng) — không đổi nền khi hover. */
   previewable: boolean;
   onEnter?: () => void;
   onLeave: () => void;
 }
 
-/** Một dòng sản phẩm; hover/focus kích hoạt xem trước, tên là link sang trang sản phẩm. */
+/**
+ * Một dòng sản phẩm, xếp hai hàng: tên chiếm trọn chiều ngang (tối đa 2 dòng), trạng thái và nút
+ * xuống hàng dưới. Panel nằm ở sidebar hẹp (~256px) nên để tên cạnh nút thì tên chỉ còn ~90px và luôn
+ * bị cắt kiểu "Đèn muối H…"; tách hàng đổi lại chiều cao lấy chỗ đọc tên.
+ */
 function ProductRow({
   image,
   name,
   productId,
-  subtitle,
+  status,
   action,
   active,
   previewable,
@@ -397,7 +440,7 @@ function ProductRow({
       onMouseLeave={onLeave}
       onFocus={onEnter}
       onBlur={onLeave}
-      className={`flex items-center gap-2.5 rounded-lg px-2 py-1.5 transition-colors ${
+      className={`flex gap-2.5 rounded-lg px-2 py-2 transition-colors ${
         active
           ? "bg-primary/10 ring-1 ring-primary/30"
           : previewable
@@ -406,36 +449,42 @@ function ProductRow({
       }`}
     >
       {image ? (
-        <img src={image} alt={name} className="h-9 w-9 shrink-0 rounded-md object-cover" />
+        <img src={image} alt={name} className="mt-0.5 h-10 w-10 shrink-0 rounded-md object-cover" />
       ) : (
-        <div className="h-9 w-9 shrink-0 rounded-md bg-gray-100" />
+        <div className="mt-0.5 h-10 w-10 shrink-0 rounded-md bg-gray-100" />
       )}
       <div className="min-w-0 flex-1">
         <Link
           to={`/products/${productId}`}
-          className="block truncate text-sm font-medium text-gray-800 hover:text-primary"
+          className="line-clamp-2 text-[13px] font-medium leading-snug text-gray-800 hover:text-primary"
           title={name}
         >
           {name}
         </Link>
-        {subtitle}
+        <div className="mt-1 flex items-center justify-between gap-2">
+          <div className="min-w-0 flex-1">{status}</div>
+          {action}
+        </div>
       </div>
-      {action}
     </li>
   );
 }
 
+/** Một dòng trạng thái duy nhất, luôn truncate — hàng thứ hai phải chừa chỗ cho nút. */
 function PurchasedStatus({ item, inThisRoom }: { item: PurchasedItem; inThisRoom: boolean }) {
+  const shipping = !item.isDelivered && (
+    <span className="flex shrink-0 items-center gap-0.5 text-amber-600" title="Hàng đang giao">
+      <Truck size={11} />
+      đang giao
+    </span>
+  );
+
   if (inThisRoom) {
     return (
-      <p className="flex items-center gap-1 text-[11px] font-medium text-primary">
-        <PackageCheck size={11} />
-        Đang trong phòng này
-        {!item.isDelivered && (
-          <span className="flex items-center gap-1 text-amber-600">
-            · <Truck size={11} /> đang giao
-          </span>
-        )}
+      <p className="flex items-center gap-1.5 truncate text-[11px] font-medium text-primary">
+        <PackageCheck size={11} className="shrink-0" />
+        <span className="truncate">Trong phòng này</span>
+        {shipping}
       </p>
     );
   }
@@ -443,9 +492,9 @@ function PurchasedStatus({ item, inThisRoom }: { item: PurchasedItem; inThisRoom
     return (
       <p
         className="truncate text-[11px] text-gray-400"
-        title={item.placedWorkspaceName ?? undefined}
+        title={`Đang ở: ${item.placedWorkspaceName ?? "phòng khác"}`}
       >
-        Đang ở:{" "}
+        Ở{" "}
         <span className="font-medium text-gray-500">
           {item.placedWorkspaceName ?? "phòng khác"}
         </span>
@@ -453,14 +502,12 @@ function PurchasedStatus({ item, inThisRoom }: { item: PurchasedItem; inThisRoom
     );
   }
   return (
-    <p className="flex items-center gap-1 text-[11px] text-gray-400">
-      {item.quantity > 1 && <span>×{item.quantity}</span>}
-      {!item.isDelivered && (
-        <span className="flex items-center gap-1 text-amber-600">
-          <Truck size={11} /> đang giao
-        </span>
+    <p className="flex items-center gap-1.5 truncate text-[11px] text-gray-400">
+      {item.quantity > 1 && <span className="shrink-0">×{item.quantity}</span>}
+      {shipping}
+      {item.isDelivered && item.quantity <= 1 && (
+        <span className="truncate">Chưa đặt vào phòng</span>
       )}
-      {item.isDelivered && item.quantity <= 1 && <span>Chưa đặt vào phòng nào</span>}
     </p>
   );
 }
@@ -487,7 +534,7 @@ function RecommendedRow({
       previewable
       onEnter={onEnter}
       onLeave={onLeave}
-      subtitle={
+      status={
         <p className="truncate text-[11px] text-gray-400" title={item.matchFacts[0]}>
           {item.price != null && (
             <span className="font-medium text-gray-600">{vnd.format(item.price)}</span>

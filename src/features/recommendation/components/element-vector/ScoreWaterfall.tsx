@@ -1,6 +1,6 @@
 ﻿import { useId, useState, type ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Check, ChevronDown, Minus, Plus, TriangleAlert } from "lucide-react";
+import { Check, ChevronDown, Dot, Minus, Plus, TriangleAlert } from "lucide-react";
 import type {
   ProductElementRow,
   ScoreBreakdown,
@@ -109,22 +109,17 @@ export default function ScoreWaterfall({
                   >
                     <div className="flex items-baseline justify-between gap-3 text-[13px]">
                       <span
-                        className={`flex min-w-0 items-center gap-1.5 font-medium ${c.contribution < 0 ? "text-[#b3261e]" : "text-gray-800"}`}
+                        className={`flex min-w-0 items-center gap-1.5 font-medium ${toneOf(c.contribution).text}`}
                       >
-                        {/* Dấu theo DẤU của số hạng: "hành nên tránh" là số hạng âm — vẽ dấu + cho nó là nói ngược. */}
-                        {c.contribution < 0 ? (
-                          <Minus size={12} className="shrink-0" />
-                        ) : (
-                          <Plus size={12} className="shrink-0 text-emerald-600" />
-                        )}
+                        {/* Dấu theo DẤU của số hạng: "hành nên tránh" là số hạng âm — vẽ dấu + cho nó là nói
+                            ngược. Số hạng bằng 0 không cộng cũng không trừ ⇒ chấm xám, không phải dấu +. */}
+                        {toneOf(c.contribution).icon}
                         <span className="truncate">{c.labelVi}</span>
                       </span>
                       <span className="shrink-0 tabular-nums text-gray-600">
                         {Math.abs(c.value).toFixed(3)}
                         <span className="text-gray-400"> × {c.weight.toFixed(2)} = </span>
-                        <span
-                          className={`font-semibold ${c.contribution < 0 ? "text-[#b3261e]" : "text-gray-900"}`}
-                        >
+                        <span className={`font-semibold ${toneOf(c.contribution).value}`}>
                           {signed(c.contribution)}
                         </span>
                       </span>
@@ -542,5 +537,31 @@ function fmt(value: number, digits: number): string {
 }
 
 function signed(value: number): string {
-  return `${value >= 0 ? "+" : "−"}${Math.abs(value).toFixed(3)}`;
+  if (Math.abs(value) < 0.0005) return "0.000"; // làm tròn về 0 thì không mang dấu nào
+  return `${value > 0 ? "+" : "−"}${Math.abs(value).toFixed(3)}`;
+}
+
+/**
+ * Màu + biểu tượng theo DẤU của số hạng. Ba mức, không phải hai: một dòng bằng 0 (vd "Không mang hành bạn
+ * nên tránh") không cộng cũng không trừ — vẽ dấu + xanh cho nó là khen nhầm. Ngưỡng 0.0005 khớp chỗ hiển
+ * thị 3 chữ số.
+ */
+function toneOf(contribution: number): { icon: ReactNode; text: string; value: string } {
+  if (contribution > 0.0005)
+    return {
+      icon: <Plus size={12} className="shrink-0 text-emerald-600" />,
+      text: "text-gray-800",
+      value: "text-gray-900",
+    };
+  if (contribution < -0.0005)
+    return {
+      icon: <Minus size={12} className="shrink-0" />,
+      text: "text-[#b3261e]",
+      value: "text-[#b3261e]",
+    };
+  return {
+    icon: <Dot size={12} className="shrink-0 text-gray-400" />,
+    text: "text-gray-500",
+    value: "text-gray-500",
+  };
 }

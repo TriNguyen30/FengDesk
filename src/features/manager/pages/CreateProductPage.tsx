@@ -97,6 +97,7 @@ export default function CreateProductPage() {
 
   // Phong thủy nâng cao (tùy chọn, mặc định không chọn — ưu tiên đường Đặc điểm sản phẩm)
   const [fengShui, setFengShui] = useState<FengShuiValues>({
+    placement: "Desk",
     primaryElement: "",
     secondaryElements: [],
     sizeClass: "Medium",
@@ -344,6 +345,8 @@ export default function CreateProductPage() {
         isActive,
         // Đặc điểm sản phẩm → auto-calc vector ngũ hành (tầng 2), ưu tiên hơn primaryElement
         elementInputs,
+        // Cách dùng: quyết định luồng chấm (phòng / bản mệnh / không gợi ý) — luôn gửi, mặc định Desk.
+        placement: fengShui.placement || "Desk",
         // Phong thủy nâng cao (tùy chọn)
         primaryElement: fengShui.primaryElement || undefined,
         secondaryElements: fengShui.secondaryElements,
@@ -726,7 +729,7 @@ export default function CreateProductPage() {
             <div className="flex items-center gap-2 border-b border-gray-100 pb-3">
               <Palette size={18} className="text-primary" />
               <h2 className="text-base font-bold text-gray-950">
-                Vibe, phong cách &amp; kích thước
+                Cách dùng, vibe &amp; kích thước
               </h2>
             </div>
             <ProductVibeStyleFields

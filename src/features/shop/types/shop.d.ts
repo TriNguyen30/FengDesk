@@ -139,9 +139,68 @@ export interface StoreStatistics {
   totalShippingFee: number;
   totalDeliveries: number;
   deliveriesByStatus: Record<string, number>;
+  /** Delivery chưa xong việc (Pending/Confirmed/Preparing/Shipped) — đã có đơn, chưa tới tay khách. */
+  activeDeliveries: number;
+  /** Giá trị hàng của các delivery đang xử lý — doanh thu sắp về. */
+  activeDeliveriesValue: number;
+  /** Đơn online khách đã đặt nhưng CHƯA thanh toán (chưa có delivery) có hàng của store. */
+  awaitingPaymentOrders: number;
+  awaitingPaymentValue: number;
   productCount: number;
   staffCount: number;
   revenueByMonth: MonthlyRevenuePoint[];
+  /** Mốc thời gian BE đã áp (`week|month|quarter|year`). */
+  range?: string;
+  /** Doanh thu theo mốc của `range`; mốc rỗng vẫn có mặt để biểu đồ không hụt cột. */
+  revenueSeries?: RevenueBucket[];
+  /** Sản phẩm trong các đơn kèm trạng thái tiền (`Ordered|Paid|Completed|Refunded`). */
+  itemsByStatus?: StoreStatisticsItemRow[];
+  /** Phí ship theo cùng bộ trạng thái — phí thuộc về đơn nên không chia xuống từng sản phẩm. */
+  shippingFeeByStatus?: Record<string, number>;
+  /** Số ngày giữ tiền sau khi giao xong (chính sách sàn). */
+  payoutHoldDays?: number;
+  /** Tiền hàng đã qua khoảng giữ — có thể yêu cầu chi. */
+  availableForPayoutValue?: number;
+  /** Đã giao nhưng chưa hết khoảng giữ. */
+  pendingClearanceValue?: number;
+  /** Công nợ chưa miễn, sẽ trừ vào kỳ chi kế tiếp. */
+  outstandingLiabilityValue?: number;
+}
+
+/**
+ * Một cột biểu đồ: 4 lớp theo **mức chắc chắn của tiền** (đặt chưa trả → đã trả đang giao → xong →
+ * hoàn tiền). Mỗi lớp bucket theo mốc riêng của nó, nên tổng một cột là "tiền phát sinh trong mốc",
+ * không phải doanh thu của mốc.
+ */
+export interface RevenueBucket {
+  /** Đầu mốc (ISO, UTC). */
+  start: string;
+  /** Nhãn đã dựng sẵn ở BE, vd "12/09", "Tuần 08/09", "Th 09". */
+  labelVi: string;
+  /** = `completed`; giữ tên cũ cho client cũ. */
+  revenue: number;
+  deliveredCount: number;
+  awaitingPayment?: number;
+  awaitingPaymentCount?: number;
+  inProgress?: number;
+  inProgressCount?: number;
+  completed?: number;
+  completedCount?: number;
+  refunded?: number;
+  refundedCount?: number;
+}
+
+export interface StoreStatisticsItemRow {
+  productId: string;
+  productName: string;
+  /** `Ordered` | `Paid` | `Completed` | `Refunded` — mã BE, FE dịch khi hiển thị. */
+  status: string;
+  quantity: number;
+  value: number;
+  /** Phí ship của đơn, phân bổ cho dòng này theo tỉ trọng tiền hàng (BE tính). */
+  shippingFee?: number;
+  /** Số đơn đang chứa sản phẩm này. */
+  orderCount: number;
 }
 
 export interface MonthlyRevenuePoint {
