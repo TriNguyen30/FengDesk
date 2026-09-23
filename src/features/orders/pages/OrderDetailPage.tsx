@@ -27,6 +27,7 @@ import { formatOrderDate, formatVnd, getOrderStatusMeta } from "../utils/orderUt
 import PaymentQrModal from "@/features/payment/components/PaymentQrModal";
 import OrderItemImage from "../components/OrderItemImage";
 import { returnApi } from "@/features/return/api/return.api";
+import { devMarkOrderShippingDelivered } from "@/features/shop/api/delivery.api";
 import { uploadFile } from "@/services/upload.service";
 import type {
   ReturnType,
@@ -115,6 +116,7 @@ export default function OrderDetailPage() {
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const [paying, setPaying] = useState(false);
+  const [confirmingOrder, setConfirmingOrder] = useState(false);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -369,7 +371,7 @@ export default function OrderDetailPage() {
 
   const order = currentOrder;
   const statusMeta = getOrderStatusMeta(order.status, order.paymentMethod);
-  const canCancel = !["Cancelled", "Completed", "Expired"].includes(order.status);
+  const canCancel = !["Shipping", "Cancelled", "Completed", "Expired"].includes(order.status);
   const deliveries: any[] = ((order as any).deliveries ?? []).map((d: any) => {
     const rr =
       d.returnRequest ||
@@ -536,13 +538,12 @@ export default function OrderDetailPage() {
         <div className="rounded-xl bg-white border border-gray-100 overflow-hidden">
           {/* Banner */}
           <div
-            className={`flex items-center justify-between px-5 py-4 border-b-2 ${
-              order.status === "Cancelled" || order.status === "Expired"
+            className={`flex items-center justify-between px-5 py-4 border-b-2 ${order.status === "Cancelled" || order.status === "Expired"
                 ? "bg-red-50 border-red-400"
                 : order.status === "Completed"
                   ? "bg-emerald-50 border-emerald-500"
                   : "bg-violet-50 border-primary"
-            }`}
+              }`}
           >
             <div className="flex items-center gap-3">
               {order.status === "Cancelled" || order.status === "Expired" ? (
@@ -554,13 +555,12 @@ export default function OrderDetailPage() {
               )}
               <div>
                 <p
-                  className={`font-semibold text-base leading-tight ${
-                    order.status === "Cancelled" || order.status === "Expired"
+                  className={`font-semibold text-base leading-tight ${order.status === "Cancelled" || order.status === "Expired"
                       ? "text-red-700"
                       : order.status === "Completed"
                         ? "text-emerald-700"
                         : "text-violet-800"
-                  }`}
+                    }`}
                 >
                   {statusMeta.label}
                 </p>
@@ -634,15 +634,14 @@ export default function OrderDetailPage() {
                     <div className="w-full flex items-center">
                       {/* left line */}
                       <div
-                        className={`flex-1 h-0.5 transition-all duration-500 ${
-                          idx === 0
+                        className={`flex-1 h-0.5 transition-all duration-500 ${idx === 0
                             ? "invisible"
                             : step.isError
                               ? "bg-red-400"
                               : leftReached
                                 ? "bg-primary group-hover:brightness-110"
                                 : "bg-gray-100 group-hover:bg-gray-200"
-                        }`}
+                          }`}
                       />
 
                       {/* Dot icon with pulse effect & hover animation */}
@@ -677,27 +676,25 @@ export default function OrderDetailPage() {
 
                       {/* right line */}
                       <div
-                        className={`flex-1 h-0.5 transition-all duration-500 ${
-                          isLast
+                        className={`flex-1 h-0.5 transition-all duration-500 ${isLast
                             ? "invisible"
                             : step.isError
                               ? "bg-red-400"
                               : rightReached
                                 ? "bg-primary group-hover:brightness-110"
                                 : "bg-gray-100 group-hover:bg-gray-200"
-                        }`}
+                          }`}
                       />
                     </div>
 
                     <div className="text-center px-1 transition-transform duration-200 group-hover:-translate-y-0.5">
                       <p
-                        className={`text-xs font-semibold leading-tight transition-colors duration-200 ${
-                          step.isError
+                        className={`text-xs font-semibold leading-tight transition-colors duration-200 ${step.isError
                             ? "text-red-600 group-hover:text-red-700"
                             : step.completed || isActive
                               ? "text-gray-900 group-hover:text-primary"
                               : "text-gray-400 group-hover:text-gray-600"
-                        }`}
+                          }`}
                       >
                         {step.label}
                       </p>
@@ -815,11 +812,10 @@ export default function OrderDetailPage() {
                 <button
                   onClick={() => setDeliveryPickerOpen(true)}
                   disabled={!hasReturnableDelivery}
-                  className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors ${
-                    hasReturnableDelivery
+                  className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors ${hasReturnableDelivery
                       ? "text-orange-600 bg-orange-50 border border-orange-200 hover:bg-orange-100 cursor-pointer"
                       : "text-gray-400 bg-gray-50 border border-gray-200 cursor-not-allowed"
-                  }`}
+                    }`}
                 >
                   <RotateCcw className="h-3.5 w-3.5" />
                   {!hasReturnableDelivery
@@ -890,11 +886,10 @@ export default function OrderDetailPage() {
                                 openReturnModal(delivery.id, getDeliveryItems(delivery.id))
                               }
                               disabled={isDisabled}
-                              className={`flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-lg transition-colors ${
-                                !isDisabled
+                              className={`flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-lg transition-colors ${!isDisabled
                                   ? "text-orange-600 bg-orange-50 border border-orange-200 hover:bg-orange-100 cursor-pointer"
                                   : "text-gray-400 bg-gray-50 border border-gray-200 cursor-not-allowed"
-                              }`}
+                                }`}
                             >
                               <RotateCcw className="h-3 w-3" />
                               {hasActiveReturn
@@ -972,6 +967,34 @@ export default function OrderDetailPage() {
               </button>
             )}
 
+            {/* Confirm Received */}
+            {["Shipping"].includes(order.status) && (
+              <button
+                disabled={confirmingOrder}
+                onClick={async () => {
+                  setConfirmingOrder(true);
+                  try {
+                    const res = await devMarkOrderShippingDelivered(order.id) as any;
+                    if (res.isSuccess || res.status === 200 || !res.error) {
+                      toast.success("Xác nhận đã nhận hàng thành công");
+                      queryClient.invalidateQueries({ queryKey: ["order", order.id] });
+                      queryClient.invalidateQueries({ queryKey: ["orders"] });
+                    } else {
+                      toast.error(res.message || "Không thể xác nhận");
+                    }
+                  } catch (err: any) {
+                    toast.error("Có lỗi xảy ra khi xác nhận");
+                  } finally {
+                    setConfirmingOrder(false);
+                  }
+                }}
+                className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-emerald-600 text-white text-sm font-semibold py-2.5 hover:bg-emerald-700 cursor-pointer disabled:opacity-50 transition-colors"
+              >
+                {confirmingOrder ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle className="h-4 w-4" />}
+                Đã nhận hàng
+              </button>
+            )}
+
             {/* Return — shown when there's a delivered delivery and payment is done */}
             {/* Return — shown when there's a delivered delivery and payment is done */}
             {(hasReturnableDelivery || hasActiveReturnForAnyDelivery) &&
@@ -979,11 +1002,10 @@ export default function OrderDetailPage() {
                 <button
                   onClick={() => setDeliveryPickerOpen(true)}
                   disabled={!hasReturnableDelivery}
-                  className={`flex-1 flex items-center justify-center gap-2 rounded-lg border text-sm font-semibold py-2.5 transition-colors ${
-                    hasReturnableDelivery
+                  className={`flex-1 flex items-center justify-center gap-2 rounded-lg border text-sm font-semibold py-2.5 transition-colors ${hasReturnableDelivery
                       ? "border-orange-300 text-orange-600 bg-orange-50 hover:bg-orange-100 cursor-pointer"
                       : "border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed"
-                  }`}
+                    }`}
                 >
                   <RotateCcw className="h-4 w-4" />
                   {!hasReturnableDelivery
@@ -1250,11 +1272,10 @@ export default function OrderDetailPage() {
                       key={opt.value}
                       type="button"
                       onClick={() => setReturnType(opt.value)}
-                      className={`rounded-lg border px-3 py-2 text-sm font-semibold transition-all cursor-pointer ${
-                        returnType === opt.value
+                      className={`rounded-lg border px-3 py-2 text-sm font-semibold transition-all cursor-pointer ${returnType === opt.value
                           ? "border-orange-400 bg-orange-50 text-orange-600"
                           : "border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50"
-                      }`}
+                        }`}
                     >
                       {opt.label}
                     </button>
