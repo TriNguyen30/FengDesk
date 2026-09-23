@@ -13,12 +13,23 @@ import {
   Upload,
   ImagePlus,
   Trash2,
+  Truck,
 } from "lucide-react";
 import { toast } from "sonner";
 import { returnApi } from "@/features/return/api/return.api";
 import type { ReturnItem, ReturnDetail } from "@/features/return/types/return.d.ts";
 import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "framer-motion";
+import { useAppDispatch } from "@/app/store";
+import { chatApi, chatHub } from "@/features/chatbox";
+import {
+  openChatbox,
+  setActiveChatbox,
+  setMessages,
+  setView,
+  upsertChatbox,
+} from "@/features/chatbox/store/chatboxSlice";
+import { ordersApi } from "@/features/orders/api/orders.api";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -83,6 +94,11 @@ const getReturnStatusMeta = (t: any): Record<string, { label: string; className:
 
 const CANCELLABLE_STATUSES = ["Requested"];
 const RESUBMIT_STATUSES = ["NeedMoreEvidence"];
+/**
+ * Trạng thái mà khách PHẢI khai mã vận đơn trả hàng. Thiếu bước này thì cửa hàng bấm "đã nhận hàng"
+ * sẽ bị chặn 409 và cả ticket đứng yên — đúng chỗ luồng đổi/trả hay tắc.
+ */
+const SHIP_BACK_STATUSES = ["ReturnInTransit"];
 const MAX_FILES = 5;
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
@@ -137,6 +153,7 @@ const modalVariants = {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function ProfileReturnOrder() {
+  const dispatch = useAppDispatch();
   const { t } = useTranslation();
   const [returns, setReturns] = useState<ReturnItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -157,6 +174,14 @@ export default function ProfileReturnOrder() {
     returnId: null,
   });
   const [resubmitFiles, setResubmitFiles] = useState<File[]>([]);
+
+  // Khai mã vận đơn trả hàng
+  const [shipBackModal, setShipBackModal] = useState<{ open: boolean; returnId: string | null }>({
+    open: false,
+    returnId: null,
+  });
+  const [trackingCode, setTrackingCode] = useState("");
+  const [submittingTracking, setSubmittingTracking] = useState(false);
   const [submittingEvidence, setSubmittingEvidence] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -228,7 +253,68 @@ export default function ProfileReturnOrder() {
     setReturnDetail(null);
   };
 
+  const contactStoreForHandoff = async (ticket: ReturnDetail) => {
+    try {
+      const orderResponse = await ordersApi.getOrderById(ticket.orderId);
+      const storeId = orderResponse.data.data.deliveries.find(
+        (delivery) => delivery.id === ticket.deliveryId,
+      )?.gardenStoreId;
+      if (!orderResponse.data.isSuccess || !storeId)
+        throw new Error("Không tìm thấy cửa hàng của đơn giao");
+      const response = await chatApi.startStoreSupport(storeId);
+      if (!response.data.isSuccess)
+        throw new Error(response.data.message || "Không mở được cuộc trò chuyện");
+      const box = response.data.data;
+      dispatch(upsertChatbox(box));
+      dispatch(setActiveChatbox(box.id));
+      dispatch(setView("conversation"));
+      dispatch(openChatbox());
+      void chatHub.joinChatbox(box.id).catch(() => {});
+      const messages = await chatApi.getMessages(box.id);
+      if (messages.data.isSuccess) {
+        dispatch(
+          setMessages({ roomId: box.id, messages: [...messages.data.data.items].reverse() }),
+        );
+      }
+    } catch {
+      toast.error("Không mở được chat cửa hàng. Vui lòng thử lại từ trang cửa hàng.");
+    }
+  };
+
   // ── Resubmit evidence handlers ─────────────────────────────────────────
+  const openShipBackModal = (returnId: string) => {
+    setShipBackModal({ open: true, returnId });
+    setTrackingCode("");
+  };
+
+  const handleShipBack = async () => {
+    const code = trackingCode.trim();
+    if (!shipBackModal.returnId || !code) {
+      toast.error("Vui lòng nhập mã vận đơn trả hàng");
+      return;
+    }
+    setSubmittingTracking(true);
+    try {
+      const res = await returnApi.shipBack(shipBackModal.returnId, code);
+      if (res.data.isSuccess) {
+        toast.success("Đã gửi mã vận đơn cho cửa hàng");
+        setShipBackModal({ open: false, returnId: null });
+        fetchReturns(page);
+        if (detailModal.open && detailModal.returnId === shipBackModal.returnId) {
+          setReturnDetail(res.data.data);
+        }
+      } else {
+        toast.error(res.data.message || "Không gửi được mã vận đơn");
+      }
+    } catch (err) {
+      const message = (err as { response?: { data?: { message?: string } } })?.response?.data
+        ?.message;
+      toast.error(message || "Có lỗi xảy ra khi gửi mã vận đơn");
+    } finally {
+      setSubmittingTracking(false);
+    }
+  };
+
   const openResubmitModal = (returnId: string) => {
     setResubmitModal({ open: true, returnId });
     setResubmitFiles([]);
@@ -620,6 +706,39 @@ export default function ProfileReturnOrder() {
                       </span>
                     </p>
 
+                    {returnDetail.status === "ReturnInTransit" && (
+                      <div className="rounded-xl border border-sky-100 bg-sky-50 p-4">
+                        <p className="text-sm font-semibold text-sky-800">
+                          {t("profile_return_order.handoff.title")}
+                        </p>
+                        <p className="mt-1 text-sm leading-6 text-sky-700">
+                          {t("profile_return_order.handoff.desc")}
+                        </p>
+                        <p className="mt-2 text-xs text-sky-700">
+                          Hãy thống nhất địa điểm, thời gian, phí gửi trả và lưu mã vận đơn/biên
+                          nhận trong chat. Cửa hàng chỉ xác nhận sau khi đã kiểm tra hàng thực tế.
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => contactStoreForHandoff(returnDetail)}
+                          className="mt-3 rounded-lg bg-sky-700 px-3 py-2 text-xs font-semibold text-white hover:bg-sky-800"
+                        >
+                          Trao đổi với cửa hàng
+                        </button>
+                      </div>
+                    )}
+                    {returnDetail.type === "Exchange" && returnDetail.status === "Exchanging" && (
+                      <div className="rounded-xl border border-indigo-100 bg-indigo-50 p-4 text-sm text-indigo-800">
+                        Staff đã duyệt đổi hàng. Cửa hàng sẽ xác nhận và gửi sản phẩm thay thế; yêu
+                        cầu hoàn tất khi đơn thay thế được giao thành công.
+                        {returnDetail.replacementDeliveryId && (
+                          <p className="mt-2 font-mono text-xs">
+                            Mã đơn giao thay thế: {returnDetail.replacementDeliveryId}
+                          </p>
+                        )}
+                      </div>
+                    )}
+
                     {/* Reason */}
                     <div className="rounded-xl border border-gray-100 p-4">
                       <p className="text-xs font-semibold text-gray-600 mb-1">
@@ -763,6 +882,15 @@ export default function ProfileReturnOrder() {
 
               {/* Footer */}
               <div className="flex gap-3 border-t border-gray-100 px-6 py-4 bg-gray-50/50">
+                {returnDetail && SHIP_BACK_STATUSES.includes(returnDetail.status) && (
+                  <button
+                    onClick={() => openShipBackModal(returnDetail.id)}
+                    className="flex-1 flex items-center justify-center gap-1.5 rounded-lg bg-sky-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-sky-600 transition-colors cursor-pointer"
+                  >
+                    <Truck className="h-4 w-4" />
+                    {returnDetail.returnTrackingCode ? "Sửa mã vận đơn" : "Khai mã vận đơn"}
+                  </button>
+                )}
                 {returnDetail && RESUBMIT_STATUSES.includes(returnDetail.status) && (
                   <button
                     onClick={() => {
@@ -799,6 +927,54 @@ export default function ProfileReturnOrder() {
       </AnimatePresence>
 
       {/* ── Resubmit Evidence Modal ────────────────────────────────────────── */}
+      <AnimatePresence>
+        {shipBackModal.open && (
+          <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-black/50 backdrop-blur-[2px]"
+              onClick={() => setShipBackModal({ open: false, returnId: null })}
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.96, y: 12 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.96, y: 12 }}
+              className="relative z-10 w-full max-w-md rounded-2xl bg-white p-6 shadow-xl"
+            >
+              <h3 className="text-base font-bold text-gray-900">Khai mã vận đơn trả hàng</h3>
+              <p className="mt-1 text-xs leading-relaxed text-gray-500">
+                Nhập mã vận đơn của đơn vị vận chuyển sau khi bạn đã gửi hàng về cửa hàng. Cửa hàng
+                cần mã này để xác nhận đã nhận được hàng.
+              </p>
+              <input
+                value={trackingCode}
+                onChange={(e) => setTrackingCode(e.target.value)}
+                maxLength={100}
+                placeholder="VD: GHN123456789"
+                className="mt-4 w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm outline-none focus:border-primary"
+              />
+              <div className="mt-5 flex gap-3">
+                <button
+                  onClick={handleShipBack}
+                  disabled={submittingTracking || !trackingCode.trim()}
+                  className="flex-1 rounded-lg bg-sky-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-sky-600 disabled:opacity-50 transition-colors cursor-pointer"
+                >
+                  {submittingTracking ? "Đang gửi..." : "Gửi cho cửa hàng"}
+                </button>
+                <button
+                  onClick={() => setShipBackModal({ open: false, returnId: null })}
+                  className="flex-1 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
+                >
+                  Đóng
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
       {resubmitModal.open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
           <div className="relative w-full max-w-lg bg-white rounded-2xl shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
@@ -849,7 +1025,7 @@ export default function ProfileReturnOrder() {
                   Kéo thả ảnh vào đây hoặc{" "}
                   <span className="text-orange-500 underline">chọn file</span>
                 </p>
-                <p className="text-xs text-gray-400">JPG, PNG, WebP, GIF - tối đa 5 MB</p>
+                <p className="text-xs text-gray-400">JPG, PNG, WebP, GIF — tối đa 5 MB</p>
                 <input
                   ref={fileInputRef}
                   type="file"

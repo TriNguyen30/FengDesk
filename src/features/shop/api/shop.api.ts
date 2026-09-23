@@ -140,9 +140,13 @@ export async function getStoreMembershipRequest(id: string) {
 }
 
 /** Thống kê dashboard vendor — BE chỉ cho owner/admin (staff 403). */
-export async function getStoreStatisticsRequest(id: string) {
+export async function getStoreStatisticsRequest(id: string, range?: string) {
+  // Tham số thứ HAI của FetchHttpClient.get là params, KHÔNG phải config kiểu axios. Truyền
+  // `{ params: { range } }` vào đây thì query thành `?params=...` và BE luôn rơi về mốc mặc định —
+  // đúng lỗi "bấm Tuần/Quý/Năm mà biểu đồ vẫn ra tháng".
   const { data } = await fetchHttpClient.get<ApiResponse<StoreStatistics>>(
     `/stores/${id}/statistics`,
+    range ? { range } : undefined,
   );
   return data;
 }

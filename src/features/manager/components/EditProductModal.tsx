@@ -30,6 +30,7 @@ import Modal from "@/components/ui/Modal";
 type TabType = "basic" | "variants" | "images" | "categories" | "feng-shui" | "model-3d";
 
 const EMPTY_FENG_SHUI: FengShuiValues = {
+  placement: "Desk",
   primaryElement: "Kim",
   secondaryElements: [],
   sizeClass: "Medium",
@@ -93,6 +94,7 @@ export default function EditProductModal({
 
         // Populate Feng Shui
         setFengShui({
+          placement: p.placement || "Desk",
           primaryElement: p.primaryElement || "Kim",
           secondaryElements: p.secondaryElements || [],
           sizeClass: p.sizeClass || "Medium",
@@ -203,6 +205,7 @@ export default function EditProductModal({
     setSavingFengShui(true);
     try {
       const res = await productApi.updateProductFengShui(productId, {
+        placement: fengShui.placement || "Desk",
         primaryElement: fengShui.primaryElement,
         secondaryElements: fengShui.secondaryElements,
         sizeClass: fengShui.sizeClass,

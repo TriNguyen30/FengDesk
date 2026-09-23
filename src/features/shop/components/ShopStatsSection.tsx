@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { BarChart3, Loader2, Package, Truck, Users, Wallet } from "lucide-react";
-import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { BarChart3, Banknote, Loader2, PackageOpen, Truck, Users, Wallet } from "lucide-react";
 import { getStoreStatisticsRequest } from "../api/shop.api";
 import type { StoreStatistics } from "../types/shop";
+import { StatsPendingItems, StatsRangeTabs } from "./StatsPendingItems";
+import RevenueStateChart from "./RevenueStateChart";
+import { EMPTY_CHART_ROW, toChartRow, type RevenueChartRow } from "./revenueChartRow";
+import type { StatsRange } from "./statsRanges";
 
 /** Nhãn tiếng Việt cho trạng thái delivery. */
 const STATUS_LABELS: Record<string, string> = {
@@ -25,19 +28,19 @@ const formatVnd = (v: number) =>
     maximumFractionDigits: 0,
   }).format(v);
 
-/** Đủ 6 tháng gần nhất (kể cả tháng 0 doanh thu) để chart không bị hụt cột. */
-function buildMonthlySeries(stats: StoreStatistics) {
+/** Dự phòng cho BE cũ (chưa có `revenueSeries`): 6 tháng gần nhất, chỉ có lớp "đã hoàn thành". */
+function buildMonthlySeries(stats: StoreStatistics): RevenueChartRow[] {
   const map = new Map(stats.revenueByMonth.map((p) => [`${p.year}-${p.month}`, p]));
-  const out: { label: string; revenue: number; count: number }[] = [];
+  const out: RevenueChartRow[] = [];
   const now = new Date();
   for (let i = 5; i >= 0; i--) {
     const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    const key = `${d.getFullYear()}-${d.getMonth() + 1}`;
-    const p = map.get(key);
+    const p = map.get(`${d.getFullYear()}-${d.getMonth() + 1}`);
     out.push({
+      ...EMPTY_CHART_ROW,
       label: `T${d.getMonth() + 1}/${d.getFullYear() % 100}`,
-      revenue: p?.revenue ?? 0,
-      count: p?.deliveredCount ?? 0,
+      completed: p?.revenue ?? 0,
+      completedCount: p?.deliveredCount ?? 0,
     });
   }
   return out;
@@ -50,11 +53,14 @@ function buildMonthlySeries(stats: StoreStatistics) {
 export function ShopStatsSection({ storeId }: { storeId: string }) {
   const [stats, setStats] = useState<StoreStatistics | null>(null);
   const [loading, setLoading] = useState(true);
+  const [range, setRange] = useState<StatsRange>("month");
 
   useEffect(() => {
     let active = true;
+    // Đổi mốc thì GIỮ dữ liệu cũ trên màn (chỉ mờ đi) — thay bằng skeleton là cả khối nháy một phát và
+    // biểu đồ phải vẽ lại từ đầu, mất luôn hiệu ứng cột chạy sang hình mới.
     setLoading(true);
-    getStoreStatisticsRequest(storeId)
+    getStoreStatisticsRequest(storeId, range)
       .then((res) => {
         if (!active) return;
         if (res.isSuccess && res.data) setStats(res.data);
@@ -69,9 +75,9 @@ export function ShopStatsSection({ storeId }: { storeId: string }) {
     return () => {
       active = false;
     };
-  }, [storeId]);
+  }, [storeId, range]);
 
-  if (loading) {
+  if (loading && !stats) {
     return (
       <div className="flex items-center justify-center py-16 text-gray-400">
         <Loader2 className="animate-spin mr-2" size={18} />
@@ -88,7 +94,9 @@ export function ShopStatsSection({ storeId }: { storeId: string }) {
     );
   }
 
-  const series = buildMonthlySeries(stats);
+  // BE trả sẵn chuỗi theo `range` (kể cả mốc rỗng); chỉ khi thiếu mới rơi về 6 tháng dựng ở client.
+  const usingFallback = !stats.revenueSeries?.length;
+  const series = usingFallback ? buildMonthlySeries(stats) : stats.revenueSeries!.map(toChartRow);
   const deliveredCount =
     (stats.deliveriesByStatus["Delivered"] ?? 0) + (stats.deliveriesByStatus["Completed"] ?? 0);
 
@@ -105,12 +113,16 @@ export function ShopStatsSection({ storeId }: { storeId: string }) {
       value: String(stats.totalDeliveries),
       sub: `Phí ship đã thu: ${formatVnd(stats.totalShippingFee)}`,
     },
+    // Hai thẻ "chưa hoàn thành": store cần biết còn bao nhiêu việc và bao nhiêu tiền đang treo.
     {
-      icon: Package,
-      label: "Sản phẩm",
-      value: String(stats.productCount),
-      sub: "Đang bán trên cửa hàng",
+      icon: PackageOpen,
+      label: "Đang xử lý",
+      value: String(stats.activeDeliveries ?? 0),
+      sub: `Chờ giao: ${formatVnd(stats.activeDeliveriesValue ?? 0)}`,
     },
+    // Thẻ "Có thể rút" tạm ẩn (24/09/2026): con số đối soát đang SAI về nghiệp vụ — đơn đã cộng
+    // vào số dư vẫn tiếp tục nằm trong "có thể rút", và công nợ hoàn hàng chưa bị trừ. Chỉ hiện
+    // doanh thu cho tới khi luồng chi tiền được làm đúng (docs/adr/vendor-payout.md).
     {
       icon: Users,
       label: "Nhân viên",
@@ -151,33 +163,19 @@ export function ShopStatsSection({ storeId }: { storeId: string }) {
         })}
       </div>
 
+      <StatsPendingItems rows={stats.itemsByStatus ?? []} />
+
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        {/* Chart doanh thu 6 tháng */}
+        {/* Chart doanh thu */}
         <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm lg:col-span-2">
-          <h3 className="text-sm font-bold text-gray-900 mb-4">Doanh thu 6 tháng gần nhất</h3>
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={series} margin={{ top: 4, right: 8, left: 8, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eee" />
-                <XAxis dataKey="label" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
-                <YAxis
-                  tick={{ fontSize: 11 }}
-                  axisLine={false}
-                  tickLine={false}
-                  tickFormatter={(v: number) => (v >= 1_000_000 ? `${v / 1_000_000}tr` : String(v))}
-                />
-                <Tooltip
-                  formatter={(value) => [formatVnd(Number(value)), "Doanh thu"]}
-                  labelFormatter={(label) => `Tháng ${label}`}
-                />
-                <Bar
-                  dataKey="revenue"
-                  fill="var(--color-primary)"
-                  radius={[6, 6, 0, 0]}
-                  maxBarSize={48}
-                />
-              </BarChart>
-            </ResponsiveContainer>
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+            <h3 className="text-sm font-bold text-gray-900">Doanh thu theo thời gian</h3>
+            <StatsRangeTabs value={range} onChange={setRange} />
+          </div>
+          <div
+            className={`transition-opacity duration-200 ${loading ? "opacity-50" : "opacity-100"}`}
+          >
+            <RevenueStateChart data={series} height={256} fallback={usingFallback} />
           </div>
         </div>
 

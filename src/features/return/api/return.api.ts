@@ -16,6 +16,9 @@ import type {
   ApproveRefundRequest,
   ApproveRefundResponse,
   ConfirmReceivedResponse,
+  VendorDisputeRequest,
+  VendorResponse,
+  ApproveExchangeRequest,
   ManagerConfirmRefundRequest,
   ManagerConfirmRefundResponse,
 } from "@/features/return/types/return.d.ts";
@@ -41,6 +44,16 @@ export const returnApi = {
     return fetchHttpClient.post<CreateReturnResponse>("/returns", payload);
   },
 
+  /**
+   * Khách khai mã vận đơn sau khi đã gửi hàng vật lý về cửa hàng (`ReturnInTransit`).
+   * BẮT BUỘC trước khi vendor bấm "đã nhận hàng" — thiếu bước này BE chặn 409.
+   */
+  shipBack: async (returnId: string, trackingCode: string) => {
+    return fetchHttpClient.post<ReturnDetailResponse>(`/returns/${returnId}/ship-back`, {
+      trackingCode,
+    });
+  },
+
   cancelReturn: async (returnId: string) => {
     return fetchHttpClient.post<CancelReturnResponse>(`/returns/${returnId}/cancel`, {});
   },
@@ -58,6 +71,18 @@ export const returnApi = {
       `/returns/${returnId}/approve-refund`,
       payload,
     );
+  },
+
+  approveExchange: async (returnId: string, payload: ApproveExchangeRequest) => {
+    return fetchHttpClient.post<ApproveRefundResponse>(`/returns/${returnId}/approve-exchange`, payload);
+  },
+
+  vendorAcknowledge: async (returnId: string) => {
+    return fetchHttpClient.post<VendorResponse>(`/returns/${returnId}/vendor-acknowledge`, {});
+  },
+
+  vendorDispute: async (returnId: string, payload: VendorDisputeRequest) => {
+    return fetchHttpClient.post<VendorResponse>(`/returns/${returnId}/vendor-dispute`, payload);
   },
 
   confirmReceived: async (returnId: string) => {

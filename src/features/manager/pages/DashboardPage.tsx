@@ -4,21 +4,33 @@ import { toast } from "sonner";
 import {
   BarChart3,
   Loader2,
-  Package,
+  PackageOpen,
   Truck,
   Users,
   Wallet,
   Store as StoreIcon,
   ArrowRight,
 } from "lucide-react";
-import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { useAppSelector } from "@/app/store";
 import {
   getAllShopRequest,
   getMyShopsRequest,
   getStoreStatisticsRequest,
 } from "@/features/shop/api/shop.api";
-import type { Shop, StoreStatistics } from "@/features/shop/types/shop";
+import type {
+  RevenueBucket,
+  Shop,
+  StoreStatistics,
+  StoreStatisticsItemRow,
+} from "@/features/shop/types/shop";
+import { StatsPendingItems, StatsRangeTabs } from "@/features/shop/components/StatsPendingItems";
+import RevenueStateChart from "@/features/shop/components/RevenueStateChart";
+import {
+  EMPTY_CHART_ROW,
+  toChartRow,
+  type RevenueChartRow,
+} from "@/features/shop/components/revenueChartRow";
+import type { StatsRange } from "@/features/shop/components/statsRanges";
 import { useStoreDeliveries, useAllOrdersList } from "@/features/orders";
 import { formatOrderDate } from "@/features/orders/utils/orderUtils";
 
@@ -58,18 +70,18 @@ const formatVnd = (v: number) =>
   }).format(v);
 
 /** Đủ 6 tháng gần nhất (kể cả tháng 0 doanh thu) để chart không bị hụt cột. */
-function buildMonthlySeries(stats: StoreStatistics) {
+function buildMonthlySeries(stats: StoreStatistics): RevenueChartRow[] {
   const map = new Map(stats.revenueByMonth.map((p) => [`${p.year}-${p.month}`, p]));
-  const out: { label: string; revenue: number; count: number }[] = [];
+  const out: RevenueChartRow[] = [];
   const now = new Date();
   for (let i = 5; i >= 0; i--) {
     const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    const key = `${d.getFullYear()}-${d.getMonth() + 1}`;
-    const p = map.get(key);
+    const p = map.get(`${d.getFullYear()}-${d.getMonth() + 1}`);
     out.push({
+      ...EMPTY_CHART_ROW,
       label: `T${d.getMonth() + 1}/${d.getFullYear() % 100}`,
-      revenue: p?.revenue ?? 0,
-      count: p?.deliveredCount ?? 0,
+      completed: p?.revenue ?? 0,
+      completedCount: p?.deliveredCount ?? 0,
     });
   }
   return out;
@@ -81,7 +93,17 @@ function aggregateStoreStats(statsList: StoreStatistics[]): StoreStatistics {
   let totalDeliveries = 0;
   let productCount = 0;
   let staffCount = 0;
+  let activeDeliveries = 0;
+  let activeDeliveriesValue = 0;
+  let awaitingPaymentOrders = 0;
+  let awaitingPaymentValue = 0;
   const deliveriesByStatus: Record<string, number> = {};
+  // Chuỗi doanh thu: mọi store cùng `range` nên cùng bộ mốc — gộp theo nhãn, giữ thứ tự của store đầu tiên.
+  const seriesMap = new Map<string, RevenueBucket>();
+  // Hàng trong đơn: gộp theo (sản phẩm × trạng thái). Sản phẩm không dùng chung giữa các store nên thực
+  // tế là nối danh sách, nhưng vẫn gộp để phòng trường hợp admin xem store trùng nhau.
+  const itemMap = new Map<string, StoreStatisticsItemRow>();
+  const shippingByStatus: Record<string, number> = {};
   const monthMap = new Map<
     string,
     { year: number; month: number; revenue: number; deliveredCount: number }
@@ -93,6 +115,50 @@ function aggregateStoreStats(statsList: StoreStatistics[]): StoreStatistics {
     totalDeliveries += s.totalDeliveries || 0;
     productCount += s.productCount || 0;
     staffCount += s.staffCount || 0;
+    activeDeliveries += s.activeDeliveries || 0;
+    activeDeliveriesValue += s.activeDeliveriesValue || 0;
+    awaitingPaymentOrders += s.awaitingPaymentOrders || 0;
+    awaitingPaymentValue += s.awaitingPaymentValue || 0;
+
+    (s.revenueSeries || []).forEach((b) => {
+      const cur = seriesMap.get(b.labelVi) || {
+        start: b.start,
+        labelVi: b.labelVi,
+        revenue: 0,
+        deliveredCount: 0,
+        awaitingPayment: 0,
+        awaitingPaymentCount: 0,
+        inProgress: 0,
+        inProgressCount: 0,
+        completed: 0,
+        completedCount: 0,
+        refunded: 0,
+        refundedCount: 0,
+      };
+      cur.revenue += b.revenue || 0;
+      cur.deliveredCount += b.deliveredCount || 0;
+      cur.awaitingPayment = (cur.awaitingPayment ?? 0) + (b.awaitingPayment || 0);
+      cur.awaitingPaymentCount = (cur.awaitingPaymentCount ?? 0) + (b.awaitingPaymentCount || 0);
+      cur.inProgress = (cur.inProgress ?? 0) + (b.inProgress || 0);
+      cur.inProgressCount = (cur.inProgressCount ?? 0) + (b.inProgressCount || 0);
+      cur.completed = (cur.completed ?? 0) + (b.completed ?? b.revenue ?? 0);
+      cur.completedCount = (cur.completedCount ?? 0) + (b.completedCount ?? b.deliveredCount ?? 0);
+      cur.refunded = (cur.refunded ?? 0) + (b.refunded || 0);
+      cur.refundedCount = (cur.refundedCount ?? 0) + (b.refundedCount || 0);
+      seriesMap.set(b.labelVi, cur);
+    });
+
+    (s.itemsByStatus || []).forEach((r) => {
+      const key = `${r.productId}|${r.status}`;
+      const cur = itemMap.get(key) || { ...r, quantity: 0, value: 0, orderCount: 0 };
+      cur.quantity += r.quantity || 0;
+      cur.value += r.value || 0;
+      cur.orderCount += r.orderCount || 0;
+      itemMap.set(key, cur);
+    });
+    Object.entries(s.shippingFeeByStatus || {}).forEach(([k, v]) => {
+      shippingByStatus[k] = (shippingByStatus[k] || 0) + (v || 0);
+    });
 
     Object.entries(s.deliveriesByStatus || {}).forEach(([k, v]) => {
       deliveriesByStatus[k] = (deliveriesByStatus[k] || 0) + v;
@@ -118,8 +184,16 @@ function aggregateStoreStats(statsList: StoreStatistics[]): StoreStatistics {
     totalDeliveries,
     productCount,
     staffCount,
+    activeDeliveries,
+    activeDeliveriesValue,
+    awaitingPaymentOrders,
+    awaitingPaymentValue,
     deliveriesByStatus,
     revenueByMonth: Array.from(monthMap.values()),
+    revenueSeries: Array.from(seriesMap.values()),
+    // Gộp xong thì thứ tự cũ vô nghĩa — xếp lại theo tiền; danh sách cuộn được nên không cắt bớt.
+    itemsByStatus: Array.from(itemMap.values()).sort((a, b) => b.value - a.value),
+    shippingFeeByStatus: shippingByStatus,
   };
 }
 
@@ -140,6 +214,7 @@ export default function DashboardPage() {
 
   const [stats, setStats] = useState<StoreStatistics | null>(null);
   const [loadingStats, setLoadingStats] = useState(true);
+  const [range, setRange] = useState<StatsRange>("month");
 
   // Fetch stores
   useEffect(() => {
@@ -223,7 +298,7 @@ export default function DashboardPage() {
         if (isAdmin && shops.length > 0) {
           // Fetch all shops stats and aggregate
           const promises = shops.map((s) =>
-            getStoreStatisticsRequest(s.id)
+            getStoreStatisticsRequest(s.id, range)
               .then((res) => (res.isSuccess && res.data ? res.data : null))
               .catch(() => null),
           );
@@ -243,7 +318,7 @@ export default function DashboardPage() {
       }
 
       try {
-        const res = await getStoreStatisticsRequest(selectedStoreId);
+        const res = await getStoreStatisticsRequest(selectedStoreId, range);
         if (!active) return;
         if (res.isSuccess && res.data) {
           setStats(res.data);
@@ -261,7 +336,7 @@ export default function DashboardPage() {
     return () => {
       active = false;
     };
-  }, [selectedStoreId, isAdmin, shops]);
+  }, [selectedStoreId, isAdmin, shops, range]);
 
   // Fetch recent deliveries for selected store
   const { deliveries: recentDeliveries, listStatus: deliveriesStatus } = useStoreDeliveries(
@@ -274,7 +349,13 @@ export default function DashboardPage() {
     selectedStoreId ? undefined : { page: 1, pageSize: 5 },
   );
 
-  const series = useMemo(() => (stats ? buildMonthlySeries(stats) : []), [stats]);
+  // BE trả sẵn chuỗi theo `range` (kể cả mốc rỗng); thiếu thì rơi về 6 tháng dựng ở client.
+  const usingFallback = !!stats && !stats.revenueSeries?.length;
+  const series = useMemo<RevenueChartRow[]>(() => {
+    if (!stats) return [];
+    if (stats.revenueSeries?.length) return stats.revenueSeries.map(toChartRow);
+    return buildMonthlySeries(stats);
+  }, [stats]);
 
   const deliveredCount = useMemo(() => {
     if (!stats) return 0;
@@ -298,12 +379,16 @@ export default function DashboardPage() {
         value: String(stats.totalDeliveries),
         sub: `Phí ship đã thu: ${formatVnd(stats.totalShippingFee)}`,
       },
+      // Hai thẻ "chưa hoàn thành": store cần biết còn bao nhiêu việc và bao nhiêu tiền đang treo.
       {
-        icon: Package,
-        label: "Sản phẩm",
-        value: String(stats.productCount),
-        sub: "Đang bán trên cửa hàng",
+        icon: PackageOpen,
+        label: "Đang xử lý",
+        value: String(stats.activeDeliveries ?? 0),
+        sub: `Chờ giao: ${formatVnd(stats.activeDeliveriesValue ?? 0)}`,
       },
+      // Thẻ "Có thể rút" tạm ẩn (24/09/2026): con số đối soát đang SAI về nghiệp vụ — đơn đã cộng
+      // vào số dư vẫn tiếp tục nằm trong "có thể rút", và công nợ hoàn hàng chưa bị trừ. Chỉ hiện
+      // doanh thu cho tới khi luồng chi tiền được làm đúng (docs/adr/vendor-payout.md).
       {
         icon: Users,
         label: "Nhân viên",
@@ -373,7 +458,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Main Content */}
-      {loadingStats ? (
+      {loadingStats && !stats ? (
         <div className="flex flex-col items-center justify-center py-20 gap-3 text-gray-400">
           <Loader2 className="animate-spin text-primary" size={24} />
           <p className="text-sm font-medium">Đang tải thống kê dữ liệu...</p>
@@ -409,57 +494,24 @@ export default function DashboardPage() {
           </div>
 
           {/* Revenue Chart & Status Breakdown */}
+          <StatsPendingItems rows={stats.itemsByStatus ?? []} />
+
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-            {/* 6-Month Revenue BarChart */}
+            {/* Revenue BarChart — mốc theo nút Tuần/Tháng/Quý/Năm */}
             <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm lg:col-span-2">
-              <div className="flex items-center justify-between mb-6">
+              <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
                 <div>
-                  <h3 className="text-base font-bold text-gray-900">Doanh thu 6 tháng gần nhất</h3>
+                  <h3 className="text-base font-bold text-gray-900">Doanh thu theo thời gian</h3>
                   <p className="text-xs text-gray-400 mt-0.5">
                     Thống kê doanh thu theo các đơn giao thành công.
                   </p>
                 </div>
+                <StatsRangeTabs value={range} onChange={setRange} />
               </div>
-              <div className="h-72 w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={series} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
-                    <XAxis
-                      dataKey="label"
-                      tick={{ fontSize: 12, fill: "#6b7280" }}
-                      axisLine={false}
-                      tickLine={false}
-                    />
-                    <YAxis
-                      tick={{ fontSize: 12, fill: "#6b7280" }}
-                      axisLine={false}
-                      tickLine={false}
-                      tickFormatter={(v: number) =>
-                        v >= 1_000_000
-                          ? `${(v / 1_000_000).toFixed(1)}M`
-                          : v >= 1_000
-                            ? `${(v / 1_000).toFixed(0)}K`
-                            : String(v)
-                      }
-                    />
-                    <Tooltip
-                      formatter={(value) => [formatVnd(Number(value)), "Doanh thu"]}
-                      labelFormatter={(label) => `Tháng ${label}`}
-                      contentStyle={{
-                        borderRadius: "12px",
-                        background: "#ffffff",
-                        border: "1px solid #f3f4f6",
-                        boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
-                      }}
-                    />
-                    <Bar
-                      dataKey="revenue"
-                      fill="var(--color-primary, #16a34a)"
-                      radius={[6, 6, 0, 0]}
-                      maxBarSize={48}
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
+              <div
+                className={`transition-opacity duration-200 ${loadingStats ? "opacity-50" : "opacity-100"}`}
+              >
+                <RevenueStateChart data={series} height={288} fallback={usingFallback} />
               </div>
             </div>
 
@@ -467,6 +519,21 @@ export default function DashboardPage() {
             <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm flex flex-col">
               <h3 className="text-base font-bold text-gray-900 mb-4">Đơn giao theo trạng thái</h3>
               <ul className="space-y-3 flex-1 overflow-y-auto pr-1">
+                {/* Đơn chưa thanh toán chưa có delivery nên không nằm trong deliveriesByStatus — kê riêng
+                    ở đầu để store thấy còn đơn "treo" trước cả khi tiền về. */}
+                {(stats.awaitingPaymentOrders ?? 0) > 0 && (
+                  <li className="text-xs">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="font-semibold text-amber-700">
+                        Chờ thanh toán (chưa có đơn giao)
+                      </span>
+                      <span className="font-bold text-gray-900">{stats.awaitingPaymentOrders}</span>
+                    </div>
+                    <div className="h-2 rounded-full bg-amber-100 overflow-hidden">
+                      <div className="h-full w-full rounded-full bg-amber-300/70" />
+                    </div>
+                  </li>
+                )}
                 {Object.entries(STATUS_LABELS).map(([key, label]) => {
                   const count = stats.deliveriesByStatus[key] ?? 0;
                   if (
