@@ -432,7 +432,7 @@ export function ShopDeliveriesView({ storeId }: ShopDeliveriesViewProps) {
           </p>
         </div>
       ) : (
-        <div className="overflow-x-auto">
+        <div className="scroll-fade overflow-x-auto">
           <table className="w-full text-left text-sm border-collapse">
             <thead>
               <tr className="border-b border-gray-200 bg-gray-50/50 text-xs font-semibold text-gray-500 uppercase tracking-wider">

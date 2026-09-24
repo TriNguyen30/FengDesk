@@ -280,7 +280,7 @@ export default function AdminUserDetailPage() {
                 Lịch sử hoạt động (Audit Logs)
               </h3>
             </div>
-            <div className="max-h-96 overflow-y-auto">
+            <div className="max-h-96 scroll-fade overflow-y-auto">
               <table className="w-full text-left text-sm text-slate-600">
                 <thead className="bg-slate-50 border-b border-slate-200 text-xs font-semibold uppercase tracking-wider text-slate-700 sticky top-0">
                   <tr>

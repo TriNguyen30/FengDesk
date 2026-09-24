@@ -356,7 +356,7 @@ export default function ShopReturnsView({ storeId }: ShopReturnsViewProps) {
           </p>
         </div>
       ) : (
-        <div className="overflow-x-auto">
+        <div className="scroll-fade overflow-x-auto">
           <table className="w-full text-left text-sm border-collapse">
             <thead>
               <tr className="border-b border-gray-200 bg-gray-50/50 text-xs font-semibold text-gray-500 uppercase tracking-wider">
@@ -482,7 +482,7 @@ export default function ShopReturnsView({ storeId }: ShopReturnsViewProps) {
             </div>
 
             {/* Body */}
-            <div className="px-6 py-5 space-y-5 max-h-[75vh] overflow-y-auto">
+            <div className="px-6 py-5 space-y-5 max-h-[75vh] scroll-fade overflow-y-auto">
               {loadingDetail ? (
                 <div className="flex h-48 items-center justify-center">
                   <Loader2 className="h-8 w-8 animate-spin text-primary" />

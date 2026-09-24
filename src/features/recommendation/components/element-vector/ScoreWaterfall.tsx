@@ -1,4 +1,4 @@
-﻿import { useId, useState, type ReactNode } from "react";
+﻿import { useEffect, useId, useState, type KeyboardEvent, type ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Check, ChevronDown, Dot, Minus, Plus, TriangleAlert } from "lucide-react";
 import type {
@@ -16,6 +16,7 @@ import {
   elementColor,
   elementVi,
 } from "./constants";
+import { seamLine, seamWash } from "@/utils/seamGlow";
 import { useAnchoredPopover } from "./useAnchoredPopover";
 
 interface ScoreWaterfallProps {
@@ -44,10 +45,15 @@ interface ScoreWaterfallProps {
  * ra đúng con số trên badge. Số ở đây là số của BE, FE không tính lại — nếu tự tính, hai bên sẽ lệch
  * cách làm tròn và user thấy waterfall không cộng ra điểm.
  *
- * Mỗi dòng **hover ra phép tính từ đầu**: số hạng là tích trong `d·p` nên popover liệt kê từng hành
- * `d[e] × p[e]`, cộng lại ra đúng `value`, rồi nhân trọng số ra `contribution`. Vector `d`/`p` lấy từ
- * `breakdown.vectors` (BE trả), FE chỉ nhân lại để **minh hoạ** — nếu tổng lệch `value` quá 0.001 là
- * FE đang đọc sai vector, không phải BE sai.
+ * Mỗi dòng có **ba mức chi tiết**, tách ra ba cử chỉ khác nhau (đổi 25/09 — phản hồi "quá nhiều chữ,
+ * thiếu trực quan"): mặc định chỉ tên + con số; **hover** bung câu giải thích; **click** ra phép tính
+ * đầy đủ. Trước đây câu giải thích luôn hiện và phép tính bám hover — thành ra nhìn vào là một bức
+ * tường chữ, mà rê chuột ngang qua thì popover nhảy loạn.
+ *
+ * Phép tính: số hạng là tích trong `d·p` nên popover liệt kê từng hành `d[e] × p[e]`, cộng lại ra đúng
+ * `value`, rồi nhân trọng số ra `contribution`. Vector `d`/`p` lấy từ `breakdown.vectors` (BE trả), FE
+ * chỉ nhân lại để **minh hoạ** — nếu tổng lệch `value` quá 0.001 là FE đang đọc sai vector, không phải
+ * BE sai.
  *
  * Bố cục: phần giải thích điểm **luôn mở**; hai câu kết luận đứng ngay dưới "Điểm cuối"; danh sách
  * "đã xét, không trừ" — lặp y hệt ở mọi sản phẩm cùng loại — gập lại, mặc định đóng; bung ra mà tràn
@@ -64,14 +70,16 @@ export default function ScoreWaterfall({
   // Mặc định MỞ (yêu cầu 21/09): cột phải cao bằng cột trái, danh sách dài thì cột cuộn dọc.
   const [skippedOpen, setSkippedOpen] = useState(true);
   const appliedPenalties = breakdown.penalties.filter((p) => p.applied);
+  // Dòng CUỐI không vẽ vạch ngăn — dưới nó đã là đường kẻ của khối "Mức độ phù hợp".
+  const rowCount = breakdown.components.length + appliedPenalties.length;
   const skippedPenalties = breakdown.penalties.filter((p) => !p.applied);
   const product = toMap(breakdown.vectors.product);
 
   return (
     <div className="rounded-xl border border-gray-200 bg-gray-50/60">
       <div className="flex items-center justify-between gap-2 px-3 py-2.5">
-        <span className="text-[13px] font-semibold text-gray-700">Điểm này đến từ đâu?</span>
-        <span className="flex items-center gap-2 text-[11px] text-gray-400">
+        <span className="text-[14px] font-semibold text-gray-700">Điểm này đến từ đâu?</span>
+        <span className="flex items-center gap-2 text-[12px] text-gray-400">
           {/* Đóng dấu phiên bản: phiên gợi ý cũ lưu điểm của công thức cũ, không so trực tiếp với điểm hôm nay. */}
           <span
             title={`Công thức phiên bản ${breakdown.formulaVersion}. Phiên gợi ý đã lưu ở phiên bản khác có điểm không so sánh trực tiếp với điểm này.`}
@@ -95,80 +103,71 @@ export default function ScoreWaterfall({
           <div
             className={
               aside
-                ? "md:absolute md:inset-y-0 md:-inset-x-2 md:overflow-y-auto md:overflow-x-hidden md:px-2 md:snap-y md:snap-mandatory [scrollbar-width:thin]"
+                ? "scroll-fade md:absolute md:inset-y-0 md:-inset-x-2 md:overflow-y-auto md:overflow-x-hidden md:px-2 md:snap-y md:snap-mandatory"
                 : ""
             }
           >
             <div className="snap-start">
               {lead && <div className="mb-3">{lead}</div>}
-              <ul className="space-y-2.5">
-                {breakdown.components.map((c) => (
-                  <HoverCalc
+              {/* `-mx-2` ở ĐÂY chứ không ở từng dòng: vạch ngăn phải chạy hết bề ngang cột, thụt vào
+                  8px mỗi bên sẽ đọc như gạch chân của chữ thay vì khe giữa hai dòng. */}
+              <ul className="-mx-2">
+                {breakdown.components.map((c, i) => (
+                  <BreakdownRow
                     key={c.code}
+                    last={i === rowCount - 1}
+                    tone={toneKey(c.contribution)}
+                    detail={c.reasonVi}
                     calc={<ComponentCalc component={c} breakdown={breakdown} product={product} />}
-                  >
-                    <div className="flex items-baseline justify-between gap-3 text-[13px]">
-                      <span
-                        className={`flex min-w-0 items-center gap-1.5 font-medium ${toneOf(c.contribution).text}`}
-                      >
-                        {/* Dấu theo DẤU của số hạng: "hành nên tránh" là số hạng âm — vẽ dấu + cho nó là nói
-                            ngược. Số hạng bằng 0 không cộng cũng không trừ ⇒ chấm xám, không phải dấu +. */}
-                        {toneOf(c.contribution).icon}
-                        <span className="truncate">{c.labelVi}</span>
-                      </span>
-                      <span className="shrink-0 tabular-nums text-gray-600">
-                        {Math.abs(c.value).toFixed(3)}
-                        <span className="text-gray-400"> × {c.weight.toFixed(2)} = </span>
-                        <span className={`font-semibold ${toneOf(c.contribution).value}`}>
-                          {signed(c.contribution)}
+                    headline={
+                      <>
+                        <span
+                          className={`flex min-w-0 items-center gap-1.5 font-medium ${toneOf(c.contribution).text}`}
+                        >
+                          {/* Dấu theo DẤU của số hạng: "hành nên tránh" là số hạng âm — vẽ dấu + cho nó là nói
+                              ngược. Số hạng bằng 0 không cộng cũng không trừ ⇒ chấm xám, không phải dấu +. */}
+                          {toneOf(c.contribution).icon}
+                          <span className="truncate">{c.labelVi}</span>
                         </span>
-                      </span>
-                    </div>
-                    <p className="mt-0.5 pl-[18px] text-xs leading-snug text-gray-500">
-                      {c.reasonVi}
-                    </p>
-                  </HoverCalc>
+                        <span className="shrink-0 text-[0.92em] tabular-nums text-gray-600">
+                          {Math.abs(c.value).toFixed(3)}
+                          <span className="text-gray-400"> × {c.weight.toFixed(2)} = </span>
+                          <span className={`font-semibold ${toneOf(c.contribution).value}`}>
+                            {signed(c.contribution)}
+                          </span>
+                        </span>
+                      </>
+                    }
+                  />
                 ))}
 
-                {appliedPenalties.map((p) => (
-                  <HoverCalc
+                {appliedPenalties.map((p, i) => (
+                  <BreakdownRow
                     key={p.code}
+                    last={breakdown.components.length + i === rowCount - 1}
+                    tone="negative"
+                    detail={p.reasonVi}
                     calc={<PenaltyCalc penalty={p} breakdown={breakdown} product={product} />}
-                  >
-                    <div className="flex items-baseline justify-between gap-3 text-[13px]">
-                      <span className="flex min-w-0 items-center gap-1.5 font-medium text-red-700">
-                        <Minus size={12} className="shrink-0" />
-                        <span className="truncate">{p.labelVi}</span>
-                      </span>
-                      <span className="shrink-0 font-semibold tabular-nums text-red-700">
-                        −{p.value.toFixed(3)}
-                      </span>
-                    </div>
-                    <p className="mt-0.5 pl-[18px] text-xs leading-snug text-gray-500">
-                      {p.reasonVi}
-                    </p>
-                  </HoverCalc>
+                    headline={
+                      <>
+                        <span className="flex min-w-0 items-center gap-1.5 font-medium text-negative">
+                          <Minus size={12} className="shrink-0" />
+                          <span className="truncate">{p.labelVi}</span>
+                        </span>
+                        <span className="shrink-0 text-[0.92em] font-semibold tabular-nums text-negative">
+                          −{p.value.toFixed(3)}
+                        </span>
+                      </>
+                    }
+                  />
                 ))}
               </ul>
             </div>
             <div className="snap-end">
-              <HoverCalc
-                as="div"
-                calc={<FinalCalc breakdown={breakdown} applied={appliedPenalties} />}
-              >
-                <div className="mt-3 flex items-baseline justify-between border-t border-gray-200 pt-2.5 text-[13px]">
-                  <span className="font-semibold text-gray-900">Mức độ phù hợp</span>
-                  <span className="font-bold tabular-nums text-gray-900">
-                    {breakdown.score.toFixed(3)}
-                    <span className="ml-1.5 font-medium text-gray-500">
-                      = {breakdown.displayPercent}%
-                    </span>
-                  </span>
-                </div>
-              </HoverCalc>
+              <FinalRow breakdown={breakdown} applied={appliedPenalties} />
 
               {breakdown.clamped && (
-                <p className="mt-1.5 text-xs leading-snug text-gray-500">
+                <p className="mt-1.5 text-[13px] leading-snug text-gray-500">
                   Điểm thô là {breakdown.rawScore.toFixed(3)}, đã cắt về biên của thang [−1, 1].
                 </p>
               )}
@@ -178,16 +177,16 @@ export default function ScoreWaterfall({
                   {matchFacts.map((f, i) => (
                     <li
                       key={`m${i}`}
-                      className="flex items-start gap-1.5 text-xs leading-snug text-gray-700"
+                      className="flex items-start gap-1.5 text-[13px] leading-snug text-gray-700"
                     >
-                      <Check size={12} className="mt-0.5 shrink-0 text-emerald-600" />
+                      <Check size={13} className="mt-0.5 shrink-0 text-positive" />
                       <span>{f}</span>
                     </li>
                   ))}
                   {cautionFacts.map((c, i) => (
                     <li
                       key={`c${i}`}
-                      className={`flex items-start gap-1.5 rounded-lg px-2 py-1.5 text-xs leading-snug ${CAUTION_CLASS[cautionTone(c)]}`}
+                      className={`flex items-start gap-1.5 rounded-lg px-2 py-1.5 text-[13px] leading-snug ${CAUTION_CLASS[cautionTone(c)]}`}
                     >
                       <TriangleAlert size={12} className="mt-0.5 shrink-0" />
                       <span>{c}</span>
@@ -204,7 +203,7 @@ export default function ScoreWaterfall({
                     aria-expanded={skippedOpen}
                     className="flex w-full items-center justify-between gap-2 text-left"
                   >
-                    <span className="text-[11px] font-medium uppercase tracking-wide text-gray-400">
+                    <span className="text-[12px] font-medium uppercase tracking-wide text-gray-400">
                       Đã xem xét các yếu tố ({skippedPenalties.length})
                     </span>
                     <ChevronDown
@@ -216,7 +215,7 @@ export default function ScoreWaterfall({
                   {skippedOpen && (
                     <ul className="mt-1.5 space-y-1.5">
                       {skippedPenalties.map((p) => (
-                        <li key={p.code} className="text-xs leading-snug text-gray-500">
+                        <li key={p.code} className="text-[13px] leading-snug text-gray-500">
                           <span className="font-medium text-gray-600">{p.labelVi}</span>
                           {" - "}
                           {p.reasonVi}
@@ -234,21 +233,38 @@ export default function ScoreWaterfall({
   );
 }
 
-// ─────────────────────────── popover "phép tính" ───────────────────────────
+// ─────────────────────────── dòng waterfall + popover "phép tính" ───────────────────────────
+
+type Tone = "positive" | "negative" | "neutral";
+
+function toneKey(contribution: number): Tone {
+  if (contribution > 0.0005) return "positive";
+  if (contribution < -0.0005) return "negative";
+  return "neutral";
+}
 
 /**
- * Bọc một dòng waterfall: hover/focus mở popover phép tính bên dưới dòng. Là `<li>` có `tabIndex` để
- * bàn phím cũng mở được. Popover bung xuống dưới, bám mép phải (cột số) — cùng cơ chế với chip nghề.
+ * Màu của vệt sáng (`wash`) và của vạch ngăn khi dòng đang sáng (`line`). Xanh cho số hạng cộng, đỏ
+ * cho số hạng trừ, xám cho dòng bằng 0 — cùng quy ước ba mức với {@link toneOf}, không phải hai.
+ *
+ * Lấy từ `--color-positive` / `--color-negative` qua `color-mix` chứ không đặt hex riêng: đó là hai
+ * token TÍN HIỆU dùng chung cả màn (dấu +, dấu ✓, chip "cải thiện", nhãn dòng trừ). Hardcode một mã
+ * ở đây là lần chỉnh màu sau vệt sáng lạc tông so với mọi thứ quanh nó.
  */
-function HoverCalc({
-  children,
-  calc,
-  as: Tag = "li",
-}: {
-  children: ReactNode;
-  calc: ReactNode;
-  as?: "li" | "div";
-}) {
+const GLOW: Record<Tone, { color: string; wash: number; line: number }> = {
+  positive: { color: "var(--color-positive)", wash: 23, line: 56 },
+  negative: { color: "var(--color-negative)", wash: 21, line: 52 },
+  neutral: { color: "#78716c", wash: 11, line: 32 },
+};
+
+/**
+ * Popover phép tính — mở bằng **CLICK**.
+ *
+ * Trước đây bám hover, nhưng 25/09 hover đã được dùng cho việc bung câu giải thích; để cả hai trên
+ * cùng một cử chỉ thì rê chuột ngang qua bảng là popover nhảy loạn. Đổi lại: click thì phải tự lo
+ * việc đóng khi bấm ra ngoài — hover trước kia tự đóng lúc rời chuột.
+ */
+function useCalcPopover(calc: ReactNode) {
   const [open, setOpen] = useState(false);
   const id = useId();
   // `fixed` theo neo (không `absolute`): dòng nằm trong cột cuộn, `absolute` sẽ bị overflow xén.
@@ -257,35 +273,160 @@ function HoverCalc({
     align: "right",
     onClose: () => setOpen(false),
   });
+
+  useEffect(() => {
+    if (!open) return;
+    const onPointerDown = (e: PointerEvent) => {
+      if (!anchorRef.current?.contains(e.target as Node)) setOpen(false);
+    };
+    // capture: bấm vào phần tử có `stopPropagation` ở trong cũng vẫn đóng được.
+    document.addEventListener("pointerdown", onPointerDown, true);
+    return () => document.removeEventListener("pointerdown", onPointerDown, true);
+  }, [open, anchorRef]);
+
+  const toggle = () => setOpen((v) => !v);
+  const anchorProps = {
+    ref: anchorRef as never,
+    tabIndex: 0,
+    "aria-expanded": open,
+    "aria-describedby": open ? id : undefined,
+    title: "Bấm để xem phép tính đầy đủ",
+    onClick: toggle,
+    onKeyDown: (e: KeyboardEvent) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        toggle();
+      } else if (e.key === "Escape") {
+        setOpen(false);
+      }
+    },
+  };
+
+  const popover = (
+    <AnimatePresence>
+      {open && (
+        <motion.div
+          id={id}
+          role="tooltip"
+          initial={{ opacity: 0, y: 4 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 4 }}
+          transition={{ duration: 0.15 }}
+          className="scroll-fade overflow-y-auto rounded-xl border border-gray-200 p-3 text-[13px] shadow-lg backdrop-blur-[3px]"
+          style={{ ...style, background: "rgba(255,255,255,0.97)" }}
+        >
+          {calc}
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+
+  return { anchorProps, popover, open };
+}
+
+/**
+ * Một dòng của waterfall — ba mức chi tiết trên ba cử chỉ:
+ *
+ * 1. **mặc định** — chỉ tên + con số. Câu giải thích ẩn đi; nó chính là phần khiến bảng này bị chê
+ *    "quá nhiều chữ" khi ba dòng cùng trải ra một lúc.
+ * 2. **hover / focus** — tên và con số co lại một nấc (13px → 12px) để nhường chỗ, câu giải thích
+ *    đẩy xuống mở ra. Dùng đúng mẹo `grid-template-rows: 0fr → 1fr` của "Hiện trạng không gian hiện
+ *    tại" bên intake: `height: auto` không transition được, còn `max-height` đoán bừa thì hoặc giật
+ *    ở cuối hoặc cắt mất chữ khi ghi chú dài.
+ * 3. **click** — popover phép tính đầy đủ.
+ *
+ * Popover đang mở thì `data-open` giữ dòng ở trạng thái đã bung: rời chuột mà dòng co lại trong khi
+ * popover vẫn treo ở toạ độ cũ sẽ thành hai mảnh rời nhau.
+ */
+function BreakdownRow({
+  tone,
+  last,
+  headline,
+  detail,
+  calc,
+}: {
+  tone: Tone;
+  last: boolean;
+  headline: ReactNode;
+  detail: string;
+  calc: ReactNode;
+}) {
+  const { anchorProps, popover, open } = useCalcPopover(calc);
+  const glow = GLOW[tone];
+
   return (
-    <Tag
-      ref={anchorRef as never}
-      className="-mx-2 rounded-lg px-2 py-1 outline-none transition-colors hover:bg-white focus-visible:bg-white focus-visible:ring-2 focus-visible:ring-primary/30"
-      tabIndex={0}
-      aria-describedby={open ? id : undefined}
-      onMouseEnter={() => setOpen(true)}
-      onMouseLeave={() => setOpen(false)}
-      onFocus={() => setOpen(true)}
-      onBlur={() => setOpen(false)}
+    <li
+      {...anchorProps}
+      data-open={open ? "true" : undefined}
+      className="group relative cursor-pointer rounded-lg px-2 py-2 outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
     >
-      {children}
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            id={id}
-            role="tooltip"
-            initial={{ opacity: 0, y: 4 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 4 }}
-            transition={{ duration: 0.15 }}
-            className="overflow-y-auto rounded-xl border border-gray-200 p-3 text-xs shadow-lg backdrop-blur-[3px]"
-            style={{ ...style, background: "rgba(255,255,255,0.97)" }}
-          >
-            {calc}
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </Tag>
+      {/* Vạch ngăn vẽ RIÊNG bằng <span>, không dùng `border-t` của <li>: <li> có bo góc nên border
+          của nó uốn cong ở hai đầu. Vạch nằm ở ĐÁY dòng — đúng cái khe mà vệt sáng hắt lên — và
+          thụt vào 16px mỗi bên, bằng đúng bề ngang vệt sáng, để hai thứ đọc thành một.
+
+          Hai lớp chồng nhau: lớp xám là vạch lúc bình thường, lớp màu mờ dần hiện lên khi sáng.
+          Dòng CUỐI không có lớp xám — dưới nó đã là đường kẻ của khối "Mức độ phù hợp", vẽ thêm là
+          hai nét sát nhau — nhưng lớp màu thì vẫn có, để lúc hover nó sáng lên y như mọi dòng. */}
+      {!last && (
+        <span
+          aria-hidden
+          className="pointer-events-none absolute bottom-0 left-4 right-4 h-px bg-gray-200/80"
+        />
+      )}
+      <span
+        aria-hidden
+        // Đậm ở TÂM rồi nhạt dần ra hai đầu về trong suốt: ở mép, lớp màu biến mất hẳn nên cái nhìn
+        // thấy chính là lớp xám bên dưới — vạch không bị "đổi màu cả cây" mà chỉ sáng lên ở giữa.
+        className="pointer-events-none absolute bottom-0 left-4 right-4 h-px opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-visible:opacity-100 group-data-[open=true]:opacity-100"
+        style={{ background: seamLine(glow.color, glow.line) }}
+      />
+      {/* Vệt sáng hắt từ khe dưới ngược lên, cùng hộp (và vì vậy cùng bề ngang) với vạch ngăn. */}
+      <span
+        aria-hidden
+        className="pointer-events-none absolute inset-y-0 left-4 right-4 opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-visible:opacity-100 group-data-[open=true]:opacity-100"
+        style={{ background: seamWash(glow.color, glow.wash) }}
+      />
+
+      <div className="relative">
+        <div className="flex items-baseline justify-between gap-2 text-[14px] transition-[font-size] duration-300 group-hover:text-[13px] group-focus-visible:text-[13px] group-data-[open=true]:text-[13px]">
+          {headline}
+        </div>
+        <div className="grid [grid-template-rows:0fr] transition-[grid-template-rows] duration-300 ease-in-out group-hover:[grid-template-rows:1fr] group-focus-visible:[grid-template-rows:1fr] group-data-[open=true]:[grid-template-rows:1fr]">
+          <div className="overflow-hidden">
+            <p className="pl-[18px] pt-1 text-[13px] leading-snug text-gray-500">{detail}</p>
+          </div>
+        </div>
+      </div>
+      {popover}
+    </li>
+  );
+}
+
+/** Dòng tổng: cũng bấm ra phép tính, nhưng không bung/không đèn — nó là kết luận, không phải số hạng. */
+function FinalRow({
+  breakdown,
+  applied,
+}: {
+  breakdown: ScoreBreakdown;
+  applied: ScorePenaltyRow[];
+}) {
+  const { anchorProps, popover } = useCalcPopover(
+    <FinalCalc breakdown={breakdown} applied={applied} />,
+  );
+  return (
+    <div
+      {...anchorProps}
+      className="-mx-2 cursor-pointer rounded-lg px-2 outline-none transition-colors hover:bg-white focus-visible:bg-white focus-visible:ring-2 focus-visible:ring-primary/30"
+    >
+      <div className="mt-3 flex items-baseline justify-between border-t border-gray-200 pt-2.5 text-[14px]">
+        <span className="font-semibold text-gray-900">Mức độ phù hợp</span>
+        <span className="font-bold tabular-nums text-gray-900">
+          {breakdown.score.toFixed(3)}
+          <span className="ml-1.5 font-medium text-gray-500">= {breakdown.displayPercent}%</span>
+        </span>
+      </div>
+      {popover}
+    </div>
   );
 }
 
@@ -372,9 +513,9 @@ function ComponentCalc({
     <div>
       <p className="mb-1.5 font-semibold text-slate-900">{title}</p>
       <div className="grid grid-cols-[auto_1fr_auto] items-center gap-x-2 gap-y-1 text-slate-700">
-        <span className="text-[11px] uppercase tracking-wide text-slate-400">Hành</span>
-        <span className="text-[11px] uppercase tracking-wide text-slate-400">{header}</span>
-        <span className="text-right text-[11px] uppercase tracking-wide text-slate-400">= </span>
+        <span className="text-[12px] uppercase tracking-wide text-slate-400">Hành</span>
+        <span className="text-[12px] uppercase tracking-wide text-slate-400">{header}</span>
+        <span className="text-right text-[12px] uppercase tracking-wide text-slate-400">= </span>
         {rows.map((r) => (
           <CalcRow
             key={r.element}
@@ -399,7 +540,7 @@ function ComponentCalc({
         </span>
       </div>
       {mismatch && (
-        <p className="mt-1 text-[11px] text-amber-700">
+        <p className="mt-1 text-[12px] text-amber-700">
           FE cộng ra {fmt(clamped, 3)} khác BE {fmt(component.value, 3)} - đang đọc sai vector, số
           BE là số đúng.
         </p>
@@ -437,7 +578,7 @@ function PenaltyCalc({
       <p className="mb-1.5 font-semibold text-slate-900">{penalty.labelVi}</p>
       {clashRows.length > 0 && (
         <div className="mb-1.5 grid grid-cols-[auto_1fr_auto] items-center gap-x-2 gap-y-1 text-slate-700">
-          <span className="col-span-3 text-[11px] uppercase tracking-wide text-slate-400">
+          <span className="col-span-3 text-[12px] uppercase tracking-wide text-slate-400">
             Hành khắc bản mệnh {destiny ? elementVi(destiny) : ""} trong sản phẩm
           </span>
           {clashRows.map((r) => (
@@ -457,7 +598,7 @@ function PenaltyCalc({
           {penalty.factor != null &&
             ` × ${penalty.factorLabelVi ?? "hệ số"} ${penalty.factor.toFixed(2)}`}
         </span>
-        <span className="font-semibold tabular-nums text-red-700">−{penalty.value.toFixed(3)}</span>
+        <span className="font-semibold tabular-nums text-negative">−{penalty.value.toFixed(3)}</span>
       </div>
     </div>
   );
@@ -493,7 +634,7 @@ function FinalCalc({
         <span>({fmt(breakdown.score, 3)} + 1) ÷ 2 × 100</span>
         <span className="tabular-nums">= {breakdown.displayPercent}%</span>
       </div>
-      <p className="text-[11px] text-slate-500">
+      <p className="text-[12px] text-slate-500">
         50% = trung tính · ≥ 60% "Phù hợp" · ≥ 80% "Rất hợp" · &lt; 40% "Cân nhắc".
       </p>
     </div>
@@ -549,15 +690,15 @@ function signed(value: number): string {
 function toneOf(contribution: number): { icon: ReactNode; text: string; value: string } {
   if (contribution > 0.0005)
     return {
-      icon: <Plus size={12} className="shrink-0 text-emerald-600" />,
+      icon: <Plus size={13} className="shrink-0 text-positive" />,
       text: "text-gray-800",
       value: "text-gray-900",
     };
   if (contribution < -0.0005)
     return {
       icon: <Minus size={12} className="shrink-0" />,
-      text: "text-[#b3261e]",
-      value: "text-[#b3261e]",
+      text: "text-negative",
+      value: "text-negative",
     };
   return {
     icon: <Dot size={12} className="shrink-0 text-gray-400" />,

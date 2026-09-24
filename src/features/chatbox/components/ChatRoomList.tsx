@@ -52,7 +52,7 @@ export default function ChatRoomList({
   }
 
   return (
-    <div className="scrollbar-none flex flex-1 flex-col overflow-y-auto py-1">
+    <div className="scrollbar-none flex flex-1 flex-col scroll-fade overflow-y-auto py-1">
       {chatboxes.map((box) => (
         <div
           key={box.id}

@@ -363,7 +363,7 @@ export default function AddressModal({ isOpen, onClose, onSuccess, address }: Ad
             initial="hidden"
             animate="visible"
             exit="exit"
-            className="relative z-[101] w-full max-w-2xl rounded-2xl bg-white shadow-xl max-h-[90vh] overflow-y-auto"
+            className="relative z-[101] w-full max-w-2xl rounded-2xl bg-white shadow-xl max-h-[90vh] scroll-fade overflow-y-auto"
           >
             <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4 sticky top-0 bg-white z-[500]">
               <h2 className="text-lg font-bold text-gray-900">

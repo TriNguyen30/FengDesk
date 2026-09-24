@@ -655,7 +655,7 @@ export default function ProfileReturnOrder() {
               </div>
 
               {/* Body */}
-              <div className="px-6 py-5 space-y-5 max-h-[75vh] overflow-y-auto">
+              <div className="px-6 py-5 space-y-5 max-h-[75vh] scroll-fade overflow-y-auto">
                 {loadingDetail ? (
                   <div className="flex h-48 items-center justify-center">
                     <Loader2 className="h-8 w-8 animate-spin text-orange-400" />

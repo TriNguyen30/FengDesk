@@ -27,7 +27,7 @@ import { logout } from "@/features/auth/store/authSlice";
 import { clearSession } from "@/utils";
 import WorkspaceSwitcher from "@/components/ui/WorkspaceSwitcher";
 import FooterManager from "@/components/ui/FooterManager";
-import FengDesk from "@/assets/image/fengdesk_logo_2.png";
+import FengDesk from "@/assets/image/fengdesk_logo_2.webp";
 
 const toasterStyle = { "--width": "min(100vw - 1.5rem, 356px)" } as CSSProperties;
 
@@ -160,7 +160,7 @@ export default function ManagerLayout() {
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 space-y-1 overflow-y-auto p-3">
+        <nav className="flex-1 space-y-1 scroll-fade overflow-y-auto p-3">
           {navigation.map((item) => {
             const hasChildren = !!item.children;
             const isAnyChildActive = hasChildren
@@ -352,7 +352,7 @@ export default function ManagerLayout() {
                     <div className="border-b border-gray-100 px-4 py-3">
                       <p className="text-sm font-semibold text-gray-900">Thông báo</p>
                     </div>
-                    <ul className="max-h-72 overflow-y-auto">
+                    <ul className="max-h-72 scroll-fade overflow-y-auto">
                       {notifications.map((n) => (
                         <li
                           key={n.id}
@@ -378,7 +378,7 @@ export default function ManagerLayout() {
         </header>
 
         {/* Page content */}
-        <main className="flex flex-1 flex-col overflow-y-auto">
+        <main className="flex flex-1 flex-col scroll-fade overflow-y-auto">
           <div className="flex-1 p-4 sm:p-6">
             <Outlet />
           </div>

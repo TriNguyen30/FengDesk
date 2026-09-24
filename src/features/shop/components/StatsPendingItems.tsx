@@ -74,8 +74,6 @@ export function StatsPendingItems({ rows }: { rows: StoreStatisticsItemRow[] }) 
   // đổi một chút là con số đoán sẽ để lòi nửa dòng ở đáy — đúng thứ làm người đọc tưởng mình bỏ sót.
   const bodyRef = useRef<HTMLTableSectionElement>(null);
   const [maxHeight, setMaxHeight] = useState<number | undefined>(undefined);
-  const [scrolling, setScrolling] = useState(false);
-  const idleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useLayoutEffect(() => {
     const body = bodyRef.current;
@@ -101,12 +99,6 @@ export function StatsPendingItems({ rows }: { rows: StoreStatisticsItemRow[] }) 
   const scrolls = sorted.length > VISIBLE_ROWS;
   const totalValue = sorted.reduce((sum, r) => sum + r.value, 0);
   const totalShipping = sorted.reduce((sum, r) => sum + (r.shippingFee ?? 0), 0);
-
-  const onScroll = () => {
-    setScrolling(true);
-    if (idleTimer.current) clearTimeout(idleTimer.current);
-    idleTimer.current = setTimeout(() => setScrolling(false), 700);
-  };
 
   return (
     <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
@@ -139,15 +131,10 @@ export function StatsPendingItems({ rows }: { rows: StoreStatisticsItemRow[] }) 
           bắt lại mạch. Thanh cuộn ẩn khi đứng yên (hiện lúc đang kéo hoặc khi rê chuột vào) — một vạch
           xám đứng im cạnh bảng không nói thêm được gì. */}
       <div
-        onScroll={onScroll}
+        // Tự ẩn + fade do `scroll-fade` lo (src/utils/scrollFade.ts). Bản cũ ở đây bật/tắt
+        // `scrollbar-width` theo state: vừa không mờ dần được, vừa làm bảng co giãn 10px mỗi lượt cuộn.
         className={
-          scrolls
-            ? `overflow-y-auto snap-y snap-mandatory overscroll-contain ${
-                scrolling
-                  ? "[scrollbar-width:thin]"
-                  : "[scrollbar-width:none] hover:[scrollbar-width:thin]"
-              }`
-            : ""
+          scrolls ? "scroll-fade overflow-y-auto snap-y snap-mandatory overscroll-contain" : ""
         }
         style={scrolls ? { maxHeight } : undefined}
       >

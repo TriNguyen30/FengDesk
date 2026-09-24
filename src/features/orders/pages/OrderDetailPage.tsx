@@ -584,7 +584,7 @@ export default function OrderDetailPage() {
           </div>
 
           {/* Stepper */}
-          <div className="px-5 pt-12 pb-6 overflow-x-auto">
+          <div className="px-5 pt-12 pb-6 scroll-fade overflow-x-auto">
             <div className="flex items-start min-w-[500px]">
               {steps.map((step, idx) => {
                 const isLast = idx === steps.length - 1;
@@ -1115,7 +1115,7 @@ export default function OrderDetailPage() {
                 <X size={18} />
               </button>
             </div>
-            <div className="px-4 py-4 space-y-2 max-h-[60vh] overflow-y-auto">
+            <div className="px-4 py-4 space-y-2 max-h-[60vh] scroll-fade overflow-y-auto">
               {returnableDeliveries.map((delivery) => (
                 <button
                   key={delivery.id}
@@ -1178,7 +1178,7 @@ export default function OrderDetailPage() {
               </button>
             </div>
 
-            <div className="px-6 py-5 space-y-5 max-h-[75vh] overflow-y-auto">
+            <div className="px-6 py-5 space-y-5 max-h-[75vh] scroll-fade overflow-y-auto">
               {/* Item selection */}
               <div>
                 <div className="flex items-center justify-between mb-2">

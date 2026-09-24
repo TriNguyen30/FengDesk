@@ -1,6 +1,7 @@
 import { AlertTriangle, Loader2, PenLine, Wrench } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
+import { seamLine, seamWash } from "@/utils/seamGlow";
 import type { AiActivity } from "./types";
 
 interface AiActivityIndicatorProps {
@@ -52,6 +53,20 @@ const TEXT_INSET_REM = 2.5;
 const SIDE_FADE =
   `linear-gradient(to right, transparent 0, #000 ${SIDE_FADE_REM}rem, ` +
   `#000 calc(100% - ${SIDE_FADE_REM}rem), transparent 100%)`;
+
+/**
+ * Khe sáng dưới đáy — cùng ngôn ngữ với từng dòng ở "Điểm này đến từ đâu?" (xem `utils/seamGlow`).
+ * Màu lấy `--color-primary`: đây là trạng thái "AI đang làm việc", dùng màu thương hiệu là đúng
+ * nghĩa; còn hai token tín hiệu +/− thì dành cho chuyện tốt/xấu, không phải chuyện đang bận.
+ *
+ * Độ đục ở đây là mức KHI HOVER; lúc thường cả hai lớp chạy ở `opacity` thấp hơn (xem `IDLE_GLOW`).
+ */
+const GLOW_COLOR = "var(--color-primary)";
+const GLOW_WASH_PERCENT = 26;
+const GLOW_LINE_PERCENT = 55;
+/* Lúc thường hai lớp chạy ở `opacity-[0.62]`, hover đưa về 1 → đậm thêm một nấc, không đổi màu.
+   Viết thẳng bằng class chứ không bằng hằng số: `edge` của framer-motion ghi `opacity` vào inline
+   style, mà inline thắng class — nên độ đậm phải nằm ở một tầng DOM khác với tầng đang animate. */
 
 /**
  * Trạng thái AI hiển thị dưới dạng KHE HỞ cắt ngang khung chat, không phải bong bóng tin nhắn:
@@ -151,14 +166,16 @@ export default function AiActivityIndicator({
       transition={bandTransition}
       // KHÔNG đặt màu nền: nền trong phải trùng nền ngoài, nếu không hai đầu khe sẽ hiện thành cạnh
       // dọc và cả khối đọc ra thành một cái box.
-      className={`relative overflow-hidden ${className}`}
+      className={`group relative overflow-hidden ${className}`}
       style={{
         // Bóng đổ vào trong, mép DƯỚI đậm hơn mép trên — làm khe trông như lõm xuống chứ không phải
         // một dải màu dán lên bề mặt. Khi nối vào khối phía trên thì bỏ bóng trên, nếu không nó
         // chồng lên viền dưới của khối đó thành một vệt tối đôi ngay chỗ nối.
+        // Chỉ còn bóng ở mép DƯỚI. Bóng trên đã bỏ cùng với vệt mảnh trên: nguồn sáng giờ nằm ở
+        // đáy khe, để một vệt tối hắt xuống từ trên là hai thứ đánh nhau.
         boxShadow: attachedAbove
           ? "inset 0 -8px 10px -9px rgba(0,0,0,0.5)"
-          : "inset 0 5px 7px -8px rgba(0,0,0,0.16), inset 0 -8px 10px -9px rgba(0,0,0,0.4)",
+          : "inset 0 -8px 10px -9px rgba(0,0,0,0.4)",
         maskImage: SIDE_FADE,
         WebkitMaskImage: SIDE_FADE,
       }}
@@ -210,25 +227,20 @@ export default function AiActivityIndicator({
         )}
       </div>
 
-      {/* Hai mép. Bám đúng mép khung nên khi chiều cao chạy, chúng tách xa / khép lại nhau.
-          Mép dưới đậm hơn + có vệt sáng ngay dưới: đó là phần "môi" dưới hứng sáng, thứ làm khe
-          trông như hổng chứ không phải hai đường kẻ. Tương quan đậm/nhạt khớp với bóng đổ ở trên. */}
-      {/* Mép trên chỉ vẽ khi KHÔNG có khối lời dẫn ngay trên — nếu có, viền dưới của khối đó chính
-          là mép trên của khe, vẽ thêm nữa thành hai vạch sát nhau. */}
-      {!attachedAbove && (
-        <motion.span
-          {...edge}
-          className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-gray-900/12 to-transparent"
+      {/* KHÔNG còn mép trên. Trước đây khe có hai vạch (trên + dưới) để đọc ra "cái rãnh"; giờ
+          nguồn sáng ở đáy làm việc đó, và một vạch xám nằm trên chỉ cắt ngang luồng đọc.
+          Còn lại đúng hai lớp của khe sáng: vệt sáng hắt lên + vạch mảnh sáng ở tâm.
+          `{...edge}` giữ nguyên hoạt cảnh rạch mở / khép lại theo chiều ngang. */}
+      <motion.span {...edge} aria-hidden className="pointer-events-none absolute inset-0">
+        <span
+          className="absolute inset-0 opacity-[0.62] transition-opacity duration-300 group-hover:opacity-100"
+          style={{ background: seamWash(GLOW_COLOR, GLOW_WASH_PERCENT) }}
         />
-      )}
-      <motion.span
-        {...edge}
-        className="pointer-events-none absolute inset-x-0 bottom-px h-px bg-gradient-to-r from-transparent via-gray-900/0 to-transparent"
-      />
-      <motion.span
-        {...edge}
-        className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-white/80 to-transparent"
-      />
+        <span
+          className="absolute inset-x-0 bottom-0 h-px opacity-[0.62] transition-opacity duration-300 group-hover:opacity-100"
+          style={{ background: seamLine(GLOW_COLOR, GLOW_LINE_PERCENT) }}
+        />
+      </motion.span>
     </motion.div>
   );
 }

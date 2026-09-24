@@ -100,7 +100,7 @@ export function StoreList({
               : "Không tìm thấy cửa hàng nào."}
           </div>
         ) : (
-          <div className="space-y-3 max-h-[70vh] overflow-y-auto pr-1">
+          <div className="space-y-3 max-h-[70vh] scroll-fade overflow-y-auto pr-1">
             {displayedStores.map((store) => {
               const isSelected = selectedStore?.id === store.id;
               const isOwner = isStoreOwner(store);

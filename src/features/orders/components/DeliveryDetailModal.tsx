@@ -103,7 +103,7 @@ export function DeliveryDetailModal({ deliveryId, open, onClose }: DeliveryDetai
         </div>
 
         {/* Body */}
-        <div className="px-6 py-5 max-h-[75vh] overflow-y-auto space-y-5 text-sm">
+        <div className="px-6 py-5 max-h-[75vh] scroll-fade overflow-y-auto space-y-5 text-sm">
           {loading ? (
             <div className="flex h-48 items-center justify-center">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />

@@ -16,7 +16,7 @@ interface SpaceTabsProps {
 /** Dải tab chọn phòng (mỗi tab có %), cuộn ngang khi nhiều không gian. */
 export default function SpaceTabs({ items, selectedId, onSelect, onAddNew }: SpaceTabsProps) {
   return (
-    <div className="flex items-end gap-1 overflow-x-auto pb-0.5">
+    <div className="flex items-end gap-1 scroll-fade overflow-x-auto pb-0.5">
       {items.map((item) => {
         const active = item.id === selectedId;
         const color = item.color ?? "#7d8f69";
