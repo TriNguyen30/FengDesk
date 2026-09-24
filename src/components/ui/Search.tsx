@@ -247,7 +247,7 @@ export default function SearchBar({
         <ul
           id={listId}
           role="listbox"
-          className="absolute left-0 right-0 top-full z-30 mt-1 max-h-64 overflow-auto rounded-lg border border-gray-200 bg-white py-1 shadow-lg"
+          className="absolute left-0 right-0 top-full z-30 mt-1 max-h-64 scroll-fade overflow-auto rounded-lg border border-gray-200 bg-white py-1 shadow-lg"
         >
           {suggestions.map((item, i) => (
             <li key={item.type === "product" ? item.id : item.text} role="presentation">

@@ -80,7 +80,7 @@ export default function CategoryBar() {
           <div
             id="category-dropdown-menu"
             role="menu"
-            className={`absolute left-0 right-0 top-full z-50 mt-1 max-h-[min(70vh,24rem)] overflow-y-auto rounded-lg border border-gray-100 bg-white shadow-lg sm:left-0 sm:right-auto sm:mt-0 sm:w-56 sm:rounded-b-lg sm:rounded-t-none ${menuOpen ? "block" : "hidden"}`}
+            className={`absolute left-0 right-0 top-full z-50 mt-1 max-h-[min(70vh,24rem)] scroll-fade overflow-y-auto rounded-lg border border-gray-100 bg-white shadow-lg sm:left-0 sm:right-auto sm:mt-0 sm:w-56 sm:rounded-b-lg sm:rounded-t-none ${menuOpen ? "block" : "hidden"}`}
           >
             {categories.map((item) => (
               <button
@@ -99,7 +99,7 @@ export default function CategoryBar() {
           </div>
         </div>
 
-        <ul className="flex min-h-[44px] items-center gap-1 overflow-x-auto overscroll-x-contain py-1 scrollbar-none sm:min-h-0 sm:flex-1 sm:gap-4 sm:px-4 sm:py-3 md:gap-6 lg:gap-8">
+        <ul className="flex min-h-[44px] items-center gap-1 scroll-fade overflow-x-auto overscroll-x-contain py-1 scrollbar-none sm:min-h-0 sm:flex-1 sm:gap-4 sm:px-4 sm:py-3 md:gap-6 lg:gap-8">
           {navItems.map((item) => (
             <li key={item.to} className="shrink-0">
               <NavLink to={item.to} end={item.to === "/"} className={navLinkClass}>

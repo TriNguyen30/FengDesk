@@ -3,13 +3,15 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { getCategoriesRequest } from "@/features/category/api/category.api";
 import type { Category } from "@/features/category/types/category";
-import dragonStatueIcon from "@/assets/icon/DragonStatue.png";
-import lampIcon from "@/assets/icon/Lamp.png";
-import plantPotIcon from "@/assets/icon/PlantPot.png";
-import crystalIcon from "@/assets/icon/Crystal.png";
-import agarwoodIcon from "@/assets/icon/TramHuong.png";
-import terrariumIcon from "@/assets/icon/Terrarium.png";
-import fountainIcon from "@/assets/icon/Fountain.png";
+// Icon hiển thị 40-48px. Bản PNG cũ là ảnh gốc 2000-3000px (riêng DragonStatue 4,2MB) —
+// đổi sang WebP 128px, tổng 7 icon từ 7,8MB còn 43KB. Đừng thay lại bằng ảnh gốc.
+import dragonStatueIcon from "@/assets/icon/DragonStatue.webp";
+import lampIcon from "@/assets/icon/Lamp.webp";
+import plantPotIcon from "@/assets/icon/PlantPot.webp";
+import crystalIcon from "@/assets/icon/Crystal.webp";
+import agarwoodIcon from "@/assets/icon/TramHuong.webp";
+import terrariumIcon from "@/assets/icon/Terrarium.webp";
+import fountainIcon from "@/assets/icon/Fountain.webp";
 
 const CATEGORY_ICONS = [plantPotIcon, dragonStatueIcon, lampIcon];
 

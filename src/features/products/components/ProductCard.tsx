@@ -283,7 +283,7 @@ export function BestSellersSection() {
       <div className="relative group/slider">
         {loading ? (
           <div
-            className="flex gap-3 overflow-x-auto snap-x snap-mandatory pb-1
+            className="flex gap-3 scroll-fade overflow-x-auto snap-x snap-mandatory pb-1
               [&::-webkit-scrollbar]:hidden"
             style={{ scrollbarWidth: "none" }}
           >
@@ -303,7 +303,7 @@ export function BestSellersSection() {
           <>
             <div
               ref={scrollRef}
-              className="flex gap-3 overflow-x-auto snap-x snap-mandatory pb-1
+              className="flex gap-3 scroll-fade overflow-x-auto snap-x snap-mandatory pb-1
                 [&::-webkit-scrollbar]:hidden"
               style={{ scrollbarWidth: "none" }}
             >

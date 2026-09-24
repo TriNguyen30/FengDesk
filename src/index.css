@@ -14,6 +14,15 @@
   --color-primary-dark: #5f7050;
   --color-primary-light: #c8d7b0;
 
+  /* Tín hiệu TỐT/XẤU — tách hẳn khỏi --color-primary.
+     `primary` là màu THƯƠNG HIỆU (jade trầm #7d8f69): dùng nó làm dấu "+" thì tín hiệu chìm nghỉm,
+     vì nó cùng độ đậm với chữ xám quanh đó. Còn `emerald` của Tailwind (#059669) lại ngả teal lạnh,
+     chỏi với nền kem ấm của các thẻ phong thuỷ. Hai token dưới là xanh lá / đỏ TƯƠI nhưng vẫn giữ
+     sắc ấm để nằm yên trên nền kem. Đổi ở đây là đổi cả dấu +, dấu ✓, chip, vạch ngăn và vệt sáng. */
+  --color-positive: #5ba130;
+  --color-positive-dark: #46801f;
+  --color-negative: #d9432e;
+
   --color-secondary: #a68a64;
   --color-secondary-dark: #7a6245;
   --color-secondary-light: #dcc4a0;
@@ -727,7 +736,8 @@
 
 @utility custom-scrollbar {
   scrollbar-width: thin;
-  scrollbar-color: var(--color-primary) transparent;
+  /* Ẩn khi đứng yên — xem khối "Thanh cuộn" bên dưới để biết vì sao không fade được. */
+  scrollbar-color: transparent transparent;
 
   &::-webkit-scrollbar {
     width: 6px;
@@ -737,11 +747,19 @@
     background: transparent;
   }
   &::-webkit-scrollbar-thumb {
-    background-color: var(--color-primary);
+    background-color: transparent;
     border-radius: 9999px;
+    /* 6px gutter − 2px viền mỗi bên = 2px thấy được. */
+    border: 2px solid transparent;
+    background-clip: content-box;
   }
-  &::-webkit-scrollbar-thumb:hover {
-    background-color: var(--color-primary-dark);
+
+  &[data-scrolling="true"] {
+    scrollbar-color: var(--color-primary) transparent;
+
+    &::-webkit-scrollbar-thumb {
+      background-color: var(--color-primary);
+    }
   }
 }
 
@@ -760,10 +778,28 @@ body {
   overflow-x: clip;
 }
 
-/* Scrollbar đồng bộ theo tone màu Jade Green mới */
+/* =========================
+   Thanh cuộn
+
+   Hai cơ chế, cố ý khác nhau vì trình duyệt ép phải thế:
+
+   1. Container có class `scroll-fade` → thanh cuộn native bị ẩn hẳn, thay bằng `.fd-scroll-thumb`
+      do src/utils/scrollFade.ts vẽ. Đây là chỗ DUY NHẤT có fade in/out thật.
+
+   2. Mọi container còn lại → vẫn là thanh cuộn native, chỉ ẩn/hiện tức thì theo `data-scrolling`
+      (JS gắn khi đang cuộn, gỡ sau ~0,9s đứng yên).
+
+   ⚠ Vì sao (2) không fade: scrollbar native của WebKit KHÔNG animate được — đã đo trên Chrome
+   24/09/2026. `transition` đặt trên `::-webkit-scrollbar-thumb` bị bỏ qua; `transition` hay
+   `@keyframes` trên một biến `@property` mà pseudo-element đọc thì còn ĐÓNG BĂNG pseudo-element
+   (đổi class cũng không repaint). Chỉ đổi giá trị không kèm animation mới ăn. Đừng mất công thử lại.
+
+   ⚠ Bề rộng gutter (10px) giữ NGUYÊN ở cả hai trạng thái, chỉ màu thumb đổi. Cách hay bị làm sai là
+   bật/tắt `scrollbar-width` — nó làm nội dung co giãn 10px mỗi lần cuộn.
+========================= */
 * {
   scrollbar-width: thin;
-  scrollbar-color: var(--color-primary) transparent;
+  scrollbar-color: transparent transparent;
 }
 *::-webkit-scrollbar {
   width: 10px;
@@ -773,13 +809,123 @@ body {
   background: transparent;
 }
 *::-webkit-scrollbar-thumb {
-  background-color: var(--color-primary);
+  background-color: transparent;
   border-radius: var(--radius-full);
-  border: 2px solid transparent;
+  /* Gutter vẫn 10px (không nhảy layout), viền trong suốt 4px mỗi bên ⇒ phần THẤY ĐƯỢC còn 2px,
+     khớp với thumb overlay. */
+  border: 4px solid transparent;
   background-clip: content-box;
 }
-*::-webkit-scrollbar-thumb:hover {
+
+[data-scrolling="true"] {
+  scrollbar-color: var(--color-primary) transparent;
+}
+[data-scrolling="true"]::-webkit-scrollbar-thumb {
+  background-color: var(--color-primary);
+}
+[data-scrolling="true"]::-webkit-scrollbar-thumb:hover {
   background-color: var(--color-primary-dark);
+}
+
+/* Thumb là con `position: absolute` nên container phải làm mốc định vị. Đặt ở @layer base để
+   utility của Tailwind (`absolute`, `md:absolute`, `sticky`...) vẫn thắng — phần tử nào không khai
+   gì mới rơi về `relative`. Đừng chuyển thành inline style: inline thắng cả class. */
+@layer base {
+  [data-scroll-fade] {
+    position: relative;
+  }
+}
+
+/* Container đã có thumb overlay thì bỏ hẳn thanh native, nếu không sẽ thấy hai thanh. */
+[data-scroll-fade] {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+[data-scroll-fade]::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+.fd-scroll-thumb {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 20;
+  border-radius: 9999px;
+  background-color: var(--color-primary);
+  /* Hiện là hiện HẲN (1), không pha loãng: thanh chỉ dày 2px, giảm alpha nữa là nhìn như vết bẩn.
+     Độ "nhẹ" đến từ việc nó biến mất khi không cuộn, không phải từ việc nó mờ. */
+  opacity: 0;
+  /* Hai thời lượng khác nhau, cố ý:
+     - opacity 500ms  → trạng thái ĐÍCH là "ẩn", nên đây là thời gian MỜ ĐI. Bắt đầu ngay tại điểm
+       dừng (`scrollend`), không chờ thêm.
+     - transform 180ms ease-out → thumb bám hơi trễ sau nội dung, nhờ vậy lúc cuộn dừng lại nó
+       *tween* nốt quãng còn thiếu thay vì khựng cái đứng im. */
+  transition:
+    opacity 500ms ease,
+    transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+
+/* Phần nhìn thấy 2px, nhưng vùng bấm phải rộng hơn nhiều mới kéo được. Mở rộng vào PHÍA TRONG
+   container (trái/trên) — nới ra phía ngoài sẽ cộng vào scrollWidth/scrollHeight và đẻ ra thanh
+   cuộn ma. */
+.fd-scroll-thumb::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+.fd-scroll-thumb--y {
+  width: 2px;
+}
+.fd-scroll-thumb--y::before {
+  top: -4px;
+  bottom: -4px;
+  left: -8px;
+  right: 0;
+}
+.fd-scroll-thumb--x {
+  height: 2px;
+}
+.fd-scroll-thumb--x::before {
+  left: 0;
+  right: 0;
+  top: -8px;
+  bottom: 0;
+}
+
+/* Thanh cuộn của cả trang: khung nhìn của nó là viewport nên thumb bám fixed, mép do CSS đặt còn
+   JS chỉ dịch theo đúng trục cuộn. */
+.fd-scroll-thumb--fixed {
+  position: fixed;
+  left: auto;
+  top: auto;
+}
+.fd-scroll-thumb--fixed.fd-scroll-thumb--y {
+  top: 0;
+  right: 2px;
+}
+.fd-scroll-thumb--fixed.fd-scroll-thumb--x {
+  left: 0;
+  bottom: 2px;
+}
+
+.fd-scroll-thumb[data-visible="true"] {
+  opacity: 1;
+  /* Hiện ra thì phải nhanh, nếu không thao tác cuộn xong rồi thanh mới kịp sáng. */
+  transition:
+    opacity 120ms ease,
+    transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.fd-scroll-thumb[data-dragging="true"] {
+  background-color: var(--color-primary-dark);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fd-scroll-thumb,
+  .fd-scroll-thumb[data-visible="true"] {
+    transition: none;
+  }
 }
 
 /* =========================

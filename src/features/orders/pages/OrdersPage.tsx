@@ -108,7 +108,7 @@ export default function OrdersPage() {
           }
         `}</style>
         <div
-          className="flex overflow-x-auto gap-1 hide-scrollbar"
+          className="flex scroll-fade overflow-x-auto gap-1 hide-scrollbar"
           style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
         >
           {TABS.map((tab) => {

@@ -539,7 +539,7 @@ export default function DashboardPage() {
             {/* Delivery Status Breakdown */}
             <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm flex flex-col">
               <h3 className="text-base font-bold text-gray-900 mb-4">Đơn giao theo trạng thái</h3>
-              <ul className="space-y-3 flex-1 overflow-y-auto pr-1">
+              <ul className="space-y-3 flex-1 scroll-fade overflow-y-auto pr-1">
                 {/* Đơn chưa thanh toán chưa có delivery nên không nằm trong deliveriesByStatus — kê riêng
                     ở đầu để store thấy còn đơn "treo" trước cả khi tiền về. */}
                 {(stats.awaitingPaymentOrders ?? 0) > 0 && (
@@ -609,7 +609,7 @@ export default function DashboardPage() {
                   Chưa có đơn vận chuyển nào.
                 </div>
               ) : (
-                <div className="overflow-x-auto">
+                <div className="scroll-fade overflow-x-auto">
                   <table className="w-full text-left text-sm">
                     <thead>
                       <tr className="border-b border-gray-100 text-xs font-semibold text-gray-400 uppercase tracking-wider">
@@ -655,7 +655,7 @@ export default function DashboardPage() {
                 </div>
               )
             ) : (
-              <div className="overflow-x-auto">
+              <div className="scroll-fade overflow-x-auto">
                 <table className="w-full text-left text-sm">
                   <thead>
                     <tr className="border-b border-gray-100 text-xs font-semibold text-gray-400 uppercase tracking-wider">

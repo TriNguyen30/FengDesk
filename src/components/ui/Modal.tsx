@@ -91,7 +91,7 @@ export default function Modal({ open, title, onClose, children, size }: ModalPro
                 <X size={20} />
               </button>
             </div>
-            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 sm:px-6 sm:py-5">
+            <div className="min-h-0 flex-1 scroll-fade overflow-y-auto overscroll-contain px-4 py-4 sm:px-6 sm:py-5">
               {children}
             </div>
           </motion.div>

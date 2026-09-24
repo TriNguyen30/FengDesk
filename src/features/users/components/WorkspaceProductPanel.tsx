@@ -170,7 +170,7 @@ function ProductPanelBody({ workspaceId }: { workspaceId: string }) {
         </TabButton>
       </div>
 
-      <div className="custom-scrollbar max-h-72 overflow-y-auto p-2">
+      <div className="custom-scrollbar max-h-72 scroll-fade overflow-y-auto p-2">
         {tab === "purchased" ? (
           purchasedLoading ? (
             <ListSkeleton />
