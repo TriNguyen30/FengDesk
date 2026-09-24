@@ -55,12 +55,13 @@ export function ShopStatsSection({ storeId }: { storeId: string }) {
   const [loading, setLoading] = useState(true);
   const [range, setRange] = useState<StatsRange>("month");
 
+  // Chỉ phụ thuộc storeId: BE trả sẵn CẢ BỐN mốc trong `revenueSeriesByRange`, nên bấm
+  // Tuần/Tháng/Quý/Năm không cần gọi lại. Trước đây `range` nằm trong deps ⇒ mỗi lần bấm là một lượt
+  // fetch mới (~vài giây vì DB ở Sydney) để nhận về đúng bộ số liệu cũ, chỉ khác cách chia cột.
   useEffect(() => {
     let active = true;
-    // Đổi mốc thì GIỮ dữ liệu cũ trên màn (chỉ mờ đi) — thay bằng skeleton là cả khối nháy một phát và
-    // biểu đồ phải vẽ lại từ đầu, mất luôn hiệu ứng cột chạy sang hình mới.
     setLoading(true);
-    getStoreStatisticsRequest(storeId, range)
+    getStoreStatisticsRequest(storeId)
       .then((res) => {
         if (!active) return;
         if (res.isSuccess && res.data) setStats(res.data);
@@ -75,7 +76,7 @@ export function ShopStatsSection({ storeId }: { storeId: string }) {
     return () => {
       active = false;
     };
-  }, [storeId, range]);
+  }, [storeId]);
 
   if (loading && !stats) {
     return (
@@ -94,9 +95,11 @@ export function ShopStatsSection({ storeId }: { storeId: string }) {
     );
   }
 
-  // BE trả sẵn chuỗi theo `range` (kể cả mốc rỗng); chỉ khi thiếu mới rơi về 6 tháng dựng ở client.
-  const usingFallback = !stats.revenueSeries?.length;
-  const series = usingFallback ? buildMonthlySeries(stats) : stats.revenueSeries!.map(toChartRow);
+  // Ưu tiên bộ bốn mốc; BE cũ chỉ có `revenueSeries` (một mốc) thì dùng tạm, không có nữa mới dựng
+  // 6 tháng ở client.
+  const bucketsForRange = stats.revenueSeriesByRange?.[range] ?? stats.revenueSeries;
+  const usingFallback = !bucketsForRange?.length;
+  const series = usingFallback ? buildMonthlySeries(stats) : bucketsForRange!.map(toChartRow);
   const deliveredCount =
     (stats.deliveriesByStatus["Delivered"] ?? 0) + (stats.deliveriesByStatus["Completed"] ?? 0);
 

@@ -153,6 +153,11 @@ export interface StoreStatistics {
   range?: string;
   /** Doanh thu theo mốc của `range`; mốc rỗng vẫn có mặt để biểu đồ không hụt cột. */
   revenueSeries?: RevenueBucket[];
+  /**
+   * Cả bốn mốc dựng sẵn từ cùng một bộ dữ liệu (`week|month|quarter|year`). Đổi mốc KHÔNG đổi số liệu,
+   * chỉ đổi cách chia cột — nên đổi tại chỗ, không gọi lại API. Thiếu field này = BE cũ, rơi về `range`.
+   */
+  revenueSeriesByRange?: Record<string, RevenueBucket[]>;
   /** Sản phẩm trong các đơn kèm trạng thái tiền (`Ordered|Paid|Completed|Refunded`). */
   itemsByStatus?: StoreStatisticsItemRow[];
   /** Phí ship theo cùng bộ trạng thái — phí thuộc về đơn nên không chia xuống từng sản phẩm. */
