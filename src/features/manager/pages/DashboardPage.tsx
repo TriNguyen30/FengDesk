@@ -87,6 +87,35 @@ function buildMonthlySeries(stats: StoreStatistics): RevenueChartRow[] {
   return out;
 }
 
+/** Cộng một mốc vào bản gộp, khớp theo nhãn. Dùng chung cho `revenueSeries` và từng mốc trong `revenueSeriesByRange`. */
+function mergeBucket(into: Map<string, RevenueBucket>, b: RevenueBucket) {
+  const cur = into.get(b.labelVi) || {
+    start: b.start,
+    labelVi: b.labelVi,
+    revenue: 0,
+    deliveredCount: 0,
+    awaitingPayment: 0,
+    awaitingPaymentCount: 0,
+    inProgress: 0,
+    inProgressCount: 0,
+    completed: 0,
+    completedCount: 0,
+    refunded: 0,
+    refundedCount: 0,
+  };
+  cur.revenue += b.revenue || 0;
+  cur.deliveredCount += b.deliveredCount || 0;
+  cur.awaitingPayment = (cur.awaitingPayment ?? 0) + (b.awaitingPayment || 0);
+  cur.awaitingPaymentCount = (cur.awaitingPaymentCount ?? 0) + (b.awaitingPaymentCount || 0);
+  cur.inProgress = (cur.inProgress ?? 0) + (b.inProgress || 0);
+  cur.inProgressCount = (cur.inProgressCount ?? 0) + (b.inProgressCount || 0);
+  cur.completed = (cur.completed ?? 0) + (b.completed ?? b.revenue ?? 0);
+  cur.completedCount = (cur.completedCount ?? 0) + (b.completedCount ?? b.deliveredCount ?? 0);
+  cur.refunded = (cur.refunded ?? 0) + (b.refunded || 0);
+  cur.refundedCount = (cur.refundedCount ?? 0) + (b.refundedCount || 0);
+  into.set(b.labelVi, cur);
+}
+
 function aggregateStoreStats(statsList: StoreStatistics[]): StoreStatistics {
   let totalRevenue = 0;
   let totalShippingFee = 0;
@@ -98,8 +127,10 @@ function aggregateStoreStats(statsList: StoreStatistics[]): StoreStatistics {
   let awaitingPaymentOrders = 0;
   let awaitingPaymentValue = 0;
   const deliveriesByStatus: Record<string, number> = {};
-  // Chuỗi doanh thu: mọi store cùng `range` nên cùng bộ mốc — gộp theo nhãn, giữ thứ tự của store đầu tiên.
+  // Chuỗi doanh thu: mọi store cùng bộ mốc — gộp theo nhãn, giữ thứ tự của store đầu tiên.
   const seriesMap = new Map<string, RevenueBucket>();
+  // Và gộp riêng cho TỪNG mốc, để admin đổi Tuần/Tháng/Quý/Năm cũng không phải gọi lại N cửa hàng.
+  const seriesByRangeMaps = new Map<string, Map<string, RevenueBucket>>();
   // Hàng trong đơn: gộp theo (sản phẩm × trạng thái). Sản phẩm không dùng chung giữa các store nên thực
   // tế là nối danh sách, nhưng vẫn gộp để phòng trường hợp admin xem store trùng nhau.
   const itemMap = new Map<string, StoreStatisticsItemRow>();
@@ -120,32 +151,14 @@ function aggregateStoreStats(statsList: StoreStatistics[]): StoreStatistics {
     awaitingPaymentOrders += s.awaitingPaymentOrders || 0;
     awaitingPaymentValue += s.awaitingPaymentValue || 0;
 
-    (s.revenueSeries || []).forEach((b) => {
-      const cur = seriesMap.get(b.labelVi) || {
-        start: b.start,
-        labelVi: b.labelVi,
-        revenue: 0,
-        deliveredCount: 0,
-        awaitingPayment: 0,
-        awaitingPaymentCount: 0,
-        inProgress: 0,
-        inProgressCount: 0,
-        completed: 0,
-        completedCount: 0,
-        refunded: 0,
-        refundedCount: 0,
-      };
-      cur.revenue += b.revenue || 0;
-      cur.deliveredCount += b.deliveredCount || 0;
-      cur.awaitingPayment = (cur.awaitingPayment ?? 0) + (b.awaitingPayment || 0);
-      cur.awaitingPaymentCount = (cur.awaitingPaymentCount ?? 0) + (b.awaitingPaymentCount || 0);
-      cur.inProgress = (cur.inProgress ?? 0) + (b.inProgress || 0);
-      cur.inProgressCount = (cur.inProgressCount ?? 0) + (b.inProgressCount || 0);
-      cur.completed = (cur.completed ?? 0) + (b.completed ?? b.revenue ?? 0);
-      cur.completedCount = (cur.completedCount ?? 0) + (b.completedCount ?? b.deliveredCount ?? 0);
-      cur.refunded = (cur.refunded ?? 0) + (b.refunded || 0);
-      cur.refundedCount = (cur.refundedCount ?? 0) + (b.refundedCount || 0);
-      seriesMap.set(b.labelVi, cur);
+    (s.revenueSeries || []).forEach((b) => mergeBucket(seriesMap, b));
+    Object.entries(s.revenueSeriesByRange || {}).forEach(([rangeCode, buckets]) => {
+      let map = seriesByRangeMaps.get(rangeCode);
+      if (!map) {
+        map = new Map<string, RevenueBucket>();
+        seriesByRangeMaps.set(rangeCode, map);
+      }
+      buckets.forEach((b) => mergeBucket(map!, b));
     });
 
     (s.itemsByStatus || []).forEach((r) => {
@@ -191,6 +204,9 @@ function aggregateStoreStats(statsList: StoreStatistics[]): StoreStatistics {
     deliveriesByStatus,
     revenueByMonth: Array.from(monthMap.values()),
     revenueSeries: Array.from(seriesMap.values()),
+    revenueSeriesByRange: Object.fromEntries(
+      Array.from(seriesByRangeMaps, ([code, map]) => [code, Array.from(map.values())]),
+    ),
     // Gộp xong thì thứ tự cũ vô nghĩa — xếp lại theo tiền; danh sách cuộn được nên không cắt bớt.
     itemsByStatus: Array.from(itemMap.values()).sort((a, b) => b.value - a.value),
     shippingFeeByStatus: shippingByStatus,
@@ -298,7 +314,7 @@ export default function DashboardPage() {
         if (isAdmin && shops.length > 0) {
           // Fetch all shops stats and aggregate
           const promises = shops.map((s) =>
-            getStoreStatisticsRequest(s.id, range)
+            getStoreStatisticsRequest(s.id)
               .then((res) => (res.isSuccess && res.data ? res.data : null))
               .catch(() => null),
           );
@@ -318,7 +334,7 @@ export default function DashboardPage() {
       }
 
       try {
-        const res = await getStoreStatisticsRequest(selectedStoreId, range);
+        const res = await getStoreStatisticsRequest(selectedStoreId);
         if (!active) return;
         if (res.isSuccess && res.data) {
           setStats(res.data);
@@ -336,7 +352,9 @@ export default function DashboardPage() {
     return () => {
       active = false;
     };
-  }, [selectedStoreId, isAdmin, shops, range]);
+    // `range` CỐ Ý không nằm trong deps: BE trả sẵn cả bốn mốc, đổi mốc là chọn lại mảng có sẵn.
+    // Với admin, mỗi lần đổi trước đây là N cửa hàng × một lượt gọi — chậm nhất màn hình này.
+  }, [selectedStoreId, isAdmin, shops]);
 
   // Fetch recent deliveries for selected store
   const { deliveries: recentDeliveries, listStatus: deliveriesStatus } = useStoreDeliveries(
@@ -349,13 +367,16 @@ export default function DashboardPage() {
     selectedStoreId ? undefined : { page: 1, pageSize: 5 },
   );
 
-  // BE trả sẵn chuỗi theo `range` (kể cả mốc rỗng); thiếu thì rơi về 6 tháng dựng ở client.
-  const usingFallback = !!stats && !stats.revenueSeries?.length;
+  // Ưu tiên bộ bốn mốc (`revenueSeriesByRange`); BE cũ chỉ có một mốc thì dùng tạm, không có nữa mới
+  // rơi về 6 tháng dựng ở client.
+  const bucketsForRange = stats?.revenueSeriesByRange?.[range] ?? stats?.revenueSeries;
+  const usingFallback = !!stats && !bucketsForRange?.length;
   const series = useMemo<RevenueChartRow[]>(() => {
     if (!stats) return [];
-    if (stats.revenueSeries?.length) return stats.revenueSeries.map(toChartRow);
+    const buckets = stats.revenueSeriesByRange?.[range] ?? stats.revenueSeries;
+    if (buckets?.length) return buckets.map(toChartRow);
     return buildMonthlySeries(stats);
-  }, [stats]);
+  }, [stats, range]);
 
   const deliveredCount = useMemo(() => {
     if (!stats) return 0;
