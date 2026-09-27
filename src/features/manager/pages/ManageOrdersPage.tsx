@@ -11,8 +11,8 @@ export default function ManageOrdersPage() {
     () => (currentUser?.role ?? "").split(",").map((r) => r.trim()),
     [currentUser?.role],
   );
-  const isAdmin = useMemo(
-    () => userRoles.some((r) => ["Admin", "SystemAdmin"].includes(r)),
+  const canOperateAsAdmin = useMemo(
+    () => userRoles.some((r) => ["Manager", "Admin", "SystemAdmin"].includes(r)),
     [userRoles],
   );
 
@@ -71,7 +71,7 @@ export default function ManageOrdersPage() {
 
         // Filter for stores where user has a role (isOwner || isStaff), unless Admin
         const validStores = activeStores.filter((s) => {
-          if (isAdmin) return true;
+          if (canOperateAsAdmin) return true;
           return (
             s.isOwner ||
             (s as any).isStaff ||
@@ -102,7 +102,7 @@ export default function ManageOrdersPage() {
     return () => {
       isMounted = false;
     };
-  }, [currentUser?.id, isAdmin]);
+  }, [currentUser?.id, canOperateAsAdmin]);
 
   return (
     <div className="space-y-6">
@@ -130,7 +130,7 @@ export default function ManageOrdersPage() {
                 value={selectedStoreId}
                 onChange={(e) => {
                   const targetId = e.target.value;
-                  if (!isAdmin && !userActiveStores.some((s) => s.id === targetId)) {
+                  if (!canOperateAsAdmin && !userActiveStores.some((s) => s.id === targetId)) {
                     return;
                   }
                   setSelectedStoreId(targetId);
