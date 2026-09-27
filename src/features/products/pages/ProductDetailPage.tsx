@@ -572,7 +572,7 @@ export default function ProductDetailPage() {
                 `}</style>
                 <div
                   ref={thumbRef}
-                  className="flex gap-2 sm:gap-3 overflow-x-auto snap-x snap-mandatory pb-1 hide-scrollbar-force"
+                  className="flex gap-2 sm:gap-3 scroll-fade overflow-x-auto snap-x snap-mandatory pb-1 hide-scrollbar-force"
                   style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
                 >
                   {sortedImages.map((img) => (
@@ -1091,7 +1091,7 @@ export default function ProductDetailPage() {
 
             {/* Bottom thumbnail bar */}
             {sortedImages.length > 1 && (
-              <div className="w-full max-w-xl px-4 py-2 overflow-x-auto flex justify-center gap-2 select-none z-10 pb-4">
+              <div className="w-full max-w-xl px-4 py-2 scroll-fade overflow-x-auto flex justify-center gap-2 select-none z-10 pb-4">
                 {sortedImages.map((img, idx) => (
                   <button
                     key={img.id}

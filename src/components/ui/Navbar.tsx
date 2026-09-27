@@ -19,7 +19,7 @@ import { useAppSelector, useAppDispatch } from "@/app/store";
 import { logout, setAuthModal } from "@/features/auth/store/authSlice";
 import { logoutRequest } from "@/features/auth/api/auth.api";
 import { clearSession } from "@/utils";
-import Logo from "@/assets/image/fengdesk_logo_2.png";
+import Logo from "@/assets/image/fengdesk_logo_2.webp";
 
 export default function Navbar() {
   const { t, i18n } = useTranslation();

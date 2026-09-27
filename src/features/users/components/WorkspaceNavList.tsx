@@ -41,7 +41,7 @@ export default function WorkspaceNavList() {
       className="overflow-hidden"
     >
       <ul
-        className="custom-scrollbar ml-5 mt-1 flex snap-y snap-mandatory flex-col gap-0.5 overflow-y-auto border-l border-gray-200 pl-2 pr-1"
+        className="custom-scrollbar ml-5 mt-1 flex snap-y snap-mandatory flex-col gap-0.5 scroll-fade overflow-y-auto border-l border-gray-200 pl-2 pr-1"
         style={{ maxHeight }}
       >
         {status === "pending" ? (

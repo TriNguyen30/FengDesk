@@ -1,6 +1,7 @@
 ﻿import React from "react";
 import { Sparkles, Save, RefreshCw } from "lucide-react";
 import type { LookupItem } from "@/features/products/types/taxonomy";
+import type { ProductPlacement } from "@/features/products/types/product";
 
 export const FS_ELEMENTS = [
   { code: "Kim", label: "Kim (Kim loại)" },
@@ -10,6 +11,34 @@ export const FS_ELEMENTS = [
   { code: "Tho", label: "Thổ (Đất)" },
 ];
 
+/**
+ * Cách dùng (`ProductPlacement`) — quyết định LUỒNG chấm gợi ý, không phải nhãn trang trí:
+ * Desk/Living chấm theo ngũ hành của phòng (Living bỏ hướng la bàn), Carry chấm theo bản mệnh người
+ * đeo, Consumable không vào gợi ý. Khai sai thì vòng tay bị chấm như đồ để bàn.
+ */
+export const FS_PLACEMENTS: { code: ProductPlacement; label: string; hint: string }[] = [
+  {
+    code: "Desk",
+    label: "Đặt trong phòng",
+    hint: "Tượng, đá, đèn, tranh - chấm theo ngũ hành phòng + gợi ý hướng đặt",
+  },
+  {
+    code: "Living",
+    label: "Cây / vật sống",
+    hint: "Chấm theo ngũ hành phòng, không xét hướng (đặt theo ánh sáng)",
+  },
+  {
+    code: "Carry",
+    label: "Mang theo người",
+    hint: "Vòng tay, mặt dây, charm ví/xe - chấm theo bản mệnh của khách",
+  },
+  {
+    code: "Consumable",
+    label: "Hàng tiêu hao",
+    hint: "Nhang, nến, muối - bán bình thường nhưng không vào gợi ý",
+  },
+];
+
 export const FS_SIZE_CLASSES = [
   { code: "Small", label: "Nhỏ" },
   { code: "Medium", label: "Vừa" },
@@ -17,6 +46,8 @@ export const FS_SIZE_CLASSES = [
 ];
 
 export interface FengShuiValues {
+  /** Mặc định `Desk` nếu không khai. */
+  placement: ProductPlacement;
   primaryElement: string;
   secondaryElements: string[];
   sizeClass: string;
@@ -97,8 +128,8 @@ export function ProductElementSelectFields({ value, onChange }: ElementSelectFie
 }
 
 interface VibeStyleFieldsProps {
-  value: Pick<FengShuiValues, "sizeClass" | "vibes" | "styles">;
-  onChange: (next: Pick<FengShuiValues, "sizeClass" | "vibes" | "styles">) => void;
+  value: Pick<FengShuiValues, "placement" | "sizeClass" | "vibes" | "styles">;
+  onChange: (next: Pick<FengShuiValues, "placement" | "sizeClass" | "vibes" | "styles">) => void;
   vibeOptions: LookupItem[];
   styleOptions: LookupItem[];
 }
@@ -112,8 +143,28 @@ export function ProductVibeStyleFields({
 }: VibeStyleFieldsProps) {
   const set = (patch: Partial<VibeStyleFieldsProps["value"]>) => onChange({ ...value, ...patch });
 
+  const placement = value.placement || "Desk";
+  const placementHint = FS_PLACEMENTS.find((x) => x.code === placement)?.hint;
+
   return (
     <div className="space-y-5">
+      {/* Cách dùng — đặt TRƯỚC kích thước vì nó quyết định luồng chấm điểm của cả sản phẩm. */}
+      <div className="space-y-1.5 max-w-sm">
+        <label className="text-sm font-semibold text-gray-700">Cách dùng *</label>
+        <select
+          value={placement}
+          onChange={(e) => set({ placement: e.target.value as ProductPlacement })}
+          className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-700 focus:border-primary focus:outline-none"
+        >
+          {FS_PLACEMENTS.map((pl) => (
+            <option key={pl.code} value={pl.code}>
+              {pl.label}
+            </option>
+          ))}
+        </select>
+        {placementHint && <p className="text-xs leading-snug text-gray-500">{placementHint}</p>}
+      </div>
+
       {/* Kích thước */}
       <div className="space-y-1.5 max-w-sm">
         <label className="text-sm font-semibold text-gray-700">Phân loại kích thước</label>

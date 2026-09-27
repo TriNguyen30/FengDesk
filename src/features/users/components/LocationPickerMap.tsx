@@ -244,7 +244,7 @@ export default function LocationPickerMap({
         </div>
 
         {searchResults.length > 0 && (
-          <div className="absolute top-full mt-1 w-full bg-white rounded-md shadow-lg max-h-60 overflow-y-auto border border-gray-100 divide-y divide-gray-100">
+          <div className="absolute top-full mt-1 w-full bg-white rounded-md shadow-lg max-h-60 scroll-fade overflow-y-auto border border-gray-100 divide-y divide-gray-100">
             {searchResults.map((result, i) => (
               <button
                 key={i}

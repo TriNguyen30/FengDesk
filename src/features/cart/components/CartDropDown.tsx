@@ -260,7 +260,7 @@ export default function CartDropDown() {
                 </div>
               ) : (
                 <>
-                  <ul className="scrollbar-none max-h-[min(50vh,20rem)] overflow-y-auto divide-y divide-gray-100">
+                  <ul className="scrollbar-none max-h-[min(50vh,20rem)] scroll-fade overflow-y-auto divide-y divide-gray-100">
                     {items.map((item) => (
                       <CartDropdownItem
                         key={item.id}

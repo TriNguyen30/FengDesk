@@ -377,7 +377,7 @@ function EditShopProfileModal({ shop, onClose, onSaved }: EditShopProfileModalPr
           </button>
         </div>
 
-        <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-4 text-sm overscroll-contain">
+        <div className="min-h-0 flex-1 space-y-4 scroll-fade overflow-y-auto px-5 py-4 text-sm overscroll-contain">
           <Field label="Tên cửa hàng" required>
             <input
               type="text"

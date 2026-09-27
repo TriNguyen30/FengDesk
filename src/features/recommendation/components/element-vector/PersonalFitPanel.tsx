@@ -351,7 +351,7 @@ function NeedTooltip({
         </div>
       )}
       <p className="text-[11px] text-slate-400">
-        Phép tính đầy đủ: rê vào dòng tương ứng ở "Điểm này đến từ đâu?".
+        Phép tính đầy đủ: bấm vào dòng tương ứng ở "Điểm này đến từ đâu?".
       </p>
     </RadarTooltipFrame>
   );
@@ -403,7 +403,7 @@ function NeedCard({
         <Sparkles size={13} />
         Dụng thần của bạn
         <span className="ml-auto text-[11px] font-medium text-[#8a6d1f]">
-          {isTuTru ? "Tứ Trụ (có giờ sinh)" : "Nạp Âm (theo năm sinh)"}
+          {isTuTru ? "Tứ Trụ" : "Nạp Âm"}
         </span>
       </div>
       <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
@@ -441,7 +441,7 @@ function NeedCard({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 4 }}
             transition={{ duration: 0.15 }}
-            className="overflow-y-auto rounded-xl border border-[#D9AD41]/60 p-3 text-xs text-slate-700 shadow-lg backdrop-blur-[3px]"
+            className="scroll-fade overflow-y-auto rounded-xl border border-[#D9AD41]/60 p-3 text-xs text-slate-700 shadow-lg backdrop-blur-[3px]"
             style={{ ...style, background: "rgba(255,255,255,0.97)" }}
           >
             <p className="mb-1.5 font-semibold text-slate-900">Các con số này từ đâu?</p>

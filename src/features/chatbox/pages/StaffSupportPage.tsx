@@ -165,7 +165,7 @@ export default function StaffSupportPage() {
             )}
           </div>
 
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1 scroll-fade overflow-y-auto">
             {/* Hàng đợi */}
             <div className="px-3 pt-3">
               <p className="flex items-center gap-1.5 px-1 pb-1.5 text-[11px] font-semibold uppercase tracking-wide text-amber-600">

@@ -28,7 +28,7 @@ export function ProductRelationsForm({
         {categories.length === 0 ? (
           <p className="text-xs text-gray-400 italic">Đang tải danh mục...</p>
         ) : (
-          <div className="max-h-72 overflow-y-auto space-y-2 pr-1">
+          <div className="max-h-72 scroll-fade overflow-y-auto space-y-2 pr-1">
             {categories.map((cat) => (
               <label
                 key={cat.id}

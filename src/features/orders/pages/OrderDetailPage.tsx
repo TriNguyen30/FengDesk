@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import {
@@ -27,6 +27,7 @@ import { formatOrderDate, formatVnd, getOrderStatusMeta } from "../utils/orderUt
 import PaymentQrModal from "@/features/payment/components/PaymentQrModal";
 import OrderItemImage from "../components/OrderItemImage";
 import { returnApi } from "@/features/return/api/return.api";
+import { devMarkOrderShippingDelivered } from "@/features/shop/api/delivery.api";
 import { uploadFile } from "@/services/upload.service";
 import type {
   ReturnType,
@@ -51,6 +52,8 @@ const getReasonOptions = (t: any) => [
   { value: "DamagedPackage", label: t("order_detail.return_modal.reasons.damaged_package") },
   { value: "NotAsDescribed", label: t("order_detail.return_modal.reasons.not_as_described") },
 ];
+
+type DeliveryStatusLabelMap = Record<string, { label: string; pillClass: string }>;
 
 const getDeliveryStatusLabel = (t: any) => ({
   Pending: {
@@ -115,6 +118,7 @@ export default function OrderDetailPage() {
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const [paying, setPaying] = useState(false);
+  const [confirmingOrder, setConfirmingOrder] = useState(false);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -142,7 +146,9 @@ export default function OrderDetailPage() {
   const [submittingReturn, setSubmittingReturn] = useState(false);
   const [selectedItems, setSelectedItems] = useState<Record<string, SelectedItem>>({});
   const [deliveryPickerOpen, setDeliveryPickerOpen] = useState(false);
-  const [exchangeOptions, setExchangeOptions] = useState<Array<{ productName: string; variant: ProductItem }>>([]);
+  const [exchangeOptions, setExchangeOptions] = useState<
+    Array<{ productName: string; variant: ProductItem }>
+  >([]);
   const [loadingExchangeOptions, setLoadingExchangeOptions] = useState(false);
   const [exchangeOptionsError, setExchangeOptionsError] = useState(false);
 
@@ -280,7 +286,9 @@ export default function OrderDetailPage() {
         return sum + (original?.unitPrice ?? 0) * selected.quantity;
       }, 0);
       const replacementValue = checkedItems.reduce((sum, selected) => {
-        const replacement = exchangeOptions.find(({ variant }) => variant.id === selected.exchangeProductItemId);
+        const replacement = exchangeOptions.find(
+          ({ variant }) => variant.id === selected.exchangeProductItemId,
+        );
         return sum + (replacement?.variant.price ?? 0) * selected.quantity;
       }, 0);
       if (replacementValue > returnedValue) {
@@ -302,7 +310,8 @@ export default function OrderDetailPage() {
         reasonDetail: reasonDetail || null,
         items,
         imageUrls: imageUrls.length > 0 ? imageUrls : null,
-        ...((returnType === "Refund" || (returnType === "Exchange" && currentOrder?.paymentMethod === "COD")) && {
+        ...((returnType === "Refund" ||
+          (returnType === "Exchange" && currentOrder?.paymentMethod === "COD")) && {
           bankAccountName: bankAccountName || null,
           bankAccountNumber: bankAccountNumber || null,
           bankName: bankName || null,
@@ -369,7 +378,7 @@ export default function OrderDetailPage() {
 
   const order = currentOrder;
   const statusMeta = getOrderStatusMeta(order.status, order.paymentMethod);
-  const canCancel = !["Cancelled", "Completed", "Expired"].includes(order.status);
+  const canCancel = !["Shipping", "Cancelled", "Completed", "Expired"].includes(order.status);
   const deliveries: any[] = ((order as any).deliveries ?? []).map((d: any) => {
     const rr =
       d.returnRequest ||
@@ -575,7 +584,7 @@ export default function OrderDetailPage() {
           </div>
 
           {/* Stepper */}
-          <div className="px-5 pt-12 pb-6 overflow-x-auto">
+          <div className="px-5 pt-12 pb-6 scroll-fade overflow-x-auto">
             <div className="flex items-start min-w-[500px]">
               {steps.map((step, idx) => {
                 const isLast = idx === steps.length - 1;
@@ -831,9 +840,10 @@ export default function OrderDetailPage() {
 
             <div className="divide-y divide-gray-100">
               {deliveries.map((delivery) => {
-                const statusInfo = getDeliveryStatusLabel(t)[
-                  delivery.status as keyof ReturnType<typeof getDeliveryStatusLabel>
-                ] ?? {
+                // `ReturnType` ở file này là kiểu RMA import từ types, che mất `ReturnType<T>` của TS —
+                // lấy kiểu bảng nhãn qua một alias riêng thay vì gọi utility bị che.
+                const statusMap: DeliveryStatusLabelMap = getDeliveryStatusLabel(t);
+                const statusInfo = statusMap[delivery.status as keyof DeliveryStatusLabelMap] ?? {
                   label: delivery.status,
                   pillClass: "bg-gray-100 text-gray-600",
                 };
@@ -972,6 +982,38 @@ export default function OrderDetailPage() {
               </button>
             )}
 
+            {/* Confirm Received */}
+            {["Shipping"].includes(order.status) && (
+              <button
+                disabled={confirmingOrder}
+                onClick={async () => {
+                  setConfirmingOrder(true);
+                  try {
+                    const res = (await devMarkOrderShippingDelivered(order.id)) as any;
+                    if (res.isSuccess || res.status === 200 || !res.error) {
+                      toast.success("Xác nhận đã nhận hàng thành công");
+                      queryClient.invalidateQueries({ queryKey: ["order", order.id] });
+                      queryClient.invalidateQueries({ queryKey: ["orders"] });
+                    } else {
+                      toast.error(res.message || "Không thể xác nhận");
+                    }
+                  } catch (err: any) {
+                    toast.error("Có lỗi xảy ra khi xác nhận");
+                  } finally {
+                    setConfirmingOrder(false);
+                  }
+                }}
+                className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-emerald-600 text-white text-sm font-semibold py-2.5 hover:bg-emerald-700 cursor-pointer disabled:opacity-50 transition-colors"
+              >
+                {confirmingOrder ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <CheckCircle className="h-4 w-4" />
+                )}
+                Đã nhận hàng
+              </button>
+            )}
+
             {/* Return — shown when there's a delivered delivery and payment is done */}
             {/* Return — shown when there's a delivered delivery and payment is done */}
             {(hasReturnableDelivery || hasActiveReturnForAnyDelivery) &&
@@ -1073,7 +1115,7 @@ export default function OrderDetailPage() {
                 <X size={18} />
               </button>
             </div>
-            <div className="px-4 py-4 space-y-2 max-h-[60vh] overflow-y-auto">
+            <div className="px-4 py-4 space-y-2 max-h-[60vh] scroll-fade overflow-y-auto">
               {returnableDeliveries.map((delivery) => (
                 <button
                   key={delivery.id}
@@ -1136,7 +1178,7 @@ export default function OrderDetailPage() {
               </button>
             </div>
 
-            <div className="px-6 py-5 space-y-5 max-h-[75vh] overflow-y-auto">
+            <div className="px-6 py-5 space-y-5 max-h-[75vh] scroll-fade overflow-y-auto">
               {/* Item selection */}
               <div>
                 <div className="flex items-center justify-between mb-2">
@@ -1267,7 +1309,8 @@ export default function OrderDetailPage() {
                   <div>
                     <p className="text-xs font-semibold text-blue-800">Sản phẩm thay thế</p>
                     <p className="mt-1 text-xs text-blue-600">
-                      Chọn một biến thể thay thế cho từng sản phẩm. Sản phẩm thay thế không được đắt hơn hàng trả.
+                      Chọn một biến thể thay thế cho từng sản phẩm. Sản phẩm thay thế không được đắt
+                      hơn hàng trả.
                     </p>
                   </div>
                   {returnModal.items
@@ -1275,27 +1318,46 @@ export default function OrderDetailPage() {
                     .map((item) => (
                       <div key={item.id}>
                         <label className="mb-1 block text-xs font-medium text-gray-700">
-                          {item.productName}{item.variantName ? ` — ${item.variantName}` : ""}
+                          {item.productName}
+                          {item.variantName ? ` — ${item.variantName}` : ""}
                         </label>
                         <select
                           value={selectedItems[item.id]?.exchangeProductItemId ?? ""}
-                          onChange={(event) => handleExchangeItemChange(item.id, event.target.value)}
+                          onChange={(event) =>
+                            handleExchangeItemChange(item.id, event.target.value)
+                          }
                           className="w-full rounded-lg border border-blue-200 bg-white px-3 py-2 text-sm text-gray-700 focus:border-blue-400 focus:outline-none"
                         >
                           <option value="">Chọn sản phẩm thay thế</option>
                           {exchangeOptions.map(({ productName, variant }) => (
-                            <option key={variant.id} value={variant.id} disabled={variant.stock < selectedItems[item.id].quantity}>
-                              {productName}{variant.name ? ` — ${variant.name}` : ""} — {formatVnd(variant.price)} — tồn {variant.stock}
+                            <option
+                              key={variant.id}
+                              value={variant.id}
+                              disabled={variant.stock < selectedItems[item.id].quantity}
+                            >
+                              {productName}
+                              {variant.name ? ` — ${variant.name}` : ""} —{" "}
+                              {formatVnd(variant.price)} — tồn {variant.stock}
                             </option>
                           ))}
                         </select>
-                        {loadingExchangeOptions && <p className="mt-1 text-xs text-blue-600">Đang tải sản phẩm thay thế...</p>}
-                        {exchangeOptionsError && <p className="mt-1 text-xs text-red-500">Không tải được sản phẩm thay thế. Đóng và mở lại để thử lại.</p>}
-                        {!loadingExchangeOptions && !exchangeOptionsError && exchangeOptions.length === 0 && (
-                          <p className="mt-1 text-xs text-red-500">
-                            Cửa hàng chưa có sản phẩm còn hàng để đổi.
+                        {loadingExchangeOptions && (
+                          <p className="mt-1 text-xs text-blue-600">
+                            Đang tải sản phẩm thay thế...
                           </p>
                         )}
+                        {exchangeOptionsError && (
+                          <p className="mt-1 text-xs text-red-500">
+                            Không tải được sản phẩm thay thế. Đóng và mở lại để thử lại.
+                          </p>
+                        )}
+                        {!loadingExchangeOptions &&
+                          !exchangeOptionsError &&
+                          exchangeOptions.length === 0 && (
+                            <p className="mt-1 text-xs text-red-500">
+                              Cửa hàng chưa có sản phẩm còn hàng để đổi.
+                            </p>
+                          )}
                       </div>
                     ))}
                 </div>
@@ -1384,13 +1446,17 @@ export default function OrderDetailPage() {
               </div>
 
               {/* Bank info */}
-              {(returnType === "Refund" || (returnType === "Exchange" && currentOrder?.paymentMethod === "COD")) && (
+              {(returnType === "Refund" ||
+                (returnType === "Exchange" && currentOrder?.paymentMethod === "COD")) && (
                 <div className="rounded-xl border border-blue-100 bg-blue-50/40 p-4 space-y-3">
                   <p className="text-xs font-bold text-blue-700 uppercase tracking-wide">
                     {t("order_detail.return_modal.bank_info")}
                   </p>
                   {returnType === "Exchange" && (
-                    <p className="text-xs text-blue-600">Cần thông tin tài khoản nếu sản phẩm thay thế rẻ hơn và cửa hàng phải hoàn chênh lệch.</p>
+                    <p className="text-xs text-blue-600">
+                      Cần thông tin tài khoản nếu sản phẩm thay thế rẻ hơn và cửa hàng phải hoàn
+                      chênh lệch.
+                    </p>
                   )}
                   <div>
                     <label className="block text-xs text-gray-600 mb-1">

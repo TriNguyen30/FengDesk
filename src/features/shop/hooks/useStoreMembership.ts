@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { getStoreMembershipRequest } from "../api/shop.api";
 import type { StoreMembership } from "../types/shop";
 
@@ -11,15 +11,15 @@ export function useStoreMembership(storeId?: string) {
   const [membership, setMembership] = useState<StoreMembership | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const fetchMembership = useCallback(() => {
     if (!storeId) {
       setMembership(null);
       setLoading(false);
-      return;
+      return Promise.resolve();
     }
     let active = true;
     setLoading(true);
-    getStoreMembershipRequest(storeId)
+    return getStoreMembershipRequest(storeId)
       .then((res) => {
         if (!active) return;
         setMembership(res.isSuccess && res.data ? res.data : null);
@@ -30,14 +30,16 @@ export function useStoreMembership(storeId?: string) {
       .finally(() => {
         if (active) setLoading(false);
       });
-    return () => {
-      active = false;
-    };
   }, [storeId]);
+
+  useEffect(() => {
+    fetchMembership();
+  }, [fetchMembership]);
 
   return {
     membership,
     loading,
+    refetch: fetchMembership,
     /**
      * Được sửa hồ sơ + xem tab Thống kê/Nhân viên. Staff assignment thắng role global:
      * admin mà đồng thời là nhân viên của chính store này thì ở màn store vẫn bị giới hạn
@@ -49,3 +51,4 @@ export function useStoreMembership(storeId?: string) {
     isShopMember: !!membership?.canManage,
   };
 }
+

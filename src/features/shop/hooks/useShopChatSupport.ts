@@ -42,9 +42,20 @@ export function useShopChatSupport(storeId: string | undefined) {
   const [claiming, setClaiming] = useState(false);
 
   const activeRef = useRef(activeId);
+  const myRoomsRef = useRef(myRooms);
+  const queueRef = useRef(queue);
+
   useEffect(() => {
     activeRef.current = activeId;
   }, [activeId]);
+
+  useEffect(() => {
+    myRoomsRef.current = myRooms;
+  }, [myRooms]);
+
+  useEffect(() => {
+    queueRef.current = queue;
+  }, [queue]);
 
   const refresh = useCallback(async () => {
     if (!storeId) return [];
@@ -52,9 +63,14 @@ export function useShopChatSupport(storeId: string | undefined) {
       chatApi.getOpenStoreSupport(storeId),
       chatApi.getMyStoreChatboxes(storeId),
     ]);
-    if (q.data.isSuccess) setQueue(q.data.data.items);
-    if (mine.data.isSuccess) setMyRooms(mine.data.data.items);
-    return mine.data.isSuccess ? mine.data.data.items : [];
+    const queueItems = q.data.isSuccess ? q.data.data.items : [];
+    const mineItems = mine.data.isSuccess ? mine.data.data.items : [];
+    setQueue(queueItems);
+    setMyRooms(mineItems);
+
+    const allRooms = [...queueItems, ...mineItems];
+    await Promise.allSettled(allRooms.map((r) => chatHub.joinChatbox(r.id)));
+    return mineItems;
   }, [storeId]);
 
   useEffect(() => {
@@ -64,37 +80,46 @@ export function useShopChatSupport(storeId: string | undefined) {
     const onMessage = (m: ChatMessageBroadcast) => {
       if (activeRef.current === m.chatboxId) setMessages((prev) => upsert(prev, m));
 
-      setMyRooms((prev) => {
-        const idx = prev.findIndex((r) => r.id === m.chatboxId);
-        if (idx === -1) return prev;
-        const room = prev[idx];
-        const isFromMe = m.senderId === meId;
-        const isFocused = activeRef.current === m.chatboxId;
-        const updatedRoom = {
-          ...room,
-          lastMessage: m,
-          unreadCount: isFromMe || isFocused ? 0 : room.unreadCount + 1,
-        };
-        const next = [...prev];
-        next.splice(idx, 1);
-        next.unshift(updatedRoom);
-        return next;
-      });
+      const inMine = myRoomsRef.current.some((r) => r.id === m.chatboxId);
+      const inQueue = queueRef.current.some((r) => r.id === m.chatboxId);
 
-      setQueue((prev) => {
-        const idx = prev.findIndex((r) => r.id === m.chatboxId);
-        if (idx === -1) return prev;
-        const room = prev[idx];
-        const updatedRoom = { ...room, lastMessage: m };
-        const next = [...prev];
-        next.splice(idx, 1);
-        next.unshift(updatedRoom);
-        return next;
-      });
+      if (inMine) {
+        setMyRooms((prev) => {
+          const idx = prev.findIndex((r) => r.id === m.chatboxId);
+          if (idx === -1) return prev;
+          const room = prev[idx];
+          const isFromMe = m.senderId === meId;
+          const isFocused = activeRef.current === m.chatboxId;
+          const updatedRoom = {
+            ...room,
+            lastMessage: m,
+            unreadCount: isFromMe || isFocused ? 0 : room.unreadCount + 1,
+          };
+          const next = [...prev];
+          next.splice(idx, 1);
+          next.unshift(updatedRoom);
+          return next;
+        });
+      } else if (inQueue) {
+        setQueue((prev) => {
+          const idx = prev.findIndex((r) => r.id === m.chatboxId);
+          if (idx === -1) return prev;
+          const room = prev[idx];
+          const updatedRoom = { ...room, lastMessage: m };
+          const next = [...prev];
+          next.splice(idx, 1);
+          next.unshift(updatedRoom);
+          return next;
+        });
+      } else {
+        // Message belongs to a room not yet in local state -> join chatbox and refresh list!
+        void chatHub.joinChatbox(m.chatboxId).catch(() => {});
+        void refresh();
+      }
     };
 
     (async () => {
-      const mine = await refresh();
+      await refresh();
       try {
         await chatHub.connect();
         if (cancelled) return;
@@ -103,15 +128,20 @@ export function useShopChatSupport(storeId: string | undefined) {
         chatHub.onReconnected(() => setStatus("connected"));
         chatHub.onClose(() => setStatus("disconnected"));
         setStatus("connected");
-        await Promise.allSettled(mine.map((r) => chatHub.joinChatbox(r.id)));
       } catch (err) {
         console.warn("[shop-chat-support] SignalR connect failed:", err);
         if (!cancelled) setStatus("error");
       }
     })();
 
+    // Fallback polling every 15 seconds to ensure queue & messages stay sync'd
+    const intervalId = setInterval(() => {
+      void refresh();
+    }, 15000);
+
     return () => {
       cancelled = true;
+      clearInterval(intervalId);
       chatHub.off("messageReceived", onMessage as (...a: unknown[]) => void);
     };
   }, [meId, storeId, refresh]);

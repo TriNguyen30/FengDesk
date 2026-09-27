@@ -139,10 +139,21 @@ export async function getStoreMembershipRequest(id: string) {
   return data;
 }
 
-/** Thống kê dashboard vendor — BE chỉ cho owner/admin (staff 403). */
-export async function getStoreStatisticsRequest(id: string) {
+/**
+ * Thống kê dashboard vendor — BE chỉ cho owner/admin (staff 403).
+ *
+ * KHÔNG truyền `range`: một lần gọi trả sẵn cả bốn mốc trong `revenueSeriesByRange`, nên đổi
+ * Tuần/Tháng/Quý/Năm là đổi tại chỗ. Mỗi lần gọi là ~8 lượt đi về DB ở Sydney (~300ms/lượt), gọi lại
+ * chỉ để chia cột khác là phí toi vài giây.
+ *
+ * `range` vẫn còn trong chữ ký cho chỗ nào chỉ cần một mốc. Lưu ý tham số thứ HAI của
+ * `FetchHttpClient.get` là params chứ không phải config kiểu axios — truyền `{ params: { range } }`
+ * vào đây thì query thành `?params=...` và BE rơi về mốc mặc định.
+ */
+export async function getStoreStatisticsRequest(id: string, range?: string) {
   const { data } = await fetchHttpClient.get<ApiResponse<StoreStatistics>>(
     `/stores/${id}/statistics`,
+    range ? { range } : undefined,
   );
   return data;
 }

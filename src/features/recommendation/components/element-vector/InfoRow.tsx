@@ -4,7 +4,7 @@ export type InfoRowTone = "neutral" | "success" | "warning" | "danger";
 
 const TONE_CLASSES: Record<InfoRowTone, string> = {
   neutral: "bg-gray-100 text-gray-500",
-  success: "bg-emerald-50 text-emerald-600",
+  success: "bg-positive/10 text-positive-dark",
   warning: "bg-amber-50 text-amber-600",
   danger: "bg-red-50 text-red-600",
 };

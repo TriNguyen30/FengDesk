@@ -1,4 +1,4 @@
-import FengDesk from "@/assets/image/fengdesk_logo_2.png";
+import FengDesk from "@/assets/image/fengdesk_logo_2.webp";
 
 export default function FooterManager() {
   const currentYear = new Date().getFullYear();

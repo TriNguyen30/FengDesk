@@ -146,7 +146,7 @@ export function ShopChatInboxMockup() {
               />
             </div>
           </div>
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1 scroll-fade overflow-y-auto">
             {MOCK_CONVERSATIONS.map((c) => {
               const isActive = c.id === activeId;
               return (
@@ -219,7 +219,7 @@ export function ShopChatInboxMockup() {
             </button>
           </header>
 
-          <div className="flex-1 space-y-3 overflow-y-auto bg-gray-50/30 px-4 py-4">
+          <div className="flex-1 space-y-3 scroll-fade overflow-y-auto bg-gray-50/30 px-4 py-4">
             {active.messages.map((m) => {
               const mine = m.from === "shop";
               return (
@@ -290,7 +290,7 @@ export function ShopChatInboxMockup() {
             </p>
             <Info size={14} className="text-gray-400" />
           </div>
-          <div className="space-y-4 overflow-y-auto p-4 text-sm">
+          <div className="space-y-4 scroll-fade overflow-y-auto p-4 text-sm">
             <div className="flex flex-col items-center gap-2 text-center">
               <div
                 className={`flex h-16 w-16 items-center justify-center rounded-full text-lg font-bold ${active.avatarColor}`}

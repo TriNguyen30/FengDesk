@@ -137,7 +137,7 @@ export default function RoomNeedCard({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 4 }}
             transition={{ duration: 0.15 }}
-            className="overflow-y-auto rounded-xl border border-primary/50 p-3 text-xs text-slate-700 shadow-lg backdrop-blur-[3px]"
+            className="scroll-fade overflow-y-auto rounded-xl border border-primary/50 p-3 text-xs text-slate-700 shadow-lg backdrop-blur-[3px]"
             style={{ ...style, background: "rgba(255,255,255,0.97)" }}
           >
             <p className="mb-1.5 font-semibold text-slate-900">Các con số này từ đâu?</p>

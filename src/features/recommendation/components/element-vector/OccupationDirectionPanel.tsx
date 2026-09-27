@@ -82,7 +82,7 @@ export default function OccupationDirectionPanel({ breakdown }: OccupationDirect
               </div>
               <span
                 className={`w-20 shrink-0 text-right text-xs tabular-nums ${
-                  row.clamped ? "text-red-500" : up ? "text-emerald-600" : "text-gray-400"
+                  row.clamped ? "text-red-500" : up ? "text-positive" : "text-gray-400"
                 }`}
               >
                 {row.clamped ? "khắc mệnh" : `${row.value > 0 ? "+" : ""}${row.value.toFixed(2)}`}

@@ -308,7 +308,7 @@ export default function ManageProductsPage() {
 
       {/* ── Products Table ─────────────────────────────────────────────────── */}
       <div className="rounded-2xl bg-white overflow-hidden shadow-sm ring-1 ring-gray-100">
-        <div className="overflow-x-auto">
+        <div className="scroll-fade overflow-x-auto">
           {loading ? (
             <div className="flex flex-col items-center justify-center py-20 gap-3">
               <Loader2 className="h-8 w-8 text-primary animate-spin" />

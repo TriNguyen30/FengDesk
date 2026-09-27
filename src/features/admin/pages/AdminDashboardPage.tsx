@@ -250,7 +250,7 @@ export default function AdminDashboardPage() {
         ) : shopStatsList.length === 0 ? (
           <div className="py-8 text-center text-sm text-gray-500">Chưa có dữ liệu cửa hàng.</div>
         ) : (
-          <div className="overflow-x-auto">
+          <div className="scroll-fade overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead>
                 <tr className="border-b border-gray-100 text-xs font-semibold text-gray-400 uppercase tracking-wider">
@@ -374,7 +374,7 @@ export default function AdminDashboardPage() {
 
         <div className="lg:col-span-3 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex flex-col">
           <h2 className="text-lg font-bold text-gray-900 mb-6">Đơn Hàng Gần Đây</h2>
-          <div className="flex-1 flex flex-col overflow-y-auto max-h-[300px] pr-2">
+          <div className="flex-1 flex flex-col scroll-fade overflow-y-auto max-h-[300px] pr-2">
             {recentOrders.length === 0 ? (
               <div className="flex-1 flex flex-col items-center justify-center text-center py-8">
                 <ShoppingBag size={48} className="text-gray-300 mb-4" />

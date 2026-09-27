@@ -199,7 +199,7 @@ export default function UserSearchCombobox({
               {errorMsg || "Không tìm thấy người dùng phù hợp."}
             </div>
           ) : (
-            <ul className="max-h-72 overflow-y-auto">
+            <ul className="max-h-72 scroll-fade overflow-y-auto">
               {results.map((u, idx) => {
                 const disabledLabel = disabledUserIds[u.id];
                 const isDisabled = !!disabledLabel;

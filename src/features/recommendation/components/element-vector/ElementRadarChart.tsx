@@ -351,8 +351,10 @@ export default function ElementRadarChart({
             tick={false}
             axisLine={false}
           />
-          {/* Lý tưởng = CHẤM mảnh xám (mốc tham chiếu, đứng yên); Xem trước = GẠCH dài đậm màu primary có chấm
-              đỉnh (thứ sẽ thay đổi). Trước đây cả hai đều gạch nét ~4px, khác mỗi màu ⇒ nhìn lướt là lẫn. */}
+          {/* Lý tưởng = CHẤM mảnh xám (mốc tham chiếu, đứng yên); Xem trước = GẠCH dài màu primary có chấm
+              đỉnh (thứ sẽ thay đổi). Trước đây cả hai đều gạch nét ~4px, khác mỗi màu ⇒ nhìn lướt là lẫn.
+              Phân biệt nằm ở KIỂU nét (chấm ngắn xám ↔ gạch dài xanh) chứ không phải độ dày, nên nét
+              "Xem trước" hạ xuống 1.5px cho bớt lấn át lớp "Hiện tại". */}
           <Radar
             name="Mức lý tưởng"
             dataKey="ideal"
@@ -429,10 +431,10 @@ export default function ElementRadarChart({
               dataKey="preview"
               stroke="var(--color-primary-dark)"
               strokeDasharray="9 5"
-              strokeWidth={2.5}
+              strokeWidth={1.5}
               fill="var(--color-primary)"
               fillOpacity={0.08}
-              dot={{ r: 2.5, fill: "var(--color-primary-dark)", stroke: "#fff", strokeWidth: 1 }}
+              dot={{ r: 2, fill: "var(--color-primary-dark)", stroke: "#fff", strokeWidth: 1 }}
               isAnimationActive
               animationDuration={600}
               animationEasing="ease-out"
@@ -458,7 +460,7 @@ export default function ElementRadarChart({
         </span>
         {showPreview && (
           <span className="flex items-center gap-1.5">
-            <span className="inline-block h-0 w-5 border-t-[3px] border-dashed border-primary-dark" />
+            <span className="inline-block h-0 w-5 border-t-[1.5px] border-dashed border-primary-dark" />
             {previewLabel}
           </span>
         )}

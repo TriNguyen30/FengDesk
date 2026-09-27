@@ -182,7 +182,7 @@ export default function AdminElementTagsPage() {
       </div>
 
       {/* Bảng */}
-      <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white">
+      <div className="scroll-fade overflow-x-auto rounded-xl border border-gray-200 bg-white">
         <table className="w-full min-w-[880px] text-left">
           <thead>
             <tr className="border-b border-gray-200 bg-gray-50 text-xs font-medium text-gray-500">

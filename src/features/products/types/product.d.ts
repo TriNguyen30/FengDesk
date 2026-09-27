@@ -24,9 +24,17 @@ export type PaginatedResponse<T> = ApiResponse<PaginatedData<T>>;
 // Product / Garden store item
 // ============================================================
 
+/**
+ * Quyết định sản phẩm đi LUỒNG CHẤM ĐIỂM nào: đồ đặt trong phòng chấm theo gap ngũ hành của phòng
+ * (`Living` bỏ hướng la bàn), vật mang theo người chấm theo dụng thần, hàng tiêu hao không vào gợi ý.
+ */
+export type ProductPlacement = "Desk" | "Living" | "Carry" | "Consumable";
+
 export interface Product {
   id: string;
   gardenStoreId: string;
+  /** Tên nhà vườn bán sản phẩm — BE trả kèm trong danh sách để thẻ không phải gọi thêm API store. */
+  storeName?: string | null;
   name: string;
   isActive: boolean;
   minPrice: number;
@@ -106,11 +114,7 @@ export interface ProductDetail {
   // Thuộc tính phong thủy (thay cho tags)
   primaryElement?: string | null;
   secondaryElements?: string[];
-  /**
-   * `Desk` | `Living` | `Carry` | `Consumable` — quyết định sản phẩm đi luồng chấm điểm nào:
-   * đồ đặt trong phòng chấm theo gap ngũ hành của phòng, còn vật mang theo người chấm theo dụng thần.
-   */
-  placement?: "Desk" | "Living" | "Carry" | "Consumable";
+  placement?: ProductPlacement;
   sizeClass?: string | null;
   vibes?: string[];
   styles?: string[];
@@ -143,6 +147,8 @@ export interface CreateProductRequest {
   sizeClass?: string;
   vibes?: string[];
   styles?: string[];
+  /** Bỏ trống thì BE dùng `Desk`. */
+  placement?: ProductPlacement;
 }
 
 export interface UpdateProductRequest {
@@ -179,6 +185,8 @@ export interface AddProductImageRequest {
 }
 
 export interface UpdateProductFengShuiRequest {
+  /** BE coi thiếu là `Desk`, nên luôn gửi — không thì sửa phong thủy sẽ âm thầm đổi vòng tay về đồ để bàn. */
+  placement?: ProductPlacement;
   primaryElement: string;
   secondaryElements: string[];
   sizeClass: string;

@@ -71,7 +71,7 @@ export default function ElementTags({ rows, showPreviewDelta = false }: ElementT
             {showDelta && (
               <span
                 className={`ml-0.5 rounded-full px-1.5 py-px text-[10px] font-bold tabular-nums ${
-                  improves ? "bg-emerald-100 text-emerald-700" : "bg-orange-100 text-orange-700"
+                  improves ? "bg-positive/15 text-positive-dark" : "bg-orange-100 text-orange-700"
                 }`}
                 title={`Nếu đặt sản phẩm đang xem vào phòng: ${improves ? "gần" : "xa"} mức lý tưởng hơn`}
               >

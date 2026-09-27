@@ -309,7 +309,7 @@ export default function CheckoutPage() {
               {t("checkout_page.summary.title", { count: checkoutItems.length })}
             </h2>
 
-            <ul className="mb-4 max-h-64 space-y-3 overflow-y-auto">
+            <ul className="mb-4 max-h-64 space-y-3 scroll-fade overflow-y-auto">
               {checkoutItems.map((item) => (
                 <li key={item.id} className="flex justify-between gap-3 text-sm">
                   <div className="min-w-0 flex-1">

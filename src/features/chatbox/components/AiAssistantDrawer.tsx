@@ -527,7 +527,7 @@ export default function AiAssistantDrawer({ open, onClose, productId }: AiAssist
           <div
             ref={scrollRef}
             onScroll={handleMessagesScroll}
-            className="scrollbar-none h-full overflow-y-auto px-4 py-5"
+            className="scrollbar-none h-full scroll-fade overflow-y-auto px-4 py-5"
           >
             {isEmpty ? (
               <div className="flex h-full flex-col items-center justify-center text-center">
@@ -697,7 +697,7 @@ export default function AiAssistantDrawer({ open, onClose, productId }: AiAssist
                           dưới cột avatar user. */}
                       {idx === lastUserIdx && narrations.length > 0 && (
                         <div className="pl-10 pr-10">
-                          <div className="max-h-30 overflow-y-auto border-y border-gray-200 py-2 font-medium text-gray-500 opacity-90 [&_.fd-md]:text-xs [&_.fd-md]:text-gray-400">
+                          <div className="max-h-30 scroll-fade overflow-y-auto border-y border-gray-200 py-2 font-medium text-gray-500 opacity-90 [&_.fd-md]:text-xs [&_.fd-md]:text-gray-400">
                             {narrations.map((n, i) => (
                               <Markdown key={i} text={n} />
                             ))}

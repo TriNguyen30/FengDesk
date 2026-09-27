@@ -264,7 +264,7 @@ export default function WorkspaceModal({
             initial="hidden"
             animate="visible"
             exit="exit"
-            className="relative z-[101] w-full max-w-lg rounded-2xl bg-white shadow-xl max-h-[90vh] overflow-y-auto"
+            className="relative z-[101] w-full max-w-lg rounded-2xl bg-white shadow-xl max-h-[90vh] scroll-fade overflow-y-auto"
           >
             <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4 sticky top-0 bg-white z-10">
               <div className="flex min-w-0 items-center gap-2">
