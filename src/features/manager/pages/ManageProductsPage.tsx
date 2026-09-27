@@ -39,8 +39,8 @@ export default function ManageProductsPage() {
     () => (currentUser?.role ?? "").split(",").map((r) => r.trim()),
     [currentUser?.role],
   );
-  const isAdmin = useMemo(
-    () => userRoles.some((r) => ["Admin", "SystemAdmin"].includes(r)),
+  const canOperateAsAdmin = useMemo(
+    () => userRoles.some((r) => ["Manager", "Admin", "SystemAdmin"].includes(r)),
     [userRoles],
   );
 
@@ -131,28 +131,28 @@ export default function ManageProductsPage() {
   }, [currentUser?.id]);
 
   const allowedStores = useMemo(() => {
-    if (isAdmin) return shops;
+    if (canOperateAsAdmin) return shops;
     return shops.filter(
       (s) =>
         s.isOwner || (s as any).isStaff || (!!currentUser?.id && s.ownerUserId === currentUser.id),
     );
-  }, [shops, isAdmin, currentUser?.id]);
+  }, [shops, canOperateAsAdmin, currentUser?.id]);
 
   const allowedStoreIds = useMemo(() => new Set(allowedStores.map((s) => s.id)), [allowedStores]);
 
   useEffect(() => {
-    if (!isAdmin && allowedStores.length > 0) {
+    if (!canOperateAsAdmin && allowedStores.length > 0) {
       if (!selectedStoreId || !allowedStoreIds.has(selectedStoreId)) {
         setSelectedStoreId(allowedStores[0].id);
       }
     }
-  }, [isAdmin, allowedStores, allowedStoreIds, selectedStoreId]);
+  }, [canOperateAsAdmin, allowedStores, allowedStoreIds, selectedStoreId]);
 
   const { products, loading, totalCount, query } = useProductList({
     page,
     pageSize,
     search: search.trim() || undefined,
-    storeId: selectedStoreId || (isAdmin ? undefined : allowedStores[0]?.id),
+    storeId: selectedStoreId || (canOperateAsAdmin ? undefined : allowedStores[0]?.id),
     categoryId: selectedCategoryId || undefined,
     tagId: selectedTagId || undefined,
   });
@@ -163,14 +163,14 @@ export default function ManageProductsPage() {
   // Reset filters
   const handleResetFilters = () => {
     setSearch("");
-    setSelectedStoreId(isAdmin ? "" : allowedStores[0]?.id || "");
+    setSelectedStoreId(canOperateAsAdmin ? "" : allowedStores[0]?.id || "");
     setSelectedCategoryId("");
     setSelectedTagId("");
     setPage(1);
   };
 
   const handleEditProduct = (product: Product) => {
-    if (!isAdmin && !allowedStoreIds.has(product.gardenStoreId)) {
+    if (!canOperateAsAdmin && !allowedStoreIds.has(product.gardenStoreId)) {
       toast.error("Bạn không có quyền quản lý sản phẩm của cửa hàng này");
       return;
     }
@@ -178,7 +178,7 @@ export default function ManageProductsPage() {
   };
 
   const handleDeleteProduct = (product: Product) => {
-    if (!isAdmin && !allowedStoreIds.has(product.gardenStoreId)) {
+    if (!canOperateAsAdmin && !allowedStoreIds.has(product.gardenStoreId)) {
       toast.error("Bạn không có quyền xóa sản phẩm của cửa hàng này");
       return;
     }
@@ -250,7 +250,7 @@ export default function ManageProductsPage() {
               }}
               className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm text-gray-700 focus:border-primary focus:bg-white focus:outline-none focus:ring-1 focus:ring-primary/30 appearance-none"
             >
-              {isAdmin && <option value="">Tất cả cửa hàng</option>}
+              {canOperateAsAdmin && <option value="">Tất cả cửa hàng</option>}
               {allowedStores.map((shop) => (
                 <option key={shop.id} value={shop.id}>
                   {shop.name}
