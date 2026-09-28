@@ -43,8 +43,14 @@ export interface RefundDetail {
   status: RefundStatus;
   amount?: number;
   method?: string | null;
+  gateway?: string | null;
+  providerRefundId?: string | null;
+  retryCount?: number;
+  isManual?: boolean;
   manualReason?: string | null;
   evidenceUrl?: string | null;
+  processedAt?: string | null;
+  completedAt?: string | null;
 }
 
 export interface ReturnDetail {
