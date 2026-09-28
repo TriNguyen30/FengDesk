@@ -14,6 +14,8 @@ import {
   ImagePlus,
   Trash2,
   Truck,
+  ReceiptText,
+  ExternalLink,
 } from "lucide-react";
 import { toast } from "sonner";
 import { returnApi } from "@/features/return/api/return.api";
@@ -34,6 +36,20 @@ import { ordersApi } from "@/features/orders/api/orders.api";
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const PAGE_SIZE = 10;
+
+const REFUND_STATUS_LABELS: Record<string, string> = {
+  Pending: "Chờ xử lý",
+  Processing: "Đang xử lý",
+  ManagerReview: "Chờ xác nhận thủ công",
+  Completed: "Đã hoàn tiền",
+  Failed: "Hoàn tiền thất bại",
+  Cancelled: "Đã hủy",
+};
+
+const REFUND_METHOD_LABELS: Record<string, string> = {
+  Original: "Hoàn về phương thức thanh toán ban đầu",
+  BankTransfer: "Chuyển khoản ngân hàng",
+};
 
 const getReturnTypeLabel = (t: any): Record<string, string> => ({
   Refund: t("profile_return_order.types.refund"),
@@ -822,6 +838,100 @@ export default function ProfileReturnOrder() {
                           )}
                         </div>
                       )}
+
+                    {/* Refund result and manual transfer evidence */}
+                    {returnDetail.refund && (
+                      <div className="rounded-xl border border-emerald-200 bg-emerald-50/50 p-4">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex items-center gap-2">
+                            <ReceiptText className="h-5 w-5 text-emerald-600" />
+                            <div>
+                              <p className="text-sm font-bold text-emerald-900">
+                                Thông tin hoàn tiền
+                              </p>
+                              <p className="text-xs text-emerald-700">
+                                {REFUND_STATUS_LABELS[returnDetail.refund.status] ??
+                                  returnDetail.refund.status}
+                              </p>
+                            </div>
+                          </div>
+                          <p className="text-base font-bold text-emerald-700">
+                            {formatVnd(returnDetail.refund.amount ?? returnDetail.refundAmount)}
+                          </p>
+                        </div>
+
+                        <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
+                          <div>
+                            <dt className="text-xs text-gray-500">Phương thức</dt>
+                            <dd className="mt-0.5 font-medium text-gray-800">
+                              {returnDetail.refund.method
+                                ? (REFUND_METHOD_LABELS[returnDetail.refund.method] ??
+                                  returnDetail.refund.method)
+                                : "-"}
+                            </dd>
+                          </div>
+                          <div>
+                            <dt className="text-xs text-gray-500">Hình thức xử lý</dt>
+                            <dd className="mt-0.5 font-medium text-gray-800">
+                              {returnDetail.refund.isManual
+                                ? "Manager chuyển khoản thủ công"
+                                : returnDetail.refund.gateway || "Tự động"}
+                            </dd>
+                          </div>
+                          {returnDetail.refund.providerRefundId && (
+                            <div>
+                              <dt className="text-xs text-gray-500">Mã giao dịch hoàn tiền</dt>
+                              <dd className="mt-0.5 break-all font-mono text-xs font-medium text-gray-800">
+                                {returnDetail.refund.providerRefundId}
+                              </dd>
+                            </div>
+                          )}
+                          {returnDetail.refund.completedAt && (
+                            <div>
+                              <dt className="text-xs text-gray-500">Thời gian hoàn tất</dt>
+                              <dd className="mt-0.5 font-medium text-gray-800">
+                                {formatDate(returnDetail.refund.completedAt)}
+                              </dd>
+                            </div>
+                          )}
+                        </dl>
+
+                        {returnDetail.refund.manualReason && (
+                          <div className="mt-4 rounded-lg border border-emerald-100 bg-white/70 p-3">
+                            <p className="text-xs font-semibold text-gray-600">
+                              Nội dung xác nhận của Manager
+                            </p>
+                            <p className="mt-1 whitespace-pre-wrap text-sm text-gray-700">
+                              {returnDetail.refund.manualReason}
+                            </p>
+                          </div>
+                        )}
+
+                        {returnDetail.refund.evidenceUrl && (
+                          <div className="mt-4">
+                            <p className="mb-2 text-xs font-semibold text-gray-600">
+                              Bill / ảnh minh chứng chuyển khoản
+                            </p>
+                            <a
+                              href={returnDetail.refund.evidenceUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="group block w-fit"
+                            >
+                              <img
+                                src={returnDetail.refund.evidenceUrl}
+                                alt="Bill chuyển khoản hoàn tiền"
+                                className="max-h-64 max-w-full rounded-lg border border-emerald-200 bg-white object-contain shadow-sm transition group-hover:opacity-90"
+                              />
+                              <span className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 group-hover:underline">
+                                <ExternalLink className="h-3.5 w-3.5" />
+                                Mở ảnh gốc
+                              </span>
+                            </a>
+                          </div>
+                        )}
+                      </div>
+                    )}
 
                     {/* Images */}
                     {returnDetail.imageUrls.length > 0 && (
