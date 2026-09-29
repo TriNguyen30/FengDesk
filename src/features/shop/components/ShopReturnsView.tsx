@@ -569,7 +569,8 @@ export default function ShopReturnsView({ storeId }: ShopReturnsViewProps) {
                     <p className="text-xs font-semibold text-gray-600 mb-2">Sản phẩm trả</p>
                     <div className="rounded-xl border border-gray-100 overflow-hidden divide-y divide-gray-100">
                       {returnDetail.items.map((it) => (
-                        <div key={it.id} className="flex items-center gap-3 p-3">
+                        <div key={it.id} className="p-3">
+                          <div className="flex items-center gap-3">
                           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gray-100">
                             <Package className="h-5 w-5 text-gray-400" />
                           </div>
@@ -584,13 +585,26 @@ export default function ShopReturnsView({ storeId }: ShopReturnsViewProps) {
                           <p className="shrink-0 text-sm font-semibold text-gray-900">
                             {formatVnd(it.lineTotal)}
                           </p>
+                          </div>
+                          {it.exchangeProductItemId && (
+                            <div className="mt-3 rounded-lg border border-indigo-100 bg-indigo-50 p-3 text-sm">
+                              <p className="text-xs font-semibold uppercase text-indigo-500">Đổi sang</p>
+                              <p className="font-medium text-indigo-900">
+                                {it.exchangeProductName || "Sản phẩm thay thế"}
+                                {it.exchangeVariantName ? ` — ${it.exchangeVariantName}` : ""}
+                              </p>
+                              <p className="text-xs text-indigo-700">
+                                {formatVnd(it.exchangeUnitPrice ?? 0)} x {it.quantity} = {formatVnd(it.exchangeLineTotal ?? 0)}
+                              </p>
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>
                   </div>
 
                   {/* Bank info (only for Refund) */}
-                  {returnDetail.type === "Refund" &&
+                  {(returnDetail.type === "Refund" || returnDetail.refundAmount > 0) &&
                     (returnDetail.bankAccountName ||
                       returnDetail.bankAccountNumber ||
                       returnDetail.bankName) && (

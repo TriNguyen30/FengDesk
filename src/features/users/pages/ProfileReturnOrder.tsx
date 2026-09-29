@@ -785,28 +785,58 @@ export default function ProfileReturnOrder() {
                       </p>
                       <div className="rounded-xl border border-gray-100 overflow-hidden divide-y divide-gray-100">
                         {returnDetail.items.map((it) => (
-                          <div key={it.id} className="flex items-center gap-3 p-3">
-                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gray-100">
-                              <Package className="h-5 w-5 text-gray-400" />
-                            </div>
-                            <div className="min-w-0 flex-1">
-                              <p className="text-sm font-medium text-gray-900 truncate">
-                                {it.productName}
+                          <div key={it.id} className="p-3">
+                            <div className="flex items-center gap-3">
+                              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gray-100">
+                                <Package className="h-5 w-5 text-gray-400" />
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <p className="truncate text-sm font-medium text-gray-900">
+                                  {it.productName}
+                                </p>
+                                <p className="mt-0.5 text-xs text-gray-500">
+                                  {formatVnd(it.unitPrice)} x {it.quantity}
+                                </p>
+                              </div>
+                              <p className="shrink-0 text-sm font-semibold text-gray-900">
+                                {formatVnd(it.lineTotal)}
                               </p>
-                              <p className="text-xs text-gray-500 mt-0.5">
-                                {formatVnd(it.unitPrice)} x {it.quantity}
-                              </p>
                             </div>
-                            <p className="shrink-0 text-sm font-semibold text-gray-900">
-                              {formatVnd(it.lineTotal)}
-                            </p>
+                            {it.exchangeProductItemId && (
+                              <div className="mt-3 flex items-center gap-3 rounded-lg border border-indigo-100 bg-indigo-50 p-3">
+                                {it.exchangeImageUrl ? (
+                                  <img
+                                    src={it.exchangeImageUrl}
+                                    alt={it.exchangeProductName || "Sản phẩm thay thế"}
+                                    className="h-10 w-10 rounded-md object-cover"
+                                  />
+                                ) : (
+                                  <div className="flex h-10 w-10 items-center justify-center rounded-md bg-white">
+                                    <RefreshCw className="h-4 w-4 text-indigo-400" />
+                                  </div>
+                                )}
+                                <div className="min-w-0 flex-1">
+                                  <p className="text-[11px] font-semibold uppercase text-indigo-500">
+                                    Đổi sang
+                                  </p>
+                                  <p className="truncate text-sm font-medium text-indigo-900">
+                                    {it.exchangeProductName || "Sản phẩm thay thế"}
+                                    {it.exchangeVariantName ? ` — ${it.exchangeVariantName}` : ""}
+                                  </p>
+                                  <p className="text-xs text-indigo-700">
+                                    {formatVnd(it.exchangeUnitPrice ?? 0)} x {it.quantity} = {" "}
+                                    {formatVnd(it.exchangeLineTotal ?? 0)}
+                                  </p>
+                                </div>
+                              </div>
+                            )}
                           </div>
                         ))}
                       </div>
                     </div>
 
                     {/* Bank info (only for Refund) */}
-                    {returnDetail.type === "Refund" &&
+                    {(returnDetail.type === "Refund" || returnDetail.refundAmount > 0) &&
                       (returnDetail.bankAccountName ||
                         returnDetail.bankAccountNumber ||
                         returnDetail.bankName) && (
