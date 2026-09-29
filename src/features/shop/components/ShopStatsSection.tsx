@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { BarChart3, Banknote, Loader2, PackageOpen, Truck, Users, Wallet } from "lucide-react";
 import { getStoreStatisticsRequest } from "../api/shop.api";
+import { usePlatformFeePolicy } from "../hooks/usePlatformFeePolicy";
 import type { StoreStatistics } from "../types/shop";
 import { StatsPendingItems, StatsRangeTabs } from "./StatsPendingItems";
 import RevenueStateChart from "./RevenueStateChart";
@@ -52,6 +53,7 @@ function buildMonthlySeries(stats: StoreStatistics): RevenueChartRow[] {
  */
 export function ShopStatsSection({ storeId }: { storeId: string }) {
   const [stats, setStats] = useState<StoreStatistics | null>(null);
+  const holdDays = usePlatformFeePolicy().policy?.payoutHoldDays;
   const [loading, setLoading] = useState(true);
   const [range, setRange] = useState<StatsRange>("month");
 
@@ -108,7 +110,11 @@ export function ShopStatsSection({ storeId }: { storeId: string }) {
       icon: Wallet,
       label: "Doanh thu (đã giao)",
       value: formatVnd(stats.totalRevenue),
-      sub: `${deliveredCount} đơn giao thành công`,
+      // BE mới trả số dư sổ cái (đã trừ phí sàn + công nợ hoàn hàng); BE cũ thì giữ dòng cũ.
+      sub:
+        stats.ledgerBalance != null
+          ? `${deliveredCount} đơn · Thực nhận sau phí sàn: ${formatVnd(stats.ledgerBalance)}`
+          : `${deliveredCount} đơn giao thành công`,
     },
     {
       icon: Truck,
@@ -123,9 +129,20 @@ export function ShopStatsSection({ storeId }: { storeId: string }) {
       value: String(stats.activeDeliveries ?? 0),
       sub: `Chờ giao: ${formatVnd(stats.activeDeliveriesValue ?? 0)}`,
     },
-    // Thẻ "Có thể rút" tạm ẩn (24/09/2026): con số đối soát đang SAI về nghiệp vụ — đơn đã cộng
-    // vào số dư vẫn tiếp tục nằm trong "có thể rút", và công nợ hoàn hàng chưa bị trừ. Chỉ hiện
-    // doanh thu cho tới khi luồng chi tiền được làm đúng (docs/adr/vendor-payout.md).
+    // "Có thể rút" đọc thẳng sổ cái (docs/adr/platform-fee-ledger.md): chỉ gồm tiền đã QUA khoảng giữ sau khi
+    // giao, đã trừ phí sàn và công nợ hoàn hàng. Phần còn trong khoảng giữ hiện ở dòng phụ. BE cũ không có sổ ⇒ ẩn.
+    ...(stats.ledgerAvailable != null
+      ? [
+          {
+            icon: Banknote,
+            label: "Có thể rút",
+            value: formatVnd(stats.ledgerAvailable),
+            sub: `Đang giữ: ${formatVnd(stats.ledgerPending ?? 0)}${
+              holdDays != null ? ` · tất toán sau ${holdDays} ngày kể từ khi giao` : ""
+            }`,
+          },
+        ]
+      : []),
     {
       icon: Users,
       label: "Nhân viên",
@@ -147,7 +164,7 @@ export function ShopStatsSection({ storeId }: { storeId: string }) {
       </div>
 
       {/* Cards tổng quan */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
         {cards.map((c) => {
           const Icon = c.icon;
           return (

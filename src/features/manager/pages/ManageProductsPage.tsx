@@ -11,12 +11,11 @@ import {
   Eye,
   CheckCircle,
   XCircle,
-  AlertCircle,
   Package,
   Loader2,
 } from "lucide-react";
 import { useAppSelector } from "@/app/store";
-import { useProductList, useDeleteProduct } from "@/features/products";
+import { useProductList } from "@/features/products";
 import { getAllShopRequest, getMyShopsRequest } from "@/features/shop/api/shop.api";
 import { getCategoriesRequest } from "@/features/category/api/category.api";
 import { getTags } from "@/features/products/api/tag.api";
@@ -26,8 +25,7 @@ import type { Category } from "@/features/category/types/category";
 import type { Tag } from "@/features/products/types/tag";
 import { generateSlug } from "@/utils/string";
 import { toast } from "sonner";
-import Modal from "@/components/ui/Modal";
-import { EditProductModal } from "@/features/manager/components";
+import { DeleteProductDialog, EditProductModal } from "@/features/manager/components";
 
 function formatVnd(n: number): string {
   return n.toLocaleString("vi-VN") + "đ";
@@ -43,6 +41,9 @@ export default function ManageProductsPage() {
     () => userRoles.some((r) => ["Admin", "SystemAdmin"].includes(r)),
     [userRoles],
   );
+  // Xoá vĩnh viễn là quyền kiểm duyệt của Manager trên MỌI cửa hàng (BE: ManagerOrAbove) — khác quyền sửa sản
+  // phẩm, vốn chỉ dành cho cửa hàng mình quản lý.
+  const canHardDelete = isAdmin || userRoles.includes("Manager");
 
   const [page, setPage] = useState(1);
   const [pageSize] = useState(10);
@@ -61,7 +62,6 @@ export default function ManageProductsPage() {
   // Delete modal state
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleteName, setDeleteName] = useState("");
-  const [deleting, setDeleting] = useState(false);
 
   // Edit modal state
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
@@ -158,7 +158,6 @@ export default function ManageProductsPage() {
   });
 
   const totalPages = query.data?.isSuccess && query.data.data ? query.data.data.totalPages : 1;
-  const deleteProductMutation = useDeleteProduct();
 
   // Reset filters
   const handleResetFilters = () => {
@@ -178,32 +177,12 @@ export default function ManageProductsPage() {
   };
 
   const handleDeleteProduct = (product: Product) => {
-    if (!isAdmin && !allowedStoreIds.has(product.gardenStoreId)) {
+    if (!canHardDelete) {
       toast.error("Bạn không có quyền xóa sản phẩm của cửa hàng này");
       return;
     }
     setDeleteId(product.id);
     setDeleteName(product.name);
-  };
-
-  const handleDeleteConfirm = async () => {
-    if (!deleteId) return;
-    setDeleting(true);
-    try {
-      const res = await deleteProductMutation.mutateAsync(deleteId);
-      if (res.data.isSuccess) {
-        toast.success(`Đã xóa sản phẩm ${deleteName}`);
-      } else {
-        toast.error(res.data.message || "Đã xảy ra lỗi khi xóa sản phẩm");
-      }
-    } catch (err) {
-      console.error(err);
-      toast.error("Đã xảy ra lỗi khi xóa sản phẩm");
-    } finally {
-      setDeleting(false);
-      setDeleteId(null);
-      setDeleteName("");
-    }
   };
 
   return (
@@ -407,7 +386,7 @@ export default function ManageProductsPage() {
                           </button>
                           <button
                             onClick={() => handleDeleteProduct(product)}
-                            title="Xóa sản phẩm"
+                            title="Xóa vĩnh viễn"
                             className="group flex items-center rounded-lg border border-red-200 bg-red-50 px-2 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-100 transition-all duration-300 cursor-pointer"
                           >
                             <Trash2 size={16} />
@@ -459,48 +438,17 @@ export default function ManageProductsPage() {
         )}
       </div>
 
-      {/* Delete Confirmation Modal */}
-      <Modal open={deleteId !== null} title="Xóa sản phẩm" onClose={() => setDeleteId(null)}>
-        <div className="space-y-4">
-          <div className="flex items-start gap-3 rounded-lg bg-red-50 p-3 text-red-800">
-            <AlertCircle size={20} className="shrink-0 mt-0.5 text-red-500" />
-            <div>
-              <p className="text-sm font-semibold">Cảnh báo: Hành động không thể hoàn tác</p>
-              <p className="text-xs text-red-700 mt-0.5">
-                Xóa sản phẩm sẽ đồng thời xóa toàn bộ các biến thể, hình ảnh và dữ liệu phong thủy
-                liên quan.
-              </p>
-            </div>
-          </div>
-          <p className="text-sm text-gray-600">
-            Bạn có chắc chắn muốn xóa sản phẩm{" "}
-            <span className="font-bold text-gray-900">{deleteName}</span> không?
-          </p>
-          <div className="flex gap-3 pt-2">
-            <button
-              onClick={() => setDeleteId(null)}
-              disabled={deleting}
-              className="flex-1 rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50 cursor-pointer disabled:opacity-50"
-            >
-              Hủy
-            </button>
-            <button
-              onClick={handleDeleteConfirm}
-              disabled={deleting}
-              className="flex-1 rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-red-700 cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
-            >
-              {deleting ? (
-                <>
-                  <Loader2 size={14} className="animate-spin" />
-                  Đang xóa...
-                </>
-              ) : (
-                "Xác nhận xóa"
-              )}
-            </button>
-          </div>
-        </div>
-      </Modal>
+      {/* Xoá: sản phẩm đã có đơn ⇒ BE 409, hộp thoại chuyển sang đề xuất Ngừng bán. */}
+      {/* Trang Manager = xoá vĩnh viễn; người bán xoá mềm ở trang cửa hàng. */}
+      <DeleteProductDialog
+        permanent
+        product={deleteId ? { id: deleteId, name: deleteName } : null}
+        onClose={() => {
+          setDeleteId(null);
+          setDeleteName("");
+        }}
+        onDone={() => query.refetch()}
+      />
 
       {/* Edit Product Modal */}
       {editingProductId && (

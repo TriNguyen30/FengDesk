@@ -10,6 +10,8 @@ export interface ElementInputValue {
 interface ProductElementInputsFieldsProps {
   value: ElementInputValue[];
   onChange: (next: ElementInputValue[]) => void;
+  /** Tắt khi card bao ngoài đã có tiêu đề riêng (vd card thu gọn ở trang tạo sản phẩm). */
+  showHeader?: boolean;
 }
 
 function toggleInput(
@@ -70,15 +72,21 @@ function ChipGroup({
  * "Đặc điểm sản phẩm" — vật liệu/màu/hình khối, chỉ dùng ngôn ngữ mô tả sản phẩm (không nhắc ngũ hành).
  * Nguồn auto-calc vector ngũ hành (tầng 2) khi tạo sản phẩm.
  */
-export function ProductElementInputsFields({ value, onChange }: ProductElementInputsFieldsProps) {
+export function ProductElementInputsFields({
+  value,
+  onChange,
+  showHeader = true,
+}: ProductElementInputsFieldsProps) {
   const { materialCodes, colorCodes, shapeCodes } = useElementInputCodes();
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center gap-2 border-b border-gray-100 pb-3">
-        <Leaf size={18} className="text-primary" />
-        <h2 className="text-base font-bold text-gray-950">Đặc điểm sản phẩm</h2>
-      </div>
+      {showHeader && (
+        <div className="flex items-center gap-2 border-b border-gray-100 pb-3">
+          <Leaf size={18} className="text-primary" />
+          <h2 className="text-base font-bold text-gray-950">Đặc điểm sản phẩm</h2>
+        </div>
+      )}
       <ChipGroup
         label="Vật liệu"
         codes={materialCodes}

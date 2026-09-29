@@ -12,6 +12,7 @@ import {
 import { useAppSelector } from "@/app/store";
 import { useHasSellerWorkspaceAccess } from "@/features/shop/hooks/useShopStaff";
 import {
+  getLastWorkspace,
   getRoles,
   getVisibleWorkspaces,
   WORKSPACES,
@@ -27,6 +28,14 @@ const ICONS: Record<WorkspaceKey, LucideIcon> = {
   management: LayoutDashboard,
   admin: Shield,
 };
+
+/**
+ * Trang KHÔNG thuộc riêng khu nào. Storefront công khai vừa là trang mua sắm, vừa là chỗ chủ cửa hàng
+ * bấm "Xem cửa hàng" để soi shop của mình (`MyShopsPage` → `/stores/:id`). Trước đây mọi đường dẫn
+ * không bắt đầu bằng /seller · /manager · /admin đều rơi vào "shop", nên đi từ khu Cửa hàng sang đây là
+ * nhãn tự nhảy về "Mua sắm" — đọc như app tự đẩy người dùng ra khỏi khu đang làm việc.
+ */
+const SHARED_PREFIXES = ["/stores/"];
 
 /** Switcher "Đổi khu" — chỉ hiện các khu user có quyền, và chỉ render khi có >1 khu. */
 export default function WorkspaceSwitcher() {
@@ -80,6 +89,24 @@ export default function WorkspaceSwitcher() {
     };
   }, [open, close]);
 
+  /** Khu suy ĐƯỢC từ đường dẫn; `null` = trang dùng chung, không kết luận gì. */
+  const routeKey: WorkspaceKey | null = location.pathname.startsWith("/admin")
+    ? "admin"
+    : location.pathname.startsWith("/manager")
+      ? "management"
+      : location.pathname.startsWith("/seller")
+        ? "seller"
+        : SHARED_PREFIXES.some((prefix) => location.pathname.startsWith(prefix))
+          ? null
+          : "shop";
+
+  // Đường dẫn nói rõ khu nào thì ghi lại. Trước đây chỉ `go()` ghi, nên vào thẳng /seller bằng URL
+  // (hoặc bằng link trong trang) là localStorage lệch với chỗ đang đứng — và đó chính là thứ trang dùng
+  // chung phải dựa vào. Ghi cả ở đây thì `getDefaultWorkspace` lần đăng nhập sau cũng đúng hơn.
+  useEffect(() => {
+    if (routeKey) setLastWorkspace(routeKey);
+  }, [routeKey]);
+
   const roles = getRoles(user);
   const baseVisible = getVisibleWorkspaces(roles);
   const sellerWorkspace = WORKSPACES.find((w) => w.key === "seller");
@@ -90,13 +117,9 @@ export default function WorkspaceSwitcher() {
 
   if (!user || visible.length <= 1) return null;
 
-  const currentKey: WorkspaceKey = location.pathname.startsWith("/admin")
-    ? "admin"
-    : location.pathname.startsWith("/manager")
-      ? "management"
-      : location.pathname.startsWith("/seller")
-        ? "seller"
-        : "shop";
+  // Trang dùng chung ⇒ giữ nguyên khu đang ở. `visible.find` bên dưới là lưới chắn khi khu lưu
+  // trong localStorage không còn thuộc quyền của user nữa.
+  const currentKey: WorkspaceKey = routeKey ?? getLastWorkspace() ?? "shop";
   const current = visible.find((w) => w.key === currentKey) ?? visible[0];
   const CurrentIcon = ICONS[current.key];
 

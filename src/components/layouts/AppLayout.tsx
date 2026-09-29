@@ -1,6 +1,6 @@
 import { useEffect, type CSSProperties } from "react";
 import Navbar from "@/components/ui/Navbar";
-import { Outlet, useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useOutlet } from "react-router-dom";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import Footer from "@/components/ui/Footer";
 import { Toaster } from "sonner";
@@ -30,6 +30,10 @@ export default function AppLayout() {
   // Gom các route con của /profile vào một key để ProfileLayout không bị remount
   // (mất state sidebar + refetch) mỗi lần đổi tab trong trang cá nhân.
   const transitionKey = pathname.startsWith("/profile") ? "/profile" : pathname;
+  // Chụp outlet của LẦN render này. Để `<Outlet />` trong motion.div thì khung đang chạy hiệu ứng thoát vẫn
+  // render route MỚI ⇒ trang mới mount trong khung cũ rồi mount lại lần hai ở khung mới: gọi API gấp đôi và
+  // mất mọi thao tác trong ~0,3s đầu (E2E bắt được ở trang thanh toán — ô mã giảm giá bị xoá trắng).
+  const outlet = useOutlet();
 
   // Khi MỞ LẠI app (reload): nếu đã đăng nhập Staff/Manager/Admin và đang ở trang chủ "/" → đưa về /manager
   // (đồng bộ với redirect sau khi login). Chỉ chạy 1 lần lúc khởi động phiên.
@@ -80,7 +84,7 @@ export default function AppLayout() {
             exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -10 }}
             transition={{ duration: 0.26, ease: [0.22, 1, 0.36, 1] }}
           >
-            <Outlet />
+            {outlet}
           </motion.div>
         </AnimatePresence>
       </div>

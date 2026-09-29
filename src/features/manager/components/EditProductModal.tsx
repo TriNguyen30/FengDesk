@@ -311,7 +311,6 @@ export default function EditProductModal({
         {activeTab === "variants" && (
           <ProductVariantsSection
             productId={product.id}
-            productName={product.name}
             items={product.items || []}
             onRefreshProduct={handleRefresh}
           />

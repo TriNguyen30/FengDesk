@@ -4,12 +4,12 @@ import {
   HubConnectionState,
   LogLevel,
 } from "@microsoft/signalr";
-import { API_BASE_URL } from "@/config/env";
+import { getApiBaseUrl } from "@/config/apiBase";
 import { getAccessToken } from "@/utils";
 
 /** Hub nằm ở gốc server (không dưới /api). Bỏ hậu tố "/api" của base URL rồi gắn "/hubs/chat". */
 function resolveHubUrl(): string {
-  const base = (API_BASE_URL ?? "").replace(/\/api\/?$/i, "").replace(/\/+$/, "");
+  const base = getApiBaseUrl().replace(/\/api\/?$/i, "").replace(/\/+$/, "");
   return `${base}/hubs/chat`;
 }
 

@@ -261,7 +261,9 @@ export default function ShopDetailPage() {
               shop={shop}
               shopAddressText={shopAddressText}
               canEdit={canEditShopProfile}
-              onShopUpdated={(updated) => setShop(updated)}
+              onShopUpdated={(updated) =>
+                setShop((prev) => ({ ...updated, rating: updated.rating ?? prev?.rating }))
+              }
             />
             <ShopProductCatalog
               products={products}

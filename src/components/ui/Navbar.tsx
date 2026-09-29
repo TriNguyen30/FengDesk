@@ -1,4 +1,14 @@
-﻿import { Truck, Package, User, LogOut, Sparkles, Store, Bot, AlertTriangle } from "lucide-react";
+﻿import {
+  Truck,
+  Package,
+  User,
+  LogOut,
+  Sparkles,
+  Store,
+  Bot,
+  AlertTriangle,
+  ChevronRight,
+} from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
@@ -14,6 +24,8 @@ import { NotificationDropdown } from "@/features/notification";
 import AppearanceSettings from "@/components/ui/AppearanceSettings";
 import WorkspaceSwitcher from "./WorkspaceSwitcher";
 import { useHasSellerWorkspaceAccess } from "@/features/shop/hooks/useShopStaff";
+import { useMyStoreBalance } from "@/features/shop/hooks/useMyStoreBalance";
+import { formatMoneyInput } from "@/utils/money";
 import { getRoles } from "@/lib/workspace";
 import { useAppSelector, useAppDispatch } from "@/app/store";
 import { logout, setAuthModal } from "@/features/auth/store/authSlice";
@@ -36,7 +48,8 @@ export default function Navbar() {
   const { user, authModal, refreshToken } = useAppSelector((state) => state.auth);
   const dispatch = useAppDispatch();
   const { getCart, clearCart } = useCart();
-  const { hasSellerWorkspaceAccess } = useHasSellerWorkspaceAccess(!!user);
+  const { hasSellerWorkspaceAccess, shops: myShops } = useHasSellerWorkspaceAccess(!!user);
+  const ownsStore = myShops.some((s) => s.isOwner);
 
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [userDropdownClosing, setUserDropdownClosing] = useState(false);
@@ -315,6 +328,15 @@ export default function Navbar() {
                         >
                           {t("navbar.orders")}
                         </button>
+                        {hasSellerWorkspaceAccess && (
+                          <MyStoresMenuItem
+                            showBalance={ownsStore}
+                            onClick={() => {
+                              closeUserDropdown();
+                              navigate("/seller");
+                            }}
+                          />
+                        )}
                         {/* Người bán đã có khu riêng ở switcher "Đổi khu" → avatar chỉ giữ CTA cho người chưa bán. */}
                         {!getRoles(user).includes("GardenOwner") && !hasSellerWorkspaceAccess && (
                           <button
@@ -389,5 +411,47 @@ export default function Navbar() {
 
       <AiAssistantDrawer key={user?.id ?? "guest"} open={aiOpen} onClose={closeAiAssistant} />
     </header>
+  );
+}
+
+/**
+ * "Cửa hàng của tôi" trong menu tài khoản → danh sách cửa hàng (/seller). Chủ cửa hàng thấy thêm số dư gộp mọi
+ * cửa hàng mình sở hữu: có thể rút + đang giữ (chưa qua khoảng giữ sau khi giao). Chỉ tải khi menu đang mở.
+ */
+function MyStoresMenuItem({ showBalance, onClick }: { showBalance: boolean; onClick: () => void }) {
+  const { t } = useTranslation();
+  const { balance, isLoading } = useMyStoreBalance(showBalance);
+
+  return (
+    <button
+      onClick={onClick}
+      className="group flex w-full flex-col rounded-md px-3 py-2 text-left transition-colors hover:bg-gray-100 cursor-pointer"
+    >
+      <span className="flex w-full items-center text-sm font-medium text-gray-700 group-hover:text-gray-900">
+        {t("navbar.my_stores")}
+        <ChevronRight size={14} className="ml-auto text-gray-400" />
+      </span>
+      {showBalance && (
+        <span
+          className="mt-0.5 text-[11px] leading-snug text-gray-500"
+          data-testid="nav-store-balance"
+        >
+          {isLoading || !balance ? (
+            t("navbar.balance_loading")
+          ) : (
+            <>
+              {t("navbar.balance_available")}{" "}
+              <b className="font-semibold text-primary">{formatMoneyInput(balance.available)}đ</b>
+              {balance.pending !== 0 && (
+                <>
+                  <br />
+                  {t("navbar.balance_pending")} {formatMoneyInput(balance.pending)}đ
+                </>
+              )}
+            </>
+          )}
+        </span>
+      )}
+    </button>
   );
 }

@@ -33,8 +33,14 @@ export const productApi = {
     return fetchHttpClient.put<ApiResponse<ProductDetail>>(`/products/${id}`, data);
   },
 
+  /** Người bán xoá = xoá mềm (ẩn sản phẩm + biến thể, gỡ khỏi giỏ). 409 khi còn đơn chưa đóng. */
   deleteProduct: (id: string) => {
     return fetchHttpClient.delete<ApiResponse<null>>(`/products/${id}`);
+  },
+
+  /** Manager xoá VĨNH VIỄN (cả sản phẩm người bán đã xoá mềm). Đơn cũ và đánh giá vẫn giữ nội dung. */
+  hardDeleteProduct: (id: string) => {
+    return fetchHttpClient.delete<ApiResponse<null>>(`/products/${id}/permanent`);
   },
 
   createProductItem: (id: string, data: CreateProductItemRequest) => {
@@ -76,5 +82,11 @@ export const productApi = {
 
   updateProductFengShui: (id: string, data: UpdateProductFengShuiRequest) => {
     return fetchHttpClient.put<ApiResponse<ProductDetail>>(`/products/${id}/feng-shui`, data);
+  },
+
+  /** Mã SKU của sàn (`FD-XXXXXXXX`) chưa dùng — điền sẵn ô SKU. Không giữ chỗ, lúc lưu BE vẫn kiểm trùng. */
+  suggestSku: async () => {
+    const { data } = await fetchHttpClient.get<ApiResponse<string>>(`/products/sku-suggestion`);
+    return data;
   },
 };

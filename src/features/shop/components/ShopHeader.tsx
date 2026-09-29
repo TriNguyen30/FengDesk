@@ -98,7 +98,16 @@ export function ShopHeader({
           <div>
             <p className="text-xs text-gray-500">Đánh Giá</p>
             <p className="mt-1 text-xm font-semibold text-gray-900">
-              4.9 <span className="text-xs font-normal text-gray-500">(98 đánh giá)</span>
+              {shop.rating && shop.rating.count > 0 ? (
+                <>
+                  {shop.rating.average.toFixed(1)}{" "}
+                  <span className="text-xs font-normal text-gray-500">
+                    ({shop.rating.count} đánh giá)
+                  </span>
+                </>
+              ) : (
+                <span className="text-xs font-normal text-gray-500">Chưa có đánh giá</span>
+              )}
             </p>
           </div>
 

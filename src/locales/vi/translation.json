@@ -10,6 +10,10 @@
     "account": "Tài khoản",
     "my_account": "Tài Khoản Của Tôi",
     "workspace": "Không Gian Làm Việc",
+    "my_stores": "Cửa hàng của tôi",
+    "balance_loading": "Đang tải số dư...",
+    "balance_available": "Có thể rút",
+    "balance_pending": "Đang giữ",
     "orders": "Đơn Mua",
     "become_seller": "Trở thành người bán",
     "logout": "Đăng xuất",
@@ -384,7 +388,8 @@
       "total": "Tổng cộng",
       "terms_prefix": "Bằng việc đặt hàng, bạn đồng ý với ",
       "terms_link": "điều khoản mua hàng",
-      "free_ship": "Free Ship TP.Hồ Chí Minh cho hoá đơn từ 500.000đ"
+      "free_ship": "Free Ship TP.Hồ Chí Minh cho hoá đơn từ 500.000đ",
+      "shipping_discount": "Giảm phí vận chuyển"
     },
     "toast": {
       "select_product": "Vui lòng chọn sản phẩm để thanh toán",
@@ -394,7 +399,15 @@
       "order_success": "Đặt hàng thành công",
       "payment_link_error": "Không thể tạo liên kết thanh toán",
       "payment_gateway_error": "Lỗi khi kết nối cổng thanh toán PayOS",
-      "order_error": "Không thể tạo đơn hàng"
+      "order_error": "Không thể tạo đơn hàng",
+      "preview_not_ready": "Chưa tính xong phí vận chuyển — vui lòng đợi hoặc thử lại."
+    },
+    "voucher": {
+      "title": "Mã giảm giá",
+      "placeholder": "Nhập mã giảm giá",
+      "apply": "Áp dụng",
+      "remove": "Bỏ mã",
+      "applied": "Đã áp dụng: {{name}}"
     }
   },
   "product_card": {
@@ -437,7 +450,8 @@
       "loading": "Đang tải các đánh giá...",
       "empty": "Chưa có đánh giá nào cho sản phẩm này. Hãy là người đầu tiên đánh giá!",
       "anonymous": "Người dùng ẩn danh",
-      "you": "Bạn"
+      "you": "Bạn",
+      "load_more": "Xem thêm đánh giá"
     },
     "actions": {
       "edit": "Sửa",
@@ -451,6 +465,17 @@
     "edit_review": {
       "title": "Chỉnh sửa đánh giá của bạn",
       "rating_label": "Đánh giá:"
+    },
+    "eligibility": {
+      "not_purchased": "Chỉ khách đã mua và nhận hàng mới đánh giá được sản phẩm này.",
+      "not_delivered": "Bạn sẽ đánh giá được sau khi nhận hàng.",
+      "reviewed": "Bạn đã đánh giá tất cả các lần mua sản phẩm này.",
+      "returned": "Đơn hàng của bạn đã hoàn hàng nên không thể đánh giá.",
+      "product_unavailable": "Sản phẩm không còn bán nên không thể đánh giá."
+    },
+    "store_rating": {
+      "no_reviews": "Chưa có đánh giá",
+      "count": "({{count}} đánh giá)"
     }
   },
   "workspace": {
@@ -554,7 +579,7 @@
       "logout": "Đăng xuất"
     },
     "hints": {
-      "birth_time": "Thêm đầy đủ thông tin để Lumi có thể tư vấn chính xác hơn."
+      "birth_time": "Thêm đầy đủ thông tin để nhận được tư vấn chính xác hơn."
     },
     "placeholders": {
       "phone": "VD: 0912345678"
@@ -670,6 +695,14 @@
         "empty_content": "Vui lòng nhập nội dung đánh giá",
         "success": "Đánh giá sản phẩm thành công!",
         "error": "Không thể gửi đánh giá lúc này"
+      },
+      "nothing_to_review": "Không còn sản phẩm nào cần đánh giá trong đơn này.",
+      "status": {
+        "Reviewable": "Chưa đánh giá",
+        "Reviewed": "Đã đánh giá",
+        "Returned": "Đã hoàn hàng",
+        "NotDelivered": "Chưa nhận hàng",
+        "ProductUnavailable": "Ngừng bán"
       }
     }
   },
@@ -704,7 +737,8 @@
       "uncalculated": "Chưa tính",
       "total": "Thành tiền",
       "payment_method": "Thanh toán qua",
-      "paid": "Đã thanh toán"
+      "paid": "Đã thanh toán",
+      "shipping_discount": "Giảm phí vận chuyển"
     },
     "delivery": {
       "title": "Đơn giao hàng",

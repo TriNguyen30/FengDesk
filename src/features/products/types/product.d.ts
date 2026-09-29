@@ -161,7 +161,8 @@ export interface CreateProductItemRequest {
   name: string;
   price: number;
   stock: number;
-  sku: string;
+  /** Trống ⇒ BE tự sinh mã sàn `FD-XXXXXXXX`. */
+  sku?: string;
   weightGram: number;
   lengthCm: number;
   widthCm: number;
@@ -172,7 +173,8 @@ export interface UpdateProductItemRequest {
   name: string;
   price: number;
   stock: number;
-  sku: string;
+  /** Trống ⇒ BE tự sinh mã sàn `FD-XXXXXXXX`. */
+  sku?: string;
   weightGram: number;
   lengthCm: number;
   widthCm: number;

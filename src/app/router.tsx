@@ -16,6 +16,8 @@ import Model3DQueuePage from "@/features/manager/pages/Model3DQueuePage";
 import CreateProductPage from "@/features/manager/pages/CreateProductPage";
 import ManageStoresPage from "@/features/manager/pages/ManageStoresPage";
 import ManageOrdersPage from "@/features/manager/pages/ManageOrdersPage";
+import ManageVouchersPage from "@/features/manager/pages/ManageVouchersPage";
+import ManagePlatformFeePage from "@/features/manager/pages/ManagePlatformFeePage";
 import StaffSupportPage from "@/features/chatbox/pages/StaffSupportPage";
 import CartPage from "@/features/cart/pages/CartPage";
 import ProtectedRoute from "./ProtectedRoute";
@@ -174,6 +176,8 @@ export default function AppRoutes() {
           <Route path="model3d-queue" element={<Model3DQueuePage />} />
           <Route path="orders" element={<ManageOrdersPage />} />
           <Route path="order-returns" element={<ManageOrderReturnPage />} />
+          <Route path="vouchers" element={<ManageVouchersPage />} />
+          <Route path="platform-fee" element={<ManagePlatformFeePage />} />
           <Route path="customers" element={<StaffSupportPage />} />
           <Route path="stores" element={<ManageStoresPage />} />
           <Route path="settings">

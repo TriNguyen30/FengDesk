@@ -4,10 +4,11 @@ import { productApi } from "@/features/products/api/product.api";
 import { toast } from "sonner";
 import Modal from "@/components/ui/Modal";
 import type { ProductItem } from "@/features/products/types/product";
+import { SkuInput } from "./SkuInput";
+import { SellerPricingField } from "@/features/shop/components/SellerPricingField";
 
 interface ProductVariantsSectionProps {
   productId: string;
-  productName: string;
   items: ProductItem[];
   onRefreshProduct: () => void;
 }
@@ -18,7 +19,6 @@ function formatVnd(n: number): string {
 
 export function ProductVariantsSection({
   productId,
-  productName,
   items,
   onRefreshProduct,
 }: ProductVariantsSectionProps) {
@@ -60,15 +60,7 @@ export function ProductVariantsSection({
       setVariantLength(0);
       setVariantWidth(0);
       setVariantHeight(0);
-      // Auto generate SKU prefix
-      const prefix =
-        productName
-          .toUpperCase()
-          .normalize("NFD")
-          .replace(/[\u0300-\u036f]/g, "")
-          .replace(/[^A-Z0-9]/g, "")
-          .slice(0, 6) || "SKU";
-      setVariantSku(`${prefix}-${Math.floor(1000 + Math.random() * 9000)}`);
+      setVariantSku("");
     }
     setItemModalOpen(true);
   };
@@ -95,7 +87,7 @@ export function ProductVariantsSection({
           name: variantName.trim(),
           price: variantPrice,
           stock: variantStock,
-          sku: variantSku.trim(),
+          sku: variantSku.trim() || undefined,
           weightGram: variantWeight,
           lengthCm: variantLength,
           widthCm: variantWidth,
@@ -107,7 +99,7 @@ export function ProductVariantsSection({
           name: variantName.trim(),
           price: variantPrice,
           stock: variantStock,
-          sku: variantSku.trim(),
+          sku: variantSku.trim() || undefined,
           weightGram: variantWeight,
           lengthCm: variantLength,
           widthCm: variantWidth,
@@ -243,18 +235,7 @@ export function ProductVariantsSection({
             />
           </div>
 
-          <div className="space-y-1.5">
-            <label className="text-sm font-semibold text-gray-700">Giá bán (VNĐ) *</label>
-            <input
-              type="number"
-              required
-              min={0}
-              step={1000}
-              value={variantPrice}
-              onChange={(e) => setVariantPrice(Number(e.target.value))}
-              className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-700 focus:border-primary focus:outline-none font-semibold"
-            />
-          </div>
+          <SellerPricingField price={variantPrice} onChange={setVariantPrice} />
 
           <div className="space-y-1.5">
             <label className="text-sm font-semibold text-gray-700">Số lượng kho *</label>
@@ -269,14 +250,9 @@ export function ProductVariantsSection({
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-sm font-semibold text-gray-700">Mã SKU *</label>
-            <input
-              type="text"
-              required
-              value={variantSku}
-              onChange={(e) => setVariantSku(e.target.value)}
-              className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-700 focus:border-primary focus:outline-none font-mono"
-            />
+            <label className="text-sm font-semibold text-gray-700">Mã SKU</label>
+            {/* Sửa biến thể: giữ mã cũ, không gợi ý mã mới (SKU bất biến). */}
+            <SkuInput value={variantSku} onChange={setVariantSku} suggest={!selectedItem} />
           </div>
 
           <div className="space-y-1.5">

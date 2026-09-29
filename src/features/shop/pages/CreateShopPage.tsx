@@ -365,9 +365,6 @@ export default function CreateShopPage() {
             <div className="space-y-3">
               <div>
                 <p className="text-sm font-semibold text-gray-900">Địa chỉ cửa hàng</p>
-                <p className="text-xs text-gray-400">
-                  Tự fill khu vực từ bản đồ và zoom ngược lại từ khu vực.
-                </p>
               </div>
               <AddressLocationFields
                 streetAddress={addressForm.streetAddress}

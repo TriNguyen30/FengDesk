@@ -83,10 +83,11 @@ export function useUpdateProduct() {
   });
 }
 
-export function useDeleteProduct() {
+export function useDeleteProduct(permanent = false) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => productApi.deleteProduct(id),
+    mutationFn: (id: string) =>
+      permanent ? productApi.hardDeleteProduct(id) : productApi.deleteProduct(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["products"] });
     },
@@ -173,6 +174,30 @@ export function useUpdateProductFengShui() {
       productApi.updateProductFengShui(id, data),
     onSuccess: (_res, { id }) => {
       queryClient.invalidateQueries({ queryKey: ["product", id] });
+    },
+  });
+}
+
+/**
+ * "Ngừng bán" — đường thay thế khi sản phẩm đã có đơn nên BE không cho xoá (xoá sẽ làm món biến mất khỏi đơn cũ):
+ * ẩn khỏi cửa hàng/tìm kiếm nhưng giữ nguyên lịch sử. PUT sản phẩm cần đủ tên + mô tả nên đọc lại chi tiết trước.
+ */
+export function useDeactivateProduct() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const detail = await productApi.getProductById(id);
+      const product = detail.data.data;
+      if (!detail.data.isSuccess || !product)
+        throw new Error(detail.data.message || "Không đọc được sản phẩm");
+      return productApi.updateProduct(id, {
+        name: product.name,
+        description: product.description ?? "",
+        isActive: false,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["products"] });
     },
   });
 }

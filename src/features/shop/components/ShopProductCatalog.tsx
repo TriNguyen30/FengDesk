@@ -3,7 +3,7 @@ import { Plus, Search, SearchX } from "lucide-react";
 import ProductCard, { ProductCardSkeleton } from "@/features/products/components/ProductCard";
 import { Product } from "@/features/products/types/product";
 import { useState } from "react";
-import { EditProductModal } from "@/features/manager/components";
+import { DeleteProductDialog, EditProductModal } from "@/features/manager/components";
 
 interface ShopProductCatalogProps {
   products: Product[];
@@ -30,6 +30,7 @@ export function ShopProductCatalog({
   onRefresh,
 }: ShopProductCatalogProps) {
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
+  const [deletingProduct, setDeletingProduct] = useState<{ id: string; name: string } | null>(null);
 
   return (
     <section className="lg:col-span-3 space-y-6">
@@ -90,6 +91,11 @@ export function ShopProductCatalog({
               key={p.id}
               product={p}
               onEdit={canAddProduct && shopId ? () => setEditingProductId(p.id) : undefined}
+              onDelete={
+                canAddProduct && shopId
+                  ? () => setDeletingProduct({ id: p.id, name: p.name })
+                  : undefined
+              }
             />
           ))}
         </div>
@@ -110,6 +116,12 @@ export function ShopProductCatalog({
           )}
         </div>
       )}
+
+      <DeleteProductDialog
+        product={deletingProduct}
+        onClose={() => setDeletingProduct(null)}
+        onDone={() => onRefresh?.()}
+      />
 
       {/* Edit Product Modal */}
       {editingProductId && (

@@ -19,6 +19,8 @@ import {
   Tags,
   ChevronDown,
   Box,
+  TicketPercent,
+  Percent,
   User,
   Lock,
 } from "lucide-react";
@@ -48,6 +50,8 @@ const navigation = [
     children: [
       { name: "Đơn hàng", href: "/manager/orders", icon: ShoppingCart },
       { name: "Trả hàng", href: "/manager/order-returns", icon: TicketX },
+      { name: "Mã giảm giá", href: "/manager/vouchers", icon: TicketPercent },
+      { name: "Phí sàn", href: "/manager/platform-fee", icon: Percent },
     ],
   },
   // { name: "Cửa hàng", href: "/manager/stores", icon: Store },

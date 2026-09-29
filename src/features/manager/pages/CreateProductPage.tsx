@@ -2,7 +2,6 @@ import { useEffect, useState, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   ChevronLeft,
-  ChevronDown,
   Save,
   Trash2,
   RefreshCw,
@@ -10,6 +9,7 @@ import {
   Layers,
   Sparkles,
   Palette,
+  Leaf,
   Info,
   DollarSign,
   Upload,
@@ -36,6 +36,14 @@ import {
 import { toast } from "sonner";
 import { uploadFile } from "@/services/upload.service";
 import { RichTextEditor } from "@/components/ui/RichTextEditor";
+import { SellerPricingField } from "@/features/shop/components/SellerPricingField";
+import { CollapsibleFormCard } from "@/features/manager/components/CollapsibleFormCard";
+import { SkuInput } from "@/features/manager/components/SkuInput";
+import {
+  FS_ELEMENTS,
+  FS_PLACEMENTS,
+  FS_SIZE_CLASSES,
+} from "@/features/manager/components/ProductFengShuiForm";
 
 export default function CreateProductPage() {
   const navigate = useNavigate();
@@ -104,6 +112,26 @@ export default function CreateProductPage() {
     vibes: [],
     styles: [],
   });
+
+  // Tóm tắt hiện trên card cột phải khi đang thu gọn.
+  const labelOf = (list: { code: string; label: string }[], code: string) =>
+    list.find((x) => x.code === code)?.label ?? code;
+  const nameOf = (list: LookupItem[], code: string) => list.find((x) => x.code === code)?.name ?? code;
+  const vibeStyleSummary = [
+    labelOf(FS_PLACEMENTS, fengShui.placement || "Desk"),
+    `Cỡ ${labelOf(FS_SIZE_CLASSES, fengShui.sizeClass).toLowerCase()}`,
+    ...fengShui.vibes.map((c) => nameOf(vibeOptions, c)),
+    ...fengShui.styles.map((c) => nameOf(styleOptions, c)),
+  ];
+  const advancedSummary = fengShui.primaryElement
+    ? [
+        `Hành chính: ${labelOf(FS_ELEMENTS, fengShui.primaryElement)}`,
+        ...fengShui.secondaryElements.map((c) => `Phụ: ${labelOf(FS_ELEMENTS, c)}`),
+      ]
+    : [];
+  const selectedCategoryNames = categories
+    .filter((c) => selectedCategoryIds.includes(c.id))
+    .map((c) => c.name);
 
   // Fetch filter options
   useEffect(() => {
@@ -209,19 +237,6 @@ export default function CreateProductPage() {
     fetchOptions();
   }, [lockedStoreId, isAdmin, currentUser?.id]);
 
-  // Set default SKU based on name if empty
-  useEffect(() => {
-    if (!itemSku && name) {
-      const generatedSku =
-        name
-          .toUpperCase()
-          .normalize("NFD")
-          .replace(/[\u0300-\u036f]/g, "")
-          .replace(/[^A-Z0-9]/g, "")
-          .slice(0, 8) + "-STD";
-      setItemSku(generatedSku);
-    }
-  }, [name, itemSku]);
 
   // Image inputs helpers
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -333,7 +348,8 @@ export default function CreateProductPage() {
             name: itemName.trim() || "Tiêu chuẩn",
             price: Number(itemPrice),
             stock: Number(itemStock),
-            sku: itemSku.trim() || "SKU-DEFAULT",
+            // Trống ⇒ BE tự sinh mã sàn; KHÔNG gửi mã cố định (mã thứ hai sẽ trùng unique index).
+            sku: itemSku.trim() || undefined,
             weightGram: Number(itemWeight),
             lengthCm: Number(itemLength),
             widthCm: Number(itemWidth),
@@ -459,7 +475,7 @@ export default function CreateProductPage() {
               </div>
 
               <div className="space-y-1.5 sm:col-span-2">
-                <label className="text-sm font-semibold text-gray-700 dark:text-gray-200">
+                <label className="text-sm font-semibold text-gray-700">
                   Mô tả sản phẩm
                 </label>
                 <RichTextEditor
@@ -493,16 +509,12 @@ export default function CreateProductPage() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-sm font-semibold text-gray-700">Giá bán (VNĐ) *</label>
-                <input
-                  type="number"
-                  required
-                  min={0}
-                  step={1000}
-                  value={itemPrice}
-                  onChange={(e) => setItemPrice(Number(e.target.value))}
-                  className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-700 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/30 font-semibold"
-                />
+                <label className="text-sm font-semibold text-gray-700">Mã SKU</label>
+                <SkuInput value={itemSku} onChange={setItemSku} />
+              </div>
+
+              <div className="sm:col-span-2">
+                <SellerPricingField price={itemPrice} onChange={setItemPrice} />
               </div>
 
               <div className="space-y-1.5">
@@ -518,18 +530,6 @@ export default function CreateProductPage() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-sm font-semibold text-gray-700">Mã SKU *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Mã phân loại sản phẩm"
-                  value={itemSku}
-                  onChange={(e) => setItemSku(e.target.value)}
-                  className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-700 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/30 font-mono"
-                />
-              </div>
-
-              <div className="space-y-1.5">
                 <label className="text-sm font-semibold text-gray-700">Trọng lượng (gram) *</label>
                 <input
                   type="number"
@@ -541,7 +541,7 @@ export default function CreateProductPage() {
                 />
               </div>
 
-              <div className="space-y-1.5">
+              <div className="space-y-1.5 sm:col-span-2">
                 <label className="text-sm font-semibold text-gray-700">
                   Kích thước (Dài x Rộng x Cao) cm *
                 </label>
@@ -720,57 +720,62 @@ export default function CreateProductPage() {
         {/* Right Side (Categories/Tags & FengShui) */}
         <div className="space-y-6">
           {/* Card 4: Đặc điểm sản phẩm — vật liệu/màu/hình khối, nguồn auto-calc phong thủy */}
-          <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-100">
-            <ProductElementInputsFields value={elementInputs} onChange={setElementInputs} />
-          </div>
+          <CollapsibleFormCard
+            icon={Leaf}
+            title="Đặc điểm sản phẩm"
+            hint="Vật liệu, màu và hình khối của sản phẩm — di chuột vào để chọn."
+            description="Chọn đúng những gì có trên sản phẩm; hệ thống dựa vào đây để tự tính ngũ hành, không cần tự khai mệnh."
+            summary={elementInputs.map((i) => i.code)}
+            testId="card-element-inputs"
+          >
+            <ProductElementInputsFields
+              value={elementInputs}
+              onChange={setElementInputs}
+              showHeader={false}
+            />
+          </CollapsibleFormCard>
 
-          {/* Card 4b: Vibe / Style / Kích thước — độc lập với phong thủy nâng cao, luôn hiện */}
-          <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-100 space-y-5">
-            <div className="flex items-center gap-2 border-b border-gray-100 pb-3">
-              <Palette size={18} className="text-primary" />
-              <h2 className="text-base font-bold text-gray-950">
-                Cách dùng, vibe &amp; kích thước
-              </h2>
-            </div>
+          {/* Card 4b: Vibe / Style / Kích thước — độc lập với phong thủy nâng cao */}
+          <CollapsibleFormCard
+            icon={Palette}
+            title="Cách dùng, vibe & kích thước"
+            hint="Sản phẩm dùng thế nào, to cỡ nào, hợp không gian ra sao — di chuột vào để chọn."
+            description="Cách dùng quyết định sản phẩm được gợi ý theo không gian hay theo người đeo; vibe và phong cách giúp khớp gu của khách."
+            summary={vibeStyleSummary}
+            testId="card-vibe-style"
+          >
             <ProductVibeStyleFields
               value={fengShui}
               onChange={(patch) => setFengShui({ ...fengShui, ...patch })}
               vibeOptions={vibeOptions}
               styleOptions={styleOptions}
             />
-          </div>
+          </CollapsibleFormCard>
 
-          {/* Card 4c: Phong thủy nâng cao — collapse, mặc định đóng */}
-          <details className="group rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-100">
-            <summary className="flex cursor-pointer list-none items-center justify-between gap-2 pb-3">
-              <span className="flex items-center gap-2">
-                <Sparkles size={18} className="text-primary" />
-                <h2 className="text-base font-bold text-gray-950">Phong thủy nâng cao</h2>
-              </span>
-              <ChevronDown
-                size={16}
-                className="text-gray-400 transition-transform group-open:rotate-180"
-              />
-            </summary>
-            <p className="mb-4 text-xs text-gray-400 italic">
-              Chỉ dùng nếu bạn đã biết chính xác - thường không cần, hệ thống tự tính từ Đặc điểm
-              sản phẩm.
-            </p>
-            <div className="border-t border-gray-100 pt-4">
-              <ProductElementSelectFields
-                value={fengShui}
-                onChange={(patch) => setFengShui({ ...fengShui, ...patch })}
-              />
-            </div>
-          </details>
+          {/* Card 4c: Phong thủy nâng cao — tùy chọn */}
+          <CollapsibleFormCard
+            icon={Sparkles}
+            title="Phong thủy nâng cao"
+            hint="Tự khai mệnh cho sản phẩm — thường bỏ qua, hệ thống tự tính."
+            description="Chỉ dùng nếu bạn đã biết chính xác — thường không cần, hệ thống tự tính từ Đặc điểm sản phẩm."
+            summary={advancedSummary}
+            testId="card-advanced-fengshui"
+          >
+            <ProductElementSelectFields
+              value={fengShui}
+              onChange={(patch) => setFengShui({ ...fengShui, ...patch })}
+            />
+          </CollapsibleFormCard>
 
           {/* Card 5: Categories */}
-          <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-100 space-y-4">
-            <div className="flex items-center gap-2 border-b border-gray-100 pb-3">
-              <Layers size={18} className="text-primary" />
-              <h2 className="text-base font-bold text-gray-950">Danh mục sản phẩm</h2>
-            </div>
-
+          <CollapsibleFormCard
+            icon={Layers}
+            title="Danh mục sản phẩm"
+            hint="Nhóm hiển thị sản phẩm trên cửa hàng — di chuột vào để chọn."
+            description="Khách lọc và duyệt sản phẩm theo danh mục; chọn một hoặc nhiều."
+            summary={selectedCategoryNames}
+            testId="card-categories"
+          >
             {categories.length === 0 ? (
               <p className="text-xs text-gray-400 italic">Đang tải danh mục...</p>
             ) : (
@@ -791,7 +796,7 @@ export default function CreateProductPage() {
                 ))}
               </div>
             )}
-          </div>
+          </CollapsibleFormCard>
 
           {/* Submission Panel */}
           <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-100">

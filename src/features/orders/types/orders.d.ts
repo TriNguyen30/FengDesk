@@ -25,6 +25,8 @@ export interface CreateOrders {
   note: string;
   items: OrdersItem[];
   paymentMethod: PaymentMethod;
+  /** Mã khách tự nhập; bỏ trống ⇒ BE tự áp voucher tự động (vd FREESHIP500) nếu đủ điều kiện. */
+  voucherCode?: string;
 }
 
 export interface OrdersItem {
@@ -34,9 +36,15 @@ export interface OrdersItem {
 
 export interface OrderLineItem {
   id: string;
-  productItemId: string;
+  /** Null khi sản phẩm đã bị Manager xoá vĩnh viễn. */
+  productItemId: string | null;
   /** Id sản phẩm gốc (Product) — dùng để đánh giá / mở trang sản phẩm, KHÔNG phải productItemId. */
-  productId: string;
+  productId: string | null;
+  /**
+   * Sản phẩm còn bán không. false ⇒ đã bị xoá: KHÔNG dẫn link, không mua lại / đánh giá. Tên, biến thể, ảnh, giá
+   * vẫn đủ vì BE chụp lại lúc đặt.
+   */
+  productAvailable: boolean;
   deliveryId: string | null;
   productName: string;
   /** Tên biến thể (vd "Đỏ / Size L"). Null nếu sản phẩm không có biến thể đặt tên. */
@@ -68,6 +76,9 @@ export interface Order {
   paymentMethod: string;
   subtotal: number;
   totalShippingFee: number;
+  /** Giảm phí ship từ voucher — `totalAmount = subtotal + totalShippingFee − shippingDiscount`. */
+  shippingDiscount?: number;
+  voucherCode?: string | null;
   totalAmount: number;
   deliveryCount?: number;
   createdAt: string;
@@ -109,6 +120,7 @@ export interface AssignDeliveryStaffRequest {
 export interface PreviewShippingFeePayload {
   shippingAddressId: string;
   items: OrdersItem[];
+  voucherCode?: string;
 }
 
 export interface StoreShippingFee {
@@ -116,12 +128,34 @@ export interface StoreShippingFee {
   storeName: string;
   subtotal: number;
   shippingFee: number;
+  shippingDiscount: number;
+}
+
+export interface AppliedVoucher {
+  code: string;
+  name: string;
+  shippingDiscount: number;
+}
+
+/** Voucher đang áp dụng — `GET /vouchers/available`. */
+export interface AvailableVoucher {
+  id: string;
+  code: string;
+  name: string;
+  description?: string | null;
+  minOrderSubtotal: number;
+  isAutoApply: boolean;
 }
 
 export interface ShippingFeePreview {
   subtotal: number;
   totalShippingFee: number;
+  shippingDiscount: number;
+  /** Số BE SẼ tính khi đặt — FE hiển thị nguyên số này, không tự cộng trừ. */
   totalAmount: number;
+  appliedVoucher: AppliedVoucher | null;
+  /** Lý do mã khách nhập không dùng được. */
+  voucherMessage: string | null;
   stores: StoreShippingFee[];
 }
 

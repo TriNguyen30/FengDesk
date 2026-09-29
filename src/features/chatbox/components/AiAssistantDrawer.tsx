@@ -264,14 +264,13 @@ export default function AiAssistantDrawer({ open, onClose, productId }: AiAssist
       if (messages.length > 0) initialScrolledRef.current = true;
       return;
     }
-    // Effect này chạy theo cả `activity`/`narrations`, tức là mỗi nhịp stream của
-    // AI. Chỉ neo đáy khi người dùng vẫn đang ở gần đáy — nếu không thì mỗi nhịp
-    // lại giật họ khỏi đoạn đang đọc. Ngoại lệ: tin cuối là tin MÌNH vừa gửi thì
-    // luôn nhảy xuống, vì đó là hành động chủ động chứ không phải nền chạy.
+    // Chỉ nhảy xuống khi tin cuối là tin MÌNH vừa gửi — hành động chủ động. Đã BỎ việc tự bám đáy theo
+    // stream (activity / narrations / tin AI): mỗi nhịp thinking đổi chiều cao khung là một lần kéo cả
+    // đoạn chat, người dùng không đọc yên được. Muốn theo dõi câu trả lời thì tự cuộn.
     const justSent = messages[messages.length - 1]?.role === "user";
 
-    if (justSent || isNearBottom()) scrollToBottom();
-  }, [messages, activity, narrations, open]);
+    if (justSent) scrollToBottom();
+  }, [messages, open]);
 
   // Trigger nạp tin cũ hơn (dùng chung cho scroll gần đỉnh + nút bấm). Ghi scrollHeight để bù vị trí.
   const triggerLoadMore = () => {

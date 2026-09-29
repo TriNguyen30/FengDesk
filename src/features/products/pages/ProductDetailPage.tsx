@@ -9,6 +9,7 @@ import {
   Minus,
   Plus,
   Store,
+  Star,
   MessageSquare,
   MapPin,
   Phone,
@@ -898,6 +899,17 @@ export default function ProductDetailPage() {
               >
                 {shop.name}
               </h2>
+              <p className="mt-1 flex items-center gap-1 text-xs text-gray-500">
+                <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+                {shop.rating && shop.rating.count > 0 ? (
+                  <>
+                    <span className="font-semibold text-gray-800">{shop.rating.average.toFixed(1)}</span>
+                    {t("review_section.store_rating.count", { count: shop.rating.count })}
+                  </>
+                ) : (
+                  t("review_section.store_rating.no_reviews")
+                )}
+              </p>
               <div className="mt-3 flex gap-2">
                 <button
                   onClick={handleChatWithShop}
@@ -958,7 +970,7 @@ export default function ProductDetailPage() {
             {t("product_detail.labels.description")}
           </h2>
           <div
-            className="text-sm leading-relaxed text-gray-700 dark:text-gray-100 quill-content"
+            className="text-sm leading-relaxed text-gray-700 quill-content"
             dangerouslySetInnerHTML={{ __html: cleanRichTextHtml(product.description) }}
           />
         </div>

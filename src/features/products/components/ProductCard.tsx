@@ -1,7 +1,15 @@
 import { Link } from "react-router-dom";
 import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { ChevronLeft, ChevronRight, Loader2, Pencil, ShoppingCart, Store } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Loader2,
+  Pencil,
+  ShoppingCart,
+  Store,
+  Trash2,
+} from "lucide-react";
 import { useProductList } from "../hooks/useProducts";
 import { Product } from "../types/product";
 import { useCart } from "@/features/cart";
@@ -36,9 +44,11 @@ interface ProductCardProps {
   soldCount?: number;
   /** Chỉ truyền khi người xem là chủ/co-owner của shop — hiện nút sửa nhanh ở góc thẻ. */
   onEdit?: () => void;
+  /** Chủ cửa hàng: nút xoá cạnh nút sửa. */
+  onDelete?: () => void;
 }
 
-export default function ProductCard({ product, soldCount, onEdit }: ProductCardProps) {
+export default function ProductCard({ product, soldCount, onEdit, onDelete }: ProductCardProps) {
   const { addItem } = useCart();
   const { t } = useTranslation();
 
@@ -89,6 +99,22 @@ export default function ProductCard({ product, soldCount, onEdit }: ProductCardP
           className="absolute top-2 right-2 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-white/90 text-gray-600 shadow-sm hover:bg-primary hover:text-white transition-colors cursor-pointer"
         >
           <Pencil size={12} />
+        </button>
+      )}
+      {onDelete && (
+        <button
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onDelete();
+          }}
+          title="Xóa sản phẩm"
+          aria-label={`Xóa ${product.name}`}
+          className={`absolute top-2 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-white/90 text-gray-600 shadow-sm transition-colors hover:bg-red-600 hover:text-white cursor-pointer ${
+            onEdit ? "right-9" : "right-2"
+          }`}
+        >
+          <Trash2 size={12} />
         </button>
       )}
 

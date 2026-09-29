@@ -11,3 +11,4 @@ export * from "./ProductFengShuiForm";
 export * from "./ProductModel3DSection";
 export * from "./ProductElementInputsFields";
 export { default as EditProductModal } from "./EditProductModal";
+export * from "./DeleteProductDialog";
