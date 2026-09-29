@@ -1,10 +1,27 @@
-import { useParams } from "react-router-dom";
+import { Navigate, useParams } from "react-router-dom";
 import ShopReturnsView from "../components/ShopReturnsView";
 import { Link } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Loader2 } from "lucide-react";
+import { useStoreMembership } from "@/features/shop/hooks/useStoreMembership";
 
 export default function ShopReturnsPage() {
   const { storeId = "" } = useParams<{ storeId: string }>();
+  // Route chỉ bọc ProtectedRoute (kiểm tra ĐĂNG NHẬP, không kiểm tra store này có phải của mình).
+  // Không tự chặn thì Staff/Manager nền tảng — vốn được xem RMA mọi cửa hàng (RmaActor.CanDecide) —
+  // sẽ thấy ticket trả hàng của cửa hàng người khác NGAY TRONG màn "Cửa hàng của tôi".
+  const { isShopMember, loading: loadingMembership } = useStoreMembership(storeId);
+
+  if (loadingMembership) {
+    return (
+      <div className="flex min-h-[50vh] items-center justify-center text-gray-400">
+        <Loader2 size={28} className="animate-spin" />
+      </div>
+    );
+  }
+
+  if (!isShopMember) {
+    return <Navigate to={`/stores/${storeId}`} replace />;
+  }
 
   return (
     <div className="mx-auto max-w-7xl py-4">

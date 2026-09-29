@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { Navigate, useNavigate, useParams } from "react-router-dom";
 import {
   ChevronLeft,
   Save,
@@ -44,6 +44,7 @@ import {
   FS_PLACEMENTS,
   FS_SIZE_CLASSES,
 } from "@/features/manager/components/ProductFengShuiForm";
+import { useStoreMembership } from "@/features/shop/hooks/useStoreMembership";
 
 export default function CreateProductPage() {
   const navigate = useNavigate();
@@ -60,6 +61,11 @@ export default function CreateProductPage() {
   // Mở từ trang shop (/seller/:storeId/products/new) → khóa luôn store, ẩn dropdown chọn shop
   // (dropdown đó chỉ có ý nghĩa cho staff/manager thao tác ở /manager/products/new).
   const { storeId: lockedStoreId } = useParams<{ storeId: string }>();
+  // Luồng seller: route /seller/:storeId/products/new chỉ bọc ProtectedRoute (kiểm tra ĐĂNG NHẬP),
+  // nên phải tự chặn theo membership — nếu không, mở thẳng URL với id cửa hàng người khác sẽ vào
+  // được form tạo sản phẩm CHO cửa hàng đó. Owner-only, khớp với canAddProduct={isOwnerView} ở
+  // ShopDetailPage. Luồng /manager/products/new không có param nên không bị ảnh hưởng.
+  const { isOwnerView, loading: loadingMembership } = useStoreMembership(lockedStoreId);
   const [submitting, setSubmitting] = useState(false);
 
   // Lists for dropdowns/checkboxes
@@ -391,6 +397,18 @@ export default function CreateProductPage() {
       setSubmitting(false);
     }
   };
+
+  if (lockedStoreId && loadingMembership) {
+    return (
+      <div className="flex min-h-[50vh] items-center justify-center text-gray-400">
+        <RefreshCw size={28} className="animate-spin" />
+      </div>
+    );
+  }
+
+  if (lockedStoreId && !isOwnerView) {
+    return <Navigate to={`/stores/${lockedStoreId}`} replace />;
+  }
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto pb-12 mt-5 px-4 md:px-0">
