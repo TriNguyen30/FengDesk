@@ -1,7 +1,7 @@
 import { useEffect, type CSSProperties } from "react";
 import Navbar from "@/components/ui/Navbar";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import Footer from "@/components/ui/Footer";
 import { Toaster } from "sonner";
 import { ChatWidget } from "@/features/chatbox";
@@ -72,17 +72,14 @@ export default function AppLayout() {
       </div>
 
       <div className="min-w-0 flex-1">
-        <AnimatePresence mode="wait" initial={false}>
-          <motion.div
-            key={transitionKey}
-            initial={reduceMotion ? false : { opacity: 0, y: 14 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -10 }}
-            transition={{ duration: 0.26, ease: [0.22, 1, 0.36, 1] }}
-          >
-            <Outlet />
-          </motion.div>
-        </AnimatePresence>
+        <motion.div
+          key={transitionKey}
+          initial={reduceMotion ? false : { opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.26, ease: [0.22, 1, 0.36, 1] }}
+        >
+          <Outlet />
+        </motion.div>
       </div>
       <Footer />
       <ChatWidget />
