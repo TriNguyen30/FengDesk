@@ -59,6 +59,25 @@ export async function hardDeleteShopRequest(id: string) {
   return data;
 }
 
+export async function ownerShopRequest(id: string) {
+  const { data } = await fetchHttpClient.get<ApiResponse<Shop>>(`/stores/${id}/owners`);
+  return data;
+}
+
+export async function addOwnerShopRequest(id: string, ownerId: string) {
+  const { data } = await fetchHttpClient.post<ApiResponse<Shop>>(`/stores/${id}/owners`, {
+    ownerId,
+  });
+  return data;
+}
+
+export async function removeOwnerShopRequest(id: string, userId: string) {
+  const { data } = await fetchHttpClient.delete<ApiResponse<Shop>>(
+    `/stores/${id}/owners/${userId}`,
+  );
+  return data;
+}
+
 export async function createShopAddressRequest(id: string, payload: CreateStoreAddressDto) {
   const { data } = await fetchHttpClient.post<ApiResponse<StoreAddress>>(
     `/stores/${id}/address`,

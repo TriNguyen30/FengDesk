@@ -52,8 +52,8 @@ export default function CreateProductPage() {
     () => (currentUser?.role ?? "").split(",").map((r) => r.trim()),
     [currentUser?.role],
   );
-  const isAdmin = useMemo(
-    () => userRoles.some((r) => ["Admin", "SystemAdmin"].includes(r)),
+  const canOperateAsAdmin = useMemo(
+    () => userRoles.some((r) => ["Manager", "Admin", "SystemAdmin"].includes(r)),
     [userRoles],
   );
 
@@ -198,7 +198,7 @@ export default function CreateProductPage() {
             }));
           }
 
-          const allowedStores = isAdmin
+          const allowedStores = canOperateAsAdmin
             ? enrichedStores
             : enrichedStores.filter(
                 (s) =>
@@ -235,7 +235,7 @@ export default function CreateProductPage() {
       }
     };
     fetchOptions();
-  }, [lockedStoreId, isAdmin, currentUser?.id]);
+  }, [lockedStoreId, canOperateAsAdmin, currentUser?.id]);
 
 
   // Image inputs helpers

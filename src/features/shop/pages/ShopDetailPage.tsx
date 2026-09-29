@@ -5,6 +5,11 @@ import { toast } from "sonner";
 import { useProductList } from "@/features/products/hooks/useProducts";
 import { getShopRequestById } from "@/features/shop/api/shop.api";
 import { useStoreMembership } from "@/features/shop/hooks/useStoreMembership";
+import {
+  useMyStoreInvitations,
+  useAcceptStoreInvitation,
+  useRejectStoreInvitation,
+} from "@/features/shop/hooks/useShopStaff";
 import { Shop } from "@/features/shop/types/shop";
 import { useAppDispatch, useAppSelector } from "@/app/store";
 import { chatApi, chatHub } from "@/features/chatbox";
@@ -43,7 +48,46 @@ export default function ShopDetailPage() {
   const [activeTab, setActiveTab] = useState<ShopTab>("products");
   // Vai trò của user với store từ BE /stores/{id}/membership — nguồn sự thật duy nhất
   // (owner chính / đồng sở hữu / garden staff Accepted / admin). Null = khách.
-  const { isOwnerView, isShopMember } = useStoreMembership(currentUser?.id ? id : undefined);
+  const { isOwnerView, isShopMember, refetch: refetchMembership } = useStoreMembership(currentUser?.id ? id : undefined);
+  const { invitations, refetch: refetchInvitations } = useMyStoreInvitations(!!currentUser?.id);
+  const acceptInvite = useAcceptStoreInvitation();
+  const rejectInvite = useRejectStoreInvitation();
+
+  const pendingInvite = invitations.find(
+    (inv) => inv.gardenStoreId === id && inv.status === "Pending",
+  );
+
+  const handleAcceptInvite = async () => {
+    if (!pendingInvite) return;
+    try {
+      const res = await acceptInvite.mutateAsync(pendingInvite.id);
+      if (res.isSuccess) {
+        toast.success(res.message || "Đã chấp nhận lời mời tham gia quản lý cửa hàng!");
+        await Promise.all([refetchMembership(), refetchInvitations()]);
+        setActiveTab("chat");
+      } else {
+        toast.error(res.message || "Không thể chấp nhận lời mời.");
+      }
+    } catch {
+      toast.error("Lỗi khi chấp nhận lời mời.");
+    }
+  };
+
+  const handleRejectInvite = async () => {
+    if (!pendingInvite) return;
+    try {
+      const res = await rejectInvite.mutateAsync(pendingInvite.id);
+      if (res.isSuccess) {
+        toast.success("Đã từ chối lời mời.");
+        await refetchInvitations();
+      } else {
+        toast.error(res.message || "Không thể từ chối lời mời.");
+      }
+    } catch {
+      toast.error("Lỗi khi từ chối lời mời.");
+    }
+  };
+
   // Guard chống double-click nút "Chat ngay": ref chặn đồng bộ, state để disable nút cho UX.
   const openingChatRef = useRef(false);
   const [isOpeningChat, setIsOpeningChat] = useState(false);
@@ -240,6 +284,39 @@ export default function ShopDetailPage() {
         isMember={isShopMember}
         onManageDeliveriesClick={() => setActiveTab("deliveries")}
       />
+
+      {/* Pending Invitation Banner */}
+      {pendingInvite && (
+        <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-2xl border border-amber-200 bg-amber-50/80 p-4 shadow-sm text-amber-900">
+          <div className="flex items-center gap-3">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-amber-700">
+              <Store size={20} />
+            </span>
+            <div>
+              <p className="text-sm font-semibold">Lời mời làm nhân viên cửa hàng</p>
+              <p className="text-xs text-amber-800 mt-0.5">
+                Chủ cửa hàng <strong>{pendingInvite.invitedByName || "Garden Owner"}</strong> đã mời bạn gia nhập đội ngũ cửa hàng <strong>{shop.name}</strong>. Đồng ý để vào khu quản lý & phản hồi tin nhắn khách hàng.
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={handleRejectInvite}
+              disabled={acceptInvite.isPending || rejectInvite.isPending}
+              className="rounded-xl border border-amber-200 bg-white px-4 py-2 text-xs font-bold text-gray-700 hover:bg-gray-50 cursor-pointer transition-colors"
+            >
+              Từ chối
+            </button>
+            <button
+              onClick={handleAcceptInvite}
+              disabled={acceptInvite.isPending || rejectInvite.isPending}
+              className="rounded-xl bg-primary px-4 py-2 text-xs font-bold text-white hover:bg-primary-dark cursor-pointer transition-colors"
+            >
+              {acceptInvite.isPending ? "Đang xử lý..." : "Đồng ý nhận việc"}
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Owner-only tabs */}
       {isShopMember && (

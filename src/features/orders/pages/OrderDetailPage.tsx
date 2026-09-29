@@ -288,6 +288,20 @@ export default function OrderDetailPage() {
       return;
     }
     if (returnType === "Exchange") {
+      const hasMoreExpensiveReplacement = checkedItems.some((selected) => {
+        const original = returnModal.items.find((item) => item.id === selected.orderItemId);
+        const replacement = exchangeOptions.find(
+          ({ variant }) => variant.id === selected.exchangeProductItemId,
+        );
+        return Boolean(
+          original && replacement && replacement.variant.price > original.unitPrice,
+        );
+      });
+      if (hasMoreExpensiveReplacement) {
+        toast.error("Sản phẩm thay thế không được có giá cao hơn sản phẩm trả tương ứng");
+        return;
+      }
+
       const returnedValue = checkedItems.reduce((sum, selected) => {
         const original = returnModal.items.find((item) => item.id === selected.orderItemId);
         return sum + (original?.unitPrice ?? 0) * selected.quantity;
@@ -1363,18 +1377,30 @@ export default function OrderDetailPage() {
                           className="w-full rounded-lg border border-blue-200 bg-white px-3 py-2 text-sm text-gray-700 focus:border-blue-400 focus:outline-none"
                         >
                           <option value="">Chọn sản phẩm thay thế</option>
-                          {exchangeOptions.map(({ productName, variant }) => (
-                            <option
-                              key={variant.id}
-                              value={variant.id}
-                              disabled={variant.stock < selectedItems[item.id].quantity}
-                            >
-                              {productName}
-                              {variant.name ? ` — ${variant.name}` : ""} —{" "}
-                              {formatVnd(variant.price)} — tồn {variant.stock}
-                            </option>
-                          ))}
+                          {exchangeOptions.map(({ productName, variant }) => {
+                            const exceedsOriginalPrice = variant.price > item.unitPrice;
+                            const hasInsufficientStock =
+                              variant.stock < selectedItems[item.id].quantity;
+                            const disabled = exceedsOriginalPrice || hasInsufficientStock;
+                            const unavailableReason = exceedsOriginalPrice
+                              ? ` — vượt giá hàng trả ${formatVnd(variant.price - item.unitPrice)}`
+                              : hasInsufficientStock
+                                ? " — không đủ tồn kho"
+                                : "";
+
+                            return (
+                              <option key={variant.id} value={variant.id} disabled={disabled}>
+                                {productName}
+                                {variant.name ? ` — ${variant.name}` : ""} —{" "}
+                                {formatVnd(variant.price)} — tồn {variant.stock}
+                                {unavailableReason}
+                              </option>
+                            );
+                          })}
                         </select>
+                        <p className="mt-1 text-xs text-gray-500">
+                          Giá trị tối đa có thể chọn: {formatVnd(item.unitPrice)} cho mỗi sản phẩm.
+                        </p>
                         {loadingExchangeOptions && (
                           <p className="mt-1 text-xs text-blue-600">
                             Đang tải sản phẩm thay thế...

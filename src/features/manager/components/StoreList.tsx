@@ -65,22 +65,20 @@ export function StoreList({
             <button
               type="button"
               onClick={() => setFilterMode("all")}
-              className={`flex-1 py-1.5 rounded-lg transition-all cursor-pointer ${
-                filterMode === "all"
+              className={`flex-1 py-1.5 rounded-lg transition-all cursor-pointer ${filterMode === "all"
                   ? "bg-white text-gray-900 shadow-sm font-bold"
                   : "text-gray-500 hover:text-gray-800"
-              }`}
+                }`}
             >
               Tất cả ({stores.length})
             </button>
             <button
               type="button"
               onClick={() => setFilterMode("mine")}
-              className={`flex-1 py-1.5 rounded-lg transition-all flex items-center justify-center gap-1 cursor-pointer ${
-                filterMode === "mine"
+              className={`flex-1 py-1.5 rounded-lg transition-all flex items-center justify-center gap-1 cursor-pointer ${filterMode === "mine"
                   ? "bg-emerald-600 text-white shadow-sm font-bold"
                   : "text-gray-500 hover:text-gray-800"
-              }`}
+                }`}
             >
               <Crown size={12} />
               Của tôi ({myStores.length})
@@ -110,21 +108,19 @@ export function StoreList({
                 <div
                   key={store.id}
                   onClick={() => onSelectStore(store)}
-                  className={`group relative flex flex-col p-4 rounded-2xl border transition-all duration-200 cursor-pointer ${
-                    isSelected
+                  className={`group relative flex flex-col p-4 rounded-2xl border transition-all duration-200 cursor-pointer ${isSelected
                       ? "border-emerald-500 bg-emerald-50/30 ring-2 ring-emerald-500/20 shadow-md"
                       : "border-gray-200/80 bg-white hover:border-emerald-500/40 hover:shadow-md"
-                  }`}
+                    }`}
                 >
                   {/* Top Header: Avatar + Title + Badges */}
                   <div className="flex items-start justify-between gap-2.5">
                     <div className="flex items-start gap-3 min-w-0 flex-1">
                       <div
-                        className={`p-2.5 rounded-xl shrink-0 transition-colors ${
-                          isSelected
+                        className={`p-2.5 rounded-xl shrink-0 transition-colors ${isSelected
                             ? "bg-emerald-600 text-white shadow-xs"
                             : "bg-emerald-50 text-emerald-700 group-hover:bg-emerald-600 group-hover:text-white"
-                        }`}
+                          }`}
                       >
                         <StoreIcon size={18} />
                       </div>
@@ -203,7 +199,7 @@ export function StoreList({
                       <Edit size={12} />
                       <span>Sửa</span>
                     </button>
-
+{/* 
                     <button
                       type="button"
                       onClick={(e) => {
@@ -215,7 +211,7 @@ export function StoreList({
                     >
                       <Trash2 size={12} />
                       <span>Tạm dừng</span>
-                    </button>
+                    </button> */}
 
                     <button
                       type="button"
@@ -227,7 +223,7 @@ export function StoreList({
                       title="Xóa vĩnh viễn"
                     >
                       <Trash2 size={12} />
-                      <span>Xóa Hẳn</span>
+                      <span>Xóa</span>
                     </button>
                   </div>
                 </div>

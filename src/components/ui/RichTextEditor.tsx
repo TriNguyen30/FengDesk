@@ -24,7 +24,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
   const quillRef = useRef<any>(null);
 
   // Upload an image file and insert its URL into Quill editor
-  const uploadAndInsertImage = useCallback(async (file: File) => {
+  const uploadAndInsertImage = useCallback(async (file: File, insertIndex?: number) => {
     if (!file.type.startsWith("image/")) {
       toast.error("Vui lòng chỉ chọn tệp hình ảnh");
       return;
@@ -43,7 +43,10 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
       if (imageUrl && typeof imageUrl === "string") {
         const editor = quillRef.current?.getEditor?.();
         if (editor) {
-          const range = editor.getSelection(true) || { index: editor.getLength(), length: 0 };
+          const range =
+            insertIndex !== undefined
+              ? { index: insertIndex, length: 0 }
+              : editor.getSelection(true) || { index: editor.getLength(), length: 0 };
           editor.insertEmbed(range.index, "image", imageUrl, "user");
           editor.setSelection(range.index + 1, 0, "silent");
         }
@@ -72,12 +75,11 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
     };
   }, [uploadAndInsertImage]);
 
-  // Support paste / drop of image files directly into the editor + sanitize text paste
+  // Sanitize pasted HTML (backgrounds / colors). Image paste/drop uses Quill uploader module below.
   useEffect(() => {
     const editor = quillRef.current?.getEditor?.();
     if (!editor || !editor.root) return;
 
-    // Register clipboard matcher to automatically clean pasted white/gray backgrounds & dark colors
     if (editor.clipboard && editor.clipboard.addMatcher) {
       editor.clipboard.addMatcher(Node.ELEMENT_NODE, (_node: HTMLElement, delta: any) => {
         if (delta && delta.ops) {
@@ -141,43 +143,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
         return delta;
       });
     }
-
-    const handlePaste = (e: ClipboardEvent) => {
-      const items = e.clipboardData?.items;
-      if (!items) return;
-
-      for (let i = 0; i < items.length; i++) {
-        if (items[i].type.indexOf("image") !== -1) {
-          const file = items[i].getAsFile();
-          if (file) {
-            e.preventDefault();
-            uploadAndInsertImage(file);
-            break;
-          }
-        }
-      }
-    };
-
-    const handleDrop = (e: DragEvent) => {
-      const files = e.dataTransfer?.files;
-      if (files && files.length > 0) {
-        const file = files[0];
-        if (file.type.startsWith("image/")) {
-          e.preventDefault();
-          uploadAndInsertImage(file);
-        }
-      }
-    };
-
-    const rootEl = editor.root as HTMLElement;
-    rootEl.addEventListener("paste", handlePaste);
-    rootEl.addEventListener("drop", handleDrop);
-
-    return () => {
-      rootEl.removeEventListener("paste", handlePaste);
-      rootEl.removeEventListener("drop", handleDrop);
-    };
-  }, [uploadAndInsertImage]);
+  }, []);
 
   // Memoize modules to avoid Quill re-creation on every render
   const modules = useMemo(
@@ -197,13 +163,29 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
           image: handleImageUpload,
         },
       },
+      // Quill 2 paste/drop images go through uploader; default handler embeds base64 (duplicate with API upload).
+      uploader: {
+        mimetypes: [
+          "image/png",
+          "image/jpeg",
+          "image/jpg",
+          "image/gif",
+          "image/webp",
+          "image/bmp",
+        ],
+        handler(range: { index: number; length: number }, files: File[]) {
+          files.forEach((file, i) => {
+            void uploadAndInsertImage(file, range.index + i);
+          });
+        },
+      },
     }),
-    [handleImageUpload],
+    [handleImageUpload, uploadAndInsertImage],
   );
 
   return (
     <div
-      className={`rich-text-editor-container rounded-xl overflow-hidden border border-gray-200 bg-white transition-all focus-within:border-primary focus-within:ring-1 focus-within:ring-primary/30 dark:bg-[#1e2219] ${
+      className={`rich-text-editor-container rounded-xl overflow-hidden border border-gray-200 bg-white transition-all focus-within:border-primary focus-within:ring-1 focus-within:ring-primary/30 dark:border-gray-700/60 dark:bg-[#1e2219] ${
         disabled ? "opacity-60 pointer-events-none" : ""
       } ${className}`}
       style={{

@@ -1,4 +1,5 @@
 import { Leaf } from "lucide-react";
+import { toast } from "sonner";
 import { useElementInputCodes } from "@/features/products/hooks/useTaxonomy";
 import type { ElementInputKind } from "@/features/products/types/taxonomy";
 
@@ -31,16 +32,21 @@ function ChipGroup({
   kind,
   value,
   onChange,
+  limit,
 }: {
   label: string;
   codes: string[];
   kind: ElementInputKind;
   value: ElementInputValue[];
   onChange: (next: ElementInputValue[]) => void;
+  limit?: number;
 }) {
   return (
     <div className="space-y-2">
-      <label className="text-sm font-semibold text-gray-700">{label}</label>
+      <label className="text-sm font-semibold text-gray-700">
+        {label}
+        {limit && <span className="ml-1 text-xs font-normal text-gray-500">(Tối đa {limit})</span>}
+      </label>
       {codes.length === 0 ? (
         <p className="text-xs text-gray-400 italic">Đang tải...</p>
       ) : (
@@ -51,7 +57,15 @@ function ChipGroup({
               <button
                 key={code}
                 type="button"
-                onClick={() => onChange(toggleInput(value, kind, code))}
+                onClick={() => {
+                  const exists = value.some((i) => i.kind === kind && i.code === code);
+                  const groupCount = value.filter((i) => i.kind === kind).length;
+                  if (!exists && limit && groupCount >= limit) {
+                    toast.error(`Chỉ được chọn tối đa ${limit} ${label.toLowerCase()}.`);
+                    return;
+                  }
+                  onChange(toggleInput(value, kind, code));
+                }}
                 className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition-all cursor-pointer ${
                   active
                     ? "border-primary bg-primary/5 text-primary"
@@ -93,6 +107,7 @@ export function ProductElementInputsFields({
         kind="Material"
         value={value}
         onChange={onChange}
+        limit={5}
       />
       <ChipGroup
         label="Màu chủ đạo"
@@ -100,6 +115,7 @@ export function ProductElementInputsFields({
         kind="Color"
         value={value}
         onChange={onChange}
+        limit={3}
       />
       <ChipGroup
         label="Hình khối"
@@ -107,6 +123,7 @@ export function ProductElementInputsFields({
         kind="Shape"
         value={value}
         onChange={onChange}
+        limit={5}
       />
     </div>
   );

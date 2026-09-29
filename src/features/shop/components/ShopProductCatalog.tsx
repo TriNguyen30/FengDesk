@@ -96,6 +96,7 @@ export function ShopProductCatalog({
                   ? () => setDeletingProduct({ id: p.id, name: p.name })
                   : undefined
               }
+              hideAddToCart={isShopMember}
             />
           ))}
         </div>

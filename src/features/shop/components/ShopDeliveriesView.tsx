@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAppSelector } from "@/app/store";
 import { toast } from "sonner";
-import { ChevronLeft, ChevronRight, Eye, Loader2, Package, Search, Truck, Check, UserPlus, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Eye, Loader2, Package, RefreshCw, Search, Truck, Check, UserPlus, X } from "lucide-react";
 import {
   DeliveryDetailModal,
   useCreateDeliveryShipment,
@@ -318,14 +318,32 @@ export function ShopDeliveriesView({ storeId }: ShopDeliveriesViewProps) {
   };
 
   const handleCreateShipment = async (delivery: StoreDelivery) => {
+    const isStatusSync = Boolean(delivery.trackingCode);
     setShippingId(delivery.id);
     try {
       const res = await createShipment.mutateAsync(delivery.id);
-      if (res.data.isSuccess) toast.success(res.data.message || "Đã tạo vận đơn thành công");
-      else toast.error(res.data.message || "Không thể tạo vận đơn");
+      if (res.data.isSuccess) {
+        toast.success(
+          res.data.message ||
+            (isStatusSync
+              ? "Đã đồng bộ trạng thái đơn giao"
+              : "Đã tạo vận đơn thành công"),
+        );
+      } else {
+        toast.error(
+          res.data.message ||
+            (isStatusSync
+              ? "Không thể đồng bộ trạng thái đơn giao"
+              : "Không thể tạo vận đơn"),
+        );
+      }
     } catch (err) {
       console.error(err);
-      toast.error("Có lỗi xảy ra khi tạo vận đơn");
+      toast.error(
+        isStatusSync
+          ? "Có lỗi xảy ra khi đồng bộ trạng thái đơn giao"
+          : "Có lỗi xảy ra khi tạo vận đơn",
+      );
     } finally {
       setShippingId(null);
     }
@@ -530,7 +548,7 @@ export function ShopDeliveriesView({ storeId }: ShopDeliveriesViewProps) {
                           {d.isExchange ? "Xác nhận đơn đổi" : "Nhận đơn"}
                         </button>
                       )}
-                      {d.status === "Confirmed" && (
+                      {d.status === "Confirmed" && !d.trackingCode && (
                         <button
                           onClick={() => handleCreateShipment(d)}
                           disabled={busyShip || (!["Manager", "GardenOwner", "GardenStaff", "Admin"].some(role => (currentUser?.role || "").includes(role)) && !d.assignedStaffId)}
@@ -543,6 +561,21 @@ export function ShopDeliveriesView({ storeId }: ShopDeliveriesViewProps) {
                             <Truck size={13} />
                           )}
                           {d.isExchange ? "Gửi hàng đổi" : "Tạo đơn ship"}
+                        </button>
+                      )}
+                      {d.status === "Confirmed" && d.trackingCode && (
+                        <button
+                          onClick={() => handleCreateShipment(d)}
+                          disabled={busyShip}
+                          title="Vận đơn đã tồn tại nhưng trạng thái chưa được cập nhật"
+                          className="inline-flex items-center gap-1.5 rounded-lg border border-amber-300 bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-700 shadow-sm hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-50 transition-all cursor-pointer whitespace-nowrap"
+                        >
+                          {busyShip ? (
+                            <Loader2 size={13} className="animate-spin" />
+                          ) : (
+                            <RefreshCw size={13} />
+                          )}
+                          Đồng bộ trạng thái
                         </button>
                       )}
                       {d.status === "Preparing" && (

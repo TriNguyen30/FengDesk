@@ -1,5 +1,5 @@
 import React from "react";
-import { Layers, Save, RefreshCw } from "lucide-react";
+import { Layers, LoaderCircle } from "lucide-react";
 import type { Category } from "@/features/category/types/category";
 
 interface ProductRelationsFormProps {
@@ -55,8 +55,8 @@ export function ProductRelationsForm({
               disabled={saving}
               className="ml-auto flex items-center justify-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm mt-3 font-bold text-white shadow-md hover:bg-primary-dark active:scale-95 disabled:opacity-50 cursor-pointer"
             >
-              {saving ? <RefreshCw size={16} className="animate-spin" /> : <Save size={16} />}
               Lưu danh mục
+              {saving && <LoaderCircle size={16} className="animate-spin" />}
             </button>
           </div>
         )}

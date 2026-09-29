@@ -1,5 +1,5 @@
 import React from "react";
-import { Info, Save, RefreshCw } from "lucide-react";
+import { Info, LoaderCircle } from "lucide-react";
 import { RichTextEditor } from "@/components/ui/RichTextEditor";
 
 interface ProductBasicFormProps {
@@ -99,8 +99,8 @@ export function ProductBasicForm({
           disabled={saving}
           className="flex items-center justify-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-white shadow-md transition-all hover:bg-primary-dark active:scale-95 disabled:opacity-50 cursor-pointer"
         >
-          {saving ? <RefreshCw size={16} className="animate-spin" /> : <Save size={16} />}
           Lưu thay đổi
+          {saving && <LoaderCircle size={16} className="animate-spin" />}
         </button>
       </div>
     </form>

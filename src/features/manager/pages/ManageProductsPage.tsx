@@ -18,11 +18,9 @@ import { useAppSelector } from "@/app/store";
 import { useProductList } from "@/features/products";
 import { getAllShopRequest, getMyShopsRequest } from "@/features/shop/api/shop.api";
 import { getCategoriesRequest } from "@/features/category/api/category.api";
-import { getTags } from "@/features/products/api/tag.api";
+import type { Category } from "@/features/category/types/category";
 import type { Product } from "@/features/products/types/product";
 import type { Shop } from "@/features/shop/types/shop";
-import type { Category } from "@/features/category/types/category";
-import type { Tag } from "@/features/products/types/tag";
 import { generateSlug } from "@/utils/string";
 import { toast } from "sonner";
 import { DeleteProductDialog, EditProductModal } from "@/features/manager/components";
@@ -37,13 +35,15 @@ export default function ManageProductsPage() {
     () => (currentUser?.role ?? "").split(",").map((r) => r.trim()),
     [currentUser?.role],
   );
-  const isAdmin = useMemo(
-    () => userRoles.some((r) => ["Admin", "SystemAdmin"].includes(r)),
+  const canOperateAsAdmin = useMemo(
+    () => userRoles.some((r) => ["Manager", "Admin", "SystemAdmin"].includes(r)),
     [userRoles],
   );
   // Xoá vĩnh viễn là quyền kiểm duyệt của Manager trên MỌI cửa hàng (BE: ManagerOrAbove) — khác quyền sửa sản
   // phẩm, vốn chỉ dành cho cửa hàng mình quản lý.
-  const canHardDelete = isAdmin || userRoles.includes("Manager");
+  // Hiện trùng tập role với canOperateAsAdmin (Manager/Admin/SystemAdmin); giữ tên riêng để hai quyền này
+  // không bị lẫn vào nhau nếu sau này tách ra.
+  const canHardDelete = canOperateAsAdmin;
 
   const [page, setPage] = useState(1);
   const [pageSize] = useState(10);
@@ -51,13 +51,12 @@ export default function ManageProductsPage() {
   // Filter lists
   const [shops, setShops] = useState<Shop[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [tags, setTags] = useState<Tag[]>([]);
 
   // Selected filters
   const [search, setSearch] = useState("");
   const [selectedStoreId, setSelectedStoreId] = useState("");
   const [selectedCategoryId, setSelectedCategoryId] = useState("");
-  const [selectedTagId, setSelectedTagId] = useState("");
+  const [selectedElement, setSelectedElement] = useState<"Kim" | "Moc" | "Thuy" | "Hoa" | "Tho" | "">("");
 
   // Delete modal state
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -70,11 +69,10 @@ export default function ManageProductsPage() {
   useEffect(() => {
     const fetchFilters = async () => {
       try {
-        const [allRes, mineRes, categoriesRes, tagsRes] = await Promise.allSettled([
+        const [allRes, mineRes, categoriesRes] = await Promise.allSettled([
           getAllShopRequest(),
           getMyShopsRequest(),
           getCategoriesRequest(),
-          getTags(),
         ]);
 
         let allStores: Shop[] = [];
@@ -120,9 +118,6 @@ export default function ManageProductsPage() {
         ) {
           setCategories(categoriesRes.value.data);
         }
-        if (tagsRes.status === "fulfilled" && tagsRes.value?.isSuccess && tagsRes.value.data) {
-          setTags(tagsRes.value.data);
-        }
       } catch (err) {
         console.error("Failed to load filter options", err);
       }
@@ -131,30 +126,30 @@ export default function ManageProductsPage() {
   }, [currentUser?.id]);
 
   const allowedStores = useMemo(() => {
-    if (isAdmin) return shops;
+    if (canOperateAsAdmin) return shops;
     return shops.filter(
       (s) =>
         s.isOwner || (s as any).isStaff || (!!currentUser?.id && s.ownerUserId === currentUser.id),
     );
-  }, [shops, isAdmin, currentUser?.id]);
+  }, [shops, canOperateAsAdmin, currentUser?.id]);
 
   const allowedStoreIds = useMemo(() => new Set(allowedStores.map((s) => s.id)), [allowedStores]);
 
   useEffect(() => {
-    if (!isAdmin && allowedStores.length > 0) {
+    if (!canOperateAsAdmin && allowedStores.length > 0) {
       if (!selectedStoreId || !allowedStoreIds.has(selectedStoreId)) {
         setSelectedStoreId(allowedStores[0].id);
       }
     }
-  }, [isAdmin, allowedStores, allowedStoreIds, selectedStoreId]);
+  }, [canOperateAsAdmin, allowedStores, allowedStoreIds, selectedStoreId]);
 
   const { products, loading, totalCount, query } = useProductList({
     page,
     pageSize,
     search: search.trim() || undefined,
-    storeId: selectedStoreId || (isAdmin ? undefined : allowedStores[0]?.id),
+    storeId: selectedStoreId || (canOperateAsAdmin ? undefined : allowedStores[0]?.id),
     categoryId: selectedCategoryId || undefined,
-    tagId: selectedTagId || undefined,
+    element: (selectedElement || undefined) as any,
   });
 
   const totalPages = query.data?.isSuccess && query.data.data ? query.data.data.totalPages : 1;
@@ -162,14 +157,14 @@ export default function ManageProductsPage() {
   // Reset filters
   const handleResetFilters = () => {
     setSearch("");
-    setSelectedStoreId(isAdmin ? "" : allowedStores[0]?.id || "");
+    setSelectedStoreId(canOperateAsAdmin ? "" : allowedStores[0]?.id || "");
     setSelectedCategoryId("");
-    setSelectedTagId("");
+    setSelectedElement("");
     setPage(1);
   };
 
   const handleEditProduct = (product: Product) => {
-    if (!isAdmin && !allowedStoreIds.has(product.gardenStoreId)) {
+    if (!canOperateAsAdmin && !allowedStoreIds.has(product.gardenStoreId)) {
       toast.error("Bạn không có quyền quản lý sản phẩm của cửa hàng này");
       return;
     }
@@ -229,7 +224,7 @@ export default function ManageProductsPage() {
               }}
               className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm text-gray-700 focus:border-primary focus:bg-white focus:outline-none focus:ring-1 focus:ring-primary/30 appearance-none"
             >
-              {isAdmin && <option value="">Tất cả cửa hàng</option>}
+              {canOperateAsAdmin && <option value="">Tất cả cửa hàng</option>}
               {allowedStores.map((shop) => (
                 <option key={shop.id} value={shop.id}>
                   {shop.name}
@@ -257,22 +252,22 @@ export default function ManageProductsPage() {
             </select>
           </div>
 
-          {/* Tag Filter */}
+          {/* Element Filter */}
           <div className="relative flex gap-2">
             <select
-              value={selectedTagId}
+              value={selectedElement}
               onChange={(e) => {
-                setSelectedTagId(e.target.value);
+                setSelectedElement(e.target.value as any);
                 setPage(1);
               }}
               className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm text-gray-700 focus:border-primary focus:bg-white focus:outline-none focus:ring-1 focus:ring-primary/30 appearance-none"
             >
-              <option value="">Tất cả nhãn (Tag)</option>
-              {tags.map((tag) => (
-                <option key={tag.id} value={tag.id}>
-                  {tag.name}
-                </option>
-              ))}
+              <option value="">Tất cả hành (Phong thủy)</option>
+              <option value="Kim">Kim</option>
+              <option value="Moc">Mộc</option>
+              <option value="Thuy">Thủy</option>
+              <option value="Hoa">Hỏa</option>
+              <option value="Tho">Thổ</option>
             </select>
             <button
               onClick={handleResetFilters}
@@ -337,9 +332,9 @@ export default function ManageProductsPage() {
                       <td className="px-6 py-4">
                         <div className="max-w-[200px] sm:max-w-md">
                           <p className="font-bold text-gray-900 line-clamp-1">{product.name}</p>
-                          <p className="text-xs text-gray-400 mt-0.5 font-mono truncate">
+                          {/* <p className="text-xs text-gray-400 mt-0.5 font-mono truncate">
                             {product.id}
-                          </p>
+                          </p> */}
                         </div>
                       </td>
                       <td className="whitespace-nowrap px-6 py-4">
