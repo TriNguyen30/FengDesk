@@ -45,6 +45,8 @@ export interface OrderLineItem {
   imageUrl: string | null;
   unitPrice: number;
   quantity: number;
+  returnedQuantity?: number;
+  returnableQuantity?: number;
   lineTotal: number;
 }
 
