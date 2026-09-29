@@ -454,6 +454,18 @@ export default function OrderDetailPage() {
   });
   const hasActiveReturnForAnyDelivery = activeReturnDeliveries.length > 0;
 
+  const deliveryGroups = Array.from(
+    deliveries
+      .reduce((groups: Map<string, any[]>, delivery: any) => {
+        const storeKey = delivery.gardenStoreId || delivery.storeName || delivery.id;
+        const group = groups.get(storeKey) ?? [];
+        group.push(delivery);
+        groups.set(storeKey, group);
+        return groups;
+      }, new Map<string, any[]>())
+      .values(),
+  );
+
   function getDeliveryItems(deliveryId: string): OrderLineItem[] {
     return (order.items ?? []).filter(
       (item) =>
@@ -900,7 +912,21 @@ export default function OrderDetailPage() {
             </div>
 
             <div className="divide-y divide-gray-100">
-              {deliveries.map((delivery) => {
+              {deliveryGroups.map((storeDeliveries) => {
+                const storeDelivery = storeDeliveries[0];
+                return (
+                  <div key={storeDelivery.gardenStoreId || storeDelivery.id} className="px-4 py-3.5">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-violet-50">
+                        <Store className="h-4 w-4 text-primary" />
+                      </div>
+                      <p className="text-sm font-semibold text-gray-800">
+                        {storeDelivery.storeName || "Cửa hàng"}
+                      </p>
+                    </div>
+
+                    <div className="mt-3 space-y-2 pl-12">
+                      {storeDeliveries.map((delivery) => {
                 // `ReturnType` ở file này là kiểu RMA import từ types, che mất `ReturnType<T>` của TS —
                 // lấy kiểu bảng nhãn qua một alias riêng thay vì gọi utility bị che.
                 const statusMap: DeliveryStatusLabelMap = getDeliveryStatusLabel(t);
@@ -918,14 +944,14 @@ export default function OrderDetailPage() {
                   deliveries.filter((d) => d.status === "Delivered").length > 1;
 
                 return (
-                  <div key={delivery.id} className="flex items-center gap-3 px-4 py-3.5">
-                    <div className="w-9 h-9 rounded-full bg-violet-50 flex items-center justify-center shrink-0">
-                      <Store className="h-4 w-4 text-primary" />
-                    </div>
+                  <div
+                    key={delivery.id}
+                    className="flex items-center gap-3 rounded-lg border border-gray-100 bg-gray-50/60 px-3 py-2.5"
+                  >
                     <div className="flex-1 min-w-0">
-                      {delivery.storeName && (
-                        <p className="text-sm font-semibold text-gray-800">{delivery.storeName}</p>
-                      )}
+                      <p className="text-xs font-semibold text-gray-700">
+                        {delivery.isExchange ? "Đơn giao sản phẩm thay thế" : "Đơn giao ban đầu"}
+                      </p>
                       {delivery.orderCode && (
                         <p className="text-xs font-mono text-gray-400 mt-0.5">
                           #{delivery.orderCode}
@@ -951,6 +977,8 @@ export default function OrderDetailPage() {
                     <div className="flex items-center gap-2 shrink-0">
                       {isDelivered &&
                         multiDelivered &&
+                        !delivery.isExchange &&
+                        getDeliveryItems(delivery.id).length > 0 &&
                         (() => {
                           const isPast7Days = isDeliveryPast7Days(delivery);
                           const isDisabled = hasActiveReturn || isPast7Days;
@@ -981,6 +1009,10 @@ export default function OrderDetailPage() {
                       >
                         {statusInfo.label}
                       </span>
+                    </div>
+                  </div>
+                );
+                      })}
                     </div>
                   </div>
                 );
