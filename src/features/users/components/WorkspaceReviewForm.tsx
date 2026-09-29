@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Sparkles } from "lucide-react";
@@ -223,9 +223,9 @@ export default function WorkspaceReviewForm({
   });
 
   const selectClass =
-    "w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400";
+    "w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-700";
   const inputClass =
-    "w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400";
+    "w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-700";
   const aiClass = "border-primary/50 ring-1 ring-primary/30";
 
   const fieldClass = (key: keyof WorkspaceFormValues, base: string) =>

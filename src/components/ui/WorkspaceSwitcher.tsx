@@ -16,6 +16,7 @@ import {
   getVisibleWorkspaces,
   WORKSPACES,
   setLastWorkspace,
+  getLastWorkspace,
   type WorkspaceDef,
   type WorkspaceKey,
 } from "@/lib/workspace";
@@ -90,13 +91,17 @@ export default function WorkspaceSwitcher() {
 
   if (!user || visible.length <= 1) return null;
 
-  const currentKey: WorkspaceKey = location.pathname.startsWith("/admin")
-    ? "admin"
-    : location.pathname.startsWith("/manager")
-      ? "management"
-      : location.pathname.startsWith("/seller")
-        ? "seller"
-        : "shop";
+  let currentKey: WorkspaceKey = "shop";
+  if (location.pathname.startsWith("/admin")) {
+    currentKey = "admin";
+  } else if (location.pathname.startsWith("/manager")) {
+    currentKey = "management";
+  } else if (location.pathname.startsWith("/seller") || location.pathname.startsWith("/become-seller")) {
+    currentKey = "seller";
+  } else if (location.pathname.startsWith("/stores")) {
+    const last = getLastWorkspace();
+    currentKey = last === "seller" ? "seller" : "shop";
+  }
   const current = visible.find((w) => w.key === currentKey) ?? visible[0];
   const CurrentIcon = ICONS[current.key];
 
