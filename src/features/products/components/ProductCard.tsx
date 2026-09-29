@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { ChevronLeft, ChevronRight, Loader2, Pencil, ShoppingCart, Store } from "lucide-react";
+import { ChevronLeft, ChevronRight, Eye, Loader2, ShoppingCart, Store } from "lucide-react";
 import { useProductList } from "../hooks/useProducts";
 import { Product } from "../types/product";
 import { useCart } from "@/features/cart";
@@ -77,72 +77,123 @@ export default function ProductCard({ product, soldCount, onEdit }: ProductCardP
         </div>
       )}
 
-      {/* Nút sửa nhanh (owner/co-owner) — sibling đè lên trên, không lồng trong Link chính bên dưới */}
+      {/* Nút xem chi tiết (owner/co-owner) — thay cho nút sửa vì click vào card sẽ mở Edit Modal */}
       {onEdit && (
-        <button
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            onEdit();
-          }}
-          title={t("product_card.labels.edit")}
+        <Link
+          to={`/products/${product.id}`}
+          onClick={(e) => e.stopPropagation()}
+          title="Xem chi tiết"
           className="absolute top-2 right-2 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-white/90 text-gray-600 shadow-sm hover:bg-primary hover:text-white transition-colors cursor-pointer"
         >
-          <Pencil size={12} />
-        </button>
+          <Eye size={12} />
+        </Link>
       )}
 
-      <Link to={`/products/${product.id}`} className="flex flex-col">
-        {/* Square image */}
-        <div className="aspect-square w-full overflow-hidden bg-gray-50">
-          <img
-            src={product.primaryImageUrl}
-            alt={product.name}
-            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-          />
-        </div>
+      {onEdit ? (
+        <div onClick={() => onEdit()} className="flex flex-col cursor-pointer">
+          {/* Square image */}
+          <div className="aspect-square w-full overflow-hidden bg-gray-50">
+            <img
+              src={product.primaryImageUrl}
+              alt={product.name}
+              className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+            />
+          </div>
 
-        {/* Info */}
-        <div className="flex flex-col flex-1 p-3">
-          <p className="line-clamp-2 text-[13px] font-medium leading-snug text-gray-800 min-h-[38px] group-hover:text-primary transition-colors">
-            {product.name}
-          </p>
-
-          {/* Bán bởi ai — khách cần biết trước khi bấm vào, nhất là khi cùng một món có ở nhiều vườn. */}
-          {product.storeName && (
-            <p className="mt-1 flex items-center gap-1 text-[11px] text-gray-500">
-              <Store size={11} className="shrink-0 text-gray-400" />
-              <span className="truncate">{product.storeName}</span>
+          {/* Info */}
+          <div className="flex flex-col flex-1 p-3">
+            <p className="line-clamp-2 text-[13px] font-medium leading-snug text-gray-800 min-h-[38px] group-hover:text-primary transition-colors">
+              {product.name}
             </p>
-          )}
 
-          <div className="mt-2 mb-3">
-            <p className="text-base font-bold text-primary">{formatPrice(product.minPrice)}</p>
-            {soldCount !== undefined && (
-              <p className="text-[11px] text-gray-400 mt-0.5">
-                {t("product_card.labels.sold", { count: soldCount })}
+            {/* Bán bởi ai — khách cần biết trước khi bấm vào, nhất là khi cùng một món có ở nhiều vườn. */}
+            {product.storeName && (
+              <p className="mt-1 flex items-center gap-1 text-[11px] text-gray-500">
+                <Store size={11} className="shrink-0 text-gray-400" />
+                <span className="truncate">{product.storeName}</span>
               </p>
             )}
-          </div>
 
-          <div className="mt-auto border-t border-gray-100 pt-3 flex items-center justify-between">
-            <button
-              className="flex items-center group/btn cursor-pointer transition-opacity hover:opacity-80"
-              onClick={handleAddToCart}
-            >
-              <div className="bg-primary text-white rounded-full p-1.5 shadow-sm transition-transform active:scale-95 relative z-10">
-                <ShoppingCart size={14} strokeWidth={2.5} />
-              </div>
-              <div className="text-[10px] font-bold leading-[1.1] text-primary text-left uppercase overflow-hidden whitespace-nowrap transition-all duration-300 max-w-0 opacity-0 -translate-x-3 group-hover:max-w-[100px] group-hover:opacity-100 group-hover:translate-x-0 group-hover:ml-1.5">
-                {t("product_card.labels.add_to_cart")}
-              </div>
-            </button>
-            <span className="bg-gray-100/80 text-primary text-[10px] px-2 py-1 rounded shadow-sm font-medium whitespace-nowrap">
-              {t("product_card.labels.in_stock")}
-            </span>
+            <div className="mt-2 mb-3">
+              <p className="text-base font-bold text-primary">{formatPrice(product.minPrice)}</p>
+              {soldCount !== undefined && (
+                <p className="text-[11px] text-gray-400 mt-0.5">
+                  {t("product_card.labels.sold", { count: soldCount })}
+                </p>
+              )}
+            </div>
+
+            <div className="mt-auto border-t border-gray-100 pt-3 flex items-center justify-between">
+              <button
+                className="flex items-center group/btn cursor-pointer transition-opacity hover:opacity-80"
+                onClick={handleAddToCart}
+              >
+                <div className="bg-primary text-white rounded-full p-1.5 shadow-sm transition-transform active:scale-95 relative z-10">
+                  <ShoppingCart size={14} strokeWidth={2.5} />
+                </div>
+                <div className="text-[10px] font-bold leading-[1.1] text-primary text-left uppercase overflow-hidden whitespace-nowrap transition-all duration-300 max-w-0 opacity-0 -translate-x-3 group-hover:max-w-[100px] group-hover:opacity-100 group-hover:translate-x-0 group-hover:ml-1.5">
+                  {t("product_card.labels.add_to_cart")}
+                </div>
+              </button>
+              <span className="bg-gray-100/80 text-primary text-[10px] px-2 py-1 rounded shadow-sm font-medium whitespace-nowrap">
+                {t("product_card.labels.in_stock")}
+              </span>
+            </div>
           </div>
         </div>
-      </Link>
+      ) : (
+        <Link to={`/products/${product.id}`} className="flex flex-col">
+          {/* Square image */}
+          <div className="aspect-square w-full overflow-hidden bg-gray-50">
+            <img
+              src={product.primaryImageUrl}
+              alt={product.name}
+              className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+            />
+          </div>
+
+          {/* Info */}
+          <div className="flex flex-col flex-1 p-3">
+            <p className="line-clamp-2 text-[13px] font-medium leading-snug text-gray-800 min-h-[38px] group-hover:text-primary transition-colors">
+              {product.name}
+            </p>
+
+            {/* Bán bởi ai — khách cần biết trước khi bấm vào, nhất là khi cùng một món có ở nhiều vườn. */}
+            {product.storeName && (
+              <p className="mt-1 flex items-center gap-1 text-[11px] text-gray-500">
+                <Store size={11} className="shrink-0 text-gray-400" />
+                <span className="truncate">{product.storeName}</span>
+              </p>
+            )}
+
+            <div className="mt-2 mb-3">
+              <p className="text-base font-bold text-primary">{formatPrice(product.minPrice)}</p>
+              {soldCount !== undefined && (
+                <p className="text-[11px] text-gray-400 mt-0.5">
+                  {t("product_card.labels.sold", { count: soldCount })}
+                </p>
+              )}
+            </div>
+
+            <div className="mt-auto border-t border-gray-100 pt-3 flex items-center justify-between">
+              <button
+                className="flex items-center group/btn cursor-pointer transition-opacity hover:opacity-80"
+                onClick={handleAddToCart}
+              >
+                <div className="bg-primary text-white rounded-full p-1.5 shadow-sm transition-transform active:scale-95 relative z-10">
+                  <ShoppingCart size={14} strokeWidth={2.5} />
+                </div>
+                <div className="text-[10px] font-bold leading-[1.1] text-primary text-left uppercase overflow-hidden whitespace-nowrap transition-all duration-300 max-w-0 opacity-0 -translate-x-3 group-hover:max-w-[100px] group-hover:opacity-100 group-hover:translate-x-0 group-hover:ml-1.5">
+                  {t("product_card.labels.add_to_cart")}
+                </div>
+              </button>
+              <span className="bg-gray-100/80 text-primary text-[10px] px-2 py-1 rounded shadow-sm font-medium whitespace-nowrap">
+                {t("product_card.labels.in_stock")}
+              </span>
+            </div>
+          </div>
+        </Link>
+      )}
     </div>
   );
 }
