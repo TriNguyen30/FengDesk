@@ -64,10 +64,10 @@ export function ShopHeader({
                     <Truck size={15} />
                     <span className="whitespace-nowrap">Quản lý đơn ship</span>
                   </button>
-                  <span className="flex h-8 items-center justify-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3 text-xs font-semibold text-emerald-700">
+                  {/* <span className="flex h-8 items-center justify-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3 text-xs font-semibold text-emerald-700">
                     <Users size={13} />
                     <span className="whitespace-nowrap">{FOLLOWER_COUNT_LABEL} người theo dõi</span>
-                  </span>
+                  </span> */}
                 </>
               ) : (
                 <>
@@ -96,35 +96,13 @@ export function ShopHeader({
         {/* Right */}
         <div className="grid flex-1 grid-cols-2 gap-x-12 gap-y-6 lg:grid-cols-3">
           <div>
-            <p className="text-xs text-gray-500">Đánh Giá</p>
-            <p className="mt-1 text-xm font-semibold text-gray-900">
-              4.9 <span className="text-xs font-normal text-gray-500">(98 đánh giá)</span>
-            </p>
-          </div>
-
-          <div>
             <p className="text-xs text-gray-500">Sản Phẩm</p>
             <p className="mt-1 text-xm font-semibold text-gray-900">{totalProductsCount}</p>
           </div>
 
           <div>
-            <p className="text-xs text-gray-500">Tỉ Lệ Phản Hồi</p>
-            <p className="mt-1 text-xm font-semibold text-gray-900">99%</p>
-          </div>
-
-          <div>
-            <p className="text-xs text-gray-500">Thời Gian Phản Hồi</p>
-            <p className="mt-1 text-xm font-semibold text-gray-900">Trong vài giờ</p>
-          </div>
-
-          <div>
             <p className="text-xs text-gray-500">Tham Gia</p>
             <p className="mt-1 text-xm font-semibold text-gray-900">{joinedTimeAgo}</p>
-          </div>
-
-          <div>
-            <p className="text-xs text-gray-500">Người Theo Dõi</p>
-            <p className="mt-1 text-xm font-semibold text-gray-900">{FOLLOWER_COUNT_LABEL}</p>
           </div>
         </div>
       </div>

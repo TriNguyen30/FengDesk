@@ -36,9 +36,11 @@ interface ProductCardProps {
   soldCount?: number;
   /** Chỉ truyền khi người xem là chủ/co-owner của shop — hiện nút sửa nhanh ở góc thẻ. */
   onEdit?: () => void;
+  /** Ẩn nút thêm vào giỏ hàng (ví dụ: khi chủ shop xem sản phẩm của mình). */
+  hideAddToCart?: boolean;
 }
 
-export default function ProductCard({ product, soldCount, onEdit }: ProductCardProps) {
+export default function ProductCard({ product, soldCount, onEdit, hideAddToCart }: ProductCardProps) {
   const { addItem } = useCart();
   const { t } = useTranslation();
 
@@ -126,17 +128,21 @@ export default function ProductCard({ product, soldCount, onEdit }: ProductCardP
           </div>
 
           <div className="mt-auto border-t border-gray-100 pt-3 flex items-center justify-between">
-            <button
-              className="flex items-center group/btn cursor-pointer transition-opacity hover:opacity-80"
-              onClick={handleAddToCart}
-            >
-              <div className="bg-primary text-white rounded-full p-1.5 shadow-sm transition-transform active:scale-95 relative z-10">
-                <ShoppingCart size={14} strokeWidth={2.5} />
-              </div>
-              <div className="text-[10px] font-bold leading-[1.1] text-primary text-left uppercase overflow-hidden whitespace-nowrap transition-all duration-300 max-w-0 opacity-0 -translate-x-3 group-hover:max-w-[100px] group-hover:opacity-100 group-hover:translate-x-0 group-hover:ml-1.5">
-                {t("product_card.labels.add_to_cart")}
-              </div>
-            </button>
+            {!hideAddToCart ? (
+              <button
+                className="flex items-center group/btn cursor-pointer transition-opacity hover:opacity-80"
+                onClick={handleAddToCart}
+              >
+                <div className="bg-primary text-white rounded-full p-1.5 shadow-sm transition-transform active:scale-95 relative z-10">
+                  <ShoppingCart size={14} strokeWidth={2.5} />
+                </div>
+                <div className="text-[10px] font-bold leading-[1.1] text-primary text-left uppercase overflow-hidden whitespace-nowrap transition-all duration-300 max-w-0 opacity-0 -translate-x-3 group-hover:max-w-[100px] group-hover:opacity-100 group-hover:translate-x-0 group-hover:ml-1.5">
+                  {t("product_card.labels.add_to_cart")}
+                </div>
+              </button>
+            ) : (
+              <div />
+            )}
             <span className="bg-gray-100/80 text-primary text-[10px] px-2 py-1 rounded shadow-sm font-medium whitespace-nowrap">
               {t("product_card.labels.in_stock")}
             </span>

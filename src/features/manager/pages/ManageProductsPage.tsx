@@ -351,9 +351,9 @@ export default function ManageProductsPage() {
                       <td className="px-6 py-4">
                         <div className="max-w-[200px] sm:max-w-md">
                           <p className="font-bold text-gray-900 line-clamp-1">{product.name}</p>
-                          <p className="text-xs text-gray-400 mt-0.5 font-mono truncate">
+                          {/* <p className="text-xs text-gray-400 mt-0.5 font-mono truncate">
                             {product.id}
-                          </p>
+                          </p> */}
                         </div>
                       </td>
                       <td className="whitespace-nowrap px-6 py-4">

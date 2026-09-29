@@ -250,9 +250,9 @@ export default function CartPage() {
                       {selectedSubtotal.toLocaleString("vi-VN")}
                       <span className="text-lg">đ</span>
                     </span>
-                    <p className="mt-0.5 text-xs text-gray-500">
+                    {/* <p className="mt-0.5 text-xs text-gray-500">
                       {t("cart_page.summary.vat_included")}
-                    </p>
+                    </p> */}
                   </div>
                 </div>
               </div>

@@ -90,6 +90,7 @@ export function ShopProductCatalog({
               key={p.id}
               product={p}
               onEdit={canAddProduct && shopId ? () => setEditingProductId(p.id) : undefined}
+              hideAddToCart={isShopMember}
             />
           ))}
         </div>
