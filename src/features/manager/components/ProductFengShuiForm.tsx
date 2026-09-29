@@ -1,5 +1,5 @@
 ﻿import React from "react";
-import { Sparkles, Save, RefreshCw } from "lucide-react";
+import { Sparkles, LoaderCircle } from "lucide-react";
 import type { LookupItem } from "@/features/products/types/taxonomy";
 import type { ProductPlacement } from "@/features/products/types/product";
 
@@ -111,11 +111,10 @@ export function ProductElementSelectFields({ value, onChange }: ElementSelectFie
                 key={el.code}
                 type="button"
                 onClick={() => set({ secondaryElements: toggle(value.secondaryElements, el.code) })}
-                className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition-all cursor-pointer ${
-                  active
+                className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition-all cursor-pointer ${active
                     ? "border-primary bg-primary/5 text-primary"
                     : "border-gray-200 text-gray-600 hover:border-primary/40"
-                }`}
+                  }`}
               >
                 {el.label}
               </button>
@@ -195,11 +194,10 @@ export function ProductVibeStyleFields({
                   key={v.code}
                   type="button"
                   onClick={() => set({ vibes: toggle(value.vibes, v.code) })}
-                  className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition-all cursor-pointer ${
-                    active
+                  className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition-all cursor-pointer ${active
                       ? "border-primary bg-primary/5 text-primary"
                       : "border-gray-200 text-gray-600 hover:border-primary/40"
-                  }`}
+                    }`}
                 >
                   {v.name}
                 </button>
@@ -223,11 +221,10 @@ export function ProductVibeStyleFields({
                   key={s.code}
                   type="button"
                   onClick={() => set({ styles: toggle(value.styles, s.code) })}
-                  className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition-all cursor-pointer ${
-                    active
+                  className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition-all cursor-pointer ${active
                       ? "border-primary bg-primary/5 text-primary"
                       : "border-gray-200 text-gray-600 hover:border-primary/40"
-                  }`}
+                    }`}
                 >
                   {s.name}
                 </button>
@@ -292,8 +289,8 @@ export function ProductFengShuiForm({ onSubmit, saving, ...fields }: ProductFeng
           disabled={saving}
           className="flex items-center justify-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-white shadow-md hover:bg-primary-dark active:scale-95 disabled:opacity-50 cursor-pointer"
         >
-          {saving ? <RefreshCw size={16} className="animate-spin" /> : <Save size={16} />}
           Lưu phong thủy
+          {saving && <LoaderCircle size={16} className="animate-spin" />}
         </button>
       </div>
     </form>
