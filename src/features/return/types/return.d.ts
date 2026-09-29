@@ -21,6 +21,11 @@ export interface ReturnDetailItem {
   unitPrice: number;
   lineTotal: number;
   exchangeProductItemId: string | null;
+  exchangeProductName: string | null;
+  exchangeVariantName: string | null;
+  exchangeUnitPrice: number | null;
+  exchangeLineTotal: number | null;
+  exchangeImageUrl: string | null;
 }
 
 export interface ReturnStatusLog {

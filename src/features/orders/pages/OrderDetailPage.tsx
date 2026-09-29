@@ -14,9 +14,7 @@ import {
   CheckCircle,
   Truck,
   Store,
-  MessageCircle,
   ShoppingCart,
-  FileText,
   StickyNote,
   Upload,
 } from "lucide-react";
@@ -171,7 +169,10 @@ export default function OrderDetailPage() {
       const original = await productApi.getProductById(items[0].productId);
       if (!original.data.isSuccess) throw new Error("Không tìm thấy cửa hàng của sản phẩm");
       const storeId = original.data.data.gardenStoreId;
-      const options: Array<{ productName: string; variant: ProductItem }> = [];
+      const optionsByVariantId = new Map<
+        string,
+        { productName: string; variant: ProductItem }
+      >();
       let page = 1;
       let totalPages = 1;
       do {
@@ -180,13 +181,15 @@ export default function OrderDetailPage() {
         for (const product of response.data.data.items) {
           if (product.gardenStoreId !== storeId || !product.isActive) continue;
           for (const variant of product.items) {
-            if (variant.stock > 0) options.push({ productName: product.name, variant });
+            if (variant.stock > 0 && !optionsByVariantId.has(variant.id)) {
+              optionsByVariantId.set(variant.id, { productName: product.name, variant });
+            }
           }
         }
         totalPages = response.data.data.totalPages;
         page += 1;
       } while (page <= totalPages);
-      setExchangeOptions(options);
+      setExchangeOptions(Array.from(optionsByVariantId.values()));
     } catch {
       setExchangeOptionsError(true);
     } finally {
@@ -204,8 +207,8 @@ export default function OrderDetailPage() {
       returnModal.items.forEach((item) => {
         all[item.id] = {
           orderItemId: item.id,
-          quantity: item.quantity,
-          maxQuantity: item.quantity,
+          quantity: item.returnableQuantity ?? item.quantity,
+          maxQuantity: item.returnableQuantity ?? item.quantity,
         };
       });
       setSelectedItems(all);
@@ -221,7 +224,11 @@ export default function OrderDetailPage() {
       }
       return {
         ...prev,
-        [item.id]: { orderItemId: item.id, quantity: item.quantity, maxQuantity: item.quantity },
+        [item.id]: {
+          orderItemId: item.id,
+          quantity: item.returnableQuantity ?? item.quantity,
+          maxQuantity: item.returnableQuantity ?? item.quantity,
+        },
       };
     });
   };
@@ -310,6 +317,27 @@ export default function OrderDetailPage() {
         return;
       }
     }
+    const returnedValue = checkedItems.reduce((sum, selected) => {
+      const original = returnModal.items.find((item) => item.id === selected.orderItemId);
+      return sum + (original?.unitPrice ?? 0) * selected.quantity;
+    }, 0);
+    const replacementValue =
+      returnType === "Exchange"
+        ? checkedItems.reduce((sum, selected) => {
+            const replacement = exchangeOptions.find(
+              ({ variant }) => variant.id === selected.exchangeProductItemId,
+            );
+            return sum + (replacement?.variant.price ?? 0) * selected.quantity;
+          }, 0)
+        : 0;
+    const requiresBankInfo = returnType === "Refund" || replacementValue < returnedValue;
+    if (
+      requiresBankInfo &&
+      (!bankAccountName.trim() || !bankAccountNumber.trim() || !bankName.trim())
+    ) {
+      toast.error("Vui lòng nhập đầy đủ thông tin tài khoản nhận tiền hoàn");
+      return;
+    }
     setSubmittingReturn(true);
     try {
       const items: CreateReturnItemRequest[] = checkedItems.map((si) => ({
@@ -324,8 +352,7 @@ export default function OrderDetailPage() {
         reasonDetail: reasonDetail || null,
         items,
         imageUrls: imageUrls.length > 0 ? imageUrls : null,
-        ...((returnType === "Refund" ||
-          (returnType === "Exchange" && currentOrder?.paymentMethod === "COD")) && {
+        ...(requiresBankInfo && {
           bankAccountName: bankAccountName || null,
           bankAccountNumber: bankAccountNumber || null,
           bankName: bankName || null,
@@ -414,9 +441,10 @@ export default function OrderDetailPage() {
 
   const returnableDeliveries = deliveries.filter((d) => {
     if (d.status !== "Delivered") return false;
+    if (d.isExchange) return false;
     if (isDeliveryPast7Days(d)) return false;
-    const rr = d.returnRequest;
-    return !rr || ["Rejected", "Cancelled", "Completed"].includes(rr.status);
+    if (d.returnRequest) return false;
+    return getDeliveryItems(d.id).length > 0;
   });
   const hasReturnableDelivery = returnableDeliveries.length > 0;
 
@@ -426,11 +454,30 @@ export default function OrderDetailPage() {
   });
   const hasActiveReturnForAnyDelivery = activeReturnDeliveries.length > 0;
 
-  const getDeliveryItems = (deliveryId: string): OrderLineItem[] =>
-    (order.items ?? []).filter((item) => item.deliveryId === deliveryId);
+  function getDeliveryItems(deliveryId: string): OrderLineItem[] {
+    return (order.items ?? []).filter(
+      (item) =>
+        item.deliveryId === deliveryId && (item.returnableQuantity ?? item.quantity) > 0,
+    );
+  }
 
   const allSelected =
     returnModal.items.length > 0 && Object.keys(selectedItems).length === returnModal.items.length;
+
+  const selectedReturnValue = Object.values(selectedItems).reduce((sum, selected) => {
+    const original = returnModal.items.find((item) => item.id === selected.orderItemId);
+    return sum + (original?.unitPrice ?? 0) * selected.quantity;
+  }, 0);
+  const selectedReplacementValue = Object.values(selectedItems).reduce((sum, selected) => {
+    const replacement = exchangeOptions.find(
+      ({ variant }) => variant.id === selected.exchangeProductItemId,
+    );
+    return sum + (replacement?.variant.price ?? 0) * selected.quantity;
+  }, 0);
+  const exchangeRefundDifference =
+    returnType === "Exchange" && selectedReplacementValue > 0
+      ? Math.max(0, selectedReturnValue - selectedReplacementValue)
+      : 0;
 
   const getSteps = () => {
     if (order.status === "Cancelled") {
@@ -1272,7 +1319,7 @@ export default function OrderDetailPage() {
                                   handleQuantityChange(
                                     item.id,
                                     Math.min(
-                                      item.quantity,
+                                      item.returnableQuantity ?? item.quantity,
                                       (selectedItems[item.id]?.quantity ?? 1) + 1,
                                     ),
                                   )
@@ -1282,11 +1329,13 @@ export default function OrderDetailPage() {
                                 +
                               </button>
                               <span className="text-xs text-gray-400 ml-0.5">
-                                / {item.quantity}
+                                / {item.returnableQuantity ?? item.quantity}
                               </span>
                             </div>
                           ) : (
-                            <span className="text-xs text-gray-400 shrink-0">x{item.quantity}</span>
+                            <span className="text-xs text-gray-400 shrink-0">
+                              x{item.returnableQuantity ?? item.quantity}
+                            </span>
                           )}
                         </div>
                       );
@@ -1386,6 +1435,22 @@ export default function OrderDetailPage() {
                           )}
                       </div>
                     ))}
+                  {exchangeRefundDifference > 0 && (
+                    <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3">
+                      <div className="flex items-center justify-between gap-3 text-sm">
+                        <span className="font-medium text-emerald-800">
+                          Tiền chênh lệch được hoàn
+                        </span>
+                        <span className="font-bold text-emerald-700">
+                          {formatVnd(exchangeRefundDifference)}
+                        </span>
+                      </div>
+                      <p className="mt-1 text-xs text-emerald-700">
+                        Khoản này sẽ được Manager chuyển vào tài khoản ngân hàng sau khi yêu cầu
+                        được duyệt.
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -1472,8 +1537,7 @@ export default function OrderDetailPage() {
               </div>
 
               {/* Bank info */}
-              {(returnType === "Refund" ||
-                (returnType === "Exchange" && currentOrder?.paymentMethod === "COD")) && (
+              {(returnType === "Refund" || exchangeRefundDifference > 0) && (
                 <div className="rounded-xl border border-blue-100 bg-blue-50/40 p-4 space-y-3">
                   <p className="text-xs font-bold text-blue-700 uppercase tracking-wide">
                     {t("order_detail.return_modal.bank_info")}
@@ -1486,7 +1550,8 @@ export default function OrderDetailPage() {
                   )}
                   <div>
                     <label className="block text-xs text-gray-600 mb-1">
-                      {t("order_detail.return_modal.account_name")}
+                      {t("order_detail.return_modal.account_name")} {" "}
+                      <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
@@ -1498,7 +1563,8 @@ export default function OrderDetailPage() {
                   </div>
                   <div>
                     <label className="block text-xs text-gray-600 mb-1">
-                      {t("order_detail.return_modal.account_number")}
+                      {t("order_detail.return_modal.account_number")} {" "}
+                      <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
@@ -1510,7 +1576,8 @@ export default function OrderDetailPage() {
                   </div>
                   <div>
                     <label className="block text-xs text-gray-600 mb-1">
-                      {t("order_detail.return_modal.bank_name")}
+                      {t("order_detail.return_modal.bank_name")} {" "}
+                      <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
