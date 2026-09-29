@@ -9,26 +9,26 @@ import type { RevenueBucket } from "../types/shop";
  */
 export const MONEY_STATES = {
   Ordered: {
-    code: "Ordered",
+    code: "Chưa thanh toán",
     labelVi: "COD / Chưa thanh toán",
     hintVi:
       "Đơn online khách chưa trả tiền, và đơn COD đang trên đường - COD thu tại điểm giao nên chưa có đồng nào.",
     chipClass: "border border-dashed border-primary bg-primary/10 text-primary",
   },
   Paid: {
-    code: "Paid",
+    code: "Đã thanh toán",
     labelVi: "Đã thanh toán, đang giao",
     hintVi: "Khách đã trả tiền online, khâu giao nhận chưa xong.",
     chipClass: "border border-primary bg-primary/25 text-primary",
   },
   Completed: {
-    code: "Completed",
+    code: "Đã hoàn thành",
     labelVi: "Đã hoàn thành",
     hintVi: "Đã giao tới tay khách - đơn COD tính là thu được tiền ở bước này.",
     chipClass: "bg-primary text-white",
   },
   Refunded: {
-    code: "Refunded",
+    code: "Đã hoàn tiền",
     labelVi: "Đã hoàn tiền",
     hintVi: "Ticket đổi/trả đã hoàn tiền xong - tiền chảy ngược.",
     chipClass: "bg-amber-500 text-white",

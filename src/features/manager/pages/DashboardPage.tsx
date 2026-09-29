@@ -62,6 +62,16 @@ const DELIVERY_STATUS_MAP: Record<string, { label: string; className: string }> 
   Cancelled: { label: "Đã hủy", className: "bg-red-50 text-red-700 border-red-200" },
 };
 
+const ORDER_STATUS_MAP: Record<string, { label: string; className: string }> = {
+  Pending: { label: "Chờ thanh toán", className: "bg-amber-50 text-amber-700 border-amber-200" },
+  Processing: { label: "Đang xử lý", className: "bg-blue-50 text-blue-700 border-blue-200" },
+  Completed: { label: "Đã hoàn thành", className: "bg-emerald-50 text-emerald-700 border-emerald-200" },
+  Cancelled: { label: "Đã hủy", className: "bg-red-50 text-red-700 border-red-200" },
+  Failed: { label: "Thất bại", className: "bg-rose-50 text-rose-700 border-rose-200" },
+  Paid: { label: "Đã thanh toán", className: "bg-indigo-50 text-indigo-700 border-indigo-200" },
+  Refunded: { label: "Đã hoàn tiền", className: "bg-gray-100 text-gray-700 border-gray-300" },
+};
+
 const formatVnd = (v: number) =>
   new Intl.NumberFormat("vi-VN", {
     style: "currency",
@@ -665,7 +675,7 @@ export default function DashboardPage() {
                   </thead>
                   <tbody className="divide-y divide-gray-50 text-xs">
                     {allOrders.slice(0, 5).map((o) => {
-                      const statusMeta = DELIVERY_STATUS_MAP[o.status] || {
+                      const statusMeta = ORDER_STATUS_MAP[o.status] || {
                         label: o.status,
                         className: "bg-gray-100 text-gray-700 border-gray-200",
                       };

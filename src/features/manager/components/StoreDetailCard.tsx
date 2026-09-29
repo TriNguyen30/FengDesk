@@ -9,6 +9,7 @@ import {
   UserPlus,
   Loader2,
   Crown,
+  User,
 } from "lucide-react";
 import type { Shop, StoreAddress, StoreStaff, UserSearchItem } from "@/features/shop/types/shop";
 import UserSearchCombobox from "@/features/shop/components/UserSearchCombobox";
@@ -31,6 +32,7 @@ interface StoreDetailCardProps {
   onRemoveStaff: (assignmentId: string) => void;
   deletingStaffId: string | null;
   currentUserId?: string;
+  selectedStoreOwnerName?: string | null;
 }
 
 export function StoreDetailCard({
@@ -51,6 +53,7 @@ export function StoreDetailCard({
   onRemoveStaff,
   deletingStaffId,
   currentUserId,
+  selectedStoreOwnerName,
 }: StoreDetailCardProps) {
   const renderStoreAddressDetails = (storeDetails: Shop | null) => {
     if (!storeDetails) return null;
@@ -143,10 +146,10 @@ export function StoreDetailCard({
               <span className="text-xs text-gray-400 font-semibold uppercase tracking-wider font-mono">
                 Mã: {selectedStore.id}
               </span>
-              {isOwner && (
-                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 text-emerald-800 px-2.5 py-0.5 text-xs font-bold border border-emerald-200">
-                  <Crown size={12} className="text-emerald-700" />
-                  Garden Owner (Chủ cửa hàng)
+              {selectedStoreOwnerName && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 text-amber-800 px-2.5 py-0.5 text-xs font-bold border border-amber-200">
+                  <Crown size={12} className="text-amber-600" />
+                  Chủ cửa hàng: {selectedStoreOwnerName}
                 </span>
               )}
             </div>
@@ -157,8 +160,8 @@ export function StoreDetailCard({
               type="button"
               onClick={() => onActiveTabChange("info")}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${activeTab === "info"
-                  ? "bg-white text-gray-900 shadow-sm"
-                  : "text-gray-500 hover:text-gray-800"
+                ? "bg-white text-gray-900 shadow-sm"
+                : "text-gray-500 hover:text-gray-800"
                 }`}
             >
               <Info size={14} />
@@ -168,8 +171,8 @@ export function StoreDetailCard({
               type="button"
               onClick={() => onActiveTabChange("staff")}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${activeTab === "staff"
-                  ? "bg-white text-gray-900 shadow-sm"
-                  : "text-gray-500 hover:text-gray-800"
+                ? "bg-white text-gray-900 shadow-sm"
+                : "text-gray-500 hover:text-gray-800"
                 }`}
             >
               <Users size={14} />
@@ -186,6 +189,18 @@ export function StoreDetailCard({
           <div className="space-y-6">
             <div className="grid gap-6 sm:grid-cols-2">
               <div className="space-y-4">
+                {selectedStoreOwnerName && (
+                  <div>
+                    <h4 className="text-xs text-gray-400 font-medium flex items-center gap-1">
+                      <Crown size={12} className="text-amber-500" />
+                      Chủ cửa hàng (Garden Owner)
+                    </h4>
+                    <p className="text-sm font-bold text-gray-900 mt-1 flex items-center gap-1.5">
+                      <User size={14} className="text-amber-600" />
+                      {selectedStoreOwnerName}
+                    </p>
+                  </div>
+                )}
                 <div>
                   <h4 className="text-xs text-gray-400 font-medium">Mô tả chi nhánh</h4>
                   <p className="text-sm text-gray-800 mt-1 font-normal leading-relaxed">
