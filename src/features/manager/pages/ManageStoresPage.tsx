@@ -47,21 +47,21 @@ export default function ManageStoresPage() {
     () => (currentUser?.role ?? "").split(",").map((r) => r.trim()),
     [currentUser?.role],
   );
-  const isAdmin = useMemo(
-    () => userRoles.some((r) => ["Admin", "SystemAdmin"].includes(r)),
+  const canOperateAsAdmin = useMemo(
+    () => userRoles.some((r) => ["Manager", "Admin", "SystemAdmin"].includes(r)),
     [userRoles],
   );
 
   const isStorePermitted = useCallback(
     (store: Shop) => {
-      if (isAdmin) return true;
+      if (canOperateAsAdmin) return true;
       return (
         store.isOwner ||
         (store as any).isStaff ||
         (!!currentUser?.id && store.ownerUserId === currentUser.id)
       );
     },
-    [isAdmin, currentUser],
+    [canOperateAsAdmin, currentUser],
   );
 
   // Lists
@@ -188,7 +188,7 @@ export default function ManageStoresPage() {
         }));
       }
 
-      const visibleStores = isAdmin
+      const visibleStores = canOperateAsAdmin
         ? enrichedStores
         : enrichedStores.filter(
           (s) =>
@@ -214,7 +214,7 @@ export default function ManageStoresPage() {
     } finally {
       setLoading(false);
     }
-  }, [currentUser, isAdmin, isStorePermitted]);
+  }, [currentUser, canOperateAsAdmin, isStorePermitted]);
 
   useEffect(() => {
     fetchStores();
@@ -813,7 +813,7 @@ export default function ManageStoresPage() {
           loading={loading}
           currentUserId={currentUser?.id}
           userRoles={userRoles}
-          isAdmin={isAdmin}
+          isAdmin={canOperateAsAdmin}
         />
 
         {/* ── Right Column: Selected Store Details & Management ──────────────── */}

@@ -229,8 +229,8 @@ export default function DashboardPage() {
     () => (currentUser?.role ?? "").split(",").map((r) => r.trim()),
     [currentUser?.role],
   );
-  const isAdmin = useMemo(
-    () => userRoles.some((r) => ["Admin", "SystemAdmin"].includes(r)),
+  const canOperateAsAdmin = useMemo(
+    () => userRoles.some((r) => ["Manager", "Admin", "SystemAdmin"].includes(r)),
     [userRoles],
   );
 
@@ -286,7 +286,7 @@ export default function DashboardPage() {
           }));
         }
 
-        const allowed = isAdmin
+        const allowed = canOperateAsAdmin
           ? enrichedStores
           : enrichedStores.filter(
               (s) =>
@@ -297,9 +297,7 @@ export default function DashboardPage() {
 
         if (active) {
           setShops(allowed);
-          if (allowed.length > 0) {
-            setSelectedStoreId(allowed[0].id);
-          }
+          setSelectedStoreId(canOperateAsAdmin ? "" : allowed[0]?.id ?? "");
         }
       } catch (err) {
         console.error("Error loading shops:", err);
@@ -312,7 +310,7 @@ export default function DashboardPage() {
     return () => {
       active = false;
     };
-  }, [isAdmin, currentUser?.id]);
+  }, [canOperateAsAdmin, currentUser?.id]);
 
   // Fetch statistics when selectedStoreId or shops change
   useEffect(() => {
@@ -321,7 +319,7 @@ export default function DashboardPage() {
 
     const fetchStats = async () => {
       if (!selectedStoreId) {
-        if (isAdmin && shops.length > 0) {
+        if (canOperateAsAdmin && shops.length > 0) {
           // Fetch all shops stats and aggregate
           const promises = shops.map((s) =>
             getStoreStatisticsRequest(s.id)
@@ -364,7 +362,7 @@ export default function DashboardPage() {
     };
     // `range` CỐ Ý không nằm trong deps: BE trả sẵn cả bốn mốc, đổi mốc là chọn lại mảng có sẵn.
     // Với admin, mỗi lần đổi trước đây là N cửa hàng × một lượt gọi — chậm nhất màn hình này.
-  }, [selectedStoreId, isAdmin, shops]);
+  }, [selectedStoreId, canOperateAsAdmin, shops]);
 
   // Fetch recent deliveries for selected store
   const { deliveries: recentDeliveries, listStatus: deliveriesStatus } = useStoreDeliveries(
@@ -438,7 +436,7 @@ export default function DashboardPage() {
     );
   }
 
-  if (shops.length === 0 && !isAdmin) {
+  if (shops.length === 0 && !canOperateAsAdmin) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center px-4">
         <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gray-50 text-gray-400 ring-1 ring-gray-100">
@@ -477,7 +475,7 @@ export default function DashboardPage() {
               onChange={(e) => setSelectedStoreId(e.target.value)}
               className="rounded-xl border border-gray-200 bg-white px-3.5 py-2 text-sm font-semibold text-gray-700 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/30 cursor-pointer"
             >
-              {isAdmin && <option value="">Tất cả cửa hàng ({shops.length})</option>}
+              {canOperateAsAdmin && <option value="">Tất cả cửa hàng ({shops.length})</option>}
               {shops.map((s) => (
                 <option key={s.id} value={s.id}>
                   {s.name}
