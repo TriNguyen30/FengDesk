@@ -39,6 +39,7 @@ import {
   DeleteStoreModal,
   StoreAddressModal,
 } from "@/features/manager/components";
+import { adminUsersApi } from "@/features/admin/api/adminUsers.api";
 
 export default function ManageStoresPage() {
   const currentUser = useAppSelector((s) => s.auth.user);
@@ -68,6 +69,7 @@ export default function ManageStoresPage() {
   const [loading, setLoading] = useState(false);
   const [selectedStore, setSelectedStore] = useState<Shop | null>(null);
   const [selectedStoreDetails, setSelectedStoreDetails] = useState<Shop | null>(null);
+  const [selectedStoreOwnerName, setSelectedStoreOwnerName] = useState<string | null>(null);
   const [staff, setStaff] = useState<StoreStaff[]>([]);
   const [loadingStaff, setLoadingStaff] = useState(false);
 
@@ -189,11 +191,11 @@ export default function ManageStoresPage() {
       const visibleStores = isAdmin
         ? enrichedStores
         : enrichedStores.filter(
-            (s) =>
-              s.isOwner ||
-              (s as any).isStaff ||
-              (!!currentUser?.id && s.ownerUserId === currentUser.id),
-          );
+          (s) =>
+            s.isOwner ||
+            (s as any).isStaff ||
+            (!!currentUser?.id && s.ownerUserId === currentUser.id),
+        );
 
       setStores(visibleStores);
 
@@ -271,9 +273,25 @@ export default function ManageStoresPage() {
     if (selectedStore) {
       fetchStoreDetails(selectedStore.id);
       fetchStaff(selectedStore.id);
+      
+      if (selectedStore.ownerUserId) {
+        adminUsersApi.getUserById(selectedStore.ownerUserId).then((res) => {
+          if (res.data?.isSuccess && res.data?.data) {
+            setSelectedStoreOwnerName(res.data.data.fullName || res.data.data.email || null);
+          } else {
+            setSelectedStoreOwnerName(null);
+          }
+        }).catch((err) => {
+          console.error("Failed to fetch store owner user details", err);
+          setSelectedStoreOwnerName(null);
+        });
+      } else {
+        setSelectedStoreOwnerName(null);
+      }
     } else {
       setSelectedStoreDetails(null);
       setStaff([]);
+      setSelectedStoreOwnerName(null);
     }
   }, [selectedStore]);
 
@@ -819,6 +837,7 @@ export default function ManageStoresPage() {
               onRemoveStaff={handleRemoveStaff}
               deletingStaffId={deletingStaffId}
               currentUserId={currentUser?.id}
+              selectedStoreOwnerName={selectedStoreOwnerName}
             />
           ) : (
             <div className="rounded-2xl border-2 border-dashed border-gray-200 bg-white p-12 text-center shadow-sm">
