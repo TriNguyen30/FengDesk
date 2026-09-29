@@ -374,14 +374,14 @@ export default function CheckoutPage() {
             </p>
           </aside>
 
-          <div className="flex items-center gap-3 rounded-xl bg-white p-4 text-sm text-gray-900 shadow-sm ring-1 ring-gray-100">
+          {/* <div className="flex items-center gap-3 rounded-xl bg-white p-4 text-sm text-gray-900 shadow-sm ring-1 ring-gray-100">
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary shrink-0 shadow-sm">
               <Truck className="h-5 w-5" />
             </div>
             <span className="font-semibold leading-snug">
               {t("checkout_page.summary.free_ship")}
             </span>
-          </div>
+          </div> */}
         </div>
       </div>
       <FeatureBar />

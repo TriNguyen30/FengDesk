@@ -41,7 +41,7 @@ export default function ZenCollectionSection() {
       <div className="grid grid-cols-1 gap-4 sm:gap-5 md:grid-cols-3 md:grid-rows-2 md:h-[560px]">
         {/* Deep Focus Bundle — wide hero card. Mộc = cây xanh/sinh khí, hành hợp với "tập trung sâu". */}
         <Link
-          to="/products?element=Moc"
+          to="/profile/workspace"
           className="group relative min-h-[280px] overflow-hidden rounded-3xl md:col-span-2 md:row-span-1 md:min-h-0"
         >
           <img

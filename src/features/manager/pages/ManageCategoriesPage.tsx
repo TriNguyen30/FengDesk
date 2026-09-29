@@ -222,9 +222,9 @@ export default function ManageCategoriesPage() {
                     <td className="px-6 py-4">
                       <div className="max-w-[200px] sm:max-w-md">
                         <p className="font-bold text-gray-900 line-clamp-1">{category.name}</p>
-                        <p className="text-xs text-gray-400 mt-0.5 font-mono truncate">
+                        {/* <p className="text-xs text-gray-400 mt-0.5 font-mono truncate">
                           {category.id}
-                        </p>
+                        </p> */}
                       </div>
                     </td>
                     <td className="px-6 py-4">

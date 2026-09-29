@@ -246,12 +246,18 @@ export function ProductVariantsSection({
           <div className="space-y-1.5">
             <label className="text-sm font-semibold text-gray-700">Giá bán (VNĐ) *</label>
             <input
-              type="number"
+              type="text"
+              inputMode="numeric"
               required
-              min={0}
-              step={1000}
-              value={variantPrice}
-              onChange={(e) => setVariantPrice(Number(e.target.value))}
+              value={variantPrice ? variantPrice.toLocaleString("vi-VN") : ""}
+              onChange={(e) => {
+                const rawValue = e.target.value.replace(/\./g, "");
+                if (rawValue === "") {
+                  setVariantPrice(0);
+                } else if (!isNaN(Number(rawValue))) {
+                  setVariantPrice(Number(rawValue));
+                }
+              }}
               className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-700 focus:border-primary focus:outline-none font-semibold"
             />
           </div>
