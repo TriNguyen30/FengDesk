@@ -120,6 +120,7 @@ export default function WorkspaceSwitcher() {
   // Trang dùng chung ⇒ giữ nguyên khu đang ở. `visible.find` bên dưới là lưới chắn khi khu lưu
   // trong localStorage không còn thuộc quyền của user nữa.
   const currentKey: WorkspaceKey = routeKey ?? getLastWorkspace() ?? "shop";
+
   const current = visible.find((w) => w.key === currentKey) ?? visible[0];
   const CurrentIcon = ICONS[current.key];
 
