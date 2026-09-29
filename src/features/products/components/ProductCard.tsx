@@ -6,6 +6,7 @@ import { useProductList } from "../hooks/useProducts";
 import { Product } from "../types/product";
 import { useCart } from "@/features/cart";
 import { toast } from "sonner";
+import { useAppSelector } from "@/app/store";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -43,6 +44,9 @@ interface ProductCardProps {
 export default function ProductCard({ product, soldCount, onEdit, hideAddToCart }: ProductCardProps) {
   const { addItem } = useCart();
   const { t } = useTranslation();
+  const currentUser = useAppSelector((s) => s.auth.user);
+  const isGardenOwner = currentUser?.role?.includes("GardenOwner") || false;
+  const shouldHideAddToCart = hideAddToCart || isGardenOwner;
 
   const handleAddToCart = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -126,18 +130,20 @@ export default function ProductCard({ product, soldCount, onEdit, hideAddToCart 
             </div>
 
             <div className="mt-auto border-t border-gray-100 pt-3 flex items-center justify-between">
-              <button
-                className="flex items-center group/btn cursor-pointer transition-opacity hover:opacity-80"
-                onClick={handleAddToCart}
-              >
-                <div className="bg-primary text-white rounded-full p-1.5 shadow-sm transition-transform active:scale-95 relative z-10">
-                  <ShoppingCart size={14} strokeWidth={2.5} />
-                </div>
-                <div className="text-[10px] font-bold leading-[1.1] text-primary text-left uppercase overflow-hidden whitespace-nowrap transition-all duration-300 max-w-0 opacity-0 -translate-x-3 group-hover:max-w-[100px] group-hover:opacity-100 group-hover:translate-x-0 group-hover:ml-1.5">
-                  {t("product_card.labels.add_to_cart")}
-                </div>
-              </button>
-              <span className="bg-gray-100/80 text-primary text-[10px] px-2 py-1 rounded shadow-sm font-medium whitespace-nowrap">
+              {!shouldHideAddToCart && (
+                <button
+                  className="flex items-center group/btn cursor-pointer transition-opacity hover:opacity-80"
+                  onClick={handleAddToCart}
+                >
+                  <div className="bg-primary text-white rounded-full p-1.5 shadow-sm transition-transform active:scale-95 relative z-10">
+                    <ShoppingCart size={14} strokeWidth={2.5} />
+                  </div>
+                  <div className="text-[10px] font-bold leading-[1.1] text-primary text-left uppercase overflow-hidden whitespace-nowrap transition-all duration-300 max-w-0 opacity-0 -translate-x-3 group-hover:max-w-[100px] group-hover:opacity-100 group-hover:translate-x-0 group-hover:ml-1.5">
+                    {t("product_card.labels.add_to_cart")}
+                  </div>
+                </button>
+              )}
+              <span className="ml-auto bg-gray-100/80 text-primary text-[10px] px-2 py-1 rounded shadow-sm font-medium whitespace-nowrap">
                 {t("product_card.labels.in_stock")}
               </span>
             </div>
@@ -178,18 +184,20 @@ export default function ProductCard({ product, soldCount, onEdit, hideAddToCart 
             </div>
 
             <div className="mt-auto border-t border-gray-100 pt-3 flex items-center justify-between">
-              <button
-                className="flex items-center group/btn cursor-pointer transition-opacity hover:opacity-80"
-                onClick={handleAddToCart}
-              >
-                <div className="bg-primary text-white rounded-full p-1.5 shadow-sm transition-transform active:scale-95 relative z-10">
-                  <ShoppingCart size={14} strokeWidth={2.5} />
-                </div>
-                <div className="text-[10px] font-bold leading-[1.1] text-primary text-left uppercase overflow-hidden whitespace-nowrap transition-all duration-300 max-w-0 opacity-0 -translate-x-3 group-hover:max-w-[100px] group-hover:opacity-100 group-hover:translate-x-0 group-hover:ml-1.5">
-                  {t("product_card.labels.add_to_cart")}
-                </div>
-              </button>
-              <span className="bg-gray-100/80 text-primary text-[10px] px-2 py-1 rounded shadow-sm font-medium whitespace-nowrap">
+              {!shouldHideAddToCart && (
+                <button
+                  className="flex items-center group/btn cursor-pointer transition-opacity hover:opacity-80"
+                  onClick={handleAddToCart}
+                >
+                  <div className="bg-primary text-white rounded-full p-1.5 shadow-sm transition-transform active:scale-95 relative z-10">
+                    <ShoppingCart size={14} strokeWidth={2.5} />
+                  </div>
+                  <div className="text-[10px] font-bold leading-[1.1] text-primary text-left uppercase overflow-hidden whitespace-nowrap transition-all duration-300 max-w-0 opacity-0 -translate-x-3 group-hover:max-w-[100px] group-hover:opacity-100 group-hover:translate-x-0 group-hover:ml-1.5">
+                    {t("product_card.labels.add_to_cart")}
+                  </div>
+                </button>
+              )}
+              <span className="ml-auto bg-gray-100/80 text-primary text-[10px] px-2 py-1 rounded shadow-sm font-medium whitespace-nowrap">
                 {t("product_card.labels.in_stock")}
               </span>
             </div>
