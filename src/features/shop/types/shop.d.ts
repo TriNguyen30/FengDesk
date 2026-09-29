@@ -16,7 +16,9 @@ export interface Shop {
   isActive: boolean;
   /** Chỉ có ở /stores/mine: true = user là owner store này, false = chỉ là nhân viên (Accepted). */
   isOwner?: boolean;
-  address: string;
+  /** BE trả object StoreAddressResponse khi store đã có địa chỉ chi tiết, chuỗi khi chưa có,
+   *  và KHÔNG trả gì ở response của PUT /stores/{id} (repo không Include address). */
+  address: string | StoreAddress | null;
   /** Điểm đánh giá cửa hàng (trung bình đánh giá sản phẩm). Chỉ có ở GET /stores/{id}. */
   rating?: StoreRating | null;
   createdAt: string;
@@ -61,6 +63,10 @@ export interface StoreAddress {
   latitude: number | null;
   longitude: number | null;
   isActive: boolean;
+  /** Tên người gửi cho nhà vận chuyển. Trống → BE dùng tên cửa hàng. */
+  senderName: string | null;
+  /** SĐT người gửi (di động 10 số). Trống → BE fallback hotline cửa hàng. */
+  senderPhone: string | null;
 }
 
 export interface CreateStoreAddressDto {
@@ -68,6 +74,9 @@ export interface CreateStoreAddressDto {
   streetAddress: string;
   latitude?: number | null;
   longitude?: number | null;
+  senderName?: string | null;
+  /** Bỏ qua (undefined/null) = giữ nguyên giá trị đang lưu; chuỗi rỗng = xoá. */
+  senderPhone?: string | null;
 }
 
 export type UpdateStoreAddressDto = CreateStoreAddressDto;

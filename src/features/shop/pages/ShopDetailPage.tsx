@@ -339,7 +339,14 @@ export default function ShopDetailPage() {
               shopAddressText={shopAddressText}
               canEdit={canEditShopProfile}
               onShopUpdated={(updated) =>
-                setShop((prev) => ({ ...updated, rating: updated.rating ?? prev?.rating }))
+                // Giữ lại address/rating cũ khi payload cập nhật không kèm chúng: PUT /stores/{id}
+                // không trả address, spread thẳng sẽ xoá trắng và màn hiện "Đang cập nhật".
+                setShop((prev) => ({
+                  ...prev,
+                  ...updated,
+                  address: updated.address ?? prev?.address ?? null,
+                  rating: updated.rating ?? prev?.rating,
+                }))
               }
             />
             <ShopProductCatalog

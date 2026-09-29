@@ -46,6 +46,10 @@ interface StoreAddressFormState {
   streetAddress: string;
   latitude: number;
   longitude: number;
+  // Modal này chưa có ô nhập người gửi (sửa ở modal "địa chỉ chi tiết"), nhưng phải mang theo để
+  // lần lưu từ đây gửi lại đúng giá trị đang có, không xoá mất SĐT lấy hàng.
+  senderName: string;
+  senderPhone: string;
 }
 
 export function StoreModal({
