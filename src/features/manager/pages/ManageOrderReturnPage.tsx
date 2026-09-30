@@ -75,7 +75,7 @@ const TABS: { value: string; label: string }[] = [
   { value: "Completed", label: "Hoàn tất" },
 ];
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 10;
 
 const REASON_LABEL: Record<string, string> = {
   Defective: "Sản phẩm bị lỗi",
