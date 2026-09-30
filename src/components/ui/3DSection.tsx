@@ -515,55 +515,46 @@ class Model3DErrorBoundary extends Component<
 }
 
 /** Bộ chuyển chế độ ảnh/3D đặt bên ngoài khung media để không xung đột với lightbox. */
-export function Model3DViewSwitcher({
+/**
+ * Nút tròn nhỏ nằm TRONG khung ảnh (góc dưới-trái) để bật/tắt mô hình 3D. Nằm đè lên ảnh nên hiện/ẩn
+ * không làm xô lệch layout. Hiệu ứng chuyển cảnh 2D↔3D lan ra/thu về đúng tâm nút này
+ * (xem MODEL_3D_TOGGLE_ORIGIN).
+ */
+export function Model3DToggleButton({
   activeMode,
-  onChange,
+  onToggle,
 }: {
   activeMode: "image" | "3d";
-  onChange: (mode: "image" | "3d") => void;
+  onToggle: () => void;
 }) {
   const { t } = useTranslation();
+  const is3D = activeMode === "3d";
+  const label = is3D ? t("product_detail.model_3d.view_image") : t("product_detail.model_3d.view_3d");
   return (
-    <div
-      role="group"
-      aria-label={t("product_detail.model_3d.view_mode")}
-      className="grid min-w-[200px] grid-cols-2 gap-1 rounded-full border border-white/60 bg-white/85 p-1 shadow-md backdrop-blur-sm"
+    <button
+      type="button"
+      onClick={(event) => {
+        event.stopPropagation();
+        onToggle();
+      }}
+      aria-pressed={is3D}
+      aria-controls="product-media-viewer"
+      aria-label={label}
+      title={label}
+      className={`absolute bottom-3 left-3 z-30 flex h-9 items-center gap-1 rounded-full px-2.5 text-xs font-bold shadow-md backdrop-blur-sm transition-all duration-200 cursor-pointer active:scale-95 ${
+        is3D
+          ? "bg-white/90 text-gray-700 hover:bg-white"
+          : "bg-primary text-white shadow-primary/30 hover:brightness-110"
+      }`}
     >
-      <button
-        type="button"
-        onClick={(event) => {
-          event.stopPropagation();
-          onChange("image");
-        }}
-        aria-pressed={activeMode === "image"}
-        aria-controls="product-media-viewer"
-        className={`flex h-9 items-center justify-center gap-1.5 rounded-full px-3 text-xs font-semibold transition-all duration-200 cursor-pointer active:scale-[.97] ${
-          activeMode === "image"
-            ? "bg-white text-gray-800 shadow-sm ring-1 ring-black/5"
-            : "text-gray-500 hover:bg-white/70 hover:text-gray-700"
-        }`}
-      >
-        <ImageIcon className="h-3.5 w-3.5" />
-        <span>{t("product_detail.model_3d.view_image")}</span>
-      </button>
-
-      <button
-        type="button"
-        onClick={(event) => {
-          event.stopPropagation();
-          onChange("3d");
-        }}
-        aria-pressed={activeMode === "3d"}
-        aria-controls="product-media-viewer"
-        className={`flex h-9 items-center justify-center gap-1.5 rounded-full px-3 text-xs font-bold transition-all duration-200 cursor-pointer active:scale-[.97] ${
-          activeMode === "3d"
-            ? "bg-primary text-white shadow-md shadow-primary/20"
-            : "text-primary hover:bg-primary/10"
-        }`}
-      >
-        <Box className="h-3.5 w-3.5" />
-        <span>{t("product_detail.model_3d.view_model")}</span>
-      </button>
-    </div>
+      {is3D ? <ImageIcon className="h-4 w-4" /> : <Box className="h-4 w-4" />}
+      <span>{is3D ? "2D" : t("product_detail.model_3d.badge")}</span>
+    </button>
   );
 }
+
+/**
+ * Tâm nút 3D (bottom-3 left-3, ~50×36px) — gốc của hiệu ứng chuyển cảnh 2D↔3D. Dùng % (khung vuông
+ * 400–520px) vì framer-motion không nội suy được clip-path có calc().
+ */
+export const MODEL_3D_TOGGLE_ORIGIN = "8% 93%";

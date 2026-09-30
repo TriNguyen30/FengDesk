@@ -1,3 +1,5 @@
+import type { LoginResponseData } from "@/features/auth/types/auth";
+
 export interface ApiResponse<T> {
   data: T;
   isSuccess: boolean;
@@ -23,6 +25,14 @@ export interface Shop {
   rating?: StoreRating | null;
   createdAt: string;
   updatedAt: string;
+}
+
+/**
+ * Kết quả POST /stores. `session` = phiên MỚI mang role người bán, chỉ có khi lần này user mới được cấp role
+ * GardenOwner (BE đã thu hồi token cũ) — lưu ngay trước mọi request kế tiếp. Null khi user vốn đã là chủ vườn.
+ */
+export interface CreateShopResponse extends Shop {
+  session?: LoginResponseData | null;
 }
 
 export interface StoreRating {

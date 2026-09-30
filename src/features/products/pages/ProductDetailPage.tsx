@@ -29,7 +29,7 @@ import { useTranslation } from "react-i18next";
 import { ProductDetail, ProductItem } from "../types/product";
 import { useProductDetail, useProductList } from "../hooks/useProducts";
 import { useProductModel3D } from "../hooks/useProductModel3D";
-import Product3DViewer, { Model3DViewSwitcher } from "@/components/ui/3DSection";
+import Product3DViewer, { Model3DToggleButton, MODEL_3D_TOGGLE_ORIGIN } from "@/components/ui/3DSection";
 import ProductCard, { ProductCardSkeleton } from "../components/ProductCard";
 import { useCart } from "@/features/cart";
 import { getShopRequestById } from "@/features/shop/api/shop.api";
@@ -81,6 +81,8 @@ export default function ProductDetailPage() {
     return [...(product?.images || [])].sort((a, b) => a.sortOrder - b.sortOrder);
   }, [product?.images]);
   const [viewMode, setViewMode] = useState<"image" | "3d">("image");
+  // Ảnh đã tự chuyển sang 3D (hoặc user đã tự bấm nút) — không tự chuyển lại lần nữa, tránh giành quyền với user.
+  const [auto3DDoneFor, setAuto3DDoneFor] = useState<string | null>(null);
   const dispatch = useAppDispatch();
   const isAuthenticated = useAppSelector((s) => !!s.auth.token);
   const { open: openAiAssistant } = useAiAssistant();
@@ -369,6 +371,21 @@ export default function ProductDetailPage() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isLightboxOpen, handleNextImage, handlePrevImage]);
 
+  // Ảnh có mô hình 3D: xem ảnh 2D ~3s rồi tự chuyển sang 3D (mỗi ảnh một lần).
+  useEffect(() => {
+    if (!model3D || viewMode !== "image" || isLightboxOpen || auto3DDoneFor === activeImage) return;
+    const timeoutId = setTimeout(() => {
+      setAuto3DDoneFor(activeImage);
+      setViewMode("3d");
+    }, 3000);
+    return () => clearTimeout(timeoutId);
+  }, [model3D, viewMode, activeImage, isLightboxOpen, auto3DDoneFor]);
+
+  const toggleViewMode = () => {
+    setAuto3DDoneFor(activeImage);
+    setViewMode((mode) => (mode === "3d" ? "image" : "3d"));
+  };
+
   // Auto swipe main image every 5 seconds
   useEffect(() => {
     if (!product || sortedImages.length <= 1 || isLightboxOpen || viewMode === "3d") return;
@@ -482,12 +499,6 @@ export default function ProductDetailPage() {
         <div className="flex flex-col sm:flex-row">
           {/* ── Left: Images ─────────────────────────────────────────────── */}
           <div className="relative w-full shrink-0 p-4 sm:w-[440px] sm:p-6 lg:w-[520px]">
-            {model3D && (
-              <div className="mb-3 flex justify-center">
-                <Model3DViewSwitcher activeMode={viewMode} onChange={setViewMode} />
-              </div>
-            )}
-
             {/* Main image / 3D viewer */}
             <div
               id="product-media-viewer"
@@ -497,7 +508,7 @@ export default function ProductDetailPage() {
             >
               {elementLabel && (
                 <div
-                  className={`absolute top-3 right-3 z-10 rounded-md px-2.5 py-1 text-xs font-bold uppercase tracking-wider text-white shadow-sm pointer-events-none ${elementColor}`}
+                  className={`absolute top-3 right-3 z-30 rounded-md px-2.5 py-1 text-xs font-bold uppercase tracking-wider text-white shadow-sm pointer-events-none ${elementColor}`}
                 >
                   {t("product_detail.labels.element")} {elementLabel}
                 </div>
@@ -505,13 +516,7 @@ export default function ProductDetailPage() {
 
 
 
-              {viewMode === "3d" && model3D ? (
-                <Product3DViewer
-                  modelUrl={model3D.modelUrl!}
-                  thumbnailUrl={model3D.thumbnailUrl}
-                  backgroundImageUrl={activeImage || model3D.sourceImageUrl}
-                />
-              ) : activeImage ? (
+              {activeImage ? (
                 <>
                   <motion.img
                     key={activeImage}
@@ -549,6 +554,27 @@ export default function ProductDetailPage() {
                   {t("product_detail.labels.no_image")}
                 </div>
               )}
+
+              <AnimatePresence>
+                {viewMode === "3d" && model3D && (
+                  <motion.div
+                    key="model-3d-layer"
+                    className="absolute inset-0 z-20"
+                    initial={{ clipPath: `circle(0% at ${MODEL_3D_TOGGLE_ORIGIN})` }}
+                    animate={{ clipPath: `circle(150% at ${MODEL_3D_TOGGLE_ORIGIN})` }}
+                    exit={{ clipPath: `circle(0% at ${MODEL_3D_TOGGLE_ORIGIN})` }}
+                    transition={{ duration: 0.7, ease: [0.65, 0, 0.35, 1] }}
+                  >
+                    <Product3DViewer
+                      modelUrl={model3D.modelUrl!}
+                      thumbnailUrl={model3D.thumbnailUrl}
+                      backgroundImageUrl={activeImage || model3D.sourceImageUrl}
+                    />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {model3D && <Model3DToggleButton activeMode={viewMode} onToggle={toggleViewMode} />}
             </div>
 
             {/* Thumbnails */}

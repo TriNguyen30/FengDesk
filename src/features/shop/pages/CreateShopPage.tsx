@@ -222,9 +222,8 @@ export default function CreateShopPage() {
     [provinces],
   );
 
-  // Sau khi mở shop, BE cấp role GardenOwner: nó tăng TokenVersion và THU HỒI toàn bộ refresh token
-  // của user, nên token đang cầm thành vô hiệu. Thử làm mới phiên trước — nếu được thì đi thẳng vào
-  // kênh người bán, không được thì phải đăng nhập lại (hỏi ý người dùng, không đá ra giữa chừng).
+  // Dự phòng khi response tạo shop KHÔNG kèm phiên mới (BE cũ, hoặc user vốn đã là chủ vườn): thử làm mới
+  // phiên — được thì đi thẳng vào kênh người bán, không được mới phải đăng nhập lại.
   const refreshSession = async (): Promise<boolean> => {
     try {
       const refreshToken = getRefreshToken();
@@ -267,6 +266,11 @@ export default function CreateShopPage() {
         return;
       }
 
+      // BE vừa cấp role GardenOwner → token cũ đã chết. Lưu phiên mới NGAY, trước request lưu địa chỉ bên
+      // dưới — không thì request đó mang token cũ và dính 401.
+      const session = res.data.session;
+      if (session) persistSession(session);
+
       if (addressForm.streetAddress.trim() && addressForm.wardId) {
         await createShopAddressRequest(res.data.id, {
           wardId: addressForm.wardId,
@@ -277,7 +281,7 @@ export default function CreateShopPage() {
       }
 
       toast.success("Tạo cửa hàng thành công! Bạn đã trở thành người bán.");
-      if (await refreshSession()) {
+      if (session || (await refreshSession())) {
         navigate("/seller");
         return;
       }
@@ -484,7 +488,7 @@ export default function CreateShopPage() {
         </aside>
       </div>
 
-      {/* Bắt buộc đăng nhập lại: BE thu hồi refresh token khi cấp role GardenOwner. Hỏi rồi mới
+      {/* Chỉ còn là đường lùi: bình thường BE trả phiên mới kèm response tạo shop. Hỏi rồi mới
           đăng xuất — không đóng được bằng Escape/nền để người dùng không bỏ lỡ thông báo. */}
       <Modal open={needRelogin} title="Cần đăng nhập lại" onClose={() => {}} size="max-w-md">
         <div className="space-y-4 pt-1">

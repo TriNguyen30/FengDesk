@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState, useCallback } from "react";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { toast } from "sonner";
-import { Clock, Loader2, MapPin, Pencil, Phone, Power, Store, X } from "lucide-react";
+import { AlertCircle, Clock, Loader2, MapPin, Pencil, Phone, Power, Store, X } from "lucide-react";
 import { Shop, StoreAddress } from "../types/shop";
 import {
   createShopAddressRequest,
@@ -151,6 +151,35 @@ function EditShopProfileModal({ shop, onClose, onSaved }: EditShopProfileModalPr
   const [longitude, setLongitude] = useState(0);
   const [isActive, setIsActive] = useState(shop.isActive);
   const [submitting, setSubmitting] = useState(false);
+
+  // Lỗi gắn theo từng ô. BE chỉ trả một câu message nên phải map câu đó về đúng ô — xem mapBackendError.
+  type FieldKey = "name" | "hotline" | "hours" | "street" | "area";
+  const [fieldErrors, setFieldErrors] = useState<Partial<Record<FieldKey, string>>>({});
+  const fieldRefs = useRef<Partial<Record<FieldKey, HTMLDivElement | null>>>({});
+
+  /** Gắn lỗi vào ô, cuộn tới nó và focus ô nhập đầu tiên bên trong. */
+  const failField = useCallback((key: FieldKey, message: string) => {
+    setFieldErrors({ [key]: message });
+    requestAnimationFrame(() => {
+      const el = fieldRefs.current[key];
+      if (!el) return;
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+      el.querySelector<HTMLElement>("input, textarea, select")?.focus({ preventScroll: true });
+    });
+  }, []);
+
+  /** BE trả message dạng câu tiếng Việt (ApiStatusMessages). Dò từ khoá để biết ô nào sai. */
+  const mapBackendError = useCallback(
+    (message?: string | null): FieldKey | null => {
+      const m = (message ?? "").toLowerCase();
+      if (m.includes("hotline")) return "hotline";
+      if (m.includes("tên cửa hàng")) return "name";
+      if (m.includes("phường/xã")) return "area";
+      if (m.includes("địa chỉ chi tiết")) return "street";
+      return null;
+    },
+    [],
+  );
 
   // BE trả `address` dạng chuỗi (store chưa có địa chỉ chi tiết) hoặc object
   // StoreAddressResponse. Chỉ trường hợp object mới có wardId để dựng lại khu vực.
@@ -322,16 +351,17 @@ function EditShopProfileModal({ shop, onClose, onSaved }: EditShopProfileModalPr
   }, [submitting, onClose]);
 
   const handleSubmit = async () => {
+    setFieldErrors({});
     if (!name.trim()) {
-      toast.error("Tên cửa hàng không được để trống");
+      failField("name", "Tên cửa hàng không được để trống.");
       return;
     }
     if (!hotline.trim()) {
-      toast.error("Hotline không được để trống");
+      failField("hotline", "Hotline không được để trống.");
       return;
     }
     if (openTime && closeTime && openTime >= closeTime) {
-      toast.error("Giờ đóng cửa phải sau giờ mở cửa");
+      failField("hours", "Giờ đóng cửa phải sau giờ mở cửa.");
       return;
     }
 
@@ -358,7 +388,9 @@ function EditShopProfileModal({ shop, onClose, onSaved }: EditShopProfileModalPr
         address: computedAddress || (typeof shop.address === "string" ? shop.address : ""),
       });
       if (!res.isSuccess || !res.data) {
-        toast.error(res.message || "Không thể cập nhật hồ sơ cửa hàng");
+        const key = mapBackendError(res.message);
+        if (key) failField(key, res.message!);
+        else toast.error(res.message || "Không thể cập nhật hồ sơ cửa hàng");
         return;
       }
 
@@ -381,7 +413,10 @@ function EditShopProfileModal({ shop, onClose, onSaved }: EditShopProfileModalPr
           ? await updateShopAddressRequest(shop.id, payload)
           : await createShopAddressRequest(shop.id, payload);
         if (!addrRes.isSuccess) {
-          toast.error(addrRes.message || "Lưu địa chỉ cửa hàng thất bại");
+          const key = mapBackendError(addrRes.message);
+          if (key) failField(key, addrRes.message!);
+          else toast.error(addrRes.message || "Lưu địa chỉ cửa hàng thất bại");
+          // Hồ sơ đã lưu xong ở bước trên — báo lên cha để màn không hiện dữ liệu cũ.
           onSaved({ ...res.data, address: nextAddress ?? res.data.address });
           return;
         }
@@ -418,15 +453,19 @@ function EditShopProfileModal({ shop, onClose, onSaved }: EditShopProfileModalPr
         </div>
 
         <div className="min-h-0 flex-1 space-y-4 scroll-fade overflow-y-auto px-5 py-4 text-sm overscroll-contain">
-          <Field label="Tên cửa hàng" required>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              disabled={submitting}
-              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/20"
-            />
-          </Field>
+          <div ref={(el) => void (fieldRefs.current.name = el)}>
+            <Field label="Tên cửa hàng" required error={fieldErrors.name}>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                disabled={submitting}
+                className={`w-full rounded-lg border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/20 ${
+                  fieldErrors.name ? "border-red-400 ring-1 ring-red-200" : "border-gray-200"
+                }`}
+              />
+            </Field>
+          </div>
 
           <Field label="Giới thiệu">
             <textarea
@@ -438,48 +477,76 @@ function EditShopProfileModal({ shop, onClose, onSaved }: EditShopProfileModalPr
             />
           </Field>
 
-          <Field label="Hotline" required>
-            <input
-              type="tel"
-              value={hotline}
-              onChange={(e) => setHotline(e.target.value)}
-              disabled={submitting}
-              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/20"
-            />
-          </Field>
+          <div ref={(el) => void (fieldRefs.current.hotline = el)}>
+            <Field label="Hotline" required error={fieldErrors.hotline}>
+              <input
+                type="tel"
+                value={hotline}
+                onChange={(e) => setHotline(e.target.value)}
+                disabled={submitting}
+                className={`w-full rounded-lg border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/20 ${
+                  fieldErrors.hotline ? "border-red-400 ring-1 ring-red-200" : "border-gray-200"
+                }`}
+              />
+            </Field>
+          </div>
 
-          <div className="grid gap-3 sm:grid-cols-2">
-            <Field label="Giờ mở cửa">
-              <input
-                type="time"
-                value={openTime}
-                onChange={(e) => setOpenTime(e.target.value)}
-                disabled={submitting}
-                className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/20"
-              />
-            </Field>
-            <Field label="Giờ đóng cửa">
-              <input
-                type="time"
-                value={closeTime}
-                onChange={(e) => setCloseTime(e.target.value)}
-                disabled={submitting}
-                className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/20"
-              />
-            </Field>
+          <div ref={(el) => void (fieldRefs.current.hours = el)}>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Field label="Giờ mở cửa">
+                <input
+                  type="time"
+                  value={openTime}
+                  onChange={(e) => setOpenTime(e.target.value)}
+                  disabled={submitting}
+                  className={`w-full rounded-lg border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/20 ${
+                    fieldErrors.hours ? "border-red-400 ring-1 ring-red-200" : "border-gray-200"
+                  }`}
+                />
+              </Field>
+              <Field label="Giờ đóng cửa" error={fieldErrors.hours}>
+                <input
+                  type="time"
+                  value={closeTime}
+                  onChange={(e) => setCloseTime(e.target.value)}
+                  disabled={submitting}
+                  className={`w-full rounded-lg border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/20 ${
+                    fieldErrors.hours ? "border-red-400 ring-1 ring-red-200" : "border-gray-200"
+                  }`}
+                />
+              </Field>
+            </div>
           </div>
           <p className="text-[11px] text-gray-400">
             Dùng bộ chọn giờ để nhập thời gian mở và đóng cửa, hệ thống sẽ lưu thành một chuỗi giờ
             hoạt động.
           </p>
 
-          <div className="space-y-3 rounded-lg bg-gray-50 p-3 border border-gray-200">
+          <div
+            ref={(el) => {
+              // Lỗi phường/xã và lỗi địa chỉ chi tiết đều nằm trong khối này (AddressLocationFields
+              // là component dùng chung nên không gắn viền đỏ vào từng ô con được).
+              fieldRefs.current.area = el;
+              fieldRefs.current.street = el;
+            }}
+            className={`space-y-3 rounded-lg bg-gray-50 p-3 border ${
+              fieldErrors.area || fieldErrors.street
+                ? "border-red-400 ring-1 ring-red-200"
+                : "border-gray-200"
+            }`}
+          >
             <div>
               <p className="text-sm font-semibold text-gray-900">Địa chỉ cửa hàng</p>
               <p className="text-xs text-gray-500">
                 Chọn khu vực hoặc chạm lên bản đồ để cập nhật địa chỉ hiển thị.
               </p>
             </div>
+            {(fieldErrors.area || fieldErrors.street) && (
+              <p className="flex items-start gap-1 text-[11px] font-medium text-red-600">
+                <AlertCircle size={12} className="mt-px shrink-0" />
+                {fieldErrors.area || fieldErrors.street}
+              </p>
+            )}
             <AddressLocationFields
               streetAddress={streetAddress}
               wardId={selectedWardId}
@@ -570,10 +637,13 @@ function EditShopProfileModal({ shop, onClose, onSaved }: EditShopProfileModalPr
 function Field({
   label,
   required,
+  error,
   children,
 }: {
   label: string;
   required?: boolean;
+  /** Lỗi của riêng ô này — hiện ngay dưới ô thay vì toast chung chung ở góc màn. */
+  error?: string;
   children: React.ReactNode;
 }) {
   return (
@@ -583,6 +653,12 @@ function Field({
         {required && <span className="text-red-500 ml-0.5">*</span>}
       </span>
       {children}
+      {error && (
+        <span className="flex items-start gap-1 text-[11px] font-medium text-red-600">
+          <AlertCircle size={12} className="mt-px shrink-0" />
+          {error}
+        </span>
+      )}
     </label>
   );
 }

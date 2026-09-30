@@ -15,6 +15,7 @@ import {
   StoreStatistics,
   PlatformFeePolicy,
   MyStoreBalance,
+  CreateShopResponse,
 } from "../types/shop";
 
 export async function getAllShopRequest() {
@@ -40,7 +41,7 @@ export async function getMyStoreBalanceRequest() {
 }
 
 export async function createShopRequest(payload: CreateShopDto) {
-  const { data } = await fetchHttpClient.post<ApiResponse<Shop>>(`/stores`, payload);
+  const { data } = await fetchHttpClient.post<ApiResponse<CreateShopResponse>>(`/stores`, payload);
   return data;
 }
 
