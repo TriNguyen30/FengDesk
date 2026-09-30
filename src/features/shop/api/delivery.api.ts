@@ -1,5 +1,15 @@
 import fetchHttpClient from "@/lib/httpClient";
 
+/**
+ * Vendor tự đẩy trạng thái giao (Preparing → Shipped, Shipped → Delivered) qua endpoint THẬT — BE kiểm owner /
+ * nhân viên được giao và tính hợp lệ của bước chuyển. Trước đây màn này gọi các hàm `devMark…` bên dưới; các
+ * endpoint dev đó chỉ mở ở môi trường Development nên ở production sẽ trả 404.
+ */
+export async function updateDeliveryStatusRequest(deliveryId: string, status: "Shipped" | "Delivered") {
+  const { data } = await fetchHttpClient.patch(`/orders/deliveries/${deliveryId}/status`, { status });
+  return data;
+}
+
 // --- DevDeliveries endpoints ---
 
 export async function devMarkDeliveryShippingDelivered(deliveryId: string) {

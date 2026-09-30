@@ -1,13 +1,18 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
-import { ArrowLeft, Truck } from "lucide-react";
+import { Link, Navigate, useParams } from "react-router-dom";
+import { ArrowLeft, Loader2, Truck } from "lucide-react";
 import { ShopDeliveriesView } from "../components/ShopDeliveriesView";
 import { getShopRequestById } from "@/features/shop/api/shop.api";
+import { useStoreMembership } from "@/features/shop/hooks/useStoreMembership";
 import type { Shop } from "@/features/shop/types/shop";
 
 export default function ShopDeliveriesPage() {
   const { storeId = "" } = useParams<{ storeId: string }>();
   const [shop, setShop] = useState<Shop | null>(null);
+  // Route chỉ bọc ProtectedRoute (kiểm tra ĐĂNG NHẬP, không kiểm tra store này có phải của mình),
+  // nên phải tự chặn theo membership: mở thẳng URL với id cửa hàng của người khác thì BE trả 403
+  // cho danh sách, NHƯNG khung trang + tên cửa hàng vẫn hiện ra như thể mình quản lý nó.
+  const { isShopMember, loading: loadingMembership } = useStoreMembership(storeId);
 
   useEffect(() => {
     let active = true;
@@ -25,6 +30,18 @@ export default function ShopDeliveriesPage() {
       active = false;
     };
   }, [storeId]);
+
+  if (loadingMembership) {
+    return (
+      <div className="flex min-h-[50vh] items-center justify-center text-gray-400">
+        <Loader2 size={28} className="animate-spin" />
+      </div>
+    );
+  }
+
+  if (!isShopMember) {
+    return <Navigate to={`/stores/${storeId}`} replace />;
+  }
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">

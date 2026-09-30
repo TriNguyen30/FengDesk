@@ -199,7 +199,7 @@ export function StoreList({
                       <Edit size={12} />
                       <span>Sửa</span>
                     </button>
-
+{/* 
                     <button
                       type="button"
                       onClick={(e) => {
@@ -211,7 +211,7 @@ export function StoreList({
                     >
                       <Trash2 size={12} />
                       <span>Tạm dừng</span>
-                    </button>
+                    </button> */}
 
                     <button
                       type="button"
@@ -223,7 +223,7 @@ export function StoreList({
                       title="Xóa vĩnh viễn"
                     >
                       <Trash2 size={12} />
-                      <span>Xóa Hẳn</span>
+                      <span>Xóa</span>
                     </button>
                   </div>
                 </div>

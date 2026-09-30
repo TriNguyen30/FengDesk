@@ -155,12 +155,15 @@ function FitPopover({
   const need = new Map(row.direction.map((r) => [r.element, r.value]));
   const supply = new Map(productVector.map((r) => [r.element, r.value]));
 
-  // Chỉ những hành có mặt ở một trong hai phía; sắp theo đóng góp ô[e]·p[e] giảm dần để dòng "vì sao
-  // được điểm" đứng đầu, dòng "vì sao bị trừ" đứng cuối.
+  // Chỉ những hành có mặt ở một trong hai phía; sắp theo đóng góp giảm dần để dòng "vì sao được
+  // điểm" đứng đầu, dòng "vì sao bị trừ" đứng cuối. Từ v3.7 đóng góp là ±min(|ô[e]|, p[e]) chứ
+  // không phải ô[e]·p[e] — sắp theo công thức cũ thì thứ tự nói một đằng, điểm nói một nẻo.
+  const term = (needValue: number, supplyValue: number) =>
+    Math.sign(needValue) * Math.min(Math.abs(needValue), supplyValue);
   const rows = ELEMENT_ORDER
     .map((e) => ({ element: e, need: need.get(e) ?? 0, supply: supply.get(e) ?? 0 }))
     .filter((r) => Math.abs(r.need) >= 0.005 || r.supply >= 0.005)
-    .sort((a, b) => b.need * b.supply - a.need * a.supply);
+    .sort((a, b) => term(b.need, b.supply) - term(a.need, a.supply));
 
   return (
     <motion.div

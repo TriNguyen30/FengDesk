@@ -9,7 +9,7 @@ import {
   useStoreDeliveries,
   useUpdateOrderDeliveryStatus,
 } from "@/features/orders";
-import { devMarkDeliveryShippingDelivered, devMarkDeliveryDelivering } from "../api/delivery.api";
+import { updateDeliveryStatusRequest } from "../api/delivery.api";
 import { AssignStaffModal } from "./AssignStaffModal";
 import type { StoreDelivery } from "@/features/orders";
 import { formatOrderDate, formatVnd } from "@/features/orders/utils/orderUtils";
@@ -203,7 +203,7 @@ export function ShopDeliveriesView({ storeId }: ShopDeliveriesViewProps) {
     setIsBulkShippingOut(true);
     try {
       const results = await Promise.allSettled(
-        shippingOutIds.map((id) => devMarkDeliveryDelivering(id))
+        shippingOutIds.map((id) => updateDeliveryStatusRequest(id, "Shipped"))
       );
       const successCount = results.filter(
         (r) => r.status === "fulfilled" && ((r.value as any).isSuccess || (r.value as any).status === 200 || !(r.value as any).error)
@@ -237,7 +237,7 @@ export function ShopDeliveriesView({ storeId }: ShopDeliveriesViewProps) {
     setIsBulkDelivered(true);
     try {
       const results = await Promise.allSettled(
-        deliveredIds.map((id) => devMarkDeliveryShippingDelivered(id))
+        deliveredIds.map((id) => updateDeliveryStatusRequest(id, "Delivered"))
       );
       const successCount = results.filter(
         (r) => r.status === "fulfilled" && ((r.value as any).isSuccess || (r.value as any).status === 200 || !(r.value as any).error)
@@ -265,7 +265,7 @@ export function ShopDeliveriesView({ storeId }: ShopDeliveriesViewProps) {
   const handleSetShipped = async (delivery: StoreDelivery) => {
     setShippingOutId(delivery.id);
     try {
-      const res = await devMarkDeliveryDelivering(delivery.id) as any;
+      const res = await updateDeliveryStatusRequest(delivery.id, "Shipped") as any;
       if (res.isSuccess || res.status === 200 || !res.error) {
         toast.success("Đã cập nhật trạng thái đang giao");
         queryClient.invalidateQueries({ queryKey: ["store-deliveries"] });
@@ -284,7 +284,7 @@ export function ShopDeliveriesView({ storeId }: ShopDeliveriesViewProps) {
   const handleSetDelivered = async (delivery: StoreDelivery) => {
     setDeliveringId(delivery.id);
     try {
-      const res = await devMarkDeliveryShippingDelivered(delivery.id) as any;
+      const res = await updateDeliveryStatusRequest(delivery.id, "Delivered") as any;
       if (res.isSuccess || res.status === 200 || !res.error) {
         toast.success("Đã cập nhật trạng thái đã giao");
         queryClient.invalidateQueries({ queryKey: ["store-deliveries"] });

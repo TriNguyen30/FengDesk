@@ -104,6 +104,10 @@ export default function ManageStoresPage() {
     streetAddress: "",
     latitude: 0,
     longitude: 0,
+    // Người gửi cho nhà vận chuyển. Hotline cửa hàng có thể là 1900/số cố định — GHN không nhận,
+    // khi đó BẮT BUỘC có senderPhone, nếu không CarrierShopSyncWorker bỏ qua store (PICKUP_PHONE_INVALID).
+    senderName: "",
+    senderPhone: "",
   });
   const [submittingAddress, setSubmittingAddress] = useState(false);
 
@@ -448,12 +452,16 @@ export default function ManageStoresPage() {
     [provinces],
   );
 
-  // Payload địa chỉ store — chỉ 4 field BE nhận (pickup point, không có người nhận).
+  // Payload địa chỉ store (điểm lấy hàng, không có người nhận). Sender đi kèm và LUÔN được gửi:
+  // BE coi null = không đổi, chuỗi rỗng = xoá — nên form phải nạp giá trị đang lưu trước khi mở,
+  // nếu không sẽ tự xoá SĐT lấy hàng của cửa hàng.
   const toStoreAddressPayload = (f: typeof addressForm) => ({
     wardId: f.wardId,
     streetAddress: f.streetAddress.trim(),
     latitude: f.latitude || null,
     longitude: f.longitude || null,
+    senderName: f.senderName.trim(),
+    senderPhone: f.senderPhone.trim(),
   });
 
   // POST khi store chưa có địa chỉ, PUT khi đã có (quyết định theo existing address.id — đọc đúng field `address`).
@@ -507,6 +515,8 @@ export default function ManageStoresPage() {
           existingAddr?.streetAddress ?? (typeof store.address === "string" ? store.address : ""),
         latitude: existingAddr?.latitude ?? 0,
         longitude: existingAddr?.longitude ?? 0,
+        senderName: existingAddr?.senderName ?? "",
+        senderPhone: existingAddr?.senderPhone ?? "",
       });
       applySavedRegion(existingAddr?.wardId ?? "");
     } else {
@@ -520,7 +530,14 @@ export default function ManageStoresPage() {
         isActive: true,
         address: "",
       });
-      setAddressForm({ wardId: "", streetAddress: "", latitude: 0, longitude: 0 });
+      setAddressForm({
+        wardId: "",
+        streetAddress: "",
+        latitude: 0,
+        longitude: 0,
+        senderName: "",
+        senderPhone: "",
+      });
       applySavedRegion("");
     }
     setIsStoreModalOpen(true);
@@ -558,7 +575,14 @@ export default function ManageStoresPage() {
         if (res.isSuccess) {
           if (hasAddressInput) {
             const existingAddr = (selectedStoreDetails as any)?.address ?? null;
-            await saveStoreAddress(editingStore.id, existingAddr?.id, addressForm);
+            // Phải kiểm tra kết quả: trước đây lời gọi này bị bỏ trắng nên địa chỉ lưu thất bại
+            // (ward sai, SĐT người gửi sai định dạng…) vẫn hiện toast "Cập nhật thành công".
+            const addrRes = await saveStoreAddress(editingStore.id, existingAddr?.id, addressForm);
+            if (!addrRes.isSuccess) {
+              toast.error(addrRes.message || "Lưu địa chỉ cửa hàng thất bại");
+              fetchStores();
+              return;
+            }
           }
           toast.success("Cập nhật cửa hàng thành công");
           fetchStores();
@@ -573,7 +597,17 @@ export default function ManageStoresPage() {
         const res = await createShopRequest(storeForm);
         if (res.isSuccess) {
           if (res.data && hasAddressInput) {
-            await saveStoreAddress(res.data.id, undefined, addressForm);
+            // Cửa hàng ĐÃ được tạo ở trên: địa chỉ lỗi thì báo đúng lỗi đó chứ không báo tạo
+            // thất bại, và vẫn đóng form + refresh để không tạo trùng cửa hàng.
+            const addrRes = await saveStoreAddress(res.data.id, undefined, addressForm);
+            if (!addrRes.isSuccess) {
+              toast.error(
+                addrRes.message || "Đã tạo cửa hàng nhưng lưu địa chỉ thất bại — hãy sửa lại địa chỉ",
+              );
+              fetchStores();
+              setIsStoreModalOpen(false);
+              return;
+            }
           }
           toast.success("Tạo cửa hàng mới thành công");
           fetchStores();
@@ -640,6 +674,8 @@ export default function ManageStoresPage() {
         streetAddress: addr.streetAddress || "",
         latitude: addr.latitude || 0,
         longitude: addr.longitude || 0,
+        senderName: addr.senderName ?? "",
+        senderPhone: addr.senderPhone ?? "",
       });
       applySavedRegion(addr.wardId || "");
     } else {
@@ -649,6 +685,8 @@ export default function ManageStoresPage() {
         streetAddress: "",
         latitude: 10.8231, // Default coordinates (HCMC)
         longitude: 106.6297,
+        senderName: "",
+        senderPhone: "",
       });
       applySavedRegion("");
     }

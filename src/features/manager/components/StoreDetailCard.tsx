@@ -77,21 +77,21 @@ export function StoreDetailCard({
               >
                 Chỉnh sửa
               </button>
-              <button
+              {/* <button
                 type="button"
                 onClick={() => onDeleteAddress(false)}
                 disabled={deletingAddress}
                 className="text-xs font-semibold text-red-500 hover:text-red-700 transition-colors disabled:opacity-55 cursor-pointer"
               >
                 Xóa mềm
-              </button>
+              </button> */}
               <button
                 type="button"
                 onClick={() => onDeleteAddress(true)}
                 disabled={deletingAddress}
                 className="text-xs font-semibold text-red-700 hover:text-red-900 transition-colors disabled:opacity-55 cursor-pointer"
               >
-                Xóa vĩnh viễn
+                Xóa 
               </button>
             </div>
           </div>

@@ -20,12 +20,16 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import Modal from "@/components/ui/Modal";
-import { useOrderDetail, useCancelOrder } from "../hooks/useOrders";
+import {
+  apiErrorMessage,
+  useConfirmReceived,
+  useOrderDetail,
+  useCancelOrder,
+} from "../hooks/useOrders";
 import { formatOrderDate, formatVnd, getOrderStatusMeta } from "../utils/orderUtils";
 import PaymentQrModal from "@/features/payment/components/PaymentQrModal";
 import OrderItemImage from "../components/OrderItemImage";
 import { returnApi } from "@/features/return/api/return.api";
-import { devMarkOrderShippingDelivered } from "@/features/shop/api/delivery.api";
 import { uploadFile } from "@/services/upload.service";
 import type {
   ReturnType,
@@ -117,6 +121,7 @@ export default function OrderDetailPage() {
   const [cancelling, setCancelling] = useState(false);
   const [paying, setPaying] = useState(false);
   const [confirmingOrder, setConfirmingOrder] = useState(false);
+  const confirmReceived = useConfirmReceived();
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -166,7 +171,9 @@ export default function OrderDetailPage() {
     setLoadingExchangeOptions(true);
     try {
       // Các item trong cùng delivery luôn thuộc một Garden Store.
-      const original = await productApi.getProductById(items[0].productId);
+      const productId = items.find((i) => i.productAvailable && i.productId)?.productId;
+      if (!productId) throw new Error("Sản phẩm không còn bán");
+      const original = await productApi.getProductById(productId);
       if (!original.data.isSuccess) throw new Error("Không tìm thấy cửa hàng của sản phẩm");
       const storeId = original.data.data.gardenStoreId;
       const optionsByVariantId = new Map<
@@ -419,7 +426,9 @@ export default function OrderDetailPage() {
 
   const order = currentOrder;
   const statusMeta = getOrderStatusMeta(order.status, order.paymentMethod);
-  const canCancel = !["Shipping", "Cancelled", "Completed", "Expired"].includes(order.status);
+  // Cùng luật với BE (OrderService.CancelAsync): chỉ đơn Pending. Trước đây nút còn hiện ở Paid/Processing
+  // (vendor đã xác nhận) và bấm vào là BE từ chối.
+  const canCancel = order.status === "Pending";
   const deliveries: any[] = ((order as any).deliveries ?? []).map((d: any) => {
     const rr =
       d.returnRequest ||
@@ -809,29 +818,50 @@ export default function OrderDetailPage() {
           {/* Product rows */}
           <ul className="divide-y divide-gray-100">
             {(order.items ?? []).map((item) => {
-              const productUrl = `/products/${(item as any).productId || item.productItemId}`;
+              // Sản phẩm đã bị xoá: vẫn hiện đủ tên/ảnh/giá (BE chụp lúc đặt) nhưng không dẫn tới trang đã mất.
+              const productUrl =
+                item.productAvailable && item.productId ? `/products/${item.productId}` : null;
+              const image = (
+                <OrderItemImage
+                  imageUrl={item.imageUrl}
+                  alt={item.productName}
+                  className={`h-14 w-14 transition-opacity ${productUrl ? "group-hover/img:opacity-90" : "opacity-80"}`}
+                />
+              );
               return (
                 <li
                   key={item.id}
                   className="flex gap-3 px-4 py-3.5 items-start hover:bg-gray-50/50 transition-colors"
+                  data-testid="order-line"
                 >
-                  <Link to={productUrl} className="shrink-0 group/img">
-                    <OrderItemImage
-                      imageUrl={item.imageUrl}
-                      alt={item.productName}
-                      className="h-14 w-14 group-hover/img:opacity-90 transition-opacity"
-                    />
-                  </Link>
-                  <div className="flex-1 min-w-0">
-                    <Link
-                      to={productUrl}
-                      className="text-sm font-medium text-gray-900 leading-snug hover:text-primary transition-colors line-clamp-2 block"
-                    >
-                      {item.productName}
+                  {productUrl ? (
+                    <Link to={productUrl} className="shrink-0 group/img">
+                      {image}
                     </Link>
-                    {(item as any).variantName && (
+                  ) : (
+                    <div className="shrink-0">{image}</div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    {productUrl ? (
+                      <Link
+                        to={productUrl}
+                        className="text-sm font-medium text-gray-900 leading-snug hover:text-primary transition-colors line-clamp-2 block"
+                      >
+                        {item.productName}
+                      </Link>
+                    ) : (
+                      <p className="text-sm font-medium text-gray-700 leading-snug line-clamp-2">
+                        {item.productName}
+                      </p>
+                    )}
+                    {!item.productAvailable && (
+                      <span className="mt-1 mr-1 inline-block rounded bg-amber-50 px-1.5 py-0.5 text-xs text-amber-700">
+                        Sản phẩm không còn bán
+                      </span>
+                    )}
+                    {item.variantName && (
                       <span className="mt-1 inline-block text-xs text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">
-                        {(item as any).variantName}
+                        {item.variantName}
                       </span>
                     )}
                     <p className="mt-1 text-xs text-gray-400">x{item.quantity}</p>
@@ -864,6 +894,15 @@ export default function OrderDetailPage() {
                   : t("order_detail.product.uncalculated")}
               </span>
             </div>
+            {(order.shippingDiscount ?? 0) > 0 && (
+              <div className="flex justify-between text-sm text-green-700">
+                <span>
+                  {t("order_detail.product.shipping_discount")}
+                  {order.voucherCode ? ` (${order.voucherCode})` : ""}
+                </span>
+                <span>−{formatVnd(order.shippingDiscount ?? 0)}</span>
+              </div>
+            )}
           </div>
           <div className="flex justify-between items-center px-4 py-3 border-t border-dashed border-gray-200 mt-1">
             <span className="text-sm font-semibold text-gray-800">
@@ -1082,16 +1121,11 @@ export default function OrderDetailPage() {
                 onClick={async () => {
                   setConfirmingOrder(true);
                   try {
-                    const res = (await devMarkOrderShippingDelivered(order.id)) as any;
-                    if (res.isSuccess || res.status === 200 || !res.error) {
-                      toast.success("Xác nhận đã nhận hàng thành công");
-                      queryClient.invalidateQueries({ queryKey: ["order", order.id] });
-                      queryClient.invalidateQueries({ queryKey: ["orders"] });
-                    } else {
-                      toast.error(res.message || "Không thể xác nhận");
-                    }
-                  } catch (err: any) {
-                    toast.error("Có lỗi xảy ra khi xác nhận");
+                    const res = await confirmReceived.mutateAsync(order.id);
+                    if (res.isSuccess) toast.success("Xác nhận đã nhận hàng thành công");
+                    else toast.error(res.message || "Không thể xác nhận");
+                  } catch (err) {
+                    toast.error(apiErrorMessage(err, "Có lỗi xảy ra khi xác nhận"));
                   } finally {
                     setConfirmingOrder(false);
                   }
@@ -1128,22 +1162,22 @@ export default function OrderDetailPage() {
               )}
 
             {/* Buy again */}
-            {["Completed", "Cancelled", "Expired"].includes(order.status) && (
-              <button
-                onClick={() => {
-                  if (order.items && order.items.length > 0) {
-                    const firstItem = order.items[0];
-                    navigate(
-                      `/products/${(firstItem as any).productId || firstItem.productItemId}`,
+            {["Completed", "Cancelled", "Expired"].includes(order.status) &&
+              (order.items ?? []).some((i) => i.productAvailable && i.productId) && (
+                <button
+                  onClick={() => {
+                    // Mua lại món đầu tiên còn bán — món của sản phẩm đã xoá thì bỏ qua.
+                    const available = (order.items ?? []).find(
+                      (i) => i.productAvailable && i.productId,
                     );
-                  }
-                }}
-                className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-primary text-white text-sm font-semibold py-2.5 hover:bg-primary/90 cursor-pointer transition-colors"
-              >
-                <ShoppingCart className="h-4 w-4" />
-                {t("order_detail.actions.buy_again")}
-              </button>
-            )}
+                    if (available) navigate(`/products/${available.productId}`);
+                  }}
+                  className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-primary text-white text-sm font-semibold py-2.5 hover:bg-primary/90 cursor-pointer transition-colors"
+                >
+                  <ShoppingCart className="h-4 w-4" />
+                  {t("order_detail.actions.buy_again")}
+                </button>
+              )}
 
             {/* Cancel */}
             {canCancel && (

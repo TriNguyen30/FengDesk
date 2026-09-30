@@ -170,7 +170,7 @@ export default function ProductFitPanel({ productId }: ProductFitPanelProps) {
                       {fit.cautionFacts.map((c, i) => (
                         <p
                           key={i}
-                          className={`rounded-lg px-3 py-2 text-xs leading-relaxed ${CAUTION_CLASS[cautionTone(c)]}`}
+                          className={`rounded-lg px-3 py-2 text-xs leading-relaxed ${CAUTION_CLASS[cautionTone(c, scorePercent(fit.score))]}`}
                         >
                           {c}
                         </p>
@@ -221,9 +221,6 @@ function RoomRadarAside({ fit }: { fit: ProductFitResponse }) {
         tagVotesScale={fit.tagVotesScale ?? 1}
         {...radarPersonalLayer(fit)}
       />
-      <p className="mt-1 text-center text-[11px] text-gray-400">
-        Nét đứt = ngũ hành phòng sau khi thêm sản phẩm này
-      </p>
       {fit.evidenceCount === 0 && (
         <p className="mt-2 rounded-lg bg-white px-3 py-2 text-[11px] leading-snug text-gray-500">
           Hiện trạng phòng đang được suy ra từ loại phòng vì bạn chưa khai màu sắc/vật liệu nào.

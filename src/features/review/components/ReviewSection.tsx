@@ -3,7 +3,7 @@ import { Star, MessageSquare, Trash2, Edit2, Loader2, Check, X, User } from "luc
 import { useAppDispatch, useAppSelector } from "@/app/store";
 import { setAuthModal } from "@/features/auth/store/authSlice";
 import { useReviews } from "../hooks/useReviews";
-import type { Review } from "../types/review";
+import type { Review, ReviewEligibilityStatus } from "../types/review";
 import { useTranslation } from "react-i18next";
 
 interface ReviewSectionProps {
@@ -13,8 +13,18 @@ interface ReviewSectionProps {
 export default function ReviewSection({ productId }: ReviewSectionProps) {
   const dispatch = useAppDispatch();
   const currentUser = useAppSelector((state) => state.auth.user);
-  const { reviews, loading, submitting, createReview, updateReview, deleteReview } =
-    useReviews(productId);
+  const {
+    reviews,
+    summary,
+    eligibility,
+    hasMore,
+    loading,
+    submitting,
+    loadMore,
+    createReview,
+    updateReview,
+    deleteReview,
+  } = useReviews(productId, !!currentUser);
   const { t } = useTranslation();
 
   // Form states for creating review
@@ -33,22 +43,28 @@ export default function ReviewSection({ productId }: ReviewSectionProps) {
   // Delete confirmation states
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  // Aggregate ratings
-  const totalReviews = reviews.length;
-  const averageRating =
-    totalReviews > 0
-      ? Number((reviews.reduce((sum, r) => sum + r.rating, 0) / totalReviews).toFixed(1))
-      : 0;
-
-  const ratingCounts = [0, 0, 0, 0, 0]; // Index 0 -> 1 star, ..., Index 4 -> 5 stars
-  reviews.forEach((r) => {
-    const idx = Math.min(Math.max(1, Math.round(r.rating)), 5) - 1;
-    ratingCounts[idx]++;
-  });
+  // Điểm tổng hợp tính ở BE trên TOÀN BỘ đánh giá của sản phẩm (danh sách bên dưới chỉ là trang đang tải).
+  const totalReviews = summary.count;
+  const averageRating = summary.average;
 
   const getRatingPercentage = (stars: number) => {
     if (totalReviews === 0) return 0;
-    return Math.round((ratingCounts[stars - 1] / totalReviews) * 100);
+    return Math.round(((summary.distribution[stars - 1] ?? 0) / totalReviews) * 100);
+  };
+
+  const ineligibleMessageKey = (status: ReviewEligibilityStatus | null | undefined) => {
+    switch (status) {
+      case "NotDelivered":
+        return "review_section.eligibility.not_delivered";
+      case "Reviewed":
+        return "review_section.eligibility.reviewed";
+      case "Returned":
+        return "review_section.eligibility.returned";
+      case "ProductUnavailable":
+        return "review_section.eligibility.product_unavailable";
+      default:
+        return "review_section.eligibility.not_purchased";
+    }
   };
 
   const handleCreateSubmit = async (e: React.FormEvent) => {
@@ -198,7 +214,7 @@ export default function ReviewSection({ productId }: ReviewSectionProps) {
 
       {/* ── Review Form Section ───────────────────────────────────────────── */}
       <div className="mb-8">
-        {currentUser ? (
+        {currentUser && eligibility?.canReview ? (
           <form
             onSubmit={handleCreateSubmit}
             className="bg-gray-50/30 border border-gray-100 rounded-xl p-4 sm:p-5"
@@ -253,6 +269,10 @@ export default function ReviewSection({ productId }: ReviewSectionProps) {
               </button>
             </div>
           </form>
+        ) : currentUser ? (
+          <div className="border border-dashed border-gray-200 rounded-xl p-4 text-center bg-gray-50/20">
+            <p className="text-sm text-gray-500">{t(ineligibleMessageKey(eligibility?.status))}</p>
+          </div>
         ) : (
           <div className="border border-dashed border-gray-200 rounded-xl p-6 text-center bg-gray-50/20">
             <p className="text-sm text-gray-500 mb-3">
@@ -286,8 +306,7 @@ export default function ReviewSection({ productId }: ReviewSectionProps) {
             const isEditing = editingId === review.id;
             const isDeleting = deletingId === review.id;
 
-            const reviewerName =
-              review.user?.fullName || review.user?.email || t("review_section.list.anonymous");
+            const reviewerName = review.user?.fullName || t("review_section.list.anonymous");
 
             return (
               <div
@@ -324,8 +343,13 @@ export default function ReviewSection({ productId }: ReviewSectionProps) {
                         </span>
                       </div>
 
-                      {/* Stars */}
-                      <div className="mb-2">{renderStars(review.rating, "h-4 w-4")}</div>
+                      {/* Stars + biến thể đã mua */}
+                      <div className="mb-2 flex flex-wrap items-center gap-2">
+                        {renderStars(review.rating, "h-4 w-4")}
+                        {review.variantName && (
+                          <span className="text-xs text-gray-400">{review.variantName}</span>
+                        )}
+                      </div>
 
                       {/* Review Comment */}
                       <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-line">
@@ -460,6 +484,20 @@ export default function ReviewSection({ productId }: ReviewSectionProps) {
               </div>
             );
           })
+        )}
+
+        {hasMore && (
+          <div className="flex justify-center pt-2">
+            <button
+              type="button"
+              onClick={loadMore}
+              disabled={loading}
+              className="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-4 py-2 text-xs font-semibold text-gray-600 hover:bg-gray-50 transition-colors cursor-pointer disabled:opacity-50"
+            >
+              {loading && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+              {t("review_section.list.load_more")}
+            </button>
+          </div>
         )}
       </div>
     </div>

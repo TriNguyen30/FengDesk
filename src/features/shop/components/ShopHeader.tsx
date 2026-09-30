@@ -1,4 +1,4 @@
-import { Store, MessageSquare, Heart, Truck, Users } from "lucide-react";
+import { Store, MessageSquare, Heart, Truck } from "lucide-react";
 import { Shop } from "../types/shop";
 
 interface ShopHeaderProps {
@@ -16,9 +16,6 @@ interface ShopHeaderProps {
   isMember?: boolean;
   onManageDeliveriesClick?: () => void;
 }
-
-// TODO: BE chưa có cột followerCount/followerSummary; tạm dùng hằng số khớp với mock ở phần stats.
-const FOLLOWER_COUNT_LABEL = "2.4k";
 
 export function ShopHeader({
   shop,
@@ -64,10 +61,6 @@ export function ShopHeader({
                     <Truck size={15} />
                     <span className="whitespace-nowrap">Quản lý đơn ship</span>
                   </button>
-                  <span className="flex h-8 items-center justify-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3 text-xs font-semibold text-emerald-700">
-                    <Users size={13} />
-                    <span className="whitespace-nowrap">{FOLLOWER_COUNT_LABEL} người theo dõi</span>
-                  </span>
                 </>
               ) : (
                 <>
@@ -98,7 +91,16 @@ export function ShopHeader({
           <div>
             <p className="text-xs text-gray-500">Đánh Giá</p>
             <p className="mt-1 text-xm font-semibold text-gray-900">
-              4.9 <span className="text-xs font-normal text-gray-500">(98 đánh giá)</span>
+              {shop.rating && shop.rating.count > 0 ? (
+                <>
+                  {shop.rating.average.toFixed(1)}{" "}
+                  <span className="text-xs font-normal text-gray-500">
+                    ({shop.rating.count} đánh giá)
+                  </span>
+                </>
+              ) : (
+                <span className="text-xs font-normal text-gray-500">Chưa có đánh giá</span>
+              )}
             </p>
           </div>
 
@@ -108,23 +110,8 @@ export function ShopHeader({
           </div>
 
           <div>
-            <p className="text-xs text-gray-500">Tỉ Lệ Phản Hồi</p>
-            <p className="mt-1 text-xm font-semibold text-gray-900">99%</p>
-          </div>
-
-          <div>
-            <p className="text-xs text-gray-500">Thời Gian Phản Hồi</p>
-            <p className="mt-1 text-xm font-semibold text-gray-900">Trong vài giờ</p>
-          </div>
-
-          <div>
             <p className="text-xs text-gray-500">Tham Gia</p>
             <p className="mt-1 text-xm font-semibold text-gray-900">{joinedTimeAgo}</p>
-          </div>
-
-          <div>
-            <p className="text-xs text-gray-500">Người Theo Dõi</p>
-            <p className="mt-1 text-xm font-semibold text-gray-900">{FOLLOWER_COUNT_LABEL}</p>
           </div>
         </div>
       </div>

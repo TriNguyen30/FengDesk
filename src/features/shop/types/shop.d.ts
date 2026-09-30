@@ -16,9 +16,18 @@ export interface Shop {
   isActive: boolean;
   /** Chỉ có ở /stores/mine: true = user là owner store này, false = chỉ là nhân viên (Accepted). */
   isOwner?: boolean;
-  address: string;
+  /** BE trả object StoreAddressResponse khi store đã có địa chỉ chi tiết, chuỗi khi chưa có,
+   *  và KHÔNG trả gì ở response của PUT /stores/{id} (repo không Include address). */
+  address: string | StoreAddress | null;
+  /** Điểm đánh giá cửa hàng (trung bình đánh giá sản phẩm). Chỉ có ở GET /stores/{id}. */
+  rating?: StoreRating | null;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface StoreRating {
+  average: number;
+  count: number;
 }
 
 export interface CreateShopDto {
@@ -54,6 +63,10 @@ export interface StoreAddress {
   latitude: number | null;
   longitude: number | null;
   isActive: boolean;
+  /** Tên người gửi cho nhà vận chuyển. Trống → BE dùng tên cửa hàng. */
+  senderName: string | null;
+  /** SĐT người gửi (di động 10 số). Trống → BE fallback hotline cửa hàng. */
+  senderPhone: string | null;
 }
 
 export interface CreateStoreAddressDto {
@@ -61,6 +74,9 @@ export interface CreateStoreAddressDto {
   streetAddress: string;
   latitude?: number | null;
   longitude?: number | null;
+  senderName?: string | null;
+  /** Bỏ qua (undefined/null) = giữ nguyên giá trị đang lưu; chuỗi rỗng = xoá. */
+  senderPhone?: string | null;
 }
 
 export type UpdateStoreAddressDto = CreateStoreAddressDto;
@@ -170,6 +186,48 @@ export interface StoreStatistics {
   pendingClearanceValue?: number;
   /** Công nợ chưa miễn, sẽ trừ vào kỳ chi kế tiếp. */
   outstandingLiabilityValue?: number;
+  /** Tỉ lệ phí sàn áp cho đơn mới (vd 0.08). */
+  commissionRate?: number;
+  /** Σ phí sàn đã thu trên hàng đã giao (đã trừ phần trả lại do hoàn hàng). */
+  platformCommission?: number;
+  /** Thực nhận theo sổ cái = tiền hàng đã giao − phí sàn − công nợ hoàn hàng. */
+  ledgerBalance?: number;
+  /** Phần thực nhận đã qua khoảng giữ. */
+  ledgerAvailable?: number;
+  /** Phần thực nhận còn trong khoảng giữ. */
+  ledgerPending?: number;
+}
+
+/** Số dư sổ cái một cửa hàng user sở hữu. */
+export interface StoreBalance {
+  storeId: string;
+  storeName: string;
+  /** Đã qua khoảng giữ — có thể rút. */
+  available: number;
+  /** Còn trong khoảng giữ (tất toán sau `payoutHoldDays` ngày kể từ khi giao). */
+  pending: number;
+  balance: number;
+}
+
+/** `GET /stores/mine/balance` — chỉ cửa hàng user SỞ HỮU; nhân viên nhận danh sách rỗng. */
+export interface MyStoreBalance {
+  available: number;
+  pending: number;
+  balance: number;
+  payoutHoldDays: number;
+  stores: StoreBalance[];
+}
+
+/** Chính sách phí sàn công khai — `GET /platform/fee-policy`. */
+export interface PlatformFeePolicy {
+  /** Tỉ lệ phí sàn trên tiền hàng, vd 0.08. */
+  commissionRate: number;
+  /** Trần giảm giá do sàn tài trợ trên mỗi đơn giao (tỉ lệ trên tiền hàng). */
+  maxPlatformFundedDiscountRate: number;
+  /** Số ngày giữ tiền sau khi giao thành công. */
+  payoutHoldDays: number;
+  /** Tỉ lệ hiện tại áp từ lúc nào; null = mặc định hệ thống. */
+  effectiveFrom?: string | null;
 }
 
 /**

@@ -22,6 +22,7 @@ import {
   ELEMENT_ORDER,
   FIT_TONES,
   cautionTone,
+  scorePercent,
   clashesDestiny,
   elementColor,
   elementVi,
@@ -226,7 +227,7 @@ export default function PersonalFitPanel({ productId }: PersonalFitPanelProps) {
                   {fit.cautionFacts.map((c, i) => (
                     <p
                       key={i}
-                      className={`rounded-lg px-3 py-2 text-[13px] leading-relaxed ${CAUTION_CLASS[cautionTone(c)]}`}
+                      className={`rounded-lg px-3 py-2 text-[13px] leading-relaxed ${CAUTION_CLASS[cautionTone(c, scorePercent(fit.score))]}`}
                     >
                       {c}
                     </p>
@@ -298,15 +299,15 @@ function NeedTooltip({
           : FIT_TONES[1];
   const pill =
     isAvoid && row.product > 0
-      ? "Hành bạn nên tránh - có trong vật này"
+      ? "Hành bạn nên tránh - có trong sản phẩm này"
       : clash && row.product > 0
         ? "Khắc bản mệnh - chưa hợp với bạn"
         : row.need > 0 && row.product > 0
           ? "Bồi đúng hành bạn đang cần"
           : row.need > 0
-            ? "Bạn đang cần, vật này chưa có"
+            ? "Bạn đang cần, sản phẩm chưa có"
             : isAvoid
-              ? "Hành nên tránh - vật này không có"
+              ? "Hành nên tránh - sản phẩm không có"
               : "Không ảnh hưởng tới bạn";
 
   const num = (x: number, d = 3) => x.toFixed(d);
@@ -327,7 +328,7 @@ function NeedTooltip({
       }
     >
       <TooltipRow label="Bạn cần" value={num(row.need, 2)} />
-      <TooltipRow label="Vật này mang" value={num(row.product)} />
+      <TooltipRow label="Sản phẩm mang" value={num(row.product)} />
       {!isAvoid && <TooltipRow label="Đáp ứng được" value={num(cover)} muted />}
       <TooltipRow
         label="Ảnh hưởng tới mức phù hợp"

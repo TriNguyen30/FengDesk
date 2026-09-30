@@ -311,7 +311,6 @@ export default function EditProductModal({
         {activeTab === "variants" && (
           <ProductVariantsSection
             productId={product.id}
-            productName={product.name}
             items={product.items || []}
             onRefreshProduct={handleRefresh}
           />
@@ -372,7 +371,7 @@ export default function EditProductModal({
             <h1 className="text-xl font-bold tracking-tight text-gray-900 truncate max-w-[200px] sm:max-w-md lg:max-w-3xl">
               {product.name}
             </h1>
-            <p className="text-xs text-gray-400 mt-0.5 font-mono font-normal">ID: {product.id}</p>
+            {/* <p className="text-xs text-gray-400 mt-0.5 font-mono font-normal">ID: {product.id}</p> */}
           </div>
         ) : (
           "Chỉnh sửa sản phẩm"

@@ -9,6 +9,7 @@ import {
   Minus,
   Plus,
   Store,
+  Star,
   MessageSquare,
   MapPin,
   Phone,
@@ -481,6 +482,12 @@ export default function ProductDetailPage() {
         <div className="flex flex-col sm:flex-row">
           {/* ── Left: Images ─────────────────────────────────────────────── */}
           <div className="relative w-full shrink-0 p-4 sm:w-[440px] sm:p-6 lg:w-[520px]">
+            {model3D && (
+              <div className="mb-3 flex justify-center">
+                <Model3DViewSwitcher activeMode={viewMode} onChange={setViewMode} />
+              </div>
+            )}
+
             {/* Main image / 3D viewer */}
             <div
               id="product-media-viewer"
@@ -496,14 +503,7 @@ export default function ProductDetailPage() {
                 </div>
               )}
 
-              {/* Nút 2D/3D nằm ĐÈ lên khung ảnh thay vì chiếm một hàng riêng phía trên: nó chỉ xuất hiện ở ảnh
-                  có mô hình 3D, nên khi slider tự chuyển ảnh, hàng đó nhảy ra/vào và đẩy mọi thứ bên dưới
-                  (kể cả bảng độ phù hợp) lên xuống. Overlay thì khung ảnh giữ nguyên chiều cao. */}
-              {model3D && (
-                <div className="absolute bottom-3 left-3 z-20">
-                  <Model3DViewSwitcher activeMode={viewMode} onChange={setViewMode} />
-                </div>
-              )}
+
 
               {viewMode === "3d" && model3D ? (
                 <Product3DViewer
@@ -898,6 +898,17 @@ export default function ProductDetailPage() {
               >
                 {shop.name}
               </h2>
+              <p className="mt-1 flex items-center gap-1 text-xs text-gray-500">
+                <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+                {shop.rating && shop.rating.count > 0 ? (
+                  <>
+                    <span className="font-semibold text-gray-800">{shop.rating.average.toFixed(1)}</span>
+                    {t("review_section.store_rating.count", { count: shop.rating.count })}
+                  </>
+                ) : (
+                  t("review_section.store_rating.no_reviews")
+                )}
+              </p>
               <div className="mt-3 flex gap-2">
                 <button
                   onClick={handleChatWithShop}
@@ -958,7 +969,7 @@ export default function ProductDetailPage() {
             {t("product_detail.labels.description")}
           </h2>
           <div
-            className="text-sm leading-relaxed text-gray-700 dark:text-gray-100 quill-content"
+            className="text-sm leading-relaxed text-gray-700 quill-content"
             dangerouslySetInnerHTML={{ __html: cleanRichTextHtml(product.description) }}
           />
         </div>

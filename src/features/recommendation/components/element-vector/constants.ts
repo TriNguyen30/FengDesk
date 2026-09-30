@@ -119,12 +119,22 @@ export function fitToneByPercent(percent: number): FitTone {
 }
 
 /**
- * Tông của một dòng `cautionFacts`: chỉ chuyện **bản mệnh** (khắc mệnh, hành nên tránh) mới đỏ; mọi
- * lưu ý còn lại (lệch cảm hứng, hành phòng đã thừa, lệch nghề…) là vàng — nhắc nhở, không phải cảnh báo.
+ * Tông của một dòng `cautionFacts`.
+ *
+ * Hai tầng, theo thứ tự:
+ *
+ * 1. **Kết luận cuối thắng.** Nếu engine đã chấm từ "Phù hợp" trở lên (≥ 60 %) thì không lưu ý nào
+ *    được đỏ. Một hộp đỏ nằm dưới chữ "Phù hợp 72 %" là **hai lời khuyên đánh nhau**: phần trừ đó đã
+ *    nằm sẵn trong chính con số 72 % rồi, nó không phải một tin xấu THỨ HAI phải trừ thêm lần nữa.
+ *    (Nếu một vật vừa khắc mệnh vừa được 85 % thì thứ sai là **trọng số**, không phải màu của cái hộp.)
+ * 2. Trong vùng còn lại, chuyện **bản mệnh** (khắc mệnh, hành nên tránh) mới đỏ; lưu ý khác (lệch cảm
+ *    hứng, hành phòng đã thừa, lệch nghề…) là vàng — nhắc nhở, không phải cảnh báo.
+ *
  * BE trả câu chữ thuần nên phân loại theo từ khoá; đổi lời ở engine thì rà lại đây.
  */
 export type CautionTone = "danger" | "notice";
-export function cautionTone(fact: string): CautionTone {
+export function cautionTone(fact: string, displayPercent: number): CautionTone {
+  if (displayPercent >= 60) return "notice";
   return /khắc|nên tránh/i.test(fact) ? "danger" : "notice";
 }
 export const CAUTION_CLASS: Record<CautionTone, string> = {

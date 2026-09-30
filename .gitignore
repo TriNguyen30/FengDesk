@@ -49,6 +49,21 @@ coverage/
 # --- codegraph local index ---
 .codegraph/
 
-# --- Claude Code working dir ---.claude/
+# --- Claude Code working dir ---
+.claude/
 .ds-sync/
 ds-bundle/
+
+# --- E2E (Playwright) ---
+# Cấu hình cục bộ (mật khẩu Postgres) — đã khớp `.env.*` ở trên, ghi rõ để khỏi ai gỡ nhầm.
+e2e/.env.e2e
+!e2e/.env.e2e.example
+# Kết quả chạy (trace/video/screenshot có thể chứa token đăng nhập của user test)
+e2e/.results/
+e2e/.report/
+e2e/.auth/
+# Thư mục mặc định của Playwright khi chạy ngoài playwright.config.ts
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/

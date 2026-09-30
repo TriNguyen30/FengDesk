@@ -1,5 +1,6 @@
-import { useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import { ClipboardList } from "lucide-react";
+import { useWheelPaging } from "@/hooks/useWheelPaging";
 import type { StoreStatisticsItemRow } from "../types/shop";
 import { MONEY_STATES, moneyStateOf, type MoneyStateKey } from "./revenueChartRow";
 import { STATS_RANGES, type StatsRange } from "./statsRanges";
@@ -73,7 +74,18 @@ export function StatsPendingItems({ rows }: { rows: StoreStatisticsItemRow[] }) 
   // Chiều cao khung = ĐÚNG N dòng, đo từ dòng thật thay vì đoán bằng hằng số: chỉ cần cỡ chữ hay padding
   // đổi một chút là con số đoán sẽ để lòi nửa dòng ở đáy — đúng thứ làm người đọc tưởng mình bỏ sót.
   const bodyRef = useRef<HTMLTableSectionElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
   const [maxHeight, setMaxHeight] = useState<number | undefined>(undefined);
+
+  // Mốc cuộn = đầu mỗi "trang" VISIBLE_ROWS − 1 dòng (chừa một dòng gối đầu), đo từ dòng thật.
+  const getPageStops = useCallback(() => {
+    const body = bodyRef.current;
+    if (!body) return [];
+    return Array.from(body.rows)
+      .filter((_, i) => i % (VISIBLE_ROWS - 1) === 0)
+      .map((row) => row.offsetTop);
+  }, []);
+  useWheelPaging(scrollRef, getPageStops, rows.length > VISIBLE_ROWS);
 
   useLayoutEffect(() => {
     const body = bodyRef.current;
@@ -128,13 +140,16 @@ export function StatsPendingItems({ rows }: { rows: StoreStatisticsItemRow[] }) 
       </table>
 
       {/* Cuộn "gần một trang": mỗi nhát kéo nhảy VISIBLE_ROWS − 1 dòng, chừa đúng một dòng gối đầu để mắt
-          bắt lại mạch. Thanh cuộn ẩn khi đứng yên (hiện lúc đang kéo hoặc khi rê chuột vào) — một vạch
-          xám đứng im cạnh bảng không nói thêm được gì. */}
+          bắt lại mạch. Chuột/trackpad đi qua useWheelPaging (một nhịp, không giật); CSS snap chỉ bật cho
+          cảm ứng (`pointer-coarse:`), nơi snap native có quán tính và không bị hút hai nhịp. */}
       <div
+        ref={scrollRef}
         // Tự ẩn + fade do `scroll-fade` lo (src/utils/scrollFade.ts). Bản cũ ở đây bật/tắt
         // `scrollbar-width` theo state: vừa không mờ dần được, vừa làm bảng co giãn 10px mỗi lượt cuộn.
         className={
-          scrolls ? "scroll-fade overflow-y-auto snap-y snap-mandatory overscroll-contain" : ""
+          scrolls
+            ? "scroll-fade overflow-y-auto overscroll-contain pointer-coarse:snap-y pointer-coarse:snap-mandatory"
+            : ""
         }
         style={scrolls ? { maxHeight } : undefined}
       >
@@ -143,7 +158,7 @@ export function StatsPendingItems({ rows }: { rows: StoreStatisticsItemRow[] }) 
             {sorted.map((r, i) => (
               <tr
                 key={`${r.productId}-${r.status}`}
-                className={`border-t border-gray-50 ${i % (VISIBLE_ROWS - 1) === 0 ? "snap-start" : ""}`}
+                className={`border-t border-gray-50 ${i % (VISIBLE_ROWS - 1) === 0 ? "pointer-coarse:snap-start" : ""}`}
               >
                 <td className="w-[32%] py-2 pr-2">
                   <span className="line-clamp-1 text-gray-700">{r.productName}</span>

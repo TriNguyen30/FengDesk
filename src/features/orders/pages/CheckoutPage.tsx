@@ -4,7 +4,7 @@ import { ChevronLeft, Loader2, MapPin, ShoppingBag, CreditCard, Truck } from "lu
 import { toast } from "sonner";
 
 import { useCart } from "@/features/cart";
-import { useCreateOrder, useShippingFeePreview } from "@/features/orders";
+import { useAvailableVouchers, useCreateOrder, useShippingFeePreview } from "@/features/orders";
 import { getAddresses } from "@/features/users/api/address.api";
 import type { Address } from "@/features/users/types/address";
 import type { PaymentMethod } from "@/features/orders/types/orders";
@@ -44,6 +44,9 @@ export default function CheckoutPage() {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("PayOS");
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  // Ô nhập mã và mã ĐÃ gửi đi — preview chỉ gọi lại khi bấm "Áp dụng", không gọi theo từng phím gõ.
+  const [voucherInput, setVoucherInput] = useState("");
+  const [voucherCode, setVoucherCode] = useState("");
 
   const subtotal = checkoutItems.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
   const totalQuantity = checkoutItems.reduce((sum, item) => sum + item.quantity, 0);
@@ -57,12 +60,22 @@ export default function CheckoutPage() {
     [checkoutItems],
   );
 
-  const { shippingFee: rawShippingFee, isLoading: feeLoading } = useShippingFeePreview(
-    selectedAddressId || undefined,
-    previewItems,
-  );
-
-  const shippingFee = subtotal >= 500000 ? 0 : rawShippingFee;
+  // Mọi con số tiền lấy từ BE (cùng hàm tính lúc đặt, gồm cả voucher) — FE không tự miễn phí ship hay cộng trừ.
+  const {
+    preview,
+    shippingFee,
+    shippingDiscount,
+    totalAmount,
+    appliedVoucher,
+    voucherMessage,
+    isLoading: feeLoading,
+    isError: feeError,
+  } = useShippingFeePreview(selectedAddressId || undefined, previewItems, voucherCode);
+  const { vouchers } = useAvailableVouchers();
+  const autoVoucher = vouchers.find((v) => v.isAutoApply);
+  // Mã khách nhập mà không dùng được thì BE từ chối đặt hàng — chặn trước ở đây cho rõ ràng.
+  const voucherRejected = Boolean(voucherCode && voucherMessage);
+  const canPlaceOrder = !feeLoading && !feeError && preview != null && !voucherRejected;
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -112,6 +125,11 @@ export default function CheckoutPage() {
       return;
     }
 
+    if (!canPlaceOrder) {
+      toast.error(t("checkout_page.toast.preview_not_ready"));
+      return;
+    }
+
     isPlacingOrderRef.current = true; // bật cờ trước khi gọi API
     setSubmitting(true);
     try {
@@ -119,6 +137,7 @@ export default function CheckoutPage() {
         shippingAddressId: selectedAddressId,
         note: note.trim(),
         paymentMethod,
+        voucherCode: voucherCode || undefined,
         items: checkoutItems.map((item) => ({
           productItemId: item.productItemId,
           quantity: item.quantity,
@@ -160,7 +179,10 @@ export default function CheckoutPage() {
     }
   };
 
-  if (cartStatus === "loading") {
+  // Chỉ chắn cả trang ở lần nạp giỏ ĐẦU TIÊN. Navbar nạp lại giỏ mỗi khi object `user` đổi — nếu lần nào
+  // cũng thay form bằng spinner thì form bị unmount, mất sạch lựa chọn của khách (phương thức thanh toán
+  // bật về PayOS, mã giảm giá, ghi chú).
+  if (cartStatus === "loading" && items.length === 0) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -326,6 +348,52 @@ export default function CheckoutPage() {
               ))}
             </ul>
 
+            <div className="mb-4 space-y-1.5">
+              <label htmlFor="voucherCode" className="text-sm font-medium text-gray-700">
+                {t("checkout_page.voucher.title")}
+              </label>
+              <div className="flex gap-2">
+                <input
+                  id="voucherCode"
+                  value={voucherInput}
+                  onChange={(e) => setVoucherInput(e.target.value.toUpperCase())}
+                  placeholder={t("checkout_page.voucher.placeholder")}
+                  className="min-w-0 flex-1 rounded-lg border border-gray-200 px-3 py-2 text-sm uppercase outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                />
+                {voucherCode ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setVoucherCode("");
+                      setVoucherInput("");
+                    }}
+                    className="rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 cursor-pointer"
+                  >
+                    {t("checkout_page.voucher.remove")}
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    disabled={!voucherInput.trim()}
+                    onClick={() => setVoucherCode(voucherInput.trim())}
+                    className="rounded-lg bg-primary/10 px-3 py-2 text-sm font-semibold text-primary hover:bg-primary/20 disabled:opacity-50 cursor-pointer"
+                  >
+                    {t("checkout_page.voucher.apply")}
+                  </button>
+                )}
+              </div>
+              {voucherRejected && (
+                <p className="text-xs text-red-600" role="alert">
+                  {voucherMessage}
+                </p>
+              )}
+              {!feeLoading && appliedVoucher && (
+                <p className="text-xs text-green-700">
+                  {t("checkout_page.voucher.applied", { name: appliedVoucher.name })}
+                </p>
+              )}
+            </div>
+
             <div className="space-y-2 border-t border-dashed border-gray-200 pt-4 text-sm">
               <div className="flex justify-between text-gray-600">
                 <span>{t("checkout_page.summary.subtotal", { count: totalQuantity })}</span>
@@ -334,26 +402,39 @@ export default function CheckoutPage() {
               <div className="flex justify-between text-gray-600">
                 <span>{t("checkout_page.summary.shipping_fee")}</span>
                 <span className="font-semibold text-gray-900">
-                  {feeLoading ? (
-                    t("checkout_page.summary.calculating")
-                  ) : shippingFee === 0 && subtotal >= 500000 ? (
-                    <span className="text-green-600">{t("checkout_page.summary.free")}</span>
-                  ) : (
-                    formatVnd(shippingFee)
-                  )}
+                  {feeLoading || !preview
+                    ? t("checkout_page.summary.calculating")
+                    : formatVnd(shippingFee)}
                 </span>
               </div>
+              {!feeLoading && shippingDiscount > 0 && (
+                <div
+                  className="flex justify-between text-green-700"
+                  data-testid="shipping-discount-row"
+                >
+                  <span>
+                    {t("checkout_page.summary.shipping_discount")}
+                    {appliedVoucher ? ` (${appliedVoucher.code})` : ""}
+                  </span>
+                  <span className="font-semibold">−{formatVnd(shippingDiscount)}</span>
+                </div>
+              )}
               <div className="flex justify-between border-t border-gray-100 pt-3 text-base font-bold text-gray-900">
                 <span>{t("checkout_page.summary.total")}</span>
                 <span className="text-primary">
-                  {feeLoading ? "..." : formatVnd(subtotal + shippingFee)}
+                  {feeLoading || totalAmount == null ? "..." : formatVnd(totalAmount)}
                 </span>
               </div>
+              {feeError && (
+                <p className="text-xs text-red-600">{t("checkout_page.toast.preview_not_ready")}</p>
+              )}
             </div>
 
             <button
               onClick={handlePlaceOrder}
-              disabled={submitting || !selectedAddressId || checkoutItems.length === 0}
+              disabled={
+                submitting || !selectedAddressId || checkoutItems.length === 0 || !canPlaceOrder
+              }
               className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3.5 text-base font-bold text-white shadow-md transition-all hover:bg-primary-dark active:scale-95 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:shadow-none cursor-pointer"
             >
               {submitting ? (
@@ -374,14 +455,14 @@ export default function CheckoutPage() {
             </p>
           </aside>
 
-          <div className="flex items-center gap-3 rounded-xl bg-white p-4 text-sm text-gray-900 shadow-sm ring-1 ring-gray-100">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary shrink-0 shadow-sm">
-              <Truck className="h-5 w-5" />
+          {autoVoucher && (
+            <div className="flex items-center gap-3 rounded-xl bg-white p-4 text-sm text-gray-900 shadow-sm ring-1 ring-gray-100">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary shrink-0 shadow-sm">
+                <Truck className="h-5 w-5" />
+              </div>
+              <span className="font-semibold leading-snug">{autoVoucher.name}</span>
             </div>
-            <span className="font-semibold leading-snug">
-              {t("checkout_page.summary.free_ship")}
-            </span>
-          </div>
+          )}
         </div>
       </div>
       <FeatureBar />

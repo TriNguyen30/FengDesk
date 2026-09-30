@@ -19,4 +19,10 @@ export default defineConfig([
       globals: globals.browser,
     },
   },
+  {
+    // E2E chạy trên Node; fixture của Playwright bắt buộc destructure `{}` khi không dùng fixture nào.
+    files: ["e2e/**/*.ts", "playwright.config.ts"],
+    languageOptions: { globals: globals.node },
+    rules: { "no-empty-pattern": "off" },
+  },
 ]);

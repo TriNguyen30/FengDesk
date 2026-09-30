@@ -23,7 +23,7 @@ interface ScoreWaterfallProps {
   breakdown: ScoreBreakdown;
   /** "Sự thật" khớp (BE `matchFacts`) — hiện ngay dưới "Điểm cuối", đọc như phần kết luận của waterfall. */
   matchFacts?: string[];
-  /** Lưu ý (BE `cautionFacts`) — cùng chỗ; đỏ khi chạm bản mệnh, vàng cho phần còn lại (`cautionTone`). */
+  /** Lưu ý (BE `cautionFacts`) — cùng chỗ; tông theo `cautionTone`, có tính đến kết luận cuối. */
   cautionFacts?: string[];
   /**
    * Cột trái đặt CHUNG trong hộp với waterfall (radar + trục nghề). Hai hộp rời — radar một bên, điểm một
@@ -130,7 +130,10 @@ export default function ScoreWaterfall({
                           <span className="truncate">{c.labelVi}</span>
                         </span>
                         <span className="shrink-0 text-[0.92em] tabular-nums text-gray-600">
-                          {Math.abs(c.value).toFixed(3)}
+                          {/* CÓ DẤU. Bản trước in `Math.abs(value)`, nên dòng trừ hiện ra
+                              "0.087 × 0.20 = −0.017" — dương nhân dương ra âm, đọc như engine tính sai.
+                              Trọng số luôn dương nên dấu phải nằm ở vế trái. */}
+                          {signed(c.value)}
                           <span className="text-gray-400"> × {c.weight.toFixed(2)} = </span>
                           <span className={`font-semibold ${toneOf(c.contribution).value}`}>
                             {signed(c.contribution)}
@@ -150,11 +153,14 @@ export default function ScoreWaterfall({
                     calc={<PenaltyCalc penalty={p} breakdown={breakdown} product={product} />}
                     headline={
                       <>
-                        <span className="flex min-w-0 items-center gap-1.5 font-medium text-negative">
-                          <Minus size={12} className="shrink-0" />
+                        {/* Cùng quy ước với `toneOf`: chỉ dấu − mang màu. Penalty luôn âm nên không cần
+                            gọi `toneOf`, nhưng class phải trùng — lệch là dòng phạt trông nặng hơn dòng
+                            thành phần âm dù cùng là một khoản trừ. */}
+                        <span className="flex min-w-0 items-center gap-1.5 font-medium text-gray-800">
+                          <Minus size={13} className="shrink-0 text-negative" />
                           <span className="truncate">{p.labelVi}</span>
                         </span>
-                        <span className="shrink-0 text-[0.92em] font-semibold tabular-nums text-negative">
+                        <span className="shrink-0 text-[0.92em] font-semibold tabular-nums text-gray-900">
                           −{p.value.toFixed(3)}
                         </span>
                       </>
@@ -186,7 +192,7 @@ export default function ScoreWaterfall({
                   {cautionFacts.map((c, i) => (
                     <li
                       key={`c${i}`}
-                      className={`flex items-start gap-1.5 rounded-lg px-2 py-1.5 text-[13px] leading-snug ${CAUTION_CLASS[cautionTone(c)]}`}
+                      className={`flex items-start gap-1.5 rounded-lg px-2 py-1.5 text-[13px] leading-snug ${CAUTION_CLASS[cautionTone(c, breakdown.displayPercent)]}`}
                     >
                       <TriangleAlert size={12} className="mt-0.5 shrink-0" />
                       <span>{c}</span>
@@ -441,6 +447,8 @@ function describeComponent(code: string): { direction: string; symbol: string; w
       return { direction: "Quan hệ với bản mệnh", symbol: "r", weight: "Wp" };
     case "OCCUPATION_SCORE":
       return { direction: "Nghề cần", symbol: "ô", weight: "Wo" };
+    case "GAP_SCORE":
+      return { direction: "Phòng cần", symbol: "ĝ", weight: "1 − Wp − Wo" };
     default:
       return { direction: "Phòng thiếu", symbol: "ĝ", weight: "1 − Wp − Wo" };
   }
@@ -473,13 +481,23 @@ function ComponentCalc({
   const meta = describeComponent(component.code);
   const direction = toMap(directionOf(component.code, breakdown));
 
-  // v3.6 — nhánh Carry không còn là tích trong: "phủ" = min(cần, cấp) theo hành; "kỵ" = −p theo hành kỵ.
-  const mode: "cover" | "avoid" | "dot" =
+  // Hai nhánh chấm theo "mức đáp ứng" chứ không phải tích trong nữa:
+  //   v3.6 Carry: "phủ" = min(cần, cấp) theo hành; "kỵ" = −p theo hành kỵ.
+  //   v3.7 phòng + nghề: min(d⁺, p) cho hành đang THIẾU, trừ min(d⁻, p) cho hành đã THỪA / nên tránh —
+  //   một dòng hai chiều, nên không tách mode riêng cho phần trừ như bên Carry. Hai trục dùng chung
+  //   một mode vì `ô` vốn được dựng đúng theo `ĝ` (chuẩn hoá nửa-L1) — cùng hình dạng, cùng phép đo.
+  //   Riêng PERSONAL_SCORE vẫn là tích trong thật: `r` là điểm quan hệ từng hành, không phải một
+  //   "ngân sách nhu cầu" Σ=1, nên lấy trung bình mới đúng.
+  // Phải bám theo BE: hàm này tự cộng lại rồi so với `component.value`, lệch thì hiện cảnh báo vàng
+  // ngay trên popover (xem `mismatch` ở cuối hàm).
+  const mode: "cover" | "avoid" | "gap" | "dot" =
     component.code === "PERSONAL_NEED_SCORE"
       ? "cover"
       : component.code === "PERSONAL_AVOID_SCORE"
         ? "avoid"
-        : "dot";
+        : component.code === "GAP_SCORE" || component.code === "OCCUPATION_SCORE"
+          ? "gap"
+          : "dot";
   const avoid = new Set(breakdown.personalAvoidElements ?? []);
   const rows = ELEMENT_ORDER.map((e) => ({ element: e, d: direction[e] ?? 0, p: product[e] ?? 0 }))
     .filter((r) =>
@@ -487,11 +505,21 @@ function ComponentCalc({
     )
     .map((r) => ({
       ...r,
-      term: mode === "cover" ? Math.min(r.d, r.p) : mode === "avoid" ? -r.p : r.d * r.p,
+      term:
+        mode === "cover"
+          ? Math.min(r.d, r.p)
+          : mode === "avoid"
+            ? -r.p
+            : mode === "gap"
+              ? // Dấu của ĝ quyết định đây là "đổ vào cốc đang vơi" hay "đổ vào cốc đã đầy".
+                Math.sign(r.d) * Math.min(Math.abs(r.d), r.p)
+              : r.d * r.p,
     }))
     // Dòng "× 0" không nói gì (vật không mang hành đó) — ẩn để tiết kiệm chỗ; riêng "đáp ứng" giữ hành bạn
     // đang cần mà vật chưa có, vì đó chính là lý do chưa đạt 100 %.
-    .filter((r) => Math.abs(r.term) >= 0.0005 || (mode === "cover" && r.d >= 0.005))
+    .filter(
+      (r) => Math.abs(r.term) >= 0.0005 || ((mode === "cover" || mode === "gap") && r.d >= 0.005),
+    )
     .sort((a, b) => Math.abs(b.term) - Math.abs(a.term));
   const sum = rows.reduce((s, r) => s + r.term, 0);
   const clamped = Math.max(-1, Math.min(1, sum));
@@ -501,13 +529,17 @@ function ComponentCalc({
       ? `${component.labelVi} - phần nhu cầu được đáp ứng`
       : mode === "avoid"
         ? `${component.labelVi} - phần vật mang hành nên tránh`
-        : `${component.labelVi} = ${meta.symbol}·p`;
+        : mode === "gap"
+          ? `${component.labelVi} - phần nhu cầu được đáp ứng`
+          : `${component.labelVi} = ${meta.symbol}·p`;
   const header =
     mode === "cover"
       ? "đáp ứng = phần nhỏ hơn giữa bạn cần và vật mang"
       : mode === "avoid"
         ? "vật mang bao nhiêu hành nên tránh"
-        : `${meta.direction} (${meta.symbol}) × vật mang (p)`;
+        : mode === "gap"
+          ? `phần nhỏ hơn giữa ${meta.direction.toLowerCase()} và vật mang; hành dư thì trừ`
+          : `${meta.direction} (${meta.symbol}) × vật mang (p)`;
 
   return (
     <div>
@@ -520,10 +552,18 @@ function ComponentCalc({
           <CalcRow
             key={r.element}
             element={r.element}
-            left={mode === "avoid" ? "" : fmt(r.d, 2)}
-            right={mode === "cover" ? `min(${fmt(r.d, 2)}, ${fmt(r.p, 3)})` : fmt(r.p, 3)}
+            // Hai mode "min" tự in cả hai số trong ngoặc nên cột trái để trống — còn để `fmt(r.d)` thì
+            // đó là một con số lặp lại đứng trơ trước `min(...)`, không phải một vế của phép tính.
+            left={mode === "avoid" || mode === "cover" || mode === "gap" ? "" : fmt(r.d, 2)}
+            right={
+              mode === "cover"
+                ? `min(${fmt(r.d, 2)}, ${fmt(r.p, 3)})`
+                : mode === "gap"
+                  ? `${r.d < 0 ? "−" : ""}min(${fmt(Math.abs(r.d), 2)}, ${fmt(r.p, 3)})`
+                  : fmt(r.p, 3)
+            }
             result={r.term}
-            op={mode === "cover" ? "" : "×"}
+            op={mode === "cover" || mode === "gap" ? "" : "×"}
           />
         ))}
       </div>
@@ -686,6 +726,11 @@ function signed(value: number): string {
  * Màu + biểu tượng theo DẤU của số hạng. Ba mức, không phải hai: một dòng bằng 0 (vd "Không mang hành bạn
  * nên tránh") không cộng cũng không trừ — vẽ dấu + xanh cho nó là khen nhầm. Ngưỡng 0.0005 khớp chỗ hiển
  * thị 3 chữ số.
+ *
+ * **Chỉ DẤU mang màu, chữ và số luôn trung tính** — đối xứng giữa hai phe. Bản trước tô đỏ cả nhãn lẫn
+ * con số của dòng trừ, trong khi dòng cộng chỉ có dấu + xanh: một khoản trừ 0.096 trông gắt hơn hẳn khoản
+ * cộng 0.560 đứng ngay trên nó. Độ lớn đã nằm ở chính con số; màu chỉ cần nói hướng. Khi hover, vệt
+ * sáng đỏ/xanh dưới dòng (xem `GLOW`) vẫn nhắc lại dấu.
  */
 function toneOf(contribution: number): { icon: ReactNode; text: string; value: string } {
   if (contribution > 0.0005)
@@ -696,9 +741,9 @@ function toneOf(contribution: number): { icon: ReactNode; text: string; value: s
     };
   if (contribution < -0.0005)
     return {
-      icon: <Minus size={12} className="shrink-0" />,
-      text: "text-negative",
-      value: "text-negative",
+      icon: <Minus size={13} className="shrink-0 text-negative" />,
+      text: "text-gray-800",
+      value: "text-gray-900",
     };
   return {
     icon: <Dot size={12} className="shrink-0 text-gray-400" />,

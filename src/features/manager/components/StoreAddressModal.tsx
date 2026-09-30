@@ -10,6 +10,10 @@ interface AddressFormState {
   streetAddress: string;
   latitude: number;
   longitude: number;
+  /** Tên người gửi cho nhà vận chuyển. Bỏ trống → BE dùng tên cửa hàng. */
+  senderName: string;
+  /** SĐT người gửi. Bắt buộc khi hotline cửa hàng không phải di động (1900/số cố định). */
+  senderPhone: string;
 }
 
 interface StoreAddressModalProps {
@@ -95,6 +99,41 @@ export function StoreAddressModal({
           mapLabel="Tọa độ trên bản đồ"
           mapNote="Chạm/Click lên bản đồ để di chuyển ghim định vị đến vị trí chính xác của cửa hàng."
         />
+
+        {/* Người gửi cho nhà vận chuyển — GHN không nhận hotline 1900/số cố định, thiếu SĐT di động
+            ở đây thì cửa hàng không được cấp mã shop và không tạo được vận đơn. */}
+        <div className="space-y-3 rounded-lg border border-gray-100 bg-gray-50/60 p-3">
+          <p className="text-sm font-semibold text-gray-700">Người gửi cho nhà vận chuyển</p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-gray-600">Tên người gửi</label>
+              <input
+                type="text"
+                value={addressForm.senderName}
+                onChange={(e) => onFormChange({ ...addressForm, senderName: e.target.value })}
+                placeholder="Bỏ trống để dùng tên cửa hàng"
+                className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 placeholder:text-gray-400 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/30"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-gray-600">
+                SĐT người gửi <span className="text-gray-400">(di động 10 số)</span>
+              </label>
+              <input
+                type="tel"
+                inputMode="numeric"
+                value={addressForm.senderPhone}
+                onChange={(e) => onFormChange({ ...addressForm, senderPhone: e.target.value })}
+                placeholder="Ví dụ: 0912345678"
+                className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 placeholder:text-gray-400 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/30"
+              />
+            </div>
+          </div>
+          <p className="text-xs text-gray-500">
+            Nhà vận chuyển chỉ nhận số di động. Nếu hotline cửa hàng là đầu số 1900 hoặc số cố định
+            thì bắt buộc nhập SĐT ở đây, nếu không cửa hàng sẽ không tạo được vận đơn.
+          </p>
+        </div>
 
         <div className="flex gap-3 pt-3 border-t border-gray-100">
           <button

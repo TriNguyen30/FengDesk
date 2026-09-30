@@ -105,7 +105,7 @@ const SOURCE_DOT: Record<CurrentContribution["source"], string> = {
 export default function ElementRadarChart({
   rows,
   showPreview = false,
-  previewLabel = "Xem trước (hàng đang giao)",
+  previewLabel = "Xem trước",
   contributions = [],
   tagVotesScale = 1,
   personalTarget,

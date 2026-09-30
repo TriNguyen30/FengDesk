@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useQueryClient } from "@tanstack/react-query";
 import {
   ChevronRight,
   Loader2,
@@ -12,18 +11,20 @@ import {
   Search,
 } from "lucide-react";
 import { motion } from "framer-motion";
-import { useOrdersList } from "../hooks/useOrders";
+import { apiErrorMessage, useConfirmReceived, useOrdersList } from "../hooks/useOrders";
 import { formatOrderDate, formatVnd, getOrderStatusMeta } from "../utils/orderUtils";
 import { useAppDispatch } from "@/app/store";
 import { openChatbox } from "@/features/chatbox/store/chatboxSlice";
 import Modal from "@/components/ui/Modal";
-import { createReviewRequest } from "@/features/review/api/review.api";
+import {
+  createReviewRequest,
+  getReviewableOrderItemsRequest,
+} from "@/features/review/api/review.api";
+import type { ReviewableOrderItem } from "@/features/review/types/review";
 import { toast } from "sonner";
-import { ordersApi } from "../api/orders.api";
 import PaymentQrModal from "@/features/payment/components/PaymentQrModal";
 import OrderItemImage from "../components/OrderItemImage";
 import { useTranslation } from "react-i18next";
-import { devMarkOrderShippingDelivered } from "@/features/shop/api/delivery.api";
 
 export default function OrdersPage() {
   const { t } = useTranslation();
@@ -45,16 +46,37 @@ export default function OrdersPage() {
   const [reviewModal, setReviewModal] = useState<{
     open: boolean;
     orderId: string | null;
-    items: any[];
-  }>({ open: false, orderId: null, items: [] });
+    items: ReviewableOrderItem[];
+    loading: boolean;
+  }>({ open: false, orderId: null, items: [], loading: false });
   const [rating, setRating] = useState(5);
   const [reviewContent, setReviewContent] = useState("");
-  const [selectedProductId, setSelectedProductId] = useState<string>("");
+  const [selectedOrderItemId, setSelectedOrderItemId] = useState<string>("");
   const [submittingReview, setSubmittingReview] = useState(false);
   // Đơn Pending/PayOS chưa trả tiền → mở modal QR + link thanh toán ngay từ danh sách.
   const [payingOrderId, setPayingOrderId] = useState<string | null>(null);
-  const queryClient = useQueryClient();
   const [confirmingOrder, setConfirmingOrder] = useState<string | null>(null);
+  const confirmReceived = useConfirmReceived();
+
+  // BE trả trạng thái đánh giá TỪNG dòng đơn (đã giao / đã hoàn / đã đánh giá...) — đánh giá gắn với dòng đơn.
+  const openReviewModal = async (orderId: string) => {
+    setReviewModal({ open: true, orderId, items: [], loading: true });
+    setRating(5);
+    setReviewContent("");
+    setSelectedOrderItemId("");
+    try {
+      const res = await getReviewableOrderItemsRequest(orderId);
+      const items = res.isSuccess ? res.data : [];
+      setReviewModal({ open: true, orderId, items, loading: false });
+      const firstReviewable = items.find((i) => i.status === "Reviewable");
+      if (firstReviewable) setSelectedOrderItemId(firstReviewable.orderItemId);
+    } catch (err) {
+      console.error(err);
+      setReviewModal({ open: true, orderId, items: [], loading: false });
+    }
+  };
+
+  const reviewableItems = reviewModal.items.filter((i) => i.status === "Reviewable");
 
   const { orders, listStatus, pagination } = useOrdersList({
     page: 1,
@@ -315,45 +337,28 @@ export default function OrdersPage() {
                           e.preventDefault();
                           setConfirmingOrder(order.id);
                           try {
-                            const res = await devMarkOrderShippingDelivered(order.id) as any;
-                            if (res.isSuccess || res.status === 200 || !res.error) {
-                              toast.success("Xác nhận đã nhận hàng thành công");
-                              queryClient.invalidateQueries({ queryKey: ["orders"] });
-                            } else {
-                              toast.error(res.message || "Không thể xác nhận");
-                            }
-                          } catch (err: any) {
-                            toast.error("Có lỗi xảy ra khi xác nhận");
+                            const res = await confirmReceived.mutateAsync(order.id);
+                            if (res.isSuccess) toast.success("Xác nhận đã nhận hàng thành công");
+                            else toast.error(res.message || "Không thể xác nhận");
+                          } catch (err) {
+                            toast.error(apiErrorMessage(err, "Có lỗi xảy ra khi xác nhận"));
                           } finally {
                             setConfirmingOrder(null);
                           }
                         }}
                         className="flex-1 sm:flex-none rounded-lg bg-emerald-600 px-6 py-2 text-sm font-medium text-white transition-colors hover:bg-emerald-700 cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
                       >
-                        {confirmingOrder === order.id && <Loader2 className="h-4 w-4 animate-spin" />}
+                        {confirmingOrder === order.id && (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        )}
                         Đã nhận hàng
                       </button>
                     )}
                     {order.status === "Completed" && (
                       <button
-                        onClick={async (e) => {
+                        onClick={(e) => {
                           e.preventDefault();
-                          let items = (order as any).items || [];
-                          if (items.length === 0) {
-                            try {
-                              const res = await ordersApi.getOrderById(order.id);
-                              if (res.data?.data?.items) {
-                                items = res.data.data.items;
-                              }
-                            } catch (err) {
-                              console.error(err);
-                            }
-                          }
-                          setReviewModal({ open: true, orderId: order.id, items });
-                          // API /Review nhận productId (Product), KHÔNG phải productItemId (biến thể).
-                          if (items.length > 0) setSelectedProductId(items[0].productId);
-                          setRating(5);
-                          setReviewContent("");
+                          openReviewModal(order.id);
                         }}
                         className="flex-1 sm:flex-none rounded-lg bg-primary px-6 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-dark cursor-pointer"
                       >
@@ -403,26 +408,78 @@ export default function OrdersPage() {
         onClose={() => setReviewModal({ ...reviewModal, open: false })}
       >
         <div className="flex flex-col gap-4">
-          {reviewModal.items.length > 0 ? (
+          {reviewModal.loading ? (
+            <div className="flex justify-center py-8">
+              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+            </div>
+          ) : reviewModal.items.length === 0 ? (
+            <div className="py-8 text-center text-gray-500">
+              {t("orders_page.review_modal.not_found")}
+            </div>
+          ) : (
             <>
-              {reviewModal.items.length > 1 && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    {t("orders_page.review_modal.select_product")}
-                  </label>
-                  <select
-                    className="w-full rounded border border-gray-300 p-2 text-sm"
-                    value={selectedProductId}
-                    onChange={(e) => setSelectedProductId(e.target.value)}
-                  >
-                    {reviewModal.items.map((item: any) => (
-                      <option key={item.id} value={item.productId}>
-                        {item.productName}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
+              {/* Mọi dòng đơn kèm trạng thái — dòng đã hoàn hàng ghi chú "Đã hoàn hàng", không chọn được. */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  {t("orders_page.review_modal.select_product")}
+                </label>
+                <ul className="flex flex-col gap-2">
+                  {reviewModal.items.map((item) => {
+                    const selectable = item.status === "Reviewable";
+                    const selected = item.orderItemId === selectedOrderItemId;
+                    return (
+                      <li key={item.orderItemId}>
+                        <button
+                          type="button"
+                          disabled={!selectable}
+                          onClick={() => setSelectedOrderItemId(item.orderItemId)}
+                          className={`flex w-full items-center gap-3 rounded-lg border p-2 text-left text-sm transition-colors ${
+                            selected
+                              ? "border-primary bg-primary/5"
+                              : "border-gray-200 hover:bg-gray-50"
+                          } ${selectable ? "cursor-pointer" : "cursor-not-allowed opacity-70"}`}
+                        >
+                          {item.imageUrl && (
+                            <img
+                              src={item.imageUrl}
+                              alt={item.productName}
+                              className="h-10 w-10 shrink-0 rounded object-cover"
+                            />
+                          )}
+                          <span className="flex-1 min-w-0">
+                            <span className="block truncate font-medium text-gray-800">
+                              {item.productName}
+                            </span>
+                            {item.variantName && (
+                              <span className="block truncate text-xs text-gray-500">
+                                {item.variantName}
+                              </span>
+                            )}
+                          </span>
+                          <span
+                            className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                              item.status === "Returned"
+                                ? "bg-red-50 text-red-600"
+                                : item.status === "Reviewable"
+                                  ? "bg-amber-50 text-amber-700"
+                                  : "bg-gray-100 text-gray-500"
+                            }`}
+                          >
+                            {t(`orders_page.review_modal.status.${item.status}`)}
+                          </span>
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+
+              {reviewableItems.length === 0 ? (
+                <p className="text-center text-sm text-gray-500">
+                  {t("orders_page.review_modal.nothing_to_review")}
+                </p>
+              ) : (
+                <>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -464,7 +521,7 @@ export default function OrdersPage() {
                 <button
                   type="button"
                   onClick={async () => {
-                    if (!selectedProductId) {
+                    if (!selectedOrderItemId) {
                       toast.error(t("orders_page.review_modal.toast.select_product"));
                       return;
                     }
@@ -474,11 +531,15 @@ export default function OrdersPage() {
                     }
                     try {
                       setSubmittingReview(true);
-                      await createReviewRequest({
-                        productId: selectedProductId,
+                      const res = await createReviewRequest({
+                        orderItemId: selectedOrderItemId,
                         content: reviewContent,
                         rating,
                       });
+                      if (!res.isSuccess) {
+                        toast.error(res.message || t("orders_page.review_modal.toast.error"));
+                        return;
+                      }
                       toast.success(t("orders_page.review_modal.toast.success"));
                       setReviewModal({ ...reviewModal, open: false });
                     } catch (error: any) {
@@ -497,11 +558,9 @@ export default function OrdersPage() {
                   )}
                 </button>
               </div>
+                </>
+              )}
             </>
-          ) : (
-            <div className="py-8 text-center text-gray-500">
-              {t("orders_page.review_modal.not_found")}
-            </div>
           )}
         </div>
       </Modal>

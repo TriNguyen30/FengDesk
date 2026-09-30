@@ -101,14 +101,26 @@ export function useCancelOrder() {
   });
 }
 
-export function useShippingFeePreview(shippingAddressId: string | undefined, items: OrdersItem[]) {
+/**
+ * Xem trước tiền của đơn — CÙNG hàm BE dùng lúc đặt (gồm cả voucher), nên `totalAmount` ở đây là số khách sẽ
+ * bị tính. FE không tự cộng trừ phí ship hay khoản giảm.
+ *
+ * `preview` là undefined khi chưa có dữ liệu hoặc gọi lỗi — nơi dùng phải chặn nút đặt hàng lúc đó, đừng coi
+ * như phí 0đ (trước đây hook trả 0 khi lỗi ⇒ khách thấy thiếu phí ship rồi bị tính đủ).
+ */
+export function useShippingFeePreview(
+  shippingAddressId: string | undefined,
+  items: OrdersItem[],
+  voucherCode?: string,
+) {
   const query = useQuery({
-    queryKey: ["shipping-fee-preview", shippingAddressId, items],
+    queryKey: ["shipping-fee-preview", shippingAddressId, items, voucherCode ?? ""],
     enabled: Boolean(shippingAddressId) && items.length > 0,
     queryFn: async () => {
       const res = await ordersApi.previewShippingFee({
         shippingAddressId: shippingAddressId!,
         items,
+        voucherCode: voucherCode || undefined,
       });
       return res.data;
     },
@@ -117,12 +129,47 @@ export function useShippingFeePreview(shippingAddressId: string | undefined, ite
   const preview = query.data?.isSuccess ? query.data.data : undefined;
 
   return {
+    preview,
     shippingFee: preview?.totalShippingFee ?? 0,
+    shippingDiscount: preview?.shippingDiscount ?? 0,
     totalAmount: preview?.totalAmount,
+    appliedVoucher: preview?.appliedVoucher ?? null,
+    voucherMessage: preview?.voucherMessage ?? null,
     stores: preview?.stores ?? [],
     isLoading: query.isLoading || query.isFetching,
-    isError: query.isError,
+    isError: query.isError || (query.data != null && !query.data.isSuccess),
   };
+}
+
+/** Khách xác nhận đã nhận hàng — thay cho việc gọi endpoint dev trước đây (đã đóng ở production). */
+export function useConfirmReceived() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (orderId: string) => (await ordersApi.confirmReceived(orderId)).data,
+    onSuccess: (_, orderId) => {
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
+      queryClient.invalidateQueries({ queryKey: ["order", orderId] });
+    },
+  });
+}
+
+/** Lỗi axios của BE (409 chưa có kiện đang giao…) mang message tiếng Việt trong phong bì — lấy ra để hiện. */
+export function apiErrorMessage(error: unknown, fallback: string): string {
+  const message = (error as { response?: { data?: { message?: string } } })?.response?.data?.message;
+  return message || fallback;
+}
+
+/** Voucher đang áp dụng — hiện ưu đãi thay cho câu chữ viết cứng. Ít đổi nên cache lâu. */
+export function useAvailableVouchers() {
+  const query = useQuery({
+    queryKey: ["available-vouchers"],
+    queryFn: async () => {
+      const res = await ordersApi.getAvailableVouchers();
+      return res.data.isSuccess ? res.data.data : [];
+    },
+    staleTime: 10 * 60 * 1000,
+  });
+  return { vouchers: query.data ?? [] };
 }
 
 export function useUpdateOrderDeliveryStatus() {

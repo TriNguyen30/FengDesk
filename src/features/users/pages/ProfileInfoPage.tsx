@@ -324,10 +324,6 @@ export default function ProfileInfoPage() {
                 </option>
               ))}
             </select>
-            <p className="mt-1.5 text-xs text-gray-500">
-              Tuỳ chọn. Nghề nghiệp chỉ đổi mức <strong>ưa thích</strong> giữa các hành, không đổi bản
-              mệnh của bạn: hành đang khắc mệnh thì vẫn khắc.
-            </p>
           </div>
 
           <div className="grid grid-cols-2 gap-4">

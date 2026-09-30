@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
+import { usePlatformFeePolicy } from "@/features/shop/hooks/usePlatformFeePolicy";
 import {
   BarChart3,
   Loader2,
@@ -8,6 +9,7 @@ import {
   Truck,
   Users,
   Wallet,
+  Banknote,
   Store as StoreIcon,
   ArrowRight,
 } from "lucide-react";
@@ -239,6 +241,7 @@ export default function DashboardPage() {
   const [selectedStoreId, setSelectedStoreId] = useState<string>("");
 
   const [stats, setStats] = useState<StoreStatistics | null>(null);
+  const holdDays = usePlatformFeePolicy().policy?.payoutHoldDays;
   const [loadingStats, setLoadingStats] = useState(true);
   const [range, setRange] = useState<StatsRange>("month");
 
@@ -415,9 +418,20 @@ export default function DashboardPage() {
         value: String(stats.activeDeliveries ?? 0),
         sub: `Chờ giao: ${formatVnd(stats.activeDeliveriesValue ?? 0)}`,
       },
-      // Thẻ "Có thể rút" tạm ẩn (24/09/2026): con số đối soát đang SAI về nghiệp vụ — đơn đã cộng
-      // vào số dư vẫn tiếp tục nằm trong "có thể rút", và công nợ hoàn hàng chưa bị trừ. Chỉ hiện
-      // doanh thu cho tới khi luồng chi tiền được làm đúng (docs/adr/vendor-payout.md).
+      // "Có thể rút" đọc thẳng sổ cái (docs/adr/platform-fee-ledger.md): chỉ gồm tiền đã QUA khoảng giữ sau khi
+      // giao, đã trừ phí sàn và công nợ hoàn hàng. Phần còn trong khoảng giữ hiện ở dòng phụ. BE cũ không có sổ ⇒ ẩn.
+      ...(stats.ledgerAvailable != null
+        ? [
+            {
+              icon: Banknote,
+              label: "Có thể rút",
+              value: formatVnd(stats.ledgerAvailable),
+              sub: `Đang giữ: ${formatVnd(stats.ledgerPending ?? 0)}${
+                holdDays != null ? ` · tất toán sau ${holdDays} ngày kể từ khi giao` : ""
+              }`,
+            },
+          ]
+        : []),
       {
         icon: Users,
         label: "Nhân viên",
@@ -425,7 +439,7 @@ export default function DashboardPage() {
         sub: "Đã phân công / nhận việc",
       },
     ];
-  }, [stats, deliveredCount]);
+  }, [stats, deliveredCount, holdDays]);
 
   if (loadingShops) {
     return (
@@ -499,7 +513,7 @@ export default function DashboardPage() {
       ) : (
         <>
           {/* Top Overview Cards */}
-          <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
             {cards.map((c) => {
               const Icon = c.icon;
               return (

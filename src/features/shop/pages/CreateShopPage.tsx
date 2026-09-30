@@ -1,4 +1,4 @@
-﻿import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "react-router-dom";
@@ -8,7 +8,10 @@ import { createShopRequest, createShopAddressRequest } from "@/features/shop/api
 import { createShopSchema, type CreateShopFormValues } from "@/features/shop/schemas/shop-schema";
 import { refreshTokenRequest } from "@/features/auth/api/auth.api";
 import { useAuthSession } from "@/features/auth/hooks/useAuthSession";
-import { getRefreshToken } from "@/utils";
+import { clearSession, getRefreshToken } from "@/utils";
+import { useAppDispatch } from "@/app/store";
+import { logout } from "@/features/auth/store/authSlice";
+import Modal from "@/components/ui/Modal";
 import { joinOpeningHours } from "@/features/shop/utils/opening-hours";
 import AddressLocationFields from "@/features/users/components/AddressLocationFields";
 import {
@@ -37,6 +40,9 @@ const PERKS = [
 
 export default function CreateShopPage() {
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+  // Hiện hộp thoại báo phải đăng nhập lại thay vì để request kế tiếp dính 401 rồi văng ra.
+  const [needRelogin, setNeedRelogin] = useState(false);
   const { persistSession } = useAuthSession();
   const [openTime, setOpenTime] = useState("");
   const [closeTime, setCloseTime] = useState("");
@@ -216,17 +222,30 @@ export default function CreateShopPage() {
     [provinces],
   );
 
-  // Sau khi mở shop, user được BE cấp role GardenOwner. Làm mới phiên để token/menu phản ánh ngay
-  // (best-effort — lỗi cũng không chặn điều hướng, lần refresh sau sẽ tự cập nhật).
-  const refreshSession = async () => {
+  // Sau khi mở shop, BE cấp role GardenOwner: nó tăng TokenVersion và THU HỒI toàn bộ refresh token
+  // của user, nên token đang cầm thành vô hiệu. Thử làm mới phiên trước — nếu được thì đi thẳng vào
+  // kênh người bán, không được thì phải đăng nhập lại (hỏi ý người dùng, không đá ra giữa chừng).
+  const refreshSession = async (): Promise<boolean> => {
     try {
       const refreshToken = getRefreshToken();
-      if (!refreshToken) return;
+      if (!refreshToken) return false;
       const refreshed = await refreshTokenRequest({ refreshToken });
-      if (refreshed.isSuccess && refreshed.data) persistSession(refreshed.data);
+      if (refreshed.isSuccess && refreshed.data) {
+        persistSession(refreshed.data);
+        return true;
+      }
+      return false;
     } catch (err) {
       console.error("Refresh session after shop creation failed", err);
+      return false;
     }
+  };
+
+  // Người dùng bấm "Đăng nhập lại" ở hộp thoại — dọn phiên rồi đưa về trang chủ để đăng nhập.
+  const handleRelogin = () => {
+    clearSession();
+    dispatch(logout());
+    navigate("/", { replace: true });
   };
 
   const onSubmit = async (values: CreateShopFormValues) => {
@@ -258,8 +277,11 @@ export default function CreateShopPage() {
       }
 
       toast.success("Tạo cửa hàng thành công! Bạn đã trở thành người bán.");
-      await refreshSession();
-      navigate("/seller");
+      if (await refreshSession()) {
+        navigate("/seller");
+        return;
+      }
+      setNeedRelogin(true);
     } catch (err) {
       console.error(err);
       toast.error("Đã xảy ra lỗi hệ thống. Vui lòng thử lại.");
@@ -365,9 +387,6 @@ export default function CreateShopPage() {
             <div className="space-y-3">
               <div>
                 <p className="text-sm font-semibold text-gray-900">Địa chỉ cửa hàng</p>
-                <p className="text-xs text-gray-400">
-                  Tự fill khu vực từ bản đồ và zoom ngược lại từ khu vực.
-                </p>
               </div>
               <AddressLocationFields
                 streetAddress={addressForm.streetAddress}
@@ -464,6 +483,24 @@ export default function CreateShopPage() {
           </p>
         </aside>
       </div>
+
+      {/* Bắt buộc đăng nhập lại: BE thu hồi refresh token khi cấp role GardenOwner. Hỏi rồi mới
+          đăng xuất — không đóng được bằng Escape/nền để người dùng không bỏ lỡ thông báo. */}
+      <Modal open={needRelogin} title="Cần đăng nhập lại" onClose={() => {}} size="max-w-md">
+        <div className="space-y-4 pt-1">
+          <p className="text-sm leading-relaxed text-gray-600">
+            Cửa hàng của bạn đã được tạo. Tài khoản vừa được cấp thêm quyền <b>người bán</b>, nên bạn
+            cần đăng nhập lại để bắt đầu sử dụng kênh người bán.
+          </p>
+          <button
+            type="button"
+            onClick={handleRelogin}
+            className="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-dark cursor-pointer"
+          >
+            Đăng nhập lại
+          </button>
+        </div>
+      </Modal>
     </div>
   );
 }

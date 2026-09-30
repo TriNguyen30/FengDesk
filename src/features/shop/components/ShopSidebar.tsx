@@ -1,8 +1,12 @@
-﻿import { useEffect, useMemo, useState, useCallback } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { toast } from "sonner";
 import { Clock, Loader2, MapPin, Pencil, Phone, Power, Store, X } from "lucide-react";
 import { Shop, StoreAddress } from "../types/shop";
-import { updateShopRequest } from "../api/shop.api";
+import {
+  createShopAddressRequest,
+  updateShopAddressRequest,
+  updateShopRequest,
+} from "../api/shop.api";
 import { joinOpeningHours, normalizeOpeningHours, splitOpeningHours } from "../utils/opening-hours";
 import AddressLocationFields from "@/features/users/components/AddressLocationFields";
 import {
@@ -142,6 +146,9 @@ function EditShopProfileModal({ shop, onClose, onSaved }: EditShopProfileModalPr
     zoom: number;
   } | null>(null);
   const [isReverseGeocoding, setIsReverseGeocoding] = useState(false);
+  // Toạ độ trước đây bị hardcode 0 nên ghim bản đồ không hiện đúng chỗ và không lưu được.
+  const [latitude, setLatitude] = useState(0);
+  const [longitude, setLongitude] = useState(0);
   const [isActive, setIsActive] = useState(shop.isActive);
   const [submitting, setSubmitting] = useState(false);
 
@@ -157,6 +164,8 @@ function EditShopProfileModal({ shop, onClose, onSaved }: EditShopProfileModalPr
     setStreetAddress(
       savedAddress?.streetAddress ?? (typeof shop.address === "string" ? shop.address : ""),
     );
+    setLatitude(savedAddress?.latitude ?? 0);
+    setLongitude(savedAddress?.longitude ?? 0);
   }, [shop.address, savedAddress]);
 
   useEffect(() => {
@@ -278,6 +287,8 @@ function EditShopProfileModal({ shop, onClose, onSaved }: EditShopProfileModalPr
 
   const handleMapLocationChange = useCallback(
     async (lat: number, lng: number) => {
+      setLatitude(lat);
+      setLongitude(lng);
       setIsReverseGeocoding(true);
       try {
         const resolved = await resolveLocationFromCoordinates(lat, lng, provinces);
@@ -342,14 +353,43 @@ function EditShopProfileModal({ shop, onClose, onSaved }: EditShopProfileModalPr
         hotline: hotline.trim(),
         openingHours: normalizedOpeningHours,
         isActive,
+        // BE bỏ qua field này (UpdateStoreRequest không có Address) — chỉ giữ cho tương thích DTO cũ.
+        // Địa chỉ THẬT được lưu bằng lời gọi riêng bên dưới.
         address: computedAddress || (typeof shop.address === "string" ? shop.address : ""),
       });
-      if (res.isSuccess && res.data) {
-        toast.success(res.message || "Cập nhật hồ sơ cửa hàng thành công");
-        onSaved(res.data);
-      } else {
+      if (!res.isSuccess || !res.data) {
         toast.error(res.message || "Không thể cập nhật hồ sơ cửa hàng");
+        return;
       }
+
+      // Địa chỉ nằm ở bảng riêng (stores_address) với endpoint riêng. Trước đây màn này chỉ ghép
+      // tỉnh/huyện/xã thành MỘT CHUỖI rồi nhét vào field `address` — mà BE không hề nhận field đó,
+      // nên mọi thay đổi khu vực/đường/toạ độ đều bị mất trong im lặng dù báo "thành công".
+      // PUT /stores/{id} trả StoreResponse KHÔNG kèm address (repo dùng FindAsync, không Include),
+      // nên phải tự gắn địa chỉ vào object báo lên cha — nếu không màn cửa hàng sẽ hiện
+      // "Đang cập nhật" cho tới khi người dùng F5.
+      let nextAddress = savedAddress ?? undefined;
+
+      if (selectedWardId && streetAddress.trim()) {
+        const payload = {
+          wardId: selectedWardId,
+          streetAddress: streetAddress.trim(),
+          latitude: latitude || null,
+          longitude: longitude || null,
+        };
+        const addrRes = savedAddress
+          ? await updateShopAddressRequest(shop.id, payload)
+          : await createShopAddressRequest(shop.id, payload);
+        if (!addrRes.isSuccess) {
+          toast.error(addrRes.message || "Lưu địa chỉ cửa hàng thất bại");
+          onSaved({ ...res.data, address: nextAddress ?? res.data.address });
+          return;
+        }
+        nextAddress = addrRes.data ?? nextAddress;
+      }
+
+      toast.success(res.message || "Cập nhật hồ sơ cửa hàng thành công");
+      onSaved({ ...res.data, address: nextAddress ?? res.data.address });
     } catch (err) {
       console.error(err);
       toast.error("Có lỗi xảy ra khi cập nhật hồ sơ");
@@ -443,8 +483,8 @@ function EditShopProfileModal({ shop, onClose, onSaved }: EditShopProfileModalPr
             <AddressLocationFields
               streetAddress={streetAddress}
               wardId={selectedWardId}
-              latitude={0}
-              longitude={0}
+              latitude={latitude}
+              longitude={longitude}
               provinces={provinces}
               districts={districts}
               wards={wards}
@@ -488,9 +528,11 @@ function EditShopProfileModal({ shop, onClose, onSaved }: EditShopProfileModalPr
                 isActive ? "bg-primary" : "bg-gray-300"
               }`}
             >
+              {/* left-0.5 làm mốc cố định: trước đây chỉ có top nên `left` auto, núm bị lệch và
+                  tràn khỏi rãnh ở trạng thái bật. Rãnh w-9 (36px) - núm w-4 (16px) - 2 lề 2px = 16px. */}
               <span
-                className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform ${
-                  isActive ? "translate-x-4" : "translate-x-0.5"
+                className={`absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform ${
+                  isActive ? "translate-x-4" : "translate-x-0"
                 }`}
               />
             </button>

@@ -10,6 +10,10 @@
     "account": "Account",
     "my_account": "My Account",
     "workspace": "Workspaces",
+    "my_stores": "My stores",
+    "balance_loading": "Loading balance...",
+    "balance_available": "Withdrawable",
+    "balance_pending": "On hold",
     "orders": "My Orders",
     "become_seller": "Become a seller",
     "logout": "Log out",
@@ -384,7 +388,8 @@
       "total": "Total",
       "terms_prefix": "By placing an order, you agree to the ",
       "terms_link": "terms of purchase",
-      "free_ship": "Free Shipping in HCM City for orders over 500k"
+      "free_ship": "Free Shipping in HCM City for orders over 500k",
+      "shipping_discount": "Shipping discount"
     },
     "toast": {
       "select_product": "Please select a product to checkout",
@@ -394,7 +399,15 @@
       "order_success": "Order placed successfully",
       "payment_link_error": "Cannot create payment link",
       "payment_gateway_error": "Error connecting to PayOS payment gateway",
-      "order_error": "Cannot create order"
+      "order_error": "Cannot create order",
+      "preview_not_ready": "Shipping fee is not ready yet — please wait or try again."
+    },
+    "voucher": {
+      "title": "Voucher",
+      "placeholder": "Enter voucher code",
+      "apply": "Apply",
+      "remove": "Remove",
+      "applied": "Applied: {{name}}"
     }
   },
   "product_card": {
@@ -437,7 +450,8 @@
       "loading": "Loading reviews...",
       "empty": "No reviews yet. Be the first to review!",
       "anonymous": "Anonymous User",
-      "you": "You"
+      "you": "You",
+      "load_more": "Load more reviews"
     },
     "actions": {
       "edit": "Edit",
@@ -451,6 +465,17 @@
     "edit_review": {
       "title": "Edit your review",
       "rating_label": "Rating:"
+    },
+    "eligibility": {
+      "not_purchased": "Only customers who bought and received this product can review it.",
+      "not_delivered": "You can review once your order is delivered.",
+      "reviewed": "You have reviewed every purchase of this product.",
+      "returned": "Your order was returned, so it cannot be reviewed.",
+      "product_unavailable": "This product is no longer sold, so it cannot be reviewed."
+    },
+    "store_rating": {
+      "no_reviews": "No reviews yet",
+      "count": "({{count}} reviews)"
     }
   },
   "workspace": {
@@ -670,6 +695,14 @@
         "empty_content": "Please enter your review content",
         "success": "Product reviewed successfully!",
         "error": "Failed to submit review at this time"
+      },
+      "nothing_to_review": "Nothing left to review in this order.",
+      "status": {
+        "Reviewable": "Not reviewed",
+        "Reviewed": "Reviewed",
+        "Returned": "Returned",
+        "NotDelivered": "Not delivered",
+        "ProductUnavailable": "Discontinued"
       }
     }
   },
@@ -704,7 +737,8 @@
       "uncalculated": "Uncalculated",
       "total": "Total",
       "payment_method": "Payment method",
-      "paid": "Paid"
+      "paid": "Paid",
+      "shipping_discount": "Shipping discount"
     },
     "delivery": {
       "title": "Deliveries",

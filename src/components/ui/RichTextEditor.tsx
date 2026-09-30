@@ -185,8 +185,9 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
 
   return (
     <div
-      className={`rich-text-editor-container rounded-xl overflow-hidden border border-gray-200 bg-white transition-all focus-within:border-primary focus-within:ring-1 focus-within:ring-primary/30 dark:border-gray-700/60 dark:bg-[#1e2219] ${disabled ? "opacity-60 pointer-events-none" : ""
-        } ${className}`}
+      className={`rich-text-editor-container rounded-xl overflow-hidden border border-gray-200 bg-white transition-all focus-within:border-primary focus-within:ring-1 focus-within:ring-primary/30 dark:border-gray-700/60 dark:bg-[#1e2219] ${
+        disabled ? "opacity-60 pointer-events-none" : ""
+      } ${className}`}
       style={{
         ["--editor-min-height" as any]: minHeight,
       }}

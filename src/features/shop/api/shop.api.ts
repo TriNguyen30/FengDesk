@@ -13,6 +13,8 @@ import {
   UserSearchItem,
   StoreMembership,
   StoreStatistics,
+  PlatformFeePolicy,
+  MyStoreBalance,
 } from "../types/shop";
 
 export async function getAllShopRequest() {
@@ -28,6 +30,12 @@ export async function getShopRequestById(id: string) {
 /** Các cửa hàng mà user hiện tại đồng sở hữu (kênh người bán). */
 export async function getMyShopsRequest() {
   const { data } = await fetchHttpClient.get<ApiResponse<Shop[]>>(`/stores/mine`);
+  return data;
+}
+
+/** Số dư (có thể rút / đang giữ) các cửa hàng user sở hữu — đọc thẳng sổ cái, hai truy vấn bất kể số cửa hàng. */
+export async function getMyStoreBalanceRequest() {
+  const { data } = await fetchHttpClient.get<ApiResponse<MyStoreBalance>>(`/stores/mine/balance`);
   return data;
 }
 
@@ -174,5 +182,12 @@ export async function getStoreStatisticsRequest(id: string, range?: string) {
     `/stores/${id}/statistics`,
     range ? { range } : undefined,
   );
+  return data;
+}
+
+/** Chính sách phí sàn (công khai) — nguồn duy nhất cho số "thực nhận" người bán thấy khi nhập giá. */
+export async function getPlatformFeePolicyRequest() {
+  const { data } =
+    await fetchHttpClient.get<ApiResponse<PlatformFeePolicy>>(`/platform/fee-policy`);
   return data;
 }

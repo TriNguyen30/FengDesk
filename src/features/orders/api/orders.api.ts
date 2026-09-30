@@ -14,6 +14,7 @@ import type {
   ShippingFeePreview,
   UpdateDeliveryStatusRequest,
   AssignDeliveryStaffRequest,
+  AvailableVoucher,
 } from "../types/orders";
 
 export const ordersApi = {
@@ -71,12 +72,20 @@ export const ordersApi = {
     );
   },
 
+  /** Khách xác nhận đã nhận các kiện đang giao (Shipped) của đơn mình. */
+  confirmReceived: (orderId: string) => {
+    return fetchHttpClient.post<ApiResponse<OrderDetail>>(`/orders/${orderId}/confirm-received`);
+  },
+
+  /** Voucher đang áp dụng (công khai) — hiện ưu đãi ở trang thanh toán. */
+  getAvailableVouchers: () => {
+    return fetchHttpClient.get<ApiResponse<AvailableVoucher[]>>("/vouchers/available");
+  },
+
   /** Garden owner/staff: chi tiết đơn giao (sản phẩm + địa chỉ nhận) để đóng gói. */
   getDeliveryDetail: (deliveryId: string) => {
     return fetchHttpClient.get<GetDeliveryOrderDetailResponse>(
       `/orders/deliveries/${deliveryId}/detail`,
     );
   },
-
-  
 };

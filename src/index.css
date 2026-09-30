@@ -1,6 +1,13 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap");
 @import "tailwindcss";
 
+/* `dark:` bám theo theme CỦA APP (nút ThemeToggle → <html data-theme="dark">), không theo theme hệ điều
+   hành. Mặc định của Tailwind là prefers-color-scheme: OS tối + app sáng thì `dark:` vẫn bật, còn OS tối +
+   app tối thì `dark:` chồng lên thang màu đã lật bên dưới → lật hai lần, ra màu sáng.
+   ⚠ Đừng viết `dark:*-gray-*` / `dark:*-slate-*`: thang trung tính đã tự lật ở theme tối. `dark:` chỉ
+   dành cho giá trị ghi cứng (vd `dark:bg-[#1e2219]`). */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
 /* =========================
    Tailwind v4 Theme Tokens
 ========================= */
@@ -108,6 +115,15 @@
 /* Hairline: gray-100 dùng làm VIỀN thì phải đậm hơn khi dùng làm NỀN, không thì
    viền thẻ tan vào nền trắng. Ghim riêng vai trò viền ở theme sáng; theme tối đã
    có thang riêng nên loại trừ. */
+/* Để trình duyệt vẽ phần NATIVE đúng theme: danh sách xổ của <select>, lịch của input date/time, ô
+   input không đặt nền, thanh cuộn mặc định. Thiếu dòng này thì mở dropdown ở theme tối vẫn ra hộp trắng. */
+:root {
+  color-scheme: light;
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+}
+
 :root:not([data-theme="dark"]) .border-gray-100 {
   border-color: oklch(92.4% 0.004 264.542);
 }
@@ -460,6 +476,27 @@
   background-color: color-mix(in oklab, var(--fd-surface) 80%, transparent);
 }
 
+:root[data-theme="dark"] .bg-white\/85 {
+  background-color: color-mix(in oklab, var(--fd-surface) 85%, transparent);
+}
+
+:root[data-theme="dark"] .bg-white\/70,
+:root[data-theme="dark"] .hover\:bg-white\/70:hover {
+  background-color: color-mix(in oklab, var(--fd-surface) 70%, transparent);
+}
+
+:root[data-theme="dark"] .bg-white\/60 {
+  background-color: color-mix(in oklab, var(--fd-surface) 60%, transparent);
+}
+
+:root[data-theme="dark"] .bg-white\/55 {
+  background-color: color-mix(in oklab, var(--fd-surface) 55%, transparent);
+}
+
+:root[data-theme="dark"] .bg-white\/40 {
+  background-color: color-mix(in oklab, var(--fd-surface) 40%, transparent);
+}
+
 /* -------------------------------------------------------------------------
    Ghim lại những chỗ bậc đậm được dùng làm NỀN TỐI có chủ đích
    (tooltip, backdrop, nút gỡ ảnh) — thang trung tính đã bị lật ở trên nên nếu
@@ -477,6 +514,21 @@
 
 :root[data-theme="dark"] .bg-gray-900\/30 {
   background-color: color-mix(in oklab, #12150e 30%, transparent);
+}
+
+/* Tooltip (components/ui/Tooltip.tsx) và bong bóng mốc thời gian ở chi tiết đơn — thiếu hai ghim này thì
+   tooltip nền SÁNG chữ trắng ở theme tối. */
+:root[data-theme="dark"] .bg-gray-900\/85 {
+  background-color: color-mix(in oklab, #12150e 85%, transparent);
+}
+
+:root[data-theme="dark"] .bg-gray-900\/95 {
+  background-color: color-mix(in oklab, #12150e 95%, transparent);
+}
+
+/* Nhãn nổi trên khung model 3D. */
+:root[data-theme="dark"] .bg-gray-950\/55 {
+  background-color: color-mix(in oklab, #0c0e09 55%, transparent);
 }
 
 :root[data-theme="dark"] .text-orange-300 {
@@ -649,6 +701,57 @@
 
 :root[data-theme="dark"] .bg-\[\#fdecea\] {
   background-color: #3a201e;
+}
+
+/* Bong bóng tin của người kia + ô nhập ở chat. */
+:root[data-theme="dark"] .bg-\[\#e4e6eb\],
+:root[data-theme="dark"] .bg-\[\#f0f2f5\] {
+  background-color: var(--color-gray-100);
+}
+
+/* Sân khấu của model 3D (3DSection / hàng đợi model 3D). */
+:root[data-theme="dark"] .bg-\[\#e5eadf\] {
+  background-color: #262c21;
+}
+
+:root[data-theme="dark"] .bg-\[\#fdf6e3\] {
+  background-color: #3a2f1e;
+}
+
+/* Popup của thư viện ngoài — không đi qua biến Tailwind nào. */
+:root[data-theme="dark"] .ql-snow .ql-picker-options,
+:root[data-theme="dark"] .ql-snow .ql-tooltip {
+  background-color: var(--fd-surface);
+  border-color: var(--color-gray-200);
+  color: var(--color-gray-800);
+  box-shadow: 0 4px 12px rgb(0 0 0 / 0.5);
+}
+
+:root[data-theme="dark"] .ql-snow .ql-tooltip input[type="text"] {
+  background-color: var(--color-gray-50);
+  border-color: var(--color-gray-200);
+  color: var(--color-gray-900);
+}
+
+:root[data-theme="dark"] .ql-snow .ql-picker-label,
+:root[data-theme="dark"] .ql-snow .ql-picker-item {
+  color: var(--color-gray-700);
+}
+
+:root[data-theme="dark"] .ql-snow .ql-stroke {
+  stroke: var(--color-gray-700);
+}
+
+:root[data-theme="dark"] .ql-snow .ql-fill {
+  fill: var(--color-gray-700);
+}
+
+:root[data-theme="dark"] .splide__arrow {
+  background-color: var(--fd-surface);
+}
+
+:root[data-theme="dark"] .splide__arrow svg {
+  fill: var(--color-gray-800);
 }
 :root[data-theme="dark"] .bg-red-600,
 :root[data-theme="dark"] .hover\:bg-red-600:hover {

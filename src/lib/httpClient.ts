@@ -1,4 +1,5 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
+import { getApiBaseUrl } from "@/config/apiBase";
 import { axiosBaseConfig } from "@/config/axios.config";
 import { clearSession, getAccessToken, getRefreshToken, setTokens } from "@/utils";
 import { HTTP_STATUS } from "@/constants";
@@ -27,6 +28,9 @@ export class FetchHttpClient {
 
   private setupRequestInterceptor() {
     this.axiosInstance.interceptors.request.use((config) => {
+      // Gán tại đây (không phải lúc khởi tạo) vì base URL được chốt sau khi dò
+      // hostname chính/dự phòng — xem config/apiBase.ts.
+      config.baseURL = getApiBaseUrl();
       const access_token = getAccessToken();
       if (access_token && !config.headers?.Authorization) {
         config.headers.Authorization = `Bearer ${access_token}`;
