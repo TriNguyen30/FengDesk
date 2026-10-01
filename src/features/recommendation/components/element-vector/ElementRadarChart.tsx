@@ -459,9 +459,10 @@ export default function ElementRadarChart({
           Hiện tại
         </span>
         {showPreview && (
-          <span className="flex items-center gap-1.5">
-            <span className="inline-block h-0 w-5 border-t-[1.5px] border-dashed border-primary-dark" />
-            {previewLabel}
+          // Tên sản phẩm dài làm legend xuống dòng khi hover → radar dịch → cắt gọn, xem đủ qua title.
+          <span className="flex min-w-0 max-w-[14rem] items-center gap-1.5" title={previewLabel}>
+            <span className="inline-block h-0 w-5 shrink-0 border-t-[1.5px] border-dashed border-primary-dark" />
+            <span className="truncate">{previewLabel}</span>
           </span>
         )}
         {showTarget && (

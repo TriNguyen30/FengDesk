@@ -40,9 +40,11 @@ import {
   StoreAddressModal,
 } from "@/features/manager/components";
 import { adminUsersApi } from "@/features/admin/api/adminUsers.api";
+import { useAuthSession } from "@/features/auth/hooks/useAuthSession";
 
 export default function ManageStoresPage() {
   const currentUser = useAppSelector((s) => s.auth.user);
+  const { persistSession } = useAuthSession();
   const userRoles = useMemo(
     () => (currentUser?.role ?? "").split(",").map((r) => r.trim()),
     [currentUser?.role],
@@ -596,6 +598,9 @@ export default function ManageStoresPage() {
       } else {
         const res = await createShopRequest(storeForm);
         if (res.isSuccess) {
+          // Người tạo được cấp role GardenOwner nếu chưa có → BE thu hồi token cũ và trả phiên mới. Lưu ngay,
+          // trước request lưu địa chỉ bên dưới.
+          if (res.data?.session) persistSession(res.data.session);
           if (res.data && hasAddressInput) {
             // Cửa hàng ĐÃ được tạo ở trên: địa chỉ lỗi thì báo đúng lỗi đó chứ không báo tạo
             // thất bại, và vẫn đóng form + refresh để không tạo trùng cửa hàng.

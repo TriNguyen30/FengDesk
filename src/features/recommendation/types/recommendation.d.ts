@@ -246,3 +246,18 @@ export interface WorkspaceRecommendationPreview {
   items: RecommendationItem[];
 }
 
+/** Một dòng trong nhóm sản phẩm đang cân nhắc — cùng productId lặp lại thì BE cộng dồn số lượng. */
+export interface BundlePreviewItem {
+  productId: string;
+  quantity: number;
+}
+
+/**
+ * `POST /recommendations/fit/bundle` — phòng sau khi đặt CẢ nhóm sản phẩm (kèm số lượng). `gap` cùng hình
+ * dạng với `ProductFitResponse.gap`: current = phòng như đang có, previewCurrent = sau khi thêm cả nhóm.
+ */
+export interface BundlePreviewResponse {
+  workspaceProfileId: string;
+  gap: ElementAnalysisRow[];
+  skippedProductIds: string[];
+}

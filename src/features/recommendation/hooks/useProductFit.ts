@@ -1,5 +1,7 @@
-import { useQuery, useQueries } from "@tanstack/react-query";
+import { keepPreviousData, useQuery, useQueries } from "@tanstack/react-query";
+import type { BundlePreviewItem } from "../types/recommendation";
 import {
+  getBundlePreview,
   getPersonalFit,
   getProductFit,
   getProductOccupationFit,
@@ -95,3 +97,31 @@ export function useWorkspaceRecommendationPreview(workspaceId?: string, topN = 8
   return { preview: query.data ?? null, status: query.status, error: query.error };
 }
 
+/**
+ * Xem trước gộp cho một nhóm món. Key chuẩn hoá (sắp theo productId) để cùng một nhóm chọn theo thứ tự
+ * khác vẫn trúng cache. `keepPreviousData`: bấm +/− số lượng thì radar giữ lớp cũ tới khi lớp mới về,
+ * không chớp mất rồi hiện lại. Key nằm dưới ["workspace", id] để đặt/gỡ sản phẩm (invalidate
+ * ["workspace"]) kéo bản xem trước tính lại theo phòng mới.
+ */
+export function useBundlePreview(workspaceId: string | undefined, items: BundlePreviewItem[]) {
+  const normalized = [...items]
+    .filter((i) => i.quantity > 0)
+    .sort((a, b) => a.productId.localeCompare(b.productId));
+  const query = useQuery({
+    queryKey: [
+      "workspace",
+      workspaceId,
+      "bundle-preview",
+      normalized.map((i) => `${i.productId}:${i.quantity}`).join(","),
+    ],
+    queryFn: () => {
+      if (!workspaceId) throw new Error("Missing workspaceId");
+      return getBundlePreview(workspaceId, normalized);
+    },
+    enabled: !!workspaceId && normalized.length > 0,
+    placeholderData: keepPreviousData,
+    retry: false,
+    staleTime: 60 * 1000,
+  });
+  return { preview: normalized.length > 0 ? (query.data ?? null) : null, status: query.status };
+}

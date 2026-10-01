@@ -9,6 +9,8 @@ import {
   deleteWorkspace,
   setDefaultWorkspace,
   getWorkspaceElementAnalysis,
+  addWorkspaceImages,
+  removeWorkspaceImage,
 } from "../api/workspace.api";
 import type { CreateWorkspaceDto, UpdateWorkspaceDto } from "../types/workspace";
 
@@ -146,4 +148,27 @@ export function useWorkspaceCompatibilities(ids: string[]) {
       return [id, r.status === "error" ? null : r.data?.compatibilityPercent];
     }),
   );
+}
+
+/** Trần số ảnh mỗi phòng — khớp BE (WorkspaceProfileService.MaxImagesPerWorkspace). */
+export const MAX_WORKSPACE_IMAGES = 8;
+
+/**
+ * Thêm/gỡ ảnh không gian của một phòng. Chỉ làm mới ["workspaces"] — ảnh không ảnh hưởng radar/đề xuất
+ * nên không động tới cache ["workspace", id, …].
+ */
+export function useWorkspaceImages(workspaceId: string) {
+  const queryClient = useQueryClient();
+  const refresh = () => queryClient.invalidateQueries({ queryKey: ["workspaces"] });
+
+  const add = useMutation({
+    mutationFn: (files: File[]) => addWorkspaceImages(workspaceId, files),
+    onSuccess: refresh,
+  });
+  const remove = useMutation({
+    mutationFn: (imageId: string) => removeWorkspaceImage(workspaceId, imageId),
+    onSuccess: refresh,
+  });
+
+  return { add, remove, busy: add.isPending || remove.isPending };
 }

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   ChevronRight,
@@ -16,6 +16,7 @@ import { formatOrderDate, formatVnd, getOrderStatusMeta } from "../utils/orderUt
 import { useAppDispatch } from "@/app/store";
 import { openChatbox } from "@/features/chatbox/store/chatboxSlice";
 import Modal from "@/components/ui/Modal";
+import Pagination from "@/components/ui/Pagination";
 import {
   createReviewRequest,
   getReviewableOrderItemsRequest,
@@ -43,6 +44,8 @@ export default function OrdersPage() {
   const dispatch = useAppDispatch();
   const [activeTab, setActiveTab] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
   const [reviewModal, setReviewModal] = useState<{
     open: boolean;
     orderId: string | null;
@@ -79,10 +82,21 @@ export default function OrdersPage() {
   const reviewableItems = reviewModal.items.filter((i) => i.status === "Reviewable");
 
   const { orders, listStatus, pagination } = useOrdersList({
-    page: 1,
-    pageSize: 20,
+    page,
+    pageSize,
     status: activeTab || undefined,
   });
+
+  const handlePageChange = (nextPage: number) => {
+    setPage(nextPage);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    if (pagination.totalPages > 0 && page > pagination.totalPages) {
+      setPage(pagination.totalPages);
+    }
+  }, [page, pagination.totalPages]);
 
   const filteredOrders = orders.filter((order) => {
     if (activeTab && order.status !== activeTab) return false;
@@ -113,9 +127,7 @@ export default function OrdersPage() {
           </div>
           {listStatus !== "loading" && (
             <p className="text-sm text-gray-500 font-medium bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100">
-              <strong className="text-gray-900">
-                {activeTab ? filteredOrders.length : pagination.totalCount || 0}
-              </strong>{" "}
+              <strong className="text-gray-900">{pagination.totalCount || 0}</strong>{" "}
               {t("orders_page.orders_count")}
             </p>
           )}
@@ -138,7 +150,10 @@ export default function OrdersPage() {
             return (
               <button
                 key={tab.value}
-                onClick={() => setActiveTab(tab.value)}
+                onClick={() => {
+                  setActiveTab(tab.value);
+                  setPage(1);
+                }}
                 className={`relative whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium transition-colors cursor-pointer shrink-0 outline-none ${
                   isActive ? "text-primary" : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
                 }`}
@@ -386,14 +401,22 @@ export default function OrdersPage() {
             );
           })}
 
-          {pagination.totalPages > 1 && (
-            <p className="pt-2 text-center text-xs text-gray-500">
-              {t("orders_page.pagination", {
-                page: pagination.page,
-                total_pages: pagination.totalPages,
-                total_count: pagination.totalCount,
-              })}
-            </p>
+          {pagination.totalCount > pageSize && (
+            <div className="flex flex-col items-center gap-2 pt-4">
+              <Pagination
+                currentPage={page}
+                totalCount={pagination.totalCount}
+                pageSize={pageSize}
+                onPageChange={handlePageChange}
+              />
+              <p className="text-center text-xs text-gray-500">
+                {t("orders_page.pagination", {
+                  page: pagination.page || page,
+                  total_pages: pagination.totalPages,
+                  total_count: pagination.totalCount,
+                })}
+              </p>
+            </div>
           )}
         </div>
       )}

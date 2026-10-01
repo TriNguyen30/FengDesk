@@ -113,6 +113,43 @@ export const classifyElementInput = async (
   return response.data.data;
 };
 
+/** Thêm ảnh không gian (nối vào cuối trình chiếu). Mỗi ảnh được chuẩn hoá JPEG ≤1024px trước khi gửi. */
+export const addWorkspaceImages = async (id: string, files: File[]): Promise<Workspace> => {
+  const optimized = await Promise.all(files.map(normalizeImageForUpload));
+  const formData = new FormData();
+  optimized.forEach((file) => formData.append("files", file));
+  const response = await fetchHttpClient.post<ApiResponse<Workspace>>(
+    `/workspace/${id}/images`,
+    formData,
+    { headers: { "Content-Type": "multipart/form-data" }, timeout: AI_REQUEST_TIMEOUT_MS },
+  );
+  return response.data.data;
+};
+
+/**
+ * Dùng lại ảnh đã nằm trên storage (ảnh gửi cho AI intake) làm ảnh không gian: tải về rồi thêm như file
+ * thường — BE chỉ nhận multipart, không nhận URL ngoài (tránh trỏ ảnh phòng sang host lạ).
+ */
+export const addWorkspaceImagesFromUrls = async (
+  id: string,
+  urls: string[],
+): Promise<Workspace> => {
+  const files = await Promise.all(
+    urls.map(async (url, i) => {
+      const blob = await (await fetch(url)).blob();
+      return new File([blob], `intake-${i}.jpg`, { type: blob.type || "image/jpeg" });
+    }),
+  );
+  return addWorkspaceImages(id, files);
+};
+
+export const removeWorkspaceImage = async (id: string, imageId: string): Promise<Workspace> => {
+  const response = await fetchHttpClient.delete<ApiResponse<Workspace>>(
+    `/workspace/${id}/images/${imageId}`,
+  );
+  return response.data.data;
+};
+
 /**
  * Tải ảnh không gian lên storage → trả link để đính kèm parse-description. signal để hủy giữa chừng.
  * Ảnh được CHUẨN HOÁ trước khi gửi (xem utils/imageResize) — ảnh gốc từ điện thoại làm chậm cả chuỗi

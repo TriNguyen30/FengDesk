@@ -1,4 +1,4 @@
-import { useState, type CSSProperties } from "react";
+import { useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 import { Link, Outlet, useLocation } from "react-router-dom";
 import { Toaster } from "sonner";
 import {
@@ -42,6 +42,11 @@ export default function AdminLayout() {
   const location = useLocation();
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
+  const mainRef = useRef<HTMLElement>(null);
+
+  useLayoutEffect(() => {
+    mainRef.current?.scrollTo(0, 0);
+  }, [location.pathname]);
 
   const handleLogout = () => {
     clearSession();
@@ -75,9 +80,8 @@ export default function AdminLayout() {
         // Mảng tối có chủ đích ở cả hai theme — đánh dấu để dark theme không lật
         // thang slate ở đây (xem :root[data-theme="dark"] [data-fd-chrome] trong index.css).
         data-fd-chrome="dark"
-        className={`fixed inset-y-0 left-0 z-30 flex w-64 flex-col border-r border-slate-200 bg-slate-900 text-slate-100 transition-all duration-300 lg:static lg:inset-0 ${
-          sidebarOpen ? "translate-x-0" : "-translate-x-full"
-        } lg:translate-x-0 ${collapsed ? "lg:w-20" : "lg:w-64"}`}
+        className={`fixed inset-y-0 left-0 z-30 flex w-64 flex-col border-r border-slate-200 bg-slate-900 text-slate-100 transition-all duration-300 lg:static lg:inset-0 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"
+          } lg:translate-x-0 ${collapsed ? "lg:w-20" : "lg:w-64"}`}
       >
         {/* Logo */}
         <div className="flex h-16 shrink-0 items-center justify-between border-b border-slate-800 px-4 bg-slate-950">
@@ -109,11 +113,10 @@ export default function AdminLayout() {
                 <Link
                   to={item.href!}
                   title={collapsed ? item.name : undefined}
-                  className={`group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
-                    isActive
+                  className={`group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${isActive
                       ? "bg-primary text-white"
                       : "text-slate-300 hover:bg-slate-800 hover:text-white"
-                  } ${collapsed ? "justify-center" : ""}`}
+                    } ${collapsed ? "justify-center" : ""}`}
                 >
                   {isActive && (
                     <span className="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-full bg-white" />
@@ -143,9 +146,8 @@ export default function AdminLayout() {
         {/* User + logout */}
         <div className="border-t border-slate-800 p-3 bg-slate-950">
           <div
-            className={`mb-2 flex items-center gap-3 rounded-lg px-2 py-2 ${
-              collapsed ? "justify-center" : ""
-            }`}
+            className={`mb-2 flex items-center gap-3 rounded-lg px-2 py-2 ${collapsed ? "justify-center" : ""
+              }`}
           >
             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary font-bold text-white">
               {initial}
@@ -162,9 +164,8 @@ export default function AdminLayout() {
           <button
             onClick={handleLogout}
             title={collapsed ? "Đăng xuất" : undefined}
-            className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-red-400 transition-colors hover:bg-red-500/10 hover:text-red-300 cursor-pointer ${
-              collapsed ? "justify-center" : ""
-            }`}
+            className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-red-400 transition-colors hover:bg-red-500/10 hover:text-red-300 cursor-pointer ${collapsed ? "justify-center" : ""
+              }`}
           >
             <LogOut size={19} />
             {!collapsed && "Đăng xuất"}
@@ -173,7 +174,7 @@ export default function AdminLayout() {
       </aside>
 
       {/* Main content */}
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         {/* Header */}
         <header className="z-10 flex h-16 shrink-0 items-center gap-4 border-b border-slate-200 bg-white px-4 sm:px-6 shadow-sm">
           <button
@@ -196,11 +197,16 @@ export default function AdminLayout() {
         </header>
 
         {/* Page content */}
-        <main className="flex flex-1 flex-col scroll-fade overflow-y-auto bg-slate-50">
-          <div className="flex-1 p-4 sm:p-6">
-            <Outlet />
+        <main
+          ref={mainRef}
+          className="flex min-h-0 flex-1 flex-col scroll-fade overflow-y-auto overflow-anchor-none bg-slate-50"
+        >
+          <div className="flex min-h-full flex-1 flex-col">
+            <div className="flex-1 p-4 sm:p-6">
+              <Outlet />
+            </div>
+            <FooterManager />
           </div>
-          <FooterManager />
         </main>
 
         <Toaster

@@ -4,7 +4,7 @@ export default function FooterManager() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="mt-auto border-t border-gray-200 bg-white px-4 py-3 sm:px-6">
+    <footer className="mt-auto shrink-0 overflow-anchor-none border-t border-gray-200 bg-white px-4 py-3 sm:px-6">
       <div className="flex flex-col items-center justify-between gap-2 sm:flex-row text-xs text-gray-500">
         <p className="flex items-center gap-1">
           &copy; {currentYear} <img src={FengDesk} alt="FengDesk" className="h-6 w-6" />{" "}

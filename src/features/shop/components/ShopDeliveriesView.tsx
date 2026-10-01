@@ -36,7 +36,7 @@ const TABS: { value: string; label: string }[] = [
   { value: "Cancelled", label: "Đã hủy" },
 ];
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 10;
 
 interface ShopDeliveriesViewProps {
   storeId: string;
@@ -505,10 +505,14 @@ export function ShopDeliveriesView({ storeId }: ShopDeliveriesViewProps) {
                         ) : (
                           <div className="w-3.5" />
                         )}
-                        <span>
-                          #{d.id.substring(0, 8)}
-                          {d.isExchange && <span className="ml-2 rounded bg-violet-50 px-2 py-0.5 font-sans text-[10px] text-violet-700">Hàng đổi</span>}
-                        </span>
+                        <div className="flex flex-col items-start gap-0.5">
+                          <span>#{d.id.substring(0, 8)}</span>
+                          {d.isExchange && (
+                            <span className="inline-block rounded bg-violet-50 px-2 py-0.5 font-sans text-[10px] font-semibold text-violet-700 whitespace-nowrap">
+                              Hàng đổi
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </td>
                     <td className="p-4 text-xs text-gray-500 whitespace-nowrap">

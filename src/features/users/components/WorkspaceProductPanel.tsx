@@ -1,4 +1,3 @@
-import { useEffect, useRef, useState } from "react";
 import { Link, useMatch } from "react-router-dom";
 import { motion, useReducedMotion } from "framer-motion";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -10,39 +9,19 @@ import {
   PackageCheck,
   PackagePlus,
   PackageX,
-  Sparkles,
   Truck,
 } from "lucide-react";
 import { getPurchasedItems, placeProduct, removePlacement } from "../api/workspace.api";
 import type { PurchasedItem } from "../types/workspace";
 import { useWorkspaceElementAnalysis, useWorkspaces } from "../hooks/useWorkspace";
 import { resolveSelectedWorkspace } from "../utils/selectWorkspace";
-import { useWorkspaceHover, type HoveredProduct } from "../context/WorkspaceHoverContext";
-import { useWorkspaceRecommendationPreview } from "@/features/recommendation/hooks/useProductFit";
-import {
-  scorePercent,
-  fitToneByPercent,
-} from "@/features/recommendation/components/element-vector/constants";
-import type { RecommendationItem } from "@/features/recommendation/types/recommendation";
-
-type Tab = "purchased" | "recommended";
-
-/** Cùng spring với pill của nav chính (ProfileLayout). */
-const PILL_SPRING = { type: "spring", stiffness: 400, damping: 32 } as const;
-
-/** Trễ nhỏ trước khi báo hover — quét chuột lướt qua danh sách không bắn một loạt request fit. */
-const HOVER_DELAY_MS = 120;
-
-const vnd = new Intl.NumberFormat("vi-VN", {
-  style: "currency",
-  currency: "VND",
-  maximumFractionDigits: 0,
-});
+import { useProductHoverIntent } from "../context/WorkspaceHoverContext";
 
 /**
- * Panel sản phẩm ở SIDEBAR hồ sơ (dưới card "Hồ sơ", chỉ khi đang ở tab workspace): tab "Đã mua"
- * (đặt/gỡ vào phòng) và tab "Đề xuất" (engine chấm cho phòng đang xem). Tự suy ra phòng đang xem từ
- * URL bằng đúng quy tắc của trang chính. Hover một món CHƯA nằm trong phòng → context → radar bên
+ * Panel "Đã mua" ở SIDEBAR hồ sơ (dưới card "Hồ sơ", chỉ khi đang ở tab workspace): đặt/gỡ/chuyển
+ * sản phẩm đã mua vào phòng. "Đề xuất" đã chuyển sang nội dung chính (WorkspaceRecommendationPicker)
+ * vì cần chỗ cho chọn nhiều món + số lượng. Tự suy ra phòng đang xem từ URL bằng đúng quy tắc của
+ * trang chính. Hover một món CHƯA nằm trong phòng → context → radar bên
  * nội dung vẽ lớp xem trước (previewCurrent từ `GET /recommendations/fit`). Món đã ở trong phòng thì
  * không xem trước — nó đã nằm trong "Hiện tại". Món đang ở phòng khác có nút "Chuyển" (PUT placements
  * tự gỡ khỏi phòng cũ). Đặt/gỡ/chuyển → invalidate ["workspace"] → radar + đề xuất tự tính lại.
@@ -57,45 +36,20 @@ export default function WorkspaceProductPanel() {
 
 /**
  * Tách thân ra để tránh hook có điều kiện. KHÔNG `key={workspaceId}`: đổi phòng chỉ đổi prop, panel
- * giữ nguyên DOM/tab/scroll — remount là thứ gây "giật" mỗi lần bấm phòng khác trên sidebar.
+ * giữ nguyên DOM/scroll — remount là thứ gây "giật" mỗi lần bấm phòng khác trên sidebar.
  */
 function ProductPanelBody({ workspaceId }: { workspaceId: string }) {
   const reduceMotion = useReducedMotion();
-  const { hovered, setHovered: onHover } = useWorkspaceHover();
+  const { hovered, beginHover, endHover } = useProductHoverIntent();
   // Chỉ để dọn vật phẩm "mồ côi" (xem `orphans` bên dưới) — trạng thái đặt/chưa đặt của các dòng
   // chính đọc từ danh sách đã mua, không chờ query này.
   const { analysis } = useWorkspaceElementAnalysis(workspaceId);
-  const [tab, setTab] = useState<Tab>("purchased");
   const queryClient = useQueryClient();
 
   const { data: purchased = [], isLoading: purchasedLoading } = useQuery({
     queryKey: ["purchased-items"],
     queryFn: getPurchasedItems,
   });
-  const recommendation = useWorkspaceRecommendationPreview(workspaceId);
-
-  // Hover có trễ; rời chuột thì hủy ngay để radar không "nhảy" theo món đã rời.
-  const hoverTimer = useRef<number | null>(null);
-  const beginHover = (product: HoveredProduct) => {
-    if (hoverTimer.current) window.clearTimeout(hoverTimer.current);
-    hoverTimer.current = window.setTimeout(() => onHover(product), HOVER_DELAY_MS);
-  };
-  const endHover = () => {
-    if (hoverTimer.current) window.clearTimeout(hoverTimer.current);
-    hoverTimer.current = null;
-    onHover(null);
-  };
-  useEffect(
-    () => () => {
-      if (hoverTimer.current) window.clearTimeout(hoverTimer.current);
-    },
-    [],
-  );
-  // Đổi tab thì món đang hover không còn trên màn hình nữa.
-  const switchTab = (next: Tab) => {
-    endHover();
-    setTab(next);
-  };
 
   const invalidate = () => {
     // Radar của MỌI workspace có thể đổi (chuyển phòng ảnh hưởng cả phòng cũ lẫn mới).
@@ -132,7 +86,6 @@ function ProductPanelBody({ workspaceId }: { workspaceId: string }) {
   });
 
   const busy = placeMutation.isPending || removeMutation.isPending;
-  const recommendedCount = recommendation.preview?.items.length ?? 0;
 
   // Vật phẩm đang nằm trong phòng nhưng KHÔNG còn trong danh sách đặt phòng — điển hình là đồ Carry
   // đặt từ trước khi backend lọc theo `ProductPlacement`. Không hiện thì chúng vẫn kéo radar mà user
@@ -148,150 +101,109 @@ function ProductPanelBody({ workspaceId }: { workspaceId: string }) {
       transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
       className="rounded-2xl border border-gray-100/90 bg-white/95 shadow-sm backdrop-blur-sm transition-all duration-300 ease-out hover:shadow-md hover:border-gray-200"
     >
-      {/* Tabs — gạch dưới trượt giữa hai tab bằng layoutId, cùng spring với pill nav. */}
-      <div className="flex items-center gap-1 border-b border-gray-100 px-3 pt-2">
-        <TabButton
-          active={tab === "purchased"}
-          onClick={() => switchTab("purchased")}
-          icon={PackageCheck}
-          reduceMotion={reduceMotion}
-        >
-          Đã mua
-          <Count value={purchased.length} />
-        </TabButton>
-        <TabButton
-          active={tab === "recommended"}
-          onClick={() => switchTab("recommended")}
-          icon={Sparkles}
-          reduceMotion={reduceMotion}
-        >
-          Đề xuất
-          <Count value={recommendedCount} />
-        </TabButton>
+      <div className="flex items-center gap-1.5 border-b border-gray-100 px-4 py-2.5 text-xs font-semibold text-gray-800">
+        <PackageCheck size={13} className="text-primary" />
+        Đã mua
+        <Count value={purchased.length} />
       </div>
 
       <div className="custom-scrollbar max-h-72 scroll-fade overflow-y-auto p-2">
-        {tab === "purchased" ? (
-          purchasedLoading ? (
-            <ListSkeleton />
-          ) : purchased.length === 0 && orphans.length === 0 ? (
-            <EmptyRow>Bạn chưa mua sản phẩm nào đặt được vào phòng.</EmptyRow>
-          ) : (
-            <ul className="space-y-1">
-              {purchased.map((item) => {
-                // Vị trí đọc từ chính danh sách đã mua (không chờ element-analysis của phòng mới tải
-                // xong) — nhờ vậy đổi phòng không có khung hình nào mọi món "chưa đặt" rồi mới đúng lại.
-                const inThisRoom = item.placedWorkspaceProfileId === workspaceId;
-                const elsewhere = !inThisRoom && !!item.placedWorkspaceProfileId;
-                // Món ở phòng khác vẫn xem trước được: chuyển sang đây thì phòng này nhận thêm nó.
-                const canPreview = !inThisRoom;
-                return (
-                  <ProductRow
-                    key={item.orderItemId}
-                    image={item.productImage}
-                    name={item.productName}
-                    productId={item.productId}
-                    active={hovered?.productId === item.productId}
-                    previewable={canPreview}
-                    onEnter={
-                      canPreview
-                        ? () => beginHover({ productId: item.productId, label: item.productName })
-                        : undefined
-                    }
-                    onLeave={endHover}
-                    status={<PurchasedStatus item={item} inThisRoom={inThisRoom} />}
-                    action={
-                      inThisRoom ? (
-                        <RowButton
-                          tone="ghost"
-                          icon={PackageX}
-                          busy={busy}
-                          onClick={() => removeMutation.mutate(item.orderItemId)}
-                          title="Gỡ khỏi phòng này"
-                        >
-                          Gỡ ra
-                        </RowButton>
-                      ) : elsewhere ? (
-                        <RowButton
-                          tone="move"
-                          icon={ArrowRightLeft}
-                          busy={busy}
-                          onClick={() =>
-                            placeMutation.mutate({ orderItemId: item.orderItemId, moving: true })
-                          }
-                          title={`Chuyển từ "${item.placedWorkspaceName ?? "phòng khác"}" sang phòng này`}
-                        >
-                          Chuyển
-                        </RowButton>
-                      ) : (
-                        <RowButton
-                          tone="primary"
-                          icon={PackagePlus}
-                          busy={busy}
-                          onClick={() =>
-                            placeMutation.mutate({ orderItemId: item.orderItemId, moving: false })
-                          }
-                          title="Đặt vào phòng này"
-                        >
-                          Đặt vào
-                        </RowButton>
-                      )
-                    }
-                  />
-                );
-              })}
-              {orphans.map((p) => (
-                <ProductRow
-                  key={p.placementId}
-                  image={p.productImage}
-                  name={p.productName}
-                  productId={p.productId}
-                  active={false}
-                  previewable={false}
-                  onLeave={endHover}
-                  status={
-                    <span className="truncate text-[11px] text-amber-600">
-                      Không còn đặt được vào phòng
-                    </span>
-                  }
-                  action={
-                    <RowButton
-                      tone="ghost"
-                      icon={PackageX}
-                      busy={busy}
-                      onClick={() => removeMutation.mutate(p.orderItemId)}
-                      title="Gỡ khỏi phòng này"
-                    >
-                      Gỡ ra
-                    </RowButton>
-                  }
-                />
-              ))}
-            </ul>
-          )
-        ) : recommendation.status === "pending" ? (
+        {purchasedLoading ? (
           <ListSkeleton />
-        ) : recommendation.status === "error" || !recommendation.preview ? (
-          <EmptyRow>{recommendationErrorText(recommendation.error)}</EmptyRow>
-        ) : recommendation.preview.items.length === 0 ? (
-          <EmptyRow>Chưa có sản phẩm nào phù hợp với phòng này.</EmptyRow>
+        ) : purchased.length === 0 && orphans.length === 0 ? (
+          <EmptyRow>Bạn chưa mua sản phẩm nào đặt được vào phòng.</EmptyRow>
         ) : (
-          <>
-            {recommendation.preview.note && (
-              <p className="mb-1 px-2 text-[11px] text-amber-700">{recommendation.preview.note}</p>
-            )}
-            <ul className="space-y-1">
-              {recommendation.preview.items.map((item) => (
-                <RecommendedRow
-                  key={item.productId}
-                  item={item}
+          <ul className="space-y-1">
+            {purchased.map((item) => {
+              // Vị trí đọc từ chính danh sách đã mua (không chờ element-analysis của phòng mới tải
+              // xong) — nhờ vậy đổi phòng không có khung hình nào mọi món "chưa đặt" rồi mới đúng lại.
+              const inThisRoom = item.placedWorkspaceProfileId === workspaceId;
+              const elsewhere = !inThisRoom && !!item.placedWorkspaceProfileId;
+              // Món ở phòng khác vẫn xem trước được: chuyển sang đây thì phòng này nhận thêm nó.
+              const canPreview = !inThisRoom;
+              return (
+                <ProductRow
+                  key={item.orderItemId}
+                  image={item.productImage}
+                  name={item.productName}
+                  productId={item.productId}
                   active={hovered?.productId === item.productId}
-                  onEnter={() => beginHover({ productId: item.productId, label: item.productName })}
+                  previewable={canPreview}
+                  onEnter={
+                    canPreview
+                      ? () => beginHover({ productId: item.productId, label: item.productName })
+                      : undefined
+                  }
                   onLeave={endHover}
+                  status={<PurchasedStatus item={item} inThisRoom={inThisRoom} />}
+                  action={
+                    inThisRoom ? (
+                      <RowButton
+                        tone="ghost"
+                        icon={PackageX}
+                        busy={busy}
+                        onClick={() => removeMutation.mutate(item.orderItemId)}
+                        title="Gỡ khỏi phòng này"
+                      >
+                        Gỡ ra
+                      </RowButton>
+                    ) : elsewhere ? (
+                      <RowButton
+                        tone="move"
+                        icon={ArrowRightLeft}
+                        busy={busy}
+                        onClick={() =>
+                          placeMutation.mutate({ orderItemId: item.orderItemId, moving: true })
+                        }
+                        title={`Chuyển từ "${item.placedWorkspaceName ?? "phòng khác"}" sang phòng này`}
+                      >
+                        Chuyển
+                      </RowButton>
+                    ) : (
+                      <RowButton
+                        tone="primary"
+                        icon={PackagePlus}
+                        busy={busy}
+                        onClick={() =>
+                          placeMutation.mutate({ orderItemId: item.orderItemId, moving: false })
+                        }
+                        title="Đặt vào phòng này"
+                      >
+                        Đặt vào
+                      </RowButton>
+                    )
+                  }
                 />
-              ))}
-            </ul>
-          </>
+              );
+            })}
+            {orphans.map((p) => (
+              <ProductRow
+                key={p.placementId}
+                image={p.productImage}
+                name={p.productName}
+                productId={p.productId}
+                active={false}
+                previewable={false}
+                onLeave={endHover}
+                status={
+                  <span className="truncate text-[11px] text-amber-600">
+                    Không còn đặt được vào phòng
+                  </span>
+                }
+                action={
+                  <RowButton
+                    tone="ghost"
+                    icon={PackageX}
+                    busy={busy}
+                    onClick={() => removeMutation.mutate(p.orderItemId)}
+                    title="Gỡ khỏi phòng này"
+                  >
+                    Gỡ ra
+                  </RowButton>
+                }
+              />
+            ))}
+          </ul>
         )}
       </div>
       <p className="flex items-center gap-1 border-t border-gray-100 px-3 py-2 text-[10px] text-gray-400">
@@ -303,43 +215,6 @@ function ProductPanelBody({ workspaceId }: { workspaceId: string }) {
 }
 
 // ── Sub-components ──────────────────────────────────────────
-
-function TabButton({
-  active,
-  onClick,
-  icon: Icon,
-  reduceMotion,
-  children,
-}: {
-  active: boolean;
-  onClick: () => void;
-  icon: typeof PackageCheck;
-  reduceMotion: boolean | null;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`relative -mb-px flex items-center gap-1.5 px-2.5 py-2 text-xs font-semibold transition-colors cursor-pointer ${
-        active ? "text-primary" : "text-gray-500 hover:text-gray-800"
-      }`}
-    >
-      {active &&
-        (reduceMotion ? (
-          <span className="absolute inset-x-0 bottom-0 h-0.5 rounded-full bg-primary" />
-        ) : (
-          <motion.span
-            layoutId="workspace-product-tab-underline"
-            transition={PILL_SPRING}
-            className="absolute inset-x-0 bottom-0 h-0.5 rounded-full bg-primary"
-          />
-        ))}
-      <Icon size={13} />
-      {children}
-    </button>
-  );
-}
 
 function Count({ value }: { value: number }) {
   return (
@@ -510,59 +385,4 @@ function PurchasedStatus({ item, inThisRoom }: { item: PurchasedItem; inThisRoom
       )}
     </p>
   );
-}
-
-function RecommendedRow({
-  item,
-  active,
-  onEnter,
-  onLeave,
-}: {
-  item: RecommendationItem;
-  active: boolean;
-  onEnter: () => void;
-  onLeave: () => void;
-}) {
-  const percent = scorePercent(item.score);
-  const tone = fitToneByPercent(percent);
-  return (
-    <ProductRow
-      image={item.imageUrl}
-      name={item.productName}
-      productId={item.productId}
-      active={active}
-      previewable
-      onEnter={onEnter}
-      onLeave={onLeave}
-      status={
-        <p className="truncate text-[11px] text-gray-400" title={item.matchFacts[0]}>
-          {item.price != null && (
-            <span className="font-medium text-gray-600">{vnd.format(item.price)}</span>
-          )}
-          {item.price != null && item.matchFacts[0] && " · "}
-          {item.matchFacts[0]}
-        </p>
-      }
-      action={
-        <span
-          className="shrink-0 rounded-full border px-2 py-0.5 text-[11px] font-bold tabular-nums"
-          style={{
-            borderColor: tone.chipBorder,
-            color: tone.chipBorder,
-            backgroundColor: tone.background,
-          }}
-          title={`${tone.label} — ${percent}% phù hợp với phòng này`}
-        >
-          {percent}%
-        </span>
-      }
-    />
-  );
-}
-
-/** 422 từ BE (chưa sản phẩm nào gắn thuộc tính / không món nào hợp) mang message đọc được — hiện nguyên. */
-function recommendationErrorText(error: unknown): string {
-  const message = (error as { response?: { data?: { message?: string } } } | null)?.response?.data
-    ?.message;
-  return message || "Chưa lấy được danh sách đề xuất cho phòng này.";
 }

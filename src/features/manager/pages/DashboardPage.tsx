@@ -401,7 +401,7 @@ export default function DashboardPage() {
     return [
       {
         icon: Wallet,
-        label: "Doanh thu (đã giao)",
+        label: "Doanh thu",
         value: formatVnd(stats.totalRevenue),
         sub: `${deliveredCount} đơn giao thành công`,
       },
