@@ -1,4 +1,4 @@
-﻿{
+{
   "navbar": {
     "disclaimer_short": "Project Demo - Not a real e-commerce store",
     "disclaimer_long": "Notice: This is an academic project website, not a real e-commerce store. All data and transactions are for demonstration purposes only.",
@@ -738,6 +738,8 @@
       "total": "Total",
       "payment_method": "Payment method",
       "paid": "Paid",
+      "cancelled": "Cancelled payment",
+      "expired": "Payment expired",
       "shipping_discount": "Shipping discount"
     },
     "delivery": {

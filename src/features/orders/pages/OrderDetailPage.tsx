@@ -916,9 +916,19 @@ export default function OrderDetailPage() {
             <CreditCard className="h-4 w-4 text-primary shrink-0" />
             <span>{t("order_detail.product.payment_method")}</span>
             <span className="font-semibold text-gray-800">{order.paymentMethod}</span>
-            {order.status !== "Pending" && order.paymentMethod === "PayOS" && (
+            {order.status !== "Pending" && order.status !== "Expired" && order.status !== "Cancelled" && order.paymentMethod === "PayOS" && (
               <span className="ml-auto text-xs font-medium bg-violet-50 text-violet-700 border border-violet-200 px-2.5 py-0.5 rounded-full">
                 {t("order_detail.product.paid")}
+              </span>
+            )}
+            {order.status === "Expired" && order.paymentMethod === "PayOS" && (
+              <span className="ml-auto text-xs font-medium bg-red-50 text-red-700 border border-red-200 px-2.5 py-0.5 rounded-full">
+                {t("order_detail.product.expired")}
+              </span>
+            )}
+            {order.status === "Cancelled" && order.paymentMethod === "PayOS" && (
+              <span className="ml-auto text-xs font-medium bg-red-50 text-red-700 border border-red-200 px-2.5 py-0.5 rounded-full">
+                {t("order_detail.product.cancelled")}
               </span>
             )}
           </div>
