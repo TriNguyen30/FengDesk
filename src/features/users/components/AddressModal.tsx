@@ -284,9 +284,15 @@ export default function AddressModal({ isOpen, onClose, onSuccess, address }: Ad
     const { name, value, type } = e.target as HTMLInputElement;
     const checked = (e.target as HTMLInputElement).checked;
 
+    let finalValue: string | boolean = type === "checkbox" ? checked : value;
+
+    if (name === "recipientPhone") {
+      finalValue = value.replace(/\D/g, "").slice(0, 10);
+    }
+
     setFormData((prev) => ({
       ...prev,
-      [name]: type === "checkbox" ? checked : value,
+      [name]: finalValue,
     }));
   };
 
@@ -310,6 +316,12 @@ export default function AddressModal({ isOpen, onClose, onSuccess, address }: Ad
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const phoneRegex = /^0[35789]\d{8}$/;
+    if (!phoneRegex.test(formData.recipientPhone)) {
+      toast.error("Số điện thoại không hợp lệ (phải gồm 10 chữ số, bắt đầu bằng 03, 05, 07, 08, 09)");
+      return;
+    }
 
     if (!selectedWardId) {
       toast.error("Vui lòng chọn đầy đủ Tỉnh/Thành, Quận/Huyện, Phường/Xã");
@@ -402,6 +414,9 @@ export default function AddressModal({ isOpen, onClose, onSuccess, address }: Ad
                     type="tel"
                     name="recipientPhone"
                     required
+                    maxLength={10}
+                    pattern="^0[35789]\d{8}$"
+                    title="Vui lòng nhập số điện thoại Việt Nam hợp lệ (10 chữ số, bắt đầu bằng 03, 05, 07, 08, 09)"
                     value={formData.recipientPhone}
                     onChange={handleChange}
                     className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"

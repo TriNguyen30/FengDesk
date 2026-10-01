@@ -1,4 +1,4 @@
-﻿{
+{
   "navbar": {
     "disclaimer_short": "Dự án thử nghiệm - Không phải web bán hàng thật",
     "disclaimer_long": "Lưu ý: Đây là website dự án thử nghiệm, không phải sàn thương mại điện tử thực tế. Mọi dữ liệu và thanh toán chỉ mang tính chất minh họa.",
@@ -738,6 +738,8 @@
       "total": "Thành tiền",
       "payment_method": "Thanh toán qua",
       "paid": "Đã thanh toán",
+      "cancelled": "Đã hủy thanh toán",
+      "expired": "Hết hạn thanh toán",
       "shipping_discount": "Giảm phí vận chuyển"
     },
     "delivery": {

@@ -50,8 +50,6 @@ export default function PaymentCancelPage() {
         .finally(() => {
           setSearchingOrder(false);
         });
-    } else {
-      toast.error("Thiếu thông tin đơn hàng thanh toán");
     }
   }, [queryOrderCode]);
 
