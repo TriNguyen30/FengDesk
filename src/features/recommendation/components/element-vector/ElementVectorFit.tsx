@@ -83,8 +83,20 @@ interface ElementVectorFitProps {
    * dev nào cần thì bật.
    */
   showVoteSimulator?: boolean;
-  /** Nội dung đặt dưới radar ở cột phải (vd panel sản phẩm đã mua / đề xuất). */
+  /** Nội dung đặt dưới radar ở cột phải (vd tóm tắt sản phẩm đã chọn + nút mua). */
   children?: ReactNode;
+  /**
+   * Khối full-width dưới hai cột phân tích/radar — trang Workspace đặt hàng sản phẩm đề xuất (hoặc thông
+   * báo "chưa có đề xuất") ở đây.
+   */
+  footer?: ReactNode;
+  /** Có ảnh nền phía sau (thẻ workspace có ảnh) → nền kính mờ thay cho nền đục để ảnh lộ nhẹ ra. */
+  glass?: boolean;
+  /**
+   * `gap` của lớp xem trước CHỈ gồm các món đã chốt (bấm chọn), không tính món đang hover. `null` = chưa
+   * chọn món nào. Mỗi lần nó đổi, chip hành nào đổi sẽ nhảy số — hover thì không. Không truyền = tắt hiệu ứng.
+   */
+  committedPreviewRows?: ElementAnalysisRow[] | null;
 }
 
 export default function ElementVectorFit({
@@ -93,6 +105,9 @@ export default function ElementVectorFit({
   productPreview = null,
   showVoteSimulator = false,
   children,
+  footer,
+  glass = false,
+  committedPreviewRows,
 }: ElementVectorFitProps) {
   // null = dùng đúng số phiếu BE trả; số = user đang kéo slider mô phỏng (không gọi lại API).
   const [simulatedVotes, setSimulatedVotes] = useState<number | null>(null);
@@ -151,50 +166,65 @@ export default function ElementVectorFit({
 
   const personalLayer = buildPersonalLayer(analysis, simulation?.person ?? null, simulatedVotes);
 
+  const notices = (
+    <>
+      {(analysis.evidenceCount ?? 0) === 0 && (
+        <p className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">
+          Đang <strong>ước tính theo loại phòng</strong> - Có vẻ như bạn chưa khai báo màu chủ đạo,
+          chất liệu hay vật trang trí nào. Thêm vài tag hiện trạng để phản ánh đúng thực trạng khu
+          vực làm việc của bạn.
+        </p>
+      )}
+      {simulation && (
+        <p className="rounded-lg bg-[#D9AD41]/10 px-3 py-2 text-xs text-[#8a6d1f]">
+          Đang <strong>xem thử</strong> ở mức {simulatedVotes} phiếu. Biểu đồ và chip ngũ hành đổi
+          theo mức này; ba nhận định bên dưới vẫn tính trên số phiếu thật.
+        </p>
+      )}
+    </>
+  );
+
+  const radarColumn = (
+    <>
+      <ElementRadarChart
+        rows={displayRows}
+        showPreview={showPreview}
+        previewLabel={previewLabel}
+        contributions={analysis.contributions}
+        tagVotesScale={analysis.tagVotesScale ?? 1}
+        {...personalLayer}
+      />
+      {showVoteSimulator && analysis.personalDirection && (
+        <RoomPersonalWeightControls
+          direction={analysis.personalDirection}
+          personVotes={personVotes}
+          simulatedVotes={simulatedVotes}
+          onSimulate={setSimulatedVotes}
+        />
+      )}
+      <ConflictResolutionBanner conflict={analysis.personalDirection?.conflictResolution ?? null} />
+      {children}
+    </>
+  );
+
   return (
-    <div className="rounded-2xl border border-[#e5e7eb] bg-[#fafbf9] p-5">
+    <div
+      className={`rounded-2xl border border-[#e5e7eb] p-5 ${glass ? "fd-panel-glass" : "bg-[#fafbf9]"}`}
+    >
       <h3 className="mb-4 text-sm font-bold text-[#111827]">Ngũ hành không gian của bạn</h3>
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:items-start">
         <div className="flex flex-col gap-4">
-          <ElementTags rows={displayRows} showPreviewDelta={!!productPreview} />
-          {(analysis.evidenceCount ?? 0) === 0 && (
-            <p className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">
-              Đang <strong>ước tính theo loại phòng</strong> - Có vẻ như bạn chưa khai báo màu chủ
-              đạo, chất liệu hay vật trang trí nào. Thêm vài tag hiện trạng để phản ánh đúng thực
-              trạng khu vực làm việc của bạn.
-            </p>
-          )}
-          {simulation && (
-            <p className="rounded-lg bg-[#D9AD41]/10 px-3 py-2 text-xs text-[#8a6d1f]">
-              Đang <strong>xem thử</strong> ở mức {simulatedVotes} phiếu. Biểu đồ và chip ngũ hành
-              đổi theo mức này; ba nhận định bên dưới vẫn tính trên số phiếu thật.
-            </p>
-          )}
+          <ElementTags
+            rows={displayRows}
+            showPreviewDelta={!!productPreview}
+            pulseRows={pulseRowsOf(baseRows, committedPreviewRows)}
+          />
+          {notices}
           <SpaceInsightList insights={analysis.insights} />
         </div>
-        <div className="flex min-w-0 flex-col gap-3">
-          <ElementRadarChart
-            rows={displayRows}
-            showPreview={showPreview}
-            previewLabel={previewLabel}
-            contributions={analysis.contributions}
-            tagVotesScale={analysis.tagVotesScale ?? 1}
-            {...personalLayer}
-          />
-          {showVoteSimulator && analysis.personalDirection && (
-            <RoomPersonalWeightControls
-              direction={analysis.personalDirection}
-              personVotes={personVotes}
-              simulatedVotes={simulatedVotes}
-              onSimulate={setSimulatedVotes}
-            />
-          )}
-          <ConflictResolutionBanner
-            conflict={analysis.personalDirection?.conflictResolution ?? null}
-          />
-          {children}
-        </div>
+        <div className="flex min-w-0 flex-col gap-3">{radarColumn}</div>
       </div>
+      {footer && <div className="mt-6 border-t border-[#e5e7eb] pt-5">{footer}</div>}
     </div>
   );
 }
@@ -268,4 +298,17 @@ function buildPersonalLayer(
         .filter((pair): pair is readonly [ElementCode, string] => pair[1] !== null),
     ),
   };
+}
+
+/**
+ * Trạng thái "đã chốt" cho hiệu ứng nhảy số của ElementTags: có món đã chọn → phòng sau khi đặt chúng;
+ * chưa chọn gì → phòng như hiện tại (previewCurrent = current, để bỏ món cuối cũng thấy các hành trở về).
+ */
+function pulseRowsOf(
+  baseRows: ElementAnalysisRow[],
+  committed: ElementAnalysisRow[] | null | undefined,
+): ElementAnalysisRow[] | undefined {
+  if (committed === undefined) return undefined;
+  if (committed === null) return baseRows.map((row) => ({ ...row, previewCurrent: row.current }));
+  return overlayPreview(baseRows, committed);
 }

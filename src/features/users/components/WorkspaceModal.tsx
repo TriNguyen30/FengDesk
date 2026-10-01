@@ -330,6 +330,7 @@ export default function WorkspaceModal({
                   initialValues={isEditMode ? null : draftRef.current.review?.values}
                   initialInputs={isEditMode ? null : draftRef.current.review?.inputs}
                   onDraftChange={handleReviewChange}
+                  suggestedImageUrls={isEditMode ? undefined : draftRef.current.describe.imageUrls}
                   onSuccess={() => {
                     // Lưu được rồi thì nháp hết ý nghĩa.
                     draftStore.clear();

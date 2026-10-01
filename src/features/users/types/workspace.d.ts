@@ -14,6 +14,8 @@ export interface Workspace {
   fengShuiElement: string | null;
   deskArea: number | null;
   isDefault: boolean;
+  /** Ảnh không gian theo thứ tự trình chiếu — nền phần tổng quan. Rỗng = chưa có. */
+  images: WorkspaceImage[];
   createdAt: string;
   updatedAt: string;
   /** % hồ sơ đã điền (fields optional có giá trị / tổng). */
@@ -24,9 +26,18 @@ export interface Workspace {
   inputs: WorkspaceProfileInputDto[];
 }
 
+export interface WorkspaceImage {
+  id: string;
+  url: string;
+  sortOrder: number;
+}
+
 export interface WorkspaceType {
   id: string;
+  /** Tên gốc tiếng Anh (khoá seed) — hiển thị thì dùng `workspaceTypeLabel`. */
   name: string;
+  /** Tên tiếng Việt; null ở loại user tự tạo. */
+  nameVi: string | null;
   description: string;
   isPublic: boolean;
   personalWeight: number;

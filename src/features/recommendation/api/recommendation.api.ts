@@ -1,6 +1,8 @@
 import fetchHttpClient from "@/lib/httpClient";
 import type { ApiResponse } from "@/types/api";
 import type {
+  BundlePreviewItem,
+  BundlePreviewResponse,
   PersonalFitResponse,
   ProductFitResponse,
   ProductOccupationFitResponse,
@@ -66,3 +68,14 @@ export const getWorkspaceRecommendationPreview = async (
   return response.data.data;
 };
 
+/** Xem trước gộp nhiều món (kèm số lượng) trên radar một phòng — chỉ đọc, POST vì body là danh sách. */
+export const getBundlePreview = async (
+  workspaceProfileId: string,
+  items: BundlePreviewItem[],
+): Promise<BundlePreviewResponse> => {
+  const response = await fetchHttpClient.post<ApiResponse<BundlePreviewResponse>>(
+    "/recommendations/fit/bundle",
+    { workspaceProfileId, items },
+  );
+  return response.data.data;
+};

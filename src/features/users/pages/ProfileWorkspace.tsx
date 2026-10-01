@@ -2,18 +2,44 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { deleteWorkspace, setDefaultWorkspace } from "../api/workspace.api";
-import { Workspace } from "../types/workspace";
+import type { ElementAnalysisRow, Workspace } from "../types/workspace";
 import { toast } from "sonner";
 import WorkspaceModal from "../components/WorkspaceModal";
 import { useWorkspaceIntakeRunning } from "../hooks/useWorkspaceIntakeDraft";
-import { useWorkspaceElementAnalysis, useWorkspaces } from "../hooks/useWorkspace";
+import {
+  useStyles,
+  useWorkspaceElementAnalysis,
+  useWorkspaces,
+  useWorkspaceTypes,
+} from "../hooks/useWorkspace";
 import { fromCm2 } from "../utils/deskArea";
 import { resolveSelectedWorkspace, workspacePath } from "../utils/selectWorkspace";
 import ElementVectorFit, {
   type ProductPreviewLayer,
 } from "@/features/recommendation/components/element-vector/ElementVectorFit";
-import { useProductFit } from "@/features/recommendation/hooks/useProductFit";
+import { useBundlePreview, useProductFit } from "@/features/recommendation/hooks/useProductFit";
+import { elementVi } from "@/features/recommendation/components/element-vector/constants";
 import { useWorkspaceHover } from "../context/WorkspaceHoverContext";
+import {
+  useRecommendationSelection,
+  type RecommendationSelection,
+} from "../hooks/useRecommendationSelection";
+import { useWorkspaceRecommendations } from "../hooks/useWorkspaceRecommendations";
+import WorkspaceRecommendationPicker, {
+  RecommendationEmptyNotice,
+  RecommendationSelectionSummary,
+} from "../components/WorkspaceRecommendationPicker";
+import WorkspaceCoverControls from "../components/WorkspaceCoverControls";
+import WorkspaceCoverBackdrop from "../components/WorkspaceCoverBackdrop";
+import { useSlideshow } from "../hooks/useSlideshow";
+import {
+  deskTypeLabel,
+  directionLabel,
+  lightingLabel,
+  locationTypeLabel,
+  workPurposeLabel,
+  workspaceTypeLabel,
+} from "../utils/workspaceLabels";
 import {
   MapPinHouse,
   Briefcase,
@@ -28,6 +54,8 @@ import {
   Trash,
   AlertTriangle,
   Lightbulb,
+  ChevronDown,
+  LayoutGrid,
 } from "lucide-react";
 
 // ── Vòng tròn % tương thích ngũ hành (nguồn: element-analysis.compatibilityPercent) ──
@@ -75,18 +103,20 @@ function CompatibilityRing({ percent, loading }: { percent: number | null; loadi
   );
 }
 
-// ── Ngũ hành không gian (hover sản phẩm ở sidebar → radar xem trước) ──
-function WorkspaceElementSection({ workspace }: { workspace: Workspace }) {
+// ── Ngũ hành không gian + đề xuất (hover / chọn sản phẩm → radar xem trước) ──
+function WorkspaceElementSection({
+  workspace,
+  onImage,
+}: {
+  workspace: Workspace;
+  /** Ảnh nền của thẻ chạy ra phía sau khối này → nền kính mờ. */
+  onImage: boolean;
+}) {
   const { analysis, status } = useWorkspaceElementAnalysis(workspace.id);
-
-  // Món đang hover trong panel sản phẩm (sidebar, qua context) → fit của món đó với phòng này → lớp
-  // nét đứt trên radar. react-query cache theo (productId, workspaceId) nên hover lại không tốn request.
-  const { hovered } = useWorkspaceHover();
-  const { fit } = useProductFit(hovered?.productId, workspace.id);
-  const productPreview: ProductPreviewLayer | null =
-    hovered && fit && fit.productId === hovered.productId
-      ? { label: hovered.label, rows: fit.gap }
-      : null;
+  // Sống theo WorkspaceCard (key = id phòng) → đổi phòng là bỏ chọn hết.
+  const selection = useRecommendationSelection();
+  const recommendations = useWorkspaceRecommendations(workspace.id);
+  const { productPreview, committedRows } = useRadarPreview(workspace.id, selection.lines);
 
   if (status === "pending") {
     return (
@@ -95,11 +125,79 @@ function WorkspaceElementSection({ workspace }: { workspace: Workspace }) {
   }
   if (status === "error" || !analysis) return null;
 
+  // Phân tích bên trái, radar bên phải; hàng đề xuất (hoặc dải "chưa có đề xuất") nằm full-width bên dưới.
+  const footer =
+    recommendations.state === "empty" ? (
+      <RecommendationEmptyNotice error={recommendations.error} />
+    ) : (
+      <div className="flex flex-col gap-3">
+        <WorkspaceRecommendationPicker recommendations={recommendations} selection={selection} />
+        <RecommendationSelectionSummary selection={selection} />
+      </div>
+    );
+
   return (
     <div className="mt-4">
-      <ElementVectorFit analysis={analysis} variant="full" productPreview={productPreview} />
+      <ElementVectorFit
+        analysis={analysis}
+        variant="full"
+        productPreview={productPreview}
+        committedPreviewRows={committedRows}
+        footer={footer}
+        glass={onImage}
+      />
     </div>
   );
+}
+
+/**
+ * Lớp nét đứt trên radar:
+ * - Đã chọn món → xem trước GỘP cả nhóm (kèm số lượng); đang hover một món khác thì cộng thêm món đó
+ *   (1 cái) để thấy "nhóm này + món kia" trước khi bấm chọn.
+ * - Chưa chọn gì → chỉ món đang hover (lưới đề xuất hoặc panel "Đã mua" ở sidebar, qua context).
+ */
+function useRadarPreview(
+  workspaceId: string,
+  lines: RecommendationSelection["lines"],
+): { productPreview: ProductPreviewLayer | null; committedRows: ElementAnalysisRow[] | null } {
+  const { hovered } = useWorkspaceHover();
+  const hoveredOutsideSelection =
+    hovered && !lines.some((l) => l.item.productId === hovered.productId) ? hovered : null;
+
+  const bundleItems = lines.length
+    ? [
+        ...lines.map((l) => ({ productId: l.item.productId, quantity: l.quantity })),
+        ...(hoveredOutsideSelection
+          ? [{ productId: hoveredOutsideSelection.productId, quantity: 1 }]
+          : []),
+      ]
+    : [];
+  const { preview: bundle } = useBundlePreview(workspaceId, bundleItems);
+  // Riêng các món đã chốt (không có món đang hover) — hiệu ứng nhảy số chỉ bám vào lớp này, nên hover
+  // không làm chip nhảy. Không hover thì trùng key với `bundle` ở trên → react-query dùng chung cache.
+  const { preview: committed } = useBundlePreview(
+    workspaceId,
+    lines.map((l) => ({ productId: l.item.productId, quantity: l.quantity })),
+  );
+  const { fit } = useProductFit(lines.length ? undefined : hovered?.productId, workspaceId);
+  const committedRows = lines.length ? (committed?.gap ?? null) : null;
+
+  if (lines.length) {
+    if (!bundle) return { productPreview: null, committedRows };
+    const totalQuantity = lines.reduce((sum, l) => sum + l.quantity, 0);
+    const base = `${totalQuantity} món đã chọn`;
+    return {
+      productPreview: {
+        label: hoveredOutsideSelection ? `${base} + ${hoveredOutsideSelection.label}` : base,
+        rows: bundle.gap,
+      },
+      committedRows,
+    };
+  }
+  if (hovered && fit && fit.productId === hovered.productId) {
+    return { productPreview: { label: hovered.label, rows: fit.gap }, committedRows };
+  }
+  return { productPreview: null, committedRows };
 }
 
 interface WorkspaceCardProps {
@@ -109,68 +207,96 @@ interface WorkspaceCardProps {
   onSetDefault: (workspace: Workspace) => void;
 }
 
-function WorkspaceCard({ workspace, onEdit, onDelete, onSetDefault }: WorkspaceCardProps) {
-  // Cùng queryKey với WorkspaceElementSection bên dưới → react-query dedupe, không tốn thêm request.
-  const { analysis, status } = useWorkspaceElementAnalysis(workspace.id);
+/** Giá trị hiển thị của từng ô thông tin phòng — mã enum BE đổi sang nhãn tiếng Việt. */
+function formatField(key: (typeof fieldConfig)[number]["key"], raw: unknown, styleName?: string) {
+  const code = String(raw);
+  switch (key) {
+    case "deskArea":
+      return `${fromCm2(Number(raw)).toFixed(2)} m²`;
+    case "locationType":
+      return locationTypeLabel(code);
+    case "styleCode":
+      return styleName ?? code;
+    case "lighting":
+      return lightingLabel(code);
+    case "deskType":
+      return deskTypeLabel(code);
+    case "deskOrientation":
+    case "roomFacingDirection":
+      return directionLabel(code);
+    case "workPurpose":
+      return workPurposeLabel(code);
+    case "fengShuiElement":
+      return elementVi(code);
+  }
+}
+
+/**
+ * Thông tin phòng dạng 1 dòng chip (nhãn ở title) + "Chi tiết" để xổ lưới đầy đủ — lưới 9 ô cũ chiếm
+ * ~200px mà ít được đọc lại, nhường chỗ cho lưới đề xuất. Gợi ý bổ sung gộp thành 1 dòng xổ được.
+ */
+function WorkspaceInfoSummary({ workspace, onImage }: { workspace: Workspace; onImage: boolean }) {
+  const [expanded, setExpanded] = useState(false);
+  // Nằm trên ảnh → kính mờ (blur + hơi trong); không ảnh → mảng xám như cũ (kính mờ trên nền trắng sẽ chìm).
+  const tileClass = onImage ? "fd-glass" : "bg-gray-50";
+  const { workspaceTypes } = useWorkspaceTypes();
+  const { styles } = useStyles();
+  const workspaceType = workspaceTypes.find((t) => t.id === workspace.workspaceTypeId);
+  const styleName = styles.find((s) => s.code === workspace.styleCode)?.name;
+
+  const fields = [
+    ...(workspaceType
+      ? [
+          {
+            key: "workspaceType",
+            label: "Loại không gian",
+            icon: LayoutGrid,
+            value: workspaceTypeLabel(workspaceType),
+          },
+        ]
+      : []),
+    ...fieldConfig.flatMap(({ key, label, icon }) => {
+      const raw = workspace[key as keyof Workspace];
+      if (raw === null || raw === undefined) return [];
+      return [{ key, label, icon, value: formatField(key, raw, styleName) }];
+    }),
+  ];
+  const hints = workspace.missingFieldHints;
 
   return (
-    <div className="relative rounded-xl border border-gray-100 bg-white p-5 shadow-sm transition-shadow hover:shadow-md">
-      {/* Header */}
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <CompatibilityRing
-            percent={analysis?.compatibilityPercent ?? null}
-            loading={status === "pending"}
+    <div className="flex flex-col gap-2">
+      <div className="flex flex-wrap items-center gap-1.5">
+        {!expanded &&
+          fields.map(({ key, label, icon: Icon, value }) => (
+            <span
+              key={key}
+              title={label}
+              className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs text-gray-700 ${tileClass}`}
+            >
+              <Icon size={12} className="shrink-0 text-primary" />
+              {value}
+            </span>
+          ))}
+        <button
+          type="button"
+          onClick={() => setExpanded((v) => !v)}
+          className="flex items-center gap-0.5 rounded-full px-2 py-1 text-xs font-medium text-gray-500 hover:bg-gray-50 hover:text-primary cursor-pointer"
+        >
+          {expanded ? "Thu gọn" : "Chi tiết"}
+          <ChevronDown
+            size={13}
+            className={`transition-transform ${expanded ? "rotate-180" : ""}`}
           />
-          <div className="flex items-center gap-2">
-            <span className="text-lg font-semibold text-gray-900">{workspace.name}</span>
-            {workspace.isDefault && (
-              <span className="flex items-center gap-1 rounded bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
-                <Star size={10} />
-                Mặc định
-              </span>
-            )}
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => onEdit(workspace)}
-            className="flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 hover:text-primary transition-colors cursor-pointer"
-          >
-            <Pencil size={14} />
-            Chỉnh sửa
-          </button>
-          <button
-            onClick={() => onDelete(workspace)}
-            className="flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-red-50 hover:text-red-500 hover:border-red-200 transition-colors cursor-pointer"
-          >
-            <Trash size={14} />
-            Xóa
-          </button>
-          <button
-            onClick={() => onSetDefault(workspace)}
-            disabled={workspace.isDefault}
-            className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors cursor-pointer
-            ${
-              workspace.isDefault
-                ? "border-primary/20 bg-primary/5 text-primary cursor-default"
-                : "border-gray-200 text-gray-600 hover:bg-primary/5 hover:text-primary hover:border-primary/30"
-            }`}
-          >
-            <Star size={14} />
-            {workspace.isDefault ? "Mặc định" : "Đặt mặc định"}
-          </button>
-        </div>
+        </button>
       </div>
 
-      {/* Info Grid */}
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {fieldConfig.map(({ key, label, icon: Icon }) => {
-          const raw = workspace[key as keyof Workspace];
-          if (raw === null || raw === undefined) return null;
-          const value = key === "deskArea" ? `${fromCm2(Number(raw)).toFixed(2)} m²` : String(raw);
-          return (
-            <div key={key} className="flex items-center gap-3 rounded-lg bg-gray-50 px-3 py-2.5">
+      {expanded && (
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {fields.map(({ key, label, icon: Icon, value }) => (
+            <div
+              key={key}
+              className={`flex items-center gap-3 rounded-lg px-3 py-2.5 ${tileClass}`}
+            >
               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-white text-primary shadow-sm">
                 <Icon size={16} />
               </div>
@@ -181,25 +307,107 @@ function WorkspaceCard({ workspace, onEdit, onDelete, onSetDefault }: WorkspaceC
                 <p className="truncate text-sm font-medium text-gray-800">{value}</p>
               </div>
             </div>
-          );
-        })}
-      </div>
-
-      {workspace.missingFieldHints.length > 0 && (
-        <div className="mt-3 rounded-lg bg-amber-50 px-3 py-2.5 text-xs text-amber-700">
-          <p className="flex items-center gap-1.5 font-medium">
-            <Lightbulb size={13} />
-            Gợi ý bổ sung để tư vấn chính xác hơn
-          </p>
-          <ul className="mt-1 list-disc space-y-0.5 pl-5">
-            {workspace.missingFieldHints.map((hint) => (
-              <li key={hint}>{hint}</li>
-            ))}
-          </ul>
+          ))}
         </div>
       )}
 
-      <WorkspaceElementSection workspace={workspace} />
+      {hints.length > 0 && (
+        <details
+          className={`group rounded-lg px-3 py-2 text-xs text-amber-700 ${onImage ? "fd-glass-warn" : "bg-amber-50"}`}
+        >
+          <summary className="flex cursor-pointer list-none items-center gap-1.5 font-medium">
+            <Lightbulb size={13} />
+            Bổ sung {hints.length} thông tin để tư vấn chính xác hơn
+            <ChevronDown size={13} className="ml-auto transition-transform group-open:rotate-180" />
+          </summary>
+          <ul className="mt-1 list-disc space-y-0.5 pl-5">
+            {hints.map((hint) => (
+              <li key={hint}>{hint}</li>
+            ))}
+          </ul>
+        </details>
+      )}
+    </div>
+  );
+}
+
+function WorkspaceCard({ workspace, onEdit, onDelete, onSetDefault }: WorkspaceCardProps) {
+  // Cùng queryKey với WorkspaceElementSection bên dưới → react-query dedupe, không tốn thêm request.
+  const { analysis, status } = useWorkspaceElementAnalysis(workspace.id);
+
+  const onImage = workspace.images.length > 0;
+  // Nút nằm đè lên ảnh → kính mờ như chip; không ảnh → viền + nền trắng như cũ.
+  const actionSurface = onImage ? "fd-glass" : "border border-gray-200 bg-white";
+  const slideshow = useSlideshow(workspace.images.length);
+
+  return (
+    <div className="relative rounded-xl border border-gray-100 bg-white shadow-sm transition-shadow hover:shadow-md">
+      {/* Ảnh là lớp NỀN cao cố định, không nằm trong luồng: thêm/gỡ ảnh hay Chi tiết/Thu gọn không đổi
+          vị trí nội dung. Mờ dần từ chân lên nên chạy ra sau cả khối "Ngũ hành"; nhiều ảnh thì tự chuyển. */}
+      <WorkspaceCoverBackdrop images={workspace.images} index={slideshow.index} />
+
+      <div className="relative px-5 pt-5 pb-4">
+        <div>
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <CompatibilityRing
+                percent={analysis?.compatibilityPercent ?? null}
+                loading={status === "pending"}
+              />
+              <div className="flex items-center gap-2">
+                <span className="text-lg font-semibold text-gray-900">{workspace.name}</span>
+                {workspace.isDefault && (
+                  <span className="flex items-center gap-1 rounded bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
+                    <Star size={10} />
+                    Mặc định
+                  </span>
+                )}
+              </div>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <WorkspaceCoverControls
+                workspace={workspace}
+                index={slideshow.index}
+                onSelect={slideshow.setIndex}
+                onPauseChange={slideshow.setPaused}
+              />
+              <button
+                onClick={() => onEdit(workspace)}
+                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-gray-600 hover:text-primary transition-colors cursor-pointer ${actionSurface}`}
+              >
+                <Pencil size={14} />
+                Chỉnh sửa
+              </button>
+              <button
+                onClick={() => onDelete(workspace)}
+                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-gray-600 hover:text-red-500 transition-colors cursor-pointer ${actionSurface}`}
+              >
+                <Trash size={14} />
+                Xóa
+              </button>
+              <button
+                onClick={() => onSetDefault(workspace)}
+                disabled={workspace.isDefault}
+                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors cursor-pointer
+                ${
+                  workspace.isDefault
+                    ? "border border-primary/20 bg-primary/5 text-primary cursor-default"
+                    : `text-gray-600 hover:text-primary ${actionSurface}`
+                }`}
+              >
+                <Star size={14} />
+                {workspace.isDefault ? "Mặc định" : "Đặt mặc định"}
+              </button>
+            </div>
+          </div>
+
+          <WorkspaceInfoSummary workspace={workspace} onImage={onImage} />
+        </div>
+      </div>
+
+      <div className="relative px-5 pb-5">
+        <WorkspaceElementSection workspace={workspace} onImage={onImage} />
+      </div>
     </div>
   );
 }
@@ -353,9 +561,7 @@ export default function ProfileWorkspace() {
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="text-xl font-bold tracking-tight text-gray-900">Không gian làm việc</h1>
-          <p className="mt-0.5 text-sm text-gray-500">
-            Quản lý các không gian làm việc của bạn.
-          </p>
+          <p className="mt-0.5 text-sm text-gray-500">Quản lý các không gian làm việc của bạn.</p>
         </div>
         <div className="flex items-center gap-3">
           {/* Dấu hiệu nhỏ: AI vẫn đang phân tích mô tả user gửi lúc nãy — mở "Tạo mới" là thấy tiến trình,

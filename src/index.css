@@ -673,6 +673,103 @@
   background-color: #232720;
 }
 
+/* -------------------------------------------------------------------------
+   Ảnh nền thẻ workspace (ProfileWorkspace + khung "độ phù hợp" ở trang sản phẩm).
+   Mọi lớp phủ/kính mờ trộn từ biến bề mặt nên tự đổi theo theme — ghi cứng trắng
+   thì theme tối ra một mảng sương trắng.
+
+   ▶ CHỈNH ĐỘ ĐỤC / ĐỘ MỜ TẠI ĐÂY (bảng biến ngay dưới). % = độ đục của lớp phủ:
+     100% = che kín ảnh, 0% = trong suốt. Muốn theme tối khác theme sáng thì chép
+     biến cần đổi vào khối :root[data-theme="dark"] bên dưới.
+------------------------------------------------------------------------- */
+
+:root {
+  /* Ảnh: giữ rõ từ trên xuống tới mốc này rồi mờ dần tới chân lớp ảnh. */
+  --fd-cover-fade-solid: 40%;
+
+  /* Lớp phủ trên ảnh: góc trên trái (vòng % + tên phòng) và dải trái → phải. */
+  --fd-cover-scrim-corner: 92%;
+  --fd-cover-scrim-left: 88%;
+  --fd-cover-scrim-mid: 68%;
+  --fd-cover-scrim-right: 30%;
+
+  /* Thẻ kính mờ nổi trên ảnh: chip thuộc tính, nút, chấm chọn ảnh — kiểu nút "Xem thêm" trên banner:
+     nền rất trong + blur mạnh + viền sáng mảnh. */
+  --fd-glass-opacity: 30%;
+  --fd-glass-blur: 14px;
+  /* Độ sáng viền mảnh quanh thẻ kính (trắng pha trong suốt). */
+  --fd-glass-edge: 45%;
+
+  /* Dải vàng "Bổ sung N thông tin…" khi nằm trên ảnh. */
+  --fd-glass-warn-opacity: 45%;
+  --fd-glass-warn-blur: 24px;
+
+  /* Khối "Ngũ hành không gian của bạn" khi ảnh chạy ra phía sau nó. */
+  --fd-panel-glass-opacity: 80%;
+  --fd-panel-glass-blur: 8px;
+
+  /* Hộp "Điểm này đến từ đâu?" (trang sản phẩm) — nhiều chữ nhỏ nên phải gần như đặc. */
+  --fd-score-panel-opacity: 94%;
+  --fd-score-panel-blur: 12px;
+
+  /* Nền khối "Ngũ hành không gian" — cùng giá trị bg-[#fafbf9] ở trên. */
+  --fd-panel: #fafbf9;
+}
+
+:root[data-theme="dark"] {
+  --fd-panel: #232720;
+}
+
+/* Ảnh cao cố định, mờ dần từ chân lên: nội dung dài/ngắn (Chi tiết/Thu gọn) không kéo giãn ảnh. */
+.fd-cover-fade {
+  mask-image: linear-gradient(to bottom, #000 0%, #000 var(--fd-cover-fade-solid), transparent 100%);
+}
+
+/* Góc trên trái (vòng % + tên phòng) đục nhất, nhạt dần sang phải để ảnh lộ ra. */
+.fd-cover-scrim {
+  background:
+    radial-gradient(
+      ellipse 55% 70% at 0% 0%,
+      color-mix(in oklab, var(--fd-surface) var(--fd-cover-scrim-corner), transparent) 0%,
+      transparent 100%
+    ),
+    linear-gradient(
+      to right,
+      color-mix(in oklab, var(--fd-surface) var(--fd-cover-scrim-left), transparent) 0%,
+      color-mix(in oklab, var(--fd-surface) var(--fd-cover-scrim-mid), transparent) 45%,
+      color-mix(in oklab, var(--fd-surface) var(--fd-cover-scrim-right), transparent) 100%
+    );
+}
+
+/* Thẻ nổi trên ảnh (chip thuộc tính, nút): kính mờ, hơi trong. */
+.fd-glass {
+  background-color: color-mix(in oklab, var(--fd-surface) var(--fd-glass-opacity), transparent);
+  backdrop-filter: blur(var(--fd-glass-blur)) saturate(140%);
+  /* Viền bằng inset shadow: không chiếm chỗ như border, chip không đổi kích thước. */
+  box-shadow:
+    inset 0 0 0 1px color-mix(in oklab, #fff var(--fd-glass-edge), transparent),
+    0 1px 2px rgb(0 0 0 / 0.06);
+}
+
+/* Dải cảnh báo vàng nổi trên ảnh — giữ tông amber (đã tự lật theo theme qua --color-amber-50). */
+.fd-glass-warn {
+  background-color: color-mix(in oklab, var(--color-amber-50) var(--fd-glass-warn-opacity), transparent);
+  backdrop-filter: blur(var(--fd-glass-warn-blur)) saturate(140%);
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, #fff var(--fd-glass-edge), transparent);
+}
+
+/* Hộp "Điểm này đến từ đâu?" — nằm trên ảnh nền phòng ở trang sản phẩm. */
+.fd-score-panel {
+  background-color: color-mix(in oklab, var(--color-gray-50) var(--fd-score-panel-opacity), transparent);
+  backdrop-filter: blur(var(--fd-score-panel-blur));
+}
+
+/* Khối "Ngũ hành không gian" khi ảnh chạy ra phía sau nó. */
+.fd-panel-glass {
+  background-color: color-mix(in oklab, var(--fd-panel) var(--fd-panel-glass-opacity), transparent);
+  backdrop-filter: blur(var(--fd-panel-glass-blur));
+}
+
 :root[data-theme="dark"] .border-\[\#e5e7eb\],
 :root[data-theme="dark"] .border-\[\#d5ddc9\],
 :root[data-theme="dark"] .border-\[\#cdd3c4\],

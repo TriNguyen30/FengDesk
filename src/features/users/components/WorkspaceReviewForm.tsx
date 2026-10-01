@@ -3,8 +3,22 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Sparkles } from "lucide-react";
 import { toast } from "sonner";
-import { createWorkspace, updateWorkspace } from "../api/workspace.api";
+import {
+  addWorkspaceImages,
+  addWorkspaceImagesFromUrls,
+  createWorkspace,
+  removeWorkspaceImage,
+  updateWorkspace,
+} from "../api/workspace.api";
 import { toCm2, fromCm2 } from "../utils/deskArea";
+import {
+  deskTypeLabel,
+  directionLabel,
+  lightingLabel,
+  locationTypeLabel,
+  workPurposeLabel,
+  workspaceTypeLabel,
+} from "../utils/workspaceLabels";
 import {
   workspaceFormSchema,
   type WorkspaceFormValues,
@@ -15,6 +29,8 @@ import {
   workPurposes,
 } from "../schemas/workspace-schema";
 import CurrentStateTagPicker from "./CurrentStateTagPicker";
+import WorkspaceImagesField, { type WorkspaceImagesValue } from "./WorkspaceImagesField";
+import { MAX_WORKSPACE_IMAGES } from "../hooks/useWorkspace";
 import type {
   ElementInputVocabulary,
   Style,
@@ -37,6 +53,8 @@ interface WorkspaceReviewFormProps {
   initialInputs?: WorkspaceProfileInputDto[] | null;
   /** Báo lên modal mỗi khi form/tag đổi, để modal ghi nháp. */
   onDraftChange?: (values: WorkspaceFormValues, inputs: WorkspaceProfileInputDto[]) => void;
+  /** Ảnh user đã gửi cho AI intake (create mode) — điền sẵn làm ảnh không gian, user gỡ được. */
+  suggestedImageUrls?: string[];
 }
 
 function toFormValues(
@@ -95,6 +113,7 @@ export default function WorkspaceReviewForm({
   initialValues,
   initialInputs,
   onDraftChange,
+  suggestedImageUrls,
 }: WorkspaceReviewFormProps) {
   const isEditMode = !!workspace;
 
@@ -115,6 +134,12 @@ export default function WorkspaceReviewForm({
   const [inputs, setInputs] = useState<WorkspaceProfileInputDto[]>(
     () => initialInputs ?? draft?.inputs ?? workspace?.inputs ?? [],
   );
+  // Ảnh gửi cho AI chính là ảnh chụp phòng → điền sẵn làm ảnh không gian (create mode).
+  const [images, setImages] = useState<WorkspaceImagesValue>(() => ({
+    removedIds: [],
+    urls: (suggestedImageUrls ?? []).slice(0, MAX_WORKSPACE_IMAGES),
+    files: [],
+  }));
 
   useEffect(() => {
     // Edit mode: nạp lại toàn bộ theo workspace đang sửa.
@@ -206,13 +231,15 @@ export default function WorkspaceReviewForm({
     };
 
     try {
+      let saved: Workspace;
       if (isEditMode && workspace) {
-        await updateWorkspace(workspace.id, payload);
+        saved = await updateWorkspace(workspace.id, payload);
         toast.success("Cập nhật không gian làm việc thành công");
       } else {
-        await createWorkspace({ ...payload, isDefault: values.isDefault });
+        saved = await createWorkspace({ ...payload, isDefault: values.isDefault });
         toast.success("Tạo không gian làm việc thành công");
       }
+      await saveImages(saved.id);
       onSuccess();
     } catch (error) {
       toast.error(
@@ -221,6 +248,21 @@ export default function WorkspaceReviewForm({
       console.error(error);
     }
   });
+
+  /**
+   * Ảnh áp SAU khi phòng đã lưu (tạo mới thì lúc này mới có id). Gỡ trước rồi mới thêm, để không chạm trần
+   * số ảnh. Lỗi ảnh không làm hỏng việc lưu phòng — báo riêng để user làm lại trên thẻ phòng.
+   */
+  const saveImages = async (workspaceId: string) => {
+    try {
+      for (const imageId of images.removedIds) await removeWorkspaceImage(workspaceId, imageId);
+      if (images.urls.length) await addWorkspaceImagesFromUrls(workspaceId, images.urls);
+      if (images.files.length) await addWorkspaceImages(workspaceId, images.files);
+    } catch (error) {
+      console.error(error);
+      toast.error("Đã lưu không gian nhưng chưa cập nhật được ảnh - thử lại trên thẻ không gian.");
+    }
+  };
 
   const selectClass =
     "w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-700";
@@ -276,6 +318,12 @@ export default function WorkspaceReviewForm({
           {errors.name && <p className="mt-1 text-xs text-danger">{errors.name.message}</p>}
         </div>
 
+        <WorkspaceImagesField
+          existing={workspace?.images ?? []}
+          value={images}
+          onChange={setImages}
+        />
+
         <div>
           {label("Loại không gian làm việc", "workspaceTypeId")}
           <select
@@ -285,7 +333,7 @@ export default function WorkspaceReviewForm({
             <option value="">Chọn loại không gian</option>
             {workspaceTypes.map((wt) => (
               <option key={wt.id} value={wt.id}>
-                {wt.name}
+                {workspaceTypeLabel(wt)}
               </option>
             ))}
           </select>
@@ -314,7 +362,7 @@ export default function WorkspaceReviewForm({
           <select {...register("locationType")} className={fieldClass("locationType", selectClass)}>
             {locationTypes.map((lt) => (
               <option key={lt} value={lt}>
-                {lt}
+                {locationTypeLabel(lt)}
               </option>
             ))}
           </select>
@@ -325,7 +373,7 @@ export default function WorkspaceReviewForm({
           <select {...register("workPurpose")} className={fieldClass("workPurpose", selectClass)}>
             {workPurposes.map((wp) => (
               <option key={wp} value={wp}>
-                {wp}
+                {workPurposeLabel(wp)}
               </option>
             ))}
           </select>
@@ -364,7 +412,7 @@ export default function WorkspaceReviewForm({
               <option value="">-- Chưa rõ --</option>
               {lightingTypes.map((lt) => (
                 <option key={lt} value={lt}>
-                  {lt}
+                  {lightingLabel(lt)}
                 </option>
               ))}
             </select>
@@ -380,7 +428,7 @@ export default function WorkspaceReviewForm({
               <option value="">-- Chưa rõ --</option>
               {deskTypes.map((dt) => (
                 <option key={dt} value={dt}>
-                  {dt}
+                  {deskTypeLabel(dt)}
                 </option>
               ))}
             </select>
@@ -412,7 +460,7 @@ export default function WorkspaceReviewForm({
               <option value="">-- Chưa rõ --</option>
               {compassDirections.map((cd) => (
                 <option key={cd} value={cd}>
-                  {cd}
+                  {directionLabel(cd)}
                 </option>
               ))}
             </select>
@@ -427,7 +475,7 @@ export default function WorkspaceReviewForm({
               <option value="">-- Chưa rõ --</option>
               {compassDirections.map((cd) => (
                 <option key={cd} value={cd}>
-                  {cd}
+                  {directionLabel(cd)}
                 </option>
               ))}
             </select>

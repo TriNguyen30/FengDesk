@@ -76,7 +76,9 @@ export default function ScoreWaterfall({
   const product = toMap(breakdown.vectors.product);
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-gray-50/60">
+    // fd-score-panel: gần như đặc + blur — ở trang sản phẩm hộp này nằm trên ảnh nền phòng, nền 60% cũ để
+    // ảnh lộ qua làm chữ nhỏ khó đọc. Độ đục chỉnh ở --fd-score-panel-opacity (index.css).
+    <div className="fd-score-panel rounded-xl border border-gray-200">
       <div className="flex items-center justify-between gap-2 px-3 py-2.5">
         <span className="text-[14px] font-semibold text-gray-700">Điểm này đến từ đâu?</span>
         <span className="flex items-center gap-2 text-[12px] text-gray-400">
@@ -638,7 +640,9 @@ function PenaltyCalc({
           {penalty.factor != null &&
             ` × ${penalty.factorLabelVi ?? "hệ số"} ${penalty.factor.toFixed(2)}`}
         </span>
-        <span className="font-semibold tabular-nums text-negative">−{penalty.value.toFixed(3)}</span>
+        <span className="font-semibold tabular-nums text-negative">
+          −{penalty.value.toFixed(3)}
+        </span>
       </div>
     </div>
   );
