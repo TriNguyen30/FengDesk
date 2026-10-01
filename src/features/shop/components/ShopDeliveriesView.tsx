@@ -36,7 +36,7 @@ const TABS: { value: string; label: string }[] = [
   { value: "Cancelled", label: "Đã hủy" },
 ];
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 10;
 
 interface ShopDeliveriesViewProps {
   storeId: string;
