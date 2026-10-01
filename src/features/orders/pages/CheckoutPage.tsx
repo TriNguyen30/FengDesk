@@ -90,7 +90,6 @@ export default function CheckoutPage() {
     if (isPlacingOrderRef.current) return;
 
     if (selectedItemIds.length === 0 || checkoutItems.length === 0) {
-      toast.error(t("checkout_page.toast.select_product"));
       navigate("/cart", { replace: true });
     }
   }, [selectedItemIds.length, checkoutItems.length, navigate, cartStatus, t]);
