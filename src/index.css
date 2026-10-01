@@ -689,7 +689,9 @@
 
   /* Lớp phủ trên ảnh: góc trên trái (vòng % + tên phòng) và dải trái → phải. */
   --fd-cover-scrim-corner: 92%;
-  --fd-cover-scrim-left: 88%;
+  /* Kích thước vùng phủ góc (ngang dọc) — nhỏ lại thì mảng sáng ở góc thu hẹp. */
+  --fd-cover-scrim-corner-size: 38% 55%;
+  --fd-cover-scrim-left: 80%;
   --fd-cover-scrim-mid: 68%;
   --fd-cover-scrim-right: 30%;
 
@@ -729,7 +731,7 @@
 .fd-cover-scrim {
   background:
     radial-gradient(
-      ellipse 55% 70% at 0% 0%,
+      ellipse var(--fd-cover-scrim-corner-size) at 0% 0%,
       color-mix(in oklab, var(--fd-surface) var(--fd-cover-scrim-corner), transparent) 0%,
       transparent 100%
     ),
@@ -1044,6 +1046,23 @@ body {
 [data-scroll-fade]::-webkit-scrollbar {
   width: 0;
   height: 0;
+}
+
+/* =========================
+   TẠM TẮT scroll-snap (01/10/2026) — `@/config/scrollBehavior` ghi thuộc tính này lên <html>.
+
+   CHỈ chạm HÀNH VI: các class `snap-x` / `snap-y` / `snap-start` nằm rải trong 7 component, chặn ở
+   đây một chỗ thay vì đi sửa từng file, để bật lại chỉ là đổi một hằng số.
+
+   KHÔNG đụng vẻ ngoài thanh cuộn — thanh mảnh 2px, tự mờ khi ngừng cuộn và màu theo theme do
+   `scrollFade.ts` lo, và nó vẫn chạy bình thường (đã soát: không hijack cuộn, xem file cấu hình).
+
+   Bật lại: `SCROLL_SNAPPING_ENABLED = true` → thuộc tính biến mất → khối này tự vô hiệu.
+========================= */
+[data-scroll-snap="off"],
+[data-scroll-snap="off"] * {
+  scroll-snap-type: none !important;
+  scroll-snap-align: none !important;
 }
 
 .fd-scroll-thumb {

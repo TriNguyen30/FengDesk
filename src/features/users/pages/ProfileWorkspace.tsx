@@ -280,7 +280,7 @@ function WorkspaceInfoSummary({ workspace, onImage }: { workspace: Workspace; on
         <button
           type="button"
           onClick={() => setExpanded((v) => !v)}
-          className="flex items-center gap-0.5 rounded-full px-2 py-1 text-xs font-medium text-gray-500 hover:bg-gray-50 hover:text-primary cursor-pointer"
+          className={`flex items-center gap-0.5 rounded-full px-2 py-1 text-xs font-medium hover:bg-gray-50 hover:text-primary cursor-pointer ${onImage ? "text-gray-700" : "text-gray-500"}`}
         >
           {expanded ? "Thu gọn" : "Chi tiết"}
           <ChevronDown
@@ -301,7 +301,9 @@ function WorkspaceInfoSummary({ workspace, onImage }: { workspace: Workspace; on
                 <Icon size={16} />
               </div>
               <div className="min-w-0">
-                <p className="text-[11px] font-medium uppercase tracking-wide text-gray-400">
+                <p
+                  className={`text-[11px] font-medium uppercase tracking-wide ${onImage ? "text-gray-600" : "text-gray-400"}`}
+                >
                   {label}
                 </p>
                 <p className="truncate text-sm font-medium text-gray-800">{value}</p>
@@ -337,7 +339,10 @@ function WorkspaceCard({ workspace, onEdit, onDelete, onSetDefault }: WorkspaceC
 
   const onImage = workspace.images.length > 0;
   // Nút nằm đè lên ảnh → kính mờ như chip; không ảnh → viền + nền trắng như cũ.
-  const actionSurface = onImage ? "fd-glass" : "border border-gray-200 bg-white";
+  // Trên ảnh: chữ đậm hơn (gray-800) — xám nhạt như nền trắng sẽ chìm vào kính mờ.
+  const actionSurface = onImage
+    ? "fd-glass text-gray-800"
+    : "border border-gray-200 bg-white text-gray-600";
   const slideshow = useSlideshow(workspace.images.length);
 
   return (
@@ -373,14 +378,14 @@ function WorkspaceCard({ workspace, onEdit, onDelete, onSetDefault }: WorkspaceC
               />
               <button
                 onClick={() => onEdit(workspace)}
-                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-gray-600 hover:text-primary transition-colors cursor-pointer ${actionSurface}`}
+                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium hover:text-primary transition-colors cursor-pointer ${actionSurface}`}
               >
                 <Pencil size={14} />
                 Chỉnh sửa
               </button>
               <button
                 onClick={() => onDelete(workspace)}
-                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-gray-600 hover:text-red-500 transition-colors cursor-pointer ${actionSurface}`}
+                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium hover:text-red-500 transition-colors cursor-pointer ${actionSurface}`}
               >
                 <Trash size={14} />
                 Xóa
@@ -391,8 +396,10 @@ function WorkspaceCard({ workspace, onEdit, onDelete, onSetDefault }: WorkspaceC
                 className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors cursor-pointer
                 ${
                   workspace.isDefault
-                    ? "border border-primary/20 bg-primary/5 text-primary cursor-default"
-                    : `text-gray-600 hover:text-primary ${actionSurface}`
+                    ? onImage
+                      ? "fd-glass font-semibold text-primary cursor-default"
+                      : "border border-primary/20 bg-primary/5 text-primary cursor-default"
+                    : `hover:text-primary ${actionSurface}`
                 }`}
               >
                 <Star size={14} />

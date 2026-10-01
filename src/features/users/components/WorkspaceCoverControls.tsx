@@ -7,7 +7,7 @@ import type { Workspace } from "../types/workspace";
 
 /** Nút nhỏ trên nền ảnh — kính mờ trộn từ màu bề mặt nên đọc được trên mọi ảnh, cả theme tối. */
 const BUTTON_CLASS =
-  "fd-glass flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:text-primary disabled:opacity-50 cursor-pointer";
+  "fd-glass flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium text-gray-800 transition-colors hover:text-primary disabled:opacity-50 cursor-pointer";
 
 interface WorkspaceCoverControlsProps {
   workspace: Workspace;

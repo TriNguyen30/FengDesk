@@ -18,6 +18,21 @@ interface CurrentStateTagPickerProps {
   aiFilled?: boolean;
 }
 
+/**
+ * Trần số tag mỗi nhóm — PHẢI khớp `ElementInputLimits` bên BE (Color 3, còn lại 5). BE mới là chốt
+ * thật (nó cắt im lặng lúc lưu); ở đây chỉ để user thấy giới hạn trước khi bấm, thay vì bấm xong rồi
+ * mất tag mà không hiểu vì sao.
+ *
+ * Vì sao có trần: mỗi tag là một "phiếu" dựng `current`. Càng nhiều tag thì `current` càng phẳng, mà
+ * phẳng thì phủ tốt với mọi mức lý tưởng ⇒ gap teo lại và điểm mọi sản phẩm xích về giữa.
+ */
+const MAX_PER_KIND: Record<InputKind, number> = {
+  Color: 3,
+  Material: 5,
+  DecorItem: 5,
+  Shape: 5,
+};
+
 const GROUPS: {
   kind: InputKind;
   label: string;
@@ -62,18 +77,25 @@ export default function CurrentStateTagPicker({
   const isSelected = (kind: InputKind, code: string) =>
     value.some((i) => i.inputKind === kind && i.inputCode === code);
 
+  const countOf = (kind: InputKind) => value.filter((i) => i.inputKind === kind).length;
+  const isFull = (kind: InputKind) => countOf(kind) >= MAX_PER_KIND[kind];
+
   const toggle = (kind: InputKind, code: string) => {
     if (isSelected(kind, code)) {
       onChange(value.filter((i) => !(i.inputKind === kind && i.inputCode === code)));
-    } else {
-      onChange([...value, { inputKind: kind, inputCode: code }]);
+      return;
     }
+    // Đầy thì KHÔNG báo lỗi, chỉ không nhận thêm — chip đã bị `disabled` nên không vào được tới đây
+    // bằng chuột; nhánh này là lưới chắn cho bàn phím và cho tag AI điền sẵn.
+    if (isFull(kind)) return;
+    onChange([...value, { inputKind: kind, inputCode: code }]);
   };
 
   const submitCustomTag = async (kind: InputKind) => {
     const label = (drafts[kind] ?? "").trim();
     if (!label || classifyingKind) return;
 
+    if (isFull(kind)) return; // nhóm đã đủ — bỏ qua im lặng, không toast
     setClassifyingKind(kind);
     try {
       const result = await classifyElementInput(kind, label);
@@ -124,6 +146,9 @@ export default function CurrentStateTagPicker({
           const selectedOptions = options.filter((o) => isSelected(group.kind, o.code));
           const expanded = expandedKind === group.kind;
           const classifying = classifyingKind === group.kind;
+          const max = MAX_PER_KIND[group.kind];
+          const picked = countOf(group.kind);
+          const full = isFull(group.kind);
 
           return (
             <div
@@ -132,7 +157,14 @@ export default function CurrentStateTagPicker({
               onMouseEnter={() => setExpandedKind(group.kind)}
               onMouseLeave={() => setExpandedKind((k) => (k === group.kind ? null : k))}
             >
-              <p className="mb-1.5 text-xs font-medium text-gray-500">{group.label}</p>
+              <p className="mb-1.5 flex items-baseline justify-between gap-2 text-xs font-medium text-gray-500">
+                <span>{group.label}</span>
+                {/* Bộ đếm, KHÔNG phải cảnh báo: đỏ ở đây sẽ đọc như "bạn làm sai". Chỉ đậm lên khi
+                    đã đủ, để user hiểu vì sao các chip còn lại mờ đi. */}
+                <span className={full ? "font-semibold text-gray-600" : "text-gray-400"}>
+                  {picked}/{max}
+                </span>
+              </p>
 
               <div
                 className={`tag-progress-bar relative mb-2 h-0.5 w-full overflow-hidden rounded-full bg-gray-200 transition-opacity duration-200 ${
@@ -149,13 +181,20 @@ export default function CurrentStateTagPicker({
                   <div className="flex flex-wrap items-center gap-1.5 pb-1">
                     {options.map((option) => {
                       const selected = isSelected(group.kind, option.code);
+                      // Đủ trần ⇒ các chip CHƯA chọn mờ đi và bấm không ăn; chip ĐÃ chọn vẫn bấm được
+                      // để bỏ ra — nếu khoá cả hai thì user kẹt, không đổi được lựa chọn.
+                      const blocked = !selected && full;
                       return (
                         <button
                           key={option.code}
                           type="button"
                           onClick={() => toggle(group.kind, option.code)}
                           aria-pressed={selected}
-                          className={chipClass(selected)}
+                          disabled={blocked}
+                          title={blocked ? `Tối đa ${max} lựa chọn - bỏ bớt một cái để đổi` : undefined}
+                          className={`${chipClass(selected)} ${
+                            blocked ? "cursor-not-allowed opacity-40" : ""
+                          }`}
                         >
                           {option.labelVi}
                         </button>
@@ -173,15 +212,15 @@ export default function CurrentStateTagPicker({
                           void submitCustomTag(group.kind);
                         }
                       }}
-                      placeholder="Thêm mới..."
-                      disabled={classifying}
+                      placeholder={full ? `Đủ ${max}` : "Thêm mới..."}
+                      disabled={classifying || full}
                       maxLength={50}
                       className="w-24 rounded-full border border-dashed border-gray-300 px-2.5 py-1 text-xs focus:border-primary focus:outline-none disabled:opacity-50"
                     />
                     <button
                       type="button"
                       onClick={() => void submitCustomTag(group.kind)}
-                      disabled={classifying || !(drafts[group.kind] ?? "").trim()}
+                      disabled={classifying || full || !(drafts[group.kind] ?? "").trim()}
                       className="flex h-6 w-6 items-center justify-center rounded-full border border-gray-300 text-gray-500 transition-colors hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
                       aria-label="Thêm tag mới"
                     >

@@ -91,7 +91,6 @@ export default function WorkspaceImagesField({
                 title="Ảnh bạn đã gửi cho AI - sẽ lưu làm ảnh không gian"
               >
                 <Sparkles size={9} />
-                Từ AI
               </span>
             )}
             <button
