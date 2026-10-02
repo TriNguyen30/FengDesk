@@ -17,6 +17,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import Modal from "@/components/ui/Modal";
 import ChangeEmailFlow from "../components/ChangeEmailFlow";
+import ChangePasswordFlow from "../components/ChangePasswordFlow";
 import { getOccupationsRequest } from "../api/occupation.api";
 
 type GenderValue = UpdateProfilePayload["gender"];
@@ -274,6 +275,8 @@ export default function ProfileInfoPage() {
             currentEmail={profile.email || ""}
             onChanged={() => queryClient.invalidateQueries({ queryKey: ["myProfile"] })}
           />
+
+          <ChangePasswordFlow currentEmail={profile.email || ""} />
 
           <div className="grid grid-cols-2 gap-4">
             <div>
