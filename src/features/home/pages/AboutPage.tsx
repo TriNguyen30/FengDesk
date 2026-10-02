@@ -105,7 +105,7 @@ export default function AboutPage() {
               được những loài cây tương sinh, hòa hợp nhất để thu hút may mắn và thịnh vượng.
             </p>
 
-            <div className="flex flex-wrap gap-8 border-t border-gray-200 pt-6">
+            {/* <div className="flex flex-wrap gap-8 border-t border-gray-200 pt-6">
               <div>
                 <h4 className="mb-2 text-4xl font-bold text-green-600">5+</h4>
                 <p className="font-medium text-gray-500">Năm Kinh Nghiệm</p>
@@ -118,7 +118,7 @@ export default function AboutPage() {
                 <h4 className="mb-2 text-4xl font-bold text-green-600">100+</h4>
                 <p className="font-medium text-gray-500">Loài Cây Khác Nhau</p>
               </div>
-            </div>
+            </div> */}
           </motion.div>
         </div>
       </section>

@@ -88,8 +88,6 @@ export default function PaymentCancelPage() {
     try {
       // Cancel payment in payments controller
       await cancelPayment(orderId, { reason: "Người dùng hủy tại trang thanh toán" }).unwrap();
-      // Cancel order in orders store
-      await cancelOrderMutation.mutateAsync(orderId);
       toast.success("Đã hủy đơn hàng thành công");
       getPaymentStatus(orderId);
       localStorage.removeItem("pending_payment_order_id");
