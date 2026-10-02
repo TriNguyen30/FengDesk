@@ -328,7 +328,7 @@ export default function CreateShopPage() {
             {/* Hotline */}
             <div>
               <label htmlFor="hotline" className="mb-1.5 block text-sm font-semibold text-gray-700">
-                Hotline <span className="text-red-500">*</span>
+                Số điện thoại <span className="text-red-500">*</span>
               </label>
               <div className="relative">
                 <Phone
@@ -338,7 +338,7 @@ export default function CreateShopPage() {
                 <input
                   id="hotline"
                   type="text"
-                  placeholder="VD: 1900 1234 hoặc 0901234567"
+                  placeholder="VD: 0321234567"
                   className="w-full rounded-xl border border-gray-200 py-2.5 pl-10 pr-4 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
                   {...register("hotline")}
                 />
@@ -490,7 +490,7 @@ export default function CreateShopPage() {
 
       {/* Chỉ còn là đường lùi: bình thường BE trả phiên mới kèm response tạo shop. Hỏi rồi mới
           đăng xuất — không đóng được bằng Escape/nền để người dùng không bỏ lỡ thông báo. */}
-      <Modal open={needRelogin} title="Cần đăng nhập lại" onClose={() => {}} size="max-w-md">
+      <Modal open={needRelogin} title="Cần đăng nhập lại" onClose={() => { }} size="max-w-md">
         <div className="space-y-4 pt-1">
           <p className="text-sm leading-relaxed text-gray-600">
             Cửa hàng của bạn đã được tạo. Tài khoản vừa được cấp thêm quyền <b>người bán</b>, nên bạn

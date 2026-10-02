@@ -52,8 +52,6 @@ export default function PaymentSuccessPage() {
         .finally(() => {
           setSearchingOrder(false);
         });
-    } else {
-      toast.error("Thiếu thông tin đơn hàng thanh toán");
     }
   }, [queryOrderCode]);
 

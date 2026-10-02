@@ -181,6 +181,7 @@ export default function LocationPickerMap({
             }
           : {
               position: "relative",
+              zIndex: 1,
               height: 300,
               borderRadius: 12,
               overflow: "hidden",
