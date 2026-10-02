@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useQueryClient, useQuery, useQueries } from "@tanstack/react-query";
 import {
@@ -425,7 +425,7 @@ export default function OrderDetailPage() {
           to="/profile/orders"
           className="mt-4 text-sm font-medium text-primary hover:underline"
         >
-          {t("order_detail.back_to_list")}
+          {t("order_detail.back")}
         </Link>
       </div>
     );

@@ -108,7 +108,7 @@ export function ShopStatsSection({ storeId }: { storeId: string }) {
   const cards = [
     {
       icon: Wallet,
-      label: "Doanh thu (đã giao)",
+      label: "Doanh thu",
       value: formatVnd(stats.totalRevenue),
       // BE mới trả số dư sổ cái (đã trừ phí sàn + công nợ hoàn hàng); BE cũ thì giữ dòng cũ.
       sub:
