@@ -13,9 +13,9 @@ export const createShopSchema = z.object({
   hotline: z
     .string()
     .trim()
-    .min(1, "Vui lòng nhập hotline")
-    .max(20, "Hotline tối đa 20 ký tự")
-    .regex(/^[0-9\s+().-]{6,}$/, "Hotline không hợp lệ"),
+    .min(1, "Vui lòng nhập số điện thoại")
+    .max(20, "Số điện thoại tối đa 20 ký tự")
+    .regex(/^[0-9\s+().-]{6,}$/, "Số điện thoại không hợp lệ"),
   description: z.string().trim().max(1000, "Mô tả tối đa 1000 ký tự").optional().or(z.literal("")),
   openingHours: z
     .string()

@@ -1,6 +1,6 @@
-﻿import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { useQueryClient, useQuery } from "@tanstack/react-query";
+import { useQueryClient, useQuery, useQueries } from "@tanstack/react-query";
 import {
   ChevronLeft,
   Loader2,
@@ -115,6 +115,13 @@ export default function OrderDetailPage() {
   const orderReturns = returnsData?.isSuccess
     ? returnsData.data.items.filter((r: any) => r.orderId === id)
     : [];
+  const returnDetails = useQueries({
+    queries: orderReturns.map((r: any) => ({
+      queryKey: ["return-detail", r.id],
+      queryFn: () => returnApi.getReturnById(r.id).then((res) => res.data.data),
+      staleTime: Infinity,
+    })),
+  });
   const { address: shippingAddress } = useAddressDetail(currentOrder?.shippingAddressId);
   const cancelOrderMutation = useCancelOrder();
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
@@ -828,6 +835,32 @@ export default function OrderDetailPage() {
                   className={`h-14 w-14 transition-opacity ${productUrl ? "group-hover/img:opacity-90" : "opacity-80"}`}
                 />
               );
+              
+              // Tìm xem sản phẩm này có phải là hàng đổi không
+              let exchangeSource = null;
+              if (item.deliveryId) {
+                const delivery = deliveries.find((d) => d.id === item.deliveryId);
+                if (delivery?.isExchange) {
+                  for (const query of returnDetails) {
+                    const ret = query.data;
+                    if (ret && ret.replacementDeliveryId === item.deliveryId) {
+                      const match = ret.items.find(
+                        (i) => i.exchangeProductItemId === item.productItemId
+                      );
+                      if (match) {
+                        const original = order.items?.find((oi) => oi.id === match.orderItemId);
+                        if (original) {
+                          exchangeSource = `${original.productName}${original.variantName ? ` - ${original.variantName}` : ""}`;
+                        } else {
+                          exchangeSource = match.productName;
+                        }
+                        break;
+                      }
+                    }
+                  }
+                }
+              }
+
               return (
                 <li
                   key={item.id}
@@ -863,6 +896,14 @@ export default function OrderDetailPage() {
                       <span className="mt-1 inline-block text-xs text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">
                         {item.variantName}
                       </span>
+                    )}
+                    {exchangeSource && (
+                      <div className="mt-1.5 flex items-start gap-1">
+                        <RotateCcw className="h-3.5 w-3.5 text-blue-500 shrink-0 mt-0.5" />
+                        <span className="text-[11px] font-medium text-blue-600 bg-blue-50 border border-blue-200 px-1.5 py-0.5 rounded">
+                          Đổi từ: {exchangeSource}
+                        </span>
+                      </div>
                     )}
                     <p className="mt-1 text-xs text-gray-400">x{item.quantity}</p>
                   </div>
