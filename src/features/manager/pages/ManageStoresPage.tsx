@@ -731,14 +731,6 @@ export default function ManageStoresPage() {
   // Address deletion (soft/hard)
   const handleDeleteAddress = async (hard: boolean = false) => {
     if (!selectedStore) return;
-    if (
-      !window.confirm(
-        hard
-          ? "Bạn có chắc chắn muốn xóa vĩnh viễn địa chỉ này?"
-          : "Bạn có chắc chắn muốn xóa mềm địa chỉ này?",
-      )
-    )
-      return;
 
     setDeletingAddress(true);
     try {

@@ -69,60 +69,77 @@ export default function AdminDashboardPage() {
     chartData,
     recentOrders,
     completedOrdersCount,
+    totalShopsRevenue,
+    totalShopsShippingFee,
+    totalShopsDeliveries,
   } = useMemo(() => {
     const uniqueUsers = new Set<string>();
     orders.forEach((o) => {
       uniqueUsers.add(o.customerId);
     });
 
-    let totalRev = 0;
+    // Cùng định nghĩa Manager Dashboard: doanh thu sản phẩm = totalRevenue
+    // (subtotal delivery Delivered/Completed). Phí ship tách riêng, không cộng vào doanh thu.
+    let productRevenue = 0;
+    let shipping = 0;
+    let deliveries = 0;
     let newOrders = 0;
     let completedOrders = 0;
-    const monthlyRevenue = Array(12).fill(0);
-
-    const now = new Date();
-    const currentYear = now.getFullYear();
+    const monthlyProductRevenue = Array(12).fill(0);
+    const currentYear = new Date().getFullYear();
 
     shopStatsList.forEach(({ stats }) => {
-      if (stats) {
-        // Doanh thu tổng bao gồm doanh thu sản phẩm và phí vận chuyển
-        totalRev += (stats.totalRevenue || 0) + (stats.totalShippingFee || 0);
-        newOrders += stats.deliveriesByStatus["Pending"] || 0;
-        completedOrders +=
-          (stats.deliveriesByStatus["Delivered"] || 0) +
-          (stats.deliveriesByStatus["Completed"] || 0);
+      if (!stats) return;
 
-        if (stats.revenueByMonth) {
-          stats.revenueByMonth.forEach((point) => {
-            if (point.year === currentYear && point.month >= 1 && point.month <= 12) {
-              monthlyRevenue[point.month - 1] += point.revenue;
-            }
-          });
-        }
+      productRevenue += stats.totalRevenue || 0;
+      shipping += stats.totalShippingFee || 0;
+      deliveries += stats.totalDeliveries || 0;
+      newOrders += stats.deliveriesByStatus["Pending"] || 0;
+      completedOrders +=
+        (stats.deliveriesByStatus["Delivered"] || 0) +
+        (stats.deliveriesByStatus["Completed"] || 0);
+
+      const yearBuckets = stats.revenueSeriesByRange?.year;
+      if (yearBuckets?.length) {
+        yearBuckets.forEach((b) => {
+          const d = new Date(b.start);
+          if (!Number.isNaN(d.getTime()) && d.getFullYear() === currentYear) {
+            monthlyProductRevenue[d.getMonth()] += b.completed ?? b.revenue ?? 0;
+          }
+        });
+      } else {
+        (stats.revenueByMonth || []).forEach((point) => {
+          if (point.year === currentYear && point.month >= 1 && point.month <= 12) {
+            monthlyProductRevenue[point.month - 1] += point.revenue || 0;
+          }
+        });
       }
     });
 
     const months = [
-      "Jan",
-      "Feb",
-      "Mar",
-      "Apr",
-      "May",
-      "Jun",
-      "Jul",
-      "Aug",
-      "Sep",
-      "Oct",
-      "Nov",
-      "Dec",
+      "Tháng 1",
+      "Tháng 2",
+      "Tháng 3",
+      "Tháng 4",
+      "Tháng 5",
+      "Tháng 6",
+      "Tháng 7",
+      "Tháng 8",
+      "Tháng 9",
+      "Tháng 10",
+      "Tháng 11",
+      "Tháng 12",
     ];
     const chart = months.map((name, index) => ({
       name,
-      total: monthlyRevenue[index],
+      total: monthlyProductRevenue[index],
     }));
 
     return {
-      totalOrderRevenue: totalRev,
+      totalOrderRevenue: productRevenue,
+      totalShopsRevenue: productRevenue,
+      totalShopsShippingFee: shipping,
+      totalShopsDeliveries: deliveries,
       newOrdersCount: newOrders,
       activeUsersCount: uniqueUsers.size,
       completedOrdersCount: completedOrders,
@@ -130,27 +147,6 @@ export default function AdminDashboardPage() {
       recentOrders: orders.slice(0, 5),
     };
   }, [orders, shopStatsList]);
-
-  // Aggregate total product revenue and shipping fees from all shops
-  const { totalShopsRevenue, totalShopsShippingFee, totalShopsDeliveries } = useMemo(() => {
-    let rev = 0;
-    let shipping = 0;
-    let deliveries = 0;
-
-    shopStatsList.forEach(({ stats }) => {
-      if (stats) {
-        rev += stats.totalRevenue || 0;
-        shipping += stats.totalShippingFee || 0;
-        deliveries += stats.totalDeliveries || 0;
-      }
-    });
-
-    return {
-      totalShopsRevenue: rev,
-      totalShopsShippingFee: shipping,
-      totalShopsDeliveries: deliveries,
-    };
-  }, [shopStatsList]);
 
   const stats = [
     {
@@ -236,7 +232,7 @@ export default function AdminDashboardPage() {
             </p>
           </div>
           <div className="text-right">
-            <span className="text-xs font-semibold text-gray-500">Tổng doanh thu đơn hàng: </span>
+            <span className="text-xs font-semibold text-gray-500">Tổng doanh thu đơn hàng (trừ phí vận chuyển): </span>
             <span className="text-sm font-bold text-emerald-600">
               {formatVnd(totalOrderRevenue)}
             </span>
@@ -255,7 +251,7 @@ export default function AdminDashboardPage() {
               <thead>
                 <tr className="border-b border-gray-100 text-xs font-semibold text-gray-400 uppercase tracking-wider">
                   <th className="pb-3 pr-4">Cửa hàng</th>
-                  <th className="pb-3 px-4">Hotline</th>
+                  {/* <th className="pb-3 px-4">Hotline</th> */}
                   <th className="pb-3 px-4 text-center">Đơn thành công</th>
                   <th className="pb-3 px-4 text-right">Phí vận chuyển</th>
                   <th className="pb-3 px-4 text-right">Doanh thu sản phẩm</th>
@@ -267,7 +263,9 @@ export default function AdminDashboardPage() {
                 {shopStatsList.map(({ shop, stats }) => {
                   const shopRev = stats?.totalRevenue ?? 0;
                   const shopShip = stats?.totalShippingFee ?? 0;
-                  const deliveredCount = stats?.deliveriesByStatus["Delivered"] ?? 0;
+                  const deliveredCount =
+                    (stats?.deliveriesByStatus["Delivered"] ?? 0) +
+                    (stats?.deliveriesByStatus["Completed"] ?? 0);
                   const pct = totalShopsRevenue > 0 ? (shopRev / totalShopsRevenue) * 100 : 0;
 
                   return (
@@ -285,9 +283,9 @@ export default function AdminDashboardPage() {
                           </div>
                         </div>
                       </td>
-                      <td className="py-3 px-4 text-gray-600 font-mono text-xs">
+                      {/* <td className="py-3 px-4 text-gray-600 font-mono text-xs">
                         {shop.hotline || "N/A"}
-                      </td>
+                      </td> */}
                       <td className="py-3 px-4 text-center font-semibold text-gray-700">
                         {deliveredCount}
                       </td>
