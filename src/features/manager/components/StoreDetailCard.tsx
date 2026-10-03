@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   MapPin,
   Plus,
@@ -10,9 +10,11 @@ import {
   Loader2,
   Crown,
   User,
+  AlertCircle,
 } from "lucide-react";
 import type { Shop, StoreAddress, StoreStaff, UserSearchItem } from "@/features/shop/types/shop";
 import UserSearchCombobox from "@/features/shop/components/UserSearchCombobox";
+import Modal from "@/components/ui/Modal";
 
 interface StoreDetailCardProps {
   selectedStore: Shop;
@@ -55,6 +57,14 @@ export function StoreDetailCard({
   currentUserId,
   selectedStoreOwnerName,
 }: StoreDetailCardProps) {
+  const [isConfirmDeleteAddressOpen, setIsConfirmDeleteAddressOpen] = useState(false);
+
+  useEffect(() => {
+    if (!deletingAddress) {
+      setIsConfirmDeleteAddressOpen(false);
+    }
+  }, [deletingAddress]);
+
   const renderStoreAddressDetails = (storeDetails: Shop | null) => {
     if (!storeDetails) return null;
 
@@ -87,11 +97,11 @@ export function StoreDetailCard({
               </button> */}
               <button
                 type="button"
-                onClick={() => onDeleteAddress(true)}
+                onClick={() => setIsConfirmDeleteAddressOpen(true)}
                 disabled={deletingAddress}
                 className="text-xs font-semibold text-red-700 hover:text-red-900 transition-colors disabled:opacity-55 cursor-pointer"
               >
-                Xóa 
+                Xóa
               </button>
             </div>
           </div>
@@ -143,9 +153,9 @@ export function StoreDetailCard({
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-xs text-gray-400 font-semibold uppercase tracking-wider font-mono">
+              {/* <span className="text-xs text-gray-400 font-semibold uppercase tracking-wider font-mono">
                 Mã: {selectedStore.id}
-              </span>
+              </span> */}
               {selectedStoreOwnerName && (
                 <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 text-amber-800 px-2.5 py-0.5 text-xs font-bold border border-amber-200">
                   <Crown size={12} className="text-amber-600" />
@@ -361,6 +371,57 @@ export function StoreDetailCard({
           </div>
         )}
       </div>
+
+      {/* ── Modal: Delete Address Confirmation ── */}
+      <Modal
+        open={isConfirmDeleteAddressOpen}
+        title="Xóa địa chỉ cửa hàng"
+        onClose={() => {
+          if (!deletingAddress) setIsConfirmDeleteAddressOpen(false);
+        }}
+      >
+        <div className="space-y-4">
+          <div className="flex items-start gap-3 rounded-xl bg-red-50 p-3.5 text-red-800 border border-red-200">
+            <AlertCircle size={20} className="shrink-0 mt-0.5 text-red-600" />
+            <div>
+              <p className="text-sm font-bold text-red-900">Xác nhận xóa địa chỉ</p>
+              <p className="text-xs text-red-700 mt-1">
+                Địa chỉ này sẽ bị xóa vĩnh viễn và không thể khôi phục. Các đơn hàng sử dụng địa chỉ này có thể bị ảnh hưởng.
+              </p>
+            </div>
+          </div>
+
+          <p className="text-sm text-gray-600">
+            Bạn có chắc chắn muốn xóa địa chỉ này không?
+          </p>
+
+          <div className="flex gap-3 pt-2">
+            <button
+              type="button"
+              onClick={() => setIsConfirmDeleteAddressOpen(false)}
+              disabled={deletingAddress}
+              className="flex-1 rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50 cursor-pointer disabled:opacity-50"
+            >
+              Hủy
+            </button>
+            <button
+              type="button"
+              onClick={() => onDeleteAddress(true)}
+              disabled={deletingAddress}
+              className="flex-1 rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-red-700 cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              {deletingAddress ? (
+                <>
+                  <Loader2 size={16} className="animate-spin" />
+                  Đang xóa...
+                </>
+              ) : (
+                "Xác nhận"
+              )}
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

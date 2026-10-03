@@ -217,10 +217,10 @@ export function StoreList({
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation();
-                        onDeleteStore(store, true);
+                        onDeleteStore(store, false);
                       }}
                       className="inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold rounded-lg text-rose-700 bg-rose-50 hover:bg-rose-100 transition-colors border border-rose-200/50 cursor-pointer"
-                      title="Xóa vĩnh viễn"
+                      title="Xóa"
                     >
                       <Trash2 size={12} />
                       <span>Xóa</span>
