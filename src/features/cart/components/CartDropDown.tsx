@@ -23,9 +23,10 @@ interface CartDropdownItemProps {
 
 function CartDropdownItem({ item, onNavigate, onQuantityChange, onRemove }: CartDropdownItemProps) {
   const { t } = useTranslation();
+  const isOutOfStock = item.stock === 0;
 
   return (
-    <li className="flex gap-3 px-3 py-3 hover:bg-gray-50/80">
+    <li className={`flex gap-3 px-3 py-3 hover:bg-gray-50/80 ${isOutOfStock ? "opacity-60" : ""}`}>
       <CartItemImage imageUrl={item.imageUrl} alt={item.productName} />
       <div className="min-w-0 flex-1">
         <a
@@ -36,12 +37,16 @@ function CartDropdownItem({ item, onNavigate, onQuantityChange, onRemove }: Cart
           {item.productName} {item.variantName ? `(${item.variantName})` : ""}
         </a>
         <p className="mt-1 text-sm font-bold text-primary">{formatVnd(item.unitPrice)}</p>
+        {isOutOfStock && (
+          <p className="mt-0.5 text-xs font-medium text-red-500">{t("cart.out_of_stock", "Hết hàng")}</p>
+        )}
         <div className="mt-2 flex items-center gap-2">
-          <div className="flex items-center rounded-md border border-gray-200 bg-white">
+          <div className={`flex items-center rounded-md border border-gray-200 bg-white ${isOutOfStock ? "opacity-50" : ""}`}>
             <button
               type="button"
+              disabled={isOutOfStock}
               onClick={() => onQuantityChange({ itemId: item.id, quantity: item.quantity - 1 })}
-              className="flex h-7 w-7 items-center justify-center text-gray-600 hover:bg-gray-100 cursor-pointer"
+              className="flex h-7 w-7 items-center justify-center text-gray-600 hover:bg-gray-100 cursor-pointer disabled:cursor-not-allowed"
               aria-label={t("cart.decrease_quantity")}
             >
               <Minus size={14} />
@@ -51,8 +56,9 @@ function CartDropdownItem({ item, onNavigate, onQuantityChange, onRemove }: Cart
             </span>
             <button
               type="button"
+              disabled={isOutOfStock}
               onClick={() => onQuantityChange({ itemId: item.id, quantity: item.quantity + 1 })}
-              className="flex h-7 w-7 items-center justify-center text-gray-600 hover:bg-gray-100 cursor-pointer"
+              className="flex h-7 w-7 items-center justify-center text-gray-600 hover:bg-gray-100 cursor-pointer disabled:cursor-not-allowed"
               aria-label={t("cart.increase_quantity")}
             >
               <Plus size={14} />
