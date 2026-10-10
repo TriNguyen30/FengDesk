@@ -29,15 +29,17 @@ interface CartLineItemProps {
 
 function CartLineItem({ item, selected, onSelect, onQuantityChange, onRemove }: CartLineItemProps) {
   const { t } = useTranslation();
+  const isOutOfStock = item.stock === 0;
 
   return (
-    <li className="flex gap-4 py-5 sm:items-center">
+    <li className={`flex gap-4 py-5 sm:items-center ${isOutOfStock ? "opacity-60" : ""}`}>
       <div className="flex items-center">
         <input
           type="checkbox"
           checked={selected}
+          disabled={isOutOfStock}
           onChange={(e) => onSelect(e.target.checked)}
-          className="h-5 w-5 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
+          className="h-5 w-5 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
         />
       </div>
       <CartItemImage
@@ -56,17 +58,24 @@ function CartLineItem({ item, selected, onSelect, onQuantityChange, onRemove }: 
             {item.productName} {item.variantName ? `(${item.variantName})` : ""}
           </Link>
           <p className="mt-1 text-lg font-bold text-primary">{formatVnd(item.unitPrice)}</p>
+          {isOutOfStock && (
+            <p className="mt-1 text-sm font-medium text-red-500">
+              {t("cart.out_of_stock", "Hết hàng")}
+            </p>
+          )}
         </div>
 
         <div className="flex items-center justify-between sm:flex-col sm:items-end gap-3">
-          <div className="flex items-center rounded-lg border border-gray-200 bg-white">
+          <div className={`flex items-center rounded-lg border border-gray-200 bg-white ${isOutOfStock ? "opacity-50" : ""}`}>
             <button
+              disabled={isOutOfStock}
               onClick={() => onQuantityChange({ itemId: item.id, quantity: item.quantity - 1 })}
-              className="flex h-8 w-8 items-center justify-center text-gray-600 hover:bg-gray-100 transition-colors cursor-pointer rounded-l-lg"
+              className="flex h-8 w-8 items-center justify-center text-gray-600 hover:bg-gray-100 transition-colors cursor-pointer rounded-l-lg disabled:cursor-not-allowed"
             >
               <Minus size={14} />
             </button>
             <input
+              disabled={isOutOfStock}
               type="text"
               inputMode="numeric"
               value={item.quantity}
@@ -81,11 +90,12 @@ function CartLineItem({ item, selected, onSelect, onQuantityChange, onRemove }: 
                 const num = val ? parseInt(val, 10) : 1;
                 onQuantityChange({ itemId: item.id, quantity: Math.max(1, num) });
               }}
-              className="min-w-10 w-10 text-center text-sm font-semibold tabular-nums focus:outline-none bg-transparent"
+              className="min-w-10 w-10 text-center text-sm font-semibold tabular-nums focus:outline-none bg-transparent disabled:cursor-not-allowed"
             />
             <button
+              disabled={isOutOfStock}
               onClick={() => onQuantityChange({ itemId: item.id, quantity: item.quantity + 1 })}
-              className="flex h-8 w-8 items-center justify-center text-gray-600 hover:bg-gray-100 transition-colors cursor-pointer rounded-r-lg"
+              className="flex h-8 w-8 items-center justify-center text-gray-600 hover:bg-gray-100 transition-colors cursor-pointer rounded-r-lg disabled:cursor-not-allowed"
             >
               <Plus size={14} />
             </button>
@@ -116,9 +126,9 @@ export default function CartPage() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
 
-  // Automatically deselect items that are removed from the cart
+  // Automatically deselect items that are removed from the cart or out of stock
   useEffect(() => {
-    setSelectedItems((prev) => prev.filter((id) => items.some((item) => item.id === id)));
+    setSelectedItems((prev) => prev.filter((id) => items.some((item) => item.id === id && item.stock > 0)));
   }, [items]);
 
   const selectedCount = useMemo(() => {
@@ -133,11 +143,12 @@ export default function CartPage() {
       .reduce((acc, i) => acc + i.unitPrice * i.quantity, 0);
   }, [items, selectedItems]);
 
-  const isAllSelected = items.length > 0 && selectedItems.length === items.length;
+  const inStockItems = items.filter(i => i.stock > 0);
+  const isAllSelected = inStockItems.length > 0 && selectedItems.length === inStockItems.length;
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelectedItems(items.map((i) => i.id));
+      setSelectedItems(inStockItems.map((i) => i.id));
     } else {
       setSelectedItems([]);
     }
