@@ -1,3 +1,4 @@
+import { useLayoutEffect, useRef, useState } from "react";
 import { GoogleLogin, type CredentialResponse } from "@react-oauth/google";
 import { toast } from "sonner";
 import { loginWithGoogleRequest } from "@/features/auth/api/auth.api";
@@ -28,6 +29,75 @@ function GoogleIcon() {
 }
 
 const googleConfigured = Boolean(import.meta.env.VITE_GOOGLE_CLIENT_ID);
+
+const googleButtonClassName =
+  "flex min-h-11 w-full items-center justify-center rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm transition group-hover:bg-gray-50 group-active:bg-gray-100 hover:bg-gray-50 active:bg-gray-100 cursor-pointer";
+
+function GoogleButtonLabel() {
+  return (
+    <div className="flex items-center gap-2">
+      <GoogleIcon />
+      <span>Tiếp tục với Google</span>
+    </div>
+  );
+}
+
+/** GIS large button is ~40px tall and max 400px wide — scale it to cover the custom button. */
+const GSI_BUTTON_HEIGHT = 40;
+
+function GoogleLoginOverlay({
+  onSuccess,
+}: {
+  onSuccess: (credentialResponse: CredentialResponse) => void;
+}) {
+  const hostRef = useRef<HTMLDivElement>(null);
+  const [box, setBox] = useState({ width: 320, height: 44 });
+
+  useLayoutEffect(() => {
+    const host = hostRef.current;
+    if (!host) return;
+
+    const sync = () => {
+      const rect = host.getBoundingClientRect();
+      if (rect.width > 0 && rect.height > 0) {
+        setBox({ width: rect.width, height: rect.height });
+      }
+    };
+
+    sync();
+    const observer = new ResizeObserver(sync);
+    observer.observe(host);
+    return () => observer.disconnect();
+  }, []);
+
+  const gsiWidth = Math.max(120, Math.min(400, Math.round(box.width)));
+  const scaleX = box.width / gsiWidth;
+  const scaleY = box.height / GSI_BUTTON_HEIGHT;
+
+  return (
+    <div ref={hostRef} className="absolute inset-0 z-10 overflow-hidden opacity-0">
+      <div
+        className="origin-top-left"
+        style={{
+          width: gsiWidth,
+          height: GSI_BUTTON_HEIGHT,
+          transform: `scale(${scaleX}, ${scaleY})`,
+        }}
+      >
+        <GoogleLogin
+          onSuccess={onSuccess}
+          onError={() => toast.error("Đăng nhập Google thất bại. Vui lòng thử lại.")}
+          theme="outline"
+          size="large"
+          shape="rectangular"
+          text="continue_with"
+          locale="vi"
+          width={gsiWidth}
+        />
+      </div>
+    </div>
+  );
+}
 
 type SocialAuthButtonsProps = {
   dividerLabel?: string;
@@ -82,30 +152,24 @@ export default function SocialAuthButtons({
       </div>
 
       <div className="flex flex-col gap-2.5">
-        {googleConfigured ? (
-          <div className="flex w-full justify-center">
-            <GoogleLogin
-              onSuccess={handleGoogleSuccess}
-              onError={() => toast.error("Đăng nhập Google thất bại. Vui lòng thử lại.")}
-              theme="outline"
-              size="large"
-              shape="rectangular"
-              text="continue_with"
-              locale="vi"
-            />
-          </div>
-        ) : (
-          <button
-            type="button"
-            onClick={() => toast.info("Đăng nhập Google chưa được cấu hình.")}
-            className="flex min-h-11 w-full items-center justify-center rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm transition hover:bg-gray-50 active:bg-gray-100 cursor-pointer"
-          >
-            <div className="flex items-center gap-2">
-              <GoogleIcon />
-              <span>Tiếp tục với Google</span>
-            </div>
-          </button>
-        )}
+        <div className="group relative w-full">
+          {googleConfigured ? (
+            <>
+              <div className={googleButtonClassName} aria-hidden>
+                <GoogleButtonLabel />
+              </div>
+              <GoogleLoginOverlay onSuccess={handleGoogleSuccess} />
+            </>
+          ) : (
+            <button
+              type="button"
+              onClick={() => toast.info("Đăng nhập Google chưa được cấu hình.")}
+              className={googleButtonClassName}
+            >
+              <GoogleButtonLabel />
+            </button>
+          )}
+        </div>
       </div>
     </>
   );
